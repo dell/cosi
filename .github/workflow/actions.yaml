@@ -1,0 +1,80 @@
+name: Workflow
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ] 
+jobs:
+  code-check:
+    name: Check formatting, linting, vetting
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout the code
+        uses: actions/checkout@v2
+      - name: Run the formatter, linter, and vetter
+        uses: dell/common-github-actions/go-code-formatter-linter-vetter@main
+        with:
+          directories: ./...
+  gosec:
+    runs-on: ubuntu-latest
+    env:
+      GO111MODULE: on
+    steps:
+      - name: Checkout Source
+        uses: actions/checkout@v2
+      - name: Run Gosec Security Scanner
+        uses: securego/gosec@master
+        with:
+          args: ./...
+  malware_security_scan:
+      name: Malware Scanner
+      runs-on: ubuntu-latest
+      steps:
+        - name: Checkout the code
+          uses: actions/checkout@v2
+        - name: Malware Scanner
+          uses: dell/common-github-actions/malware-scanner@main
+          with:
+            directories: .
+            options: -ri
+  code-sanitizer:
+    name: Check for forbidden words
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout the code
+        uses: actions/checkout@v2
+      - name: Run the forbidden words scan
+        uses: dell/common-github-actions/code-sanitizer@main
+        with:
+          args: .
+  tests:
+    name: Run Go unit tests and check package coverage
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout the code
+        uses: actions/checkout@v2
+      - name: Run unit tests and check package coverage
+        uses: dell/common-github-actions/go-code-tester@main
+        with:
+          threshold: 90
+          test-folder: "."
+  build-secure-and-push:
+    runs-on: ubuntu-latest
+    env:
+      CONTAINER_REGISTRY: TODO.regitry
+    steps:
+    - uses: actions/checkout@master
+
+    - run: docker build . -t ${{ env.CONTAINER_REGISTRY }}/cosi-driver:${{ github.sha }}
+      
+    - uses: Azure/container-scan@v0
+      with:
+        image-name: ${{ env.CONTAINER_REGISTRY }}/cosi-driver:${{ github.sha }}
+    
+    - uses: Azure/docker-login@v1
+      with:
+        login-server: ${{ env.CONTAINER_REGISTRY }}
+        username: ${{ secrets.REGISTRY_USERNAME }}
+        password: ${{ secrets.REGISTRY_PASSWORD }}
+    
+    - run: docker push ${{ env.CONTAINER_REGISTRY }}/cosi-driver:${{ github.sha }}
