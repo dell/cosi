@@ -15,7 +15,6 @@ jobs:
         uses: dell/common-github-actions/go-code-formatter-linter-vetter@main
         with:
           directories: ./...
-          exclude-dir: ./core
 
   gosec:
     runs-on: ubuntu-latest
@@ -28,8 +27,9 @@ jobs:
         uses: securego/gosec@master
         with:
           args: ./...
-  malware_security_scan:
+          exclude-dir: ./core
 
+  malware_security_scan:
       name: Malware Scanner
       runs-on: ubuntu-latest
       steps:
@@ -75,11 +75,9 @@ jobs:
     - uses: Azure/container-scan@v0
       with:
         image-name: ${{ env.CONTAINER_REGISTRY }}/cosi-driver:${{ github.sha }}
-    
     - uses: Azure/docker-login@v1
       with:
         login-server: ${{ env.CONTAINER_REGISTRY }}
         username: ${{ secrets.REGISTRY_USERNAME }}
         password: ${{ secrets.REGISTRY_PASSWORD }}
-
     #- run: docker push ${{ env.CONTAINER_REGISTRY }}/cosi-driver:${{ github.sha }}
