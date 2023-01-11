@@ -27,7 +27,7 @@ jobs:
         uses: securego/gosec@master
         with:
           args: ./...
-          exclude-dir: ./core
+          args: "--exclude-dir=./core"
 
   malware_security_scan:
       name: Malware Scanner
