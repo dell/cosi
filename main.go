@@ -14,6 +14,6 @@ package main
 
 import "fmt"
 
-func main() {
+func Main() {
 	fmt.Println("Here will be driver!")
 }
