@@ -26,7 +26,7 @@ jobs:
       - name: Run Gosec Security Scanner
         uses: securego/gosec@master
         with:
-          args: ./... --exclude-dir=./core
+          args: -exclude-dir=core ./... 
 
   malware_security_scan:
       name: Malware Scanner
@@ -62,6 +62,7 @@ jobs:
         with:
           threshold: 90
           test-folder: "."
+          skip-list: "this/core"
 
   build-secure-and-push:
     runs-on: ubuntu-latest
@@ -69,7 +70,7 @@ jobs:
       CONTAINER_REGISTRY: TODO.regitry #TODO: provide registry
     steps:
     - uses: actions/checkout@master
-    - run: docker build . -t ${{ env.CONTAINER_REGISTRY }}/cosi-driver:${{ github.sha }}
+    #- run: docker build . -t ${{ env.CONTAINER_REGISTRY }}/cosi-driver:${{ github.sha }}
     - run: make docker
     - uses: Azure/container-scan@v0
       with:

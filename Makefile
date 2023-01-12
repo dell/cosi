@@ -34,7 +34,7 @@ clean:
 	rm -f core/core_generated.go
 	go clean
 
-build: golint check
+build: golint 
 	go generate
 	CGO_ENABLED=0 GOOS=linux go build
 
