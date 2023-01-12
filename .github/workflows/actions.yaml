@@ -62,7 +62,7 @@ jobs:
         with:
           threshold: 90
           test-folder: "."
-          skip-list: "github.com/dell/cosi-driver"
+          skip-list: "cosi-driver" #TODO: remove if code will appear 
 
   build-secure-and-push:
     runs-on: ubuntu-latest
