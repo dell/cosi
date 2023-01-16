@@ -6,6 +6,6 @@ import (
 )
 
 func TestMain(t *testing.T) {
-	Main()
+	main()
 	fmt.Println("TMP TEST")
 }
