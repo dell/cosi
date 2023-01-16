@@ -69,15 +69,22 @@ jobs:
     env:
       CONTAINER_REGISTRY: TODO.regitry #TODO: provide registry
     steps:
+     - name: Set up Go 1.19+
+        uses: actions/setup-go@v2
+        with:
+          go-version: ^1.19
+        id: go
     - uses: actions/checkout@master
-    #- run: docker build . -t ${{ env.CONTAINER_REGISTRY }}/cosi-driver:${{ github.sha }}
-    - run: make docker
+    - run: docker build . -t cosi-driver:latest
     - uses: Azure/container-scan@v0
       with:
-        image-name: ${{ env.CONTAINER_REGISTRY }}/cosi-driver:${{ github.sha }}
-    - uses: Azure/docker-login@v1
-      with:
-        login-server: ${{ env.CONTAINER_REGISTRY }}
-        username: ${{ secrets.REGISTRY_USERNAME }}
-        password: ${{ secrets.REGISTRY_PASSWORD }}
-    #- run: docker push ${{ env.CONTAINER_REGISTRY }}/cosi-driver:${{ github.sha }}
+        image-name: cosi-driver:latest
+    - name: Scan operator Image
+      uses: Azure/docker-login@v1
+      env: 
+          DOCKLE_HOST: "unix:///var/run/docker.sock"
+        with:
+          image-name: dell-csi-operator:latest
+          severity-threshold: HIGH
+    # - run: make docker && docker push
+    # if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/master' }}

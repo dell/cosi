@@ -1,12 +1,11 @@
 package main
- 
+
 import (
-  "testing"
-  "fmt"
-  
+	"fmt"
+	"testing"
 )
- 
+
 func TestMain(t *testing.T) {
-  Main()
-  fmt.Println("TMP TEST")
+	Main()
+	fmt.Println("TMP TEST")
 }
