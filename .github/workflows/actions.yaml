@@ -77,14 +77,10 @@ jobs:
     - uses: actions/checkout@master
     - run: docker build . -t cosi-driver:latest
     - uses: Azure/container-scan@v0
-      with:
-        image-name: cosi-driver:latest
-    - name: Scan operator Image
-      uses: Azure/docker-login@v1
       env: 
           DOCKLE_HOST: "unix:///var/run/docker.sock"
         with:
           image-name: dell-csi-operator:latest
           severity-threshold: HIGH
-    # - run: make docker && docker push
+    # - run: make push
     # if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/master' }}
