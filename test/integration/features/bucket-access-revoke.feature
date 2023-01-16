@@ -13,7 +13,7 @@ Feature: BucketAccess deletion on ObjectScale platform
         And ObjectStore "object-store-1" is created
         And Kubernetes namespace "driver-ns" is created
         And Kubernetes namespace "namespace-1" is created
-        And COSI controller is installed in namespace "driver-ns"
+        And COSI controller "cosi-controller" is installed in namespace "driver-ns"
         And COSI driver "cosi-driver" is installed in namespace "driver-ns"
         And specification of custom resource "my-bucket-class" is:
         """
@@ -43,7 +43,8 @@ Feature: BucketAccess deletion on ObjectScale platform
         And BucketClaim resource is created from specification "my-bucket-claim"
         And Bucket resource referencing BucketClaim resource "my-bucket-claim" is created in ObjectStore "object-store-1"
         And BucketClaim resource "my-bucket-claim" in namespace "namespace-1" status "bucketReady" is "true"
-        And Bucket resource referencing BucketClaim resource "my-bucket-claim" status "bucketReady" is "true" and bucketID is not empty
+        And Bucket resource referencing BucketClaim resource "my-bucket-claim" status "bucketReady" is "true"
+        And Bucket resource referencing BucketClaim resource "bucket-claim-delete" bucketID is not empty
         And specification of custom resource "my-bucket-access-class" is:
         """
         apiVersion: storage.k8s.io/v1

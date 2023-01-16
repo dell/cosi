@@ -14,7 +14,7 @@ Feature: BucketAccess creation in IAM flow on ObjectScale platform
         And ObjectStore "object-store-1" is created
         And Kubernetes namespace "driver-ns" is created
         And Kubernetes namespace "namespace-1" is created
-        And COSI controller is installed in namespace "driver-ns"
+        And COSI controller "cosi-controller" is installed in namespace "driver-ns"
         And COSI driver "cosi-driver" is installed in namespace "driver-ns"
         And specification of custom resource "my-bucket-class" is:
         """
@@ -44,7 +44,8 @@ Feature: BucketAccess creation in IAM flow on ObjectScale platform
         And BucketClaim resource is created from specification "my-bucket-claim"
         And Bucket resource referencing BucketClaim resource "my-bucket-claim" is created in ObjectStore "object-store-1"
         And BucketClaim resource "my-bucket-claim" in namespace "namespace-1" status "bucketReady" is "true"
-        And Bucket resource referencing BucketClaim resource "my-bucket-claim" status "bucketReady" is "true" and bucketID is not empty
+        And Bucket resource referencing BucketClaim resource "my-bucket-claim" status "bucketReady" is "true"
+        And Bucket resource referencing BucketClaim resource "bucket-claim-delete" bucketID is not empty
     
     @test_KRV-xxx
     Scenario: BucketAccess creation with IAM authorization mechanism
@@ -82,3 +83,4 @@ Feature: BucketAccess creation in IAM flow on ObjectScale platform
         And BucketAccess resource "my-bucket-access" in namespace "namespace-1" status "accountID" is "${accountID}"
         And Secret "bucket-credentials-1" is created in namespace "namespace-1" and is not empty
         And ServiceAccount "service-account-1" is mapped to appropriate account on ObjectScale platform
+        And Bucket resource referencing BucketClaim resource "bucket-claim-delete" is accessible from Secret "bucket-credentials-1"
