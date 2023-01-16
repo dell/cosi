@@ -1,11 +1,11 @@
 @component_COSI
 @story_KRV-xxx
 
-Feature: BucketAccess deletion on ObjectScale platform
+Feature: BucketAccess creation in KEY flow on ObjectScale platform
 
     As an ObjectScale platform user
-    I want to delete BucketAccess
-    so that access for a Bucket is deleted for particular account
+    I want to add BucketAccess via KEY authentication, which is a request access to a Bucket for particular account
+    so that access credentials for a Bucket are created and unique identifier for the account (accountID) is returned
 
     Background: 
         Given Kubernetes cluster is up and running
@@ -13,7 +13,7 @@ Feature: BucketAccess deletion on ObjectScale platform
         And ObjectStore "object-store-1" is created
         And Kubernetes namespace "driver-ns" is created
         And Kubernetes namespace "namespace-1" is created
-        And COSI controller is installed in namespace "driver-ns"
+        And COSI controller "cosi-controller" is installed in namespace "driver-ns"
         And COSI driver "cosi-driver" is installed in namespace "driver-ns"
         And specification of custom resource "my-bucket-class" is:
         """
@@ -43,7 +43,11 @@ Feature: BucketAccess deletion on ObjectScale platform
         And BucketClaim resource is created from specification "my-bucket-claim"
         And Bucket resource referencing BucketClaim resource "my-bucket-claim" is created in ObjectStore "object-store-1"
         And BucketClaim resource "my-bucket-claim" in namespace "namespace-1" status "bucketReady" is "true"
-        And Bucket resource referencing BucketClaim resource "my-bucket-claim" status "bucketReady" is "true" and bucketID is not empty
+        And Bucket resource referencing BucketClaim resource "my-bucket-claim" status "bucketReady" is "true"
+        And Bucket resource referencing BucketClaim resource "bucket-claim-delete" bucketID is not empty
+
+    @test_KRV-xxx
+    Scenario: BucketAccess creation with KEY authorization mechanism 
         And specification of custom resource "my-bucket-access-class" is:
         """
         apiVersion: storage.k8s.io/v1
@@ -55,7 +59,7 @@ Feature: BucketAccess deletion on ObjectScale platform
         parameters:
             objectScaleID: ${objectScaleID}
             objectStoreID: ${objectStoreID}
-            accountSecret: ${secretName}
+            accountSecret: ${secretName} 
         """
         And specification of custom resource "my-bucket-access" is:
         """
@@ -69,18 +73,11 @@ Feature: BucketAccess deletion on ObjectScale platform
             bucketClaimName: my-bucket-claim                              
             credentialsSecretName: bucket-credentials-1
         """ 
-        And BucketAccessClass resource is created from specification "my-bucket-access-class"
+        When BucketAccessClass resource is created from specification "my-bucket-access-class"
         And BucketAccess resource is created from specification "my-bucket-access"
-        And BucketAccess resource "my-bucket-access" in namespace "namespace-1" status "accessGranted" is "true"
+        Then BucketAccess resource "my-bucket-access" in namespace "namespace-1" status "accessGranted" is "true"
         And User "${user}" in account on ObjectScale platform is created
-        And Policy "${policy}" on ObjectScale platform is created
+        And Policy "${policy}" for Bucket resource referencing BucketClaim resource "my-bucket-claim" on ObjectScale platform is created
         And BucketAccess resource "my-bucket-access" in namespace "namespace-1" status "accountID" is "${accountID}"
         And Secret "bucket-credentials-1" is created in namespace "namespace-1" and is not empty
-
-    @test_KRV-xxx
-    Scenario: 
-        When BucketAccess resource "my-bucket-access" in namespace "namespace-1" is deleted
-        And Policy "${policy}" for Bucket resource referencing BucketClaim resource "my-bucket-claim" on ObjectScale platform is deleted
-        Then User "${user}" in account on ObjectScale platform is deleted
-        
-
+        And Bucket resource referencing BucketClaim resource "bucket-claim-delete" is accessible from Secret "bucket-credentials-1"

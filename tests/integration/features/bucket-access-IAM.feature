@@ -1,11 +1,12 @@
 @component_COSI
 @story_KRV-xxx
 
-Feature: BucketAccess creation in KEY flow on ObjectScale platform
+Feature: BucketAccess creation in IAM flow on ObjectScale platform
 
     As an ObjectScale platform user
-    I want to add BucketAccess via KEY authentication, which is a request access to a Bucket for particular account
-    so that access credentials for a Bucket are created and unique identifier for the account (accountID) is returned
+    I want to add BucketAccess via IAM authentication, which is a request access to a Bucket for particular account 
+    so that access credentials for a Bucket are created, unique identifier for the account (accountID) is returned
+    and ServiceAccount is mapped to appropriate account on ObjectScale platform
 
     Background: 
         Given Kubernetes cluster is up and running
@@ -13,7 +14,7 @@ Feature: BucketAccess creation in KEY flow on ObjectScale platform
         And ObjectStore "object-store-1" is created
         And Kubernetes namespace "driver-ns" is created
         And Kubernetes namespace "namespace-1" is created
-        And COSI controller is installed in namespace "driver-ns"
+        And COSI controller "cosi-controller" is installed in namespace "driver-ns"
         And COSI driver "cosi-driver" is installed in namespace "driver-ns"
         And specification of custom resource "my-bucket-class" is:
         """
@@ -26,7 +27,7 @@ Feature: BucketAccess creation in KEY flow on ObjectScale platform
         parameters:
             objectScaleID: ${objectScaleID}
             objectStoreID: ${objectStoreID}
-            accountSecret: ${secretName} 
+            accountSecret: ${secretName}
         """
         And specification of custom resource "my-bucket-claim" is:
         """
@@ -43,10 +44,11 @@ Feature: BucketAccess creation in KEY flow on ObjectScale platform
         And BucketClaim resource is created from specification "my-bucket-claim"
         And Bucket resource referencing BucketClaim resource "my-bucket-claim" is created in ObjectStore "object-store-1"
         And BucketClaim resource "my-bucket-claim" in namespace "namespace-1" status "bucketReady" is "true"
-        And Bucket resource referencing BucketClaim resource "my-bucket-claim" status "bucketReady" is "true" and bucketID is not empty
-
+        And Bucket resource referencing BucketClaim resource "my-bucket-claim" status "bucketReady" is "true"
+        And Bucket resource referencing BucketClaim resource "bucket-claim-delete" bucketID is not empty
+    
     @test_KRV-xxx
-    Scenario: BucketAccess creation with KEY authorization mechanism 
+    Scenario: BucketAccess creation with IAM authorization mechanism
         And specification of custom resource "my-bucket-access-class" is:
         """
         apiVersion: storage.k8s.io/v1
@@ -54,11 +56,11 @@ Feature: BucketAccess creation in KEY flow on ObjectScale platform
         metadata:
             name: my-bucket-access-class                                         
         driverName: cosi-driver  
-        authenticationType: KEY
+        authenticationType: IAM
         parameters:
             objectScaleID: ${objectScaleID}
             objectStoreID: ${objectStoreID}
-            accountSecret: ${secretName} 
+            accountSecret: ${secretName}  
         """
         And specification of custom resource "my-bucket-access" is:
         """
@@ -66,11 +68,12 @@ Feature: BucketAccess creation in KEY flow on ObjectScale platform
         kind: BucketAccess
         metadata:
             name: my-bucket-access
-            namespace: namespace-1                             
+            namespace: namespace-1                                
         spec:                                               
             bucketAccessClassName: my-bucket-access-class                           
             bucketClaimName: my-bucket-claim                              
             credentialsSecretName: bucket-credentials-1
+            serviceAccountName: service-account-1
         """ 
         When BucketAccessClass resource is created from specification "my-bucket-access-class"
         And BucketAccess resource is created from specification "my-bucket-access"
@@ -79,3 +82,5 @@ Feature: BucketAccess creation in KEY flow on ObjectScale platform
         And Policy "${policy}" for Bucket resource referencing BucketClaim resource "my-bucket-claim" on ObjectScale platform is created
         And BucketAccess resource "my-bucket-access" in namespace "namespace-1" status "accountID" is "${accountID}"
         And Secret "bucket-credentials-1" is created in namespace "namespace-1" and is not empty
+        And ServiceAccount "service-account-1" is mapped to appropriate account on ObjectScale platform
+        And Bucket resource referencing BucketClaim resource "bucket-claim-delete" is accessible from Secret "bucket-credentials-1"
