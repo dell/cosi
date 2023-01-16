@@ -69,18 +69,17 @@ jobs:
     env:
       CONTAINER_REGISTRY: TODO.regitry #TODO: provide registry
     steps:
-     - name: Set up Go 1.19+
-        uses: actions/setup-go@v2
-        with:
-          go-version: ^1.19
+    - uses: actions/setup-go@v2
+      with:
+        go-version: ^1.19
         id: go
     - uses: actions/checkout@master
     - run: docker build . -t cosi-driver:latest
     - uses: Azure/container-scan@v0
       env: 
           DOCKLE_HOST: "unix:///var/run/docker.sock"
-        with:
-          image-name: dell-csi-operator:latest
-          severity-threshold: HIGH
+      with:
+        image-name: cosi-driver:latest
+        severity-threshold: HIGH
     # - run: make push
     # if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/master' }}
