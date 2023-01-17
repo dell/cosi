@@ -26,5 +26,3 @@ ARG DIGEST
 FROM $BASEIMAGE@${DIGEST} AS final
 COPY ./ /go/src/
 WORKDIR /go/src/
-RUN CGO_ENABLED=0 \
-     make build
