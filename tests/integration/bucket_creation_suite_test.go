@@ -132,28 +132,28 @@ var _ = Describe("COSI driver", func() {
 
 	// STEP: Scenario: Successfull bucket creation
 	It("Successfully creates bucket", func() {
-		// STEP: When BucketClaim resource is created from specification "bucket-claim-valid"
+		// STEP: BucketClaim resource is created from specification "bucket-claim-valid"
 		By("creating a BucketClaim resource from specification 'bucket-claim-valid'")
 		steps.CreateBucketClaimResource(bucketClient, bucketClaimValid)
 		// STEP: Bucket resource referencing BucketClaim resource "bucket-claim-valid" is created in ObjectStore "object-store-1"
 		By("checking if Bucket resource referencing BucketClaim resource 'bucket-claim-valid' is created in ObjectStore 'object-store-1'")
 		steps.CheckBucketResourceInObjectStore(objectscale, validBucket)
-		// STEP: And BucketClaim resource "bucket-claim-valid" in namespace "namespace-1" status "bucketReady" is "true"
+		// STEP: BucketClaim resource "bucket-claim-valid" in namespace "namespace-1" status "bucketReady" is "true"
 		By("checking if the status 'bucketReady' of BucketClaim resource 'bucket-claim-valid' in namespace 'namespace-1' is 'true'")
 		steps.CheckBucketClaimStatus(bucketClient, bucketClaimValid)
-		// STEP: And Bucket resource referencing BucketClaim resource "bucket-claim-valid" status "bucketReady" is "true" and bucketID is not empty
+		// STEP: Bucket resource referencing BucketClaim resource "bucket-claim-valid" status "bucketReady" is "true" and bucketID is not empty
 		By("checking the status 'bucketReady' of Bucket resource referencing BucketClaim resource 'bucket-claim-valid'  is 'true'")
 		steps.CheckBucketStatus(bucketClient, validBucket)
-		// STEP: And Bucket resource referencing BucketClaim resource "bucket-claim-valid" status "bucketID" is not empty
+		// STEP: Bucket resource referencing BucketClaim resource "bucket-claim-valid" status "bucketID" is not empty
 		By("checking the status 'bucketID' of Bucket resource referencing BucketClaim resource 'bucket-claim-valid' is not empty")
 		steps.CheckBucketID(bucketClient, validBucket)
 	})
 	// STEP: Scenario: Unsuccessfull bucket creation
 	It("Unsuccessfully tries to create bucket", func() {
-		// STEP: When BucketClaim resource is created from specification "bucket-claim-invalid"
+		// STEP: BucketClaim resource is created from specification "bucket-claim-invalid"
 		By("creating a BucketClaim resource from specification 'bucket-claim-invalid'")
 		steps.CreateBucketClaimResource(bucketClient, bucketClaimInvalid)
-		// STEP: And BucketClaim resource "bucket-claim-invalid" in namespace "namespace-1" status "bucketReady" is "false"
+		// STEP: BucketClaim resource "bucket-claim-invalid" in namespace "namespace-1" status "bucketReady" is "false"
 		By("checking if the status 'bucketReady' of BucketClaim resource 'bucket-claim-invalid' in namespace 'namespace-1' is 'false'")
 		steps.CheckBucketClaimStatus(bucketClient, bucketClaimInvalid)
 	})

@@ -159,62 +159,62 @@ var _ = Describe("COSI driver", func() {
 
 	// STEP: Scenario: BucketClaim deletion with deletionPolicy set to "delete"
 	It("Delets the bucket when deletionPolicy is set to 'delete'", func() {
-		// STEP: And BucketClass resource is created from specification "my-bucket-class-delete"
+		// STEP: BucketClass resource is created from specification "my-bucket-class-delete"
 		By("creating a BucketClass resource from specification 'my-bucket-class-delete'")
 		steps.CreateBucketClassResource(bucketClient, bucketClassDelete)
 
-		// STEP: And BucketClaim resource is created from specification "my-bucket-claim-delete"
+		// STEP: BucketClaim resource is created from specification "my-bucket-claim-delete"
 		By("creating a BucketClaim resource from specification 'my-bucket-claim-delete'")
 		steps.CreateBucketClaimResource(bucketClient, bucketClaimDelete)
 
-		// STEP: And Bucket resource referencing BucketClaim resource "bucket-claim-delete" is created in ObjectStore "object-store-1"
+		// STEP: Bucket resource referencing BucketClaim resource "bucket-claim-delete" is created in ObjectStore "object-store-1"
 		By("checking if Bucket resource referencing BucketClaim resource 'bucket-claim-delete' is created in ObjectStore 'object-store-1'")
 		steps.CheckBucketResourceInObjectStore(objectscale, deleteBucket)
 
-		// STEP: And BucketClaim resource "bucket-claim-delete" in namespace "namespace-1" status "bucketReady" is "true"
+		// STEP: BucketClaim resource "bucket-claim-delete" in namespace "namespace-1" status "bucketReady" is "true"
 		By("checking if the status 'bucketReady' of BucketClaim resource 'bucket-claim-delete' in namespace 'namespace-1' is 'true'")
 		steps.CheckBucketClaimStatus(bucketClient, bucketClaimDelete)
 
-		// STEP: And Bucket resource referencing BucketClaim resource "bucket-claim-delete" status "bucketReady" is "true" and bucketID is not empty
+		// STEP: Bucket resource referencing BucketClaim resource "bucket-claim-delete" status "bucketReady" is "true" and bucketID is not empty
 		By("checking the status 'bucketReady' of Bucket resource referencing BucketClaim resource 'bucket-claim-delete'  is 'true'")
 		steps.CheckBucketStatus(bucketClient, deleteBucket)
 
-		// STEP: And Bucket resource referencing BucketClaim resource "bucket-claim-delete" status "bucketID" is not empty
+		// STEP: Bucket resource referencing BucketClaim resource "bucket-claim-delete" status "bucketID" is not empty
 		By("checking the status 'bucketID' of Bucket resource referencing BucketClaim resource 'bucket-claim-delete' is not empty")
 		steps.CheckBucketStatus(bucketClient, deleteBucket)
 
-		// STEP: When BucketClaim resource "my-bucket-claim-delete" is deleted in namespace "namespace-1"
+		// STEP: BucketClaim resource "my-bucket-claim-delete" is deleted in namespace "namespace-1"
 		By("deleting BucketClaim resource 'my-bucket-claim-delete' in namespace 'namespace-1'")
 		steps.DeleteBucketClaimResource(bucketClient, bucketClaimDelete)
 
-		// STEP: Then Bucket referencing BucketClaim resource "my-bucket-claim-delete" is deleted in ObjectStore "object-store-1"
+		// STEP: Bucket referencing BucketClaim resource "my-bucket-claim-delete" is deleted in ObjectStore "object-store-1"
 		By("checking if Bucket referencing BucketClaim resource 'my-bucket-claim-delete' is deleted in ObjectStore 'object-store-1'")
 		steps.CheckBucketDeletionInObjectStore(objectscale, deleteBucket)
 	})
 
 	// STEP: Scenario: BucketClaim deletion with deletionPolicy set to "retain"
 	It("Does not delete the bucket when deletionPolicy is set to 'retain'", func() {
-		// STEP: And BucketClass resource is created from specification "my-bucket-class-retain"
+		// STEP: BucketClass resource is created from specification "my-bucket-class-retain"
 		By("creating a BucketClass resource from specification 'my-bucket-class-retain'")
 		steps.CreateBucketClassResource(bucketClient, bucketClassRetain)
-		// STEP: And BucketClaim resource is created from specification "my-bucket-claim-retain"
+		// STEP: BucketClaim resource is created from specification "my-bucket-claim-retain"
 		By("creating a BucketClaim resource from specification 'my-bucket-claim-retain'")
 		steps.CreateBucketClaimResource(bucketClient, bucketClaimRetain)
-		// STEP: And Bucket resource referencing BucketClaim resource "bucket-claim-retain" is created in ObjectStore "object-store-1"
+		// STEP: Bucket resource referencing BucketClaim resource "bucket-claim-retain" is created in ObjectStore "object-store-1"
 		By("checking if Bucket resource referencing BucketClaim resource 'bucket-claim-retain' is created in ObjectStore 'object-store-1'")
 		steps.CheckBucketResourceInObjectStore(objectscale, retainBucket)
-		// STEP: And BucketClaim resource "bucket-claim-retain" in namespace "namespace-1" status "bucketReady" is "true"
+		// STEP: BucketClaim resource "bucket-claim-retain" in namespace "namespace-1" status "bucketReady" is "true"
 		By("checking if the status 'bucketReady' of BucketClaim resource 'bucket-claim-retain' in namespace 'namespace-1' is 'true'")
 		steps.CheckBucketClaimStatus(bucketClient, bucketClaimRetain)
-		// STEP: And Bucket resource referencing BucketClaim resource "bucket-claim-retain" status "bucketReady" is "true" and bucketID is not empty
+		// STEP: Bucket resource referencing BucketClaim resource "bucket-claim-retain" status "bucketReady" is "true" and bucketID is not empty
 		By("checking the status 'bucketReady' of Bucket resource referencing BucketClaim resource 'bucket-claim-retain'  is 'true'")
 		steps.CheckBucketStatus(bucketClient, retainBucket)
-		// STEP: And Bucket resource referencing BucketClaim resource "bucket-claim-retain" status "bucketID" is not empty
+		// STEP: Bucket resource referencing BucketClaim resource "bucket-claim-retain" status "bucketID" is not empty
 		By("checking the ID of Bucket resource referencing BucketClaim resource 'bucket-claim-retain' is not empty")
-		// STEP: When BucketClaim resource "my-bucket-claim-retain" is deleted in namespace "namespace-1"
+		// STEP: BucketClaim resource "my-bucket-claim-retain" is deleted in namespace "namespace-1"
 		By("deleting BucketClaim resource 'my-bucket-claim-retain' in namespace 'namespace-1'")
 		steps.DeleteBucketClaimResource(bucketClient, bucketClaimRetain)
-		// STEP: Then Bucket referencing BucketClaim resource "my-bucket-claim-retain" is available in ObjectStore "object-store-1"
+		// STEP: Bucket referencing BucketClaim resource "my-bucket-claim-retain" is available in ObjectStore "object-store-1"
 		By("checking if Bucket referencing BucketClaim resource 'my-bucket-claim-retain' is available in ObjectStore 'object-store-1'")
 		steps.CheckBucketResourceInObjectStore(objectscale, retainBucket)
 	})
