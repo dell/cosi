@@ -6,8 +6,8 @@ import (
 	// TODO: use https://pkg.go.dev/helm.sh/helm/v3 for helm operations if needed
 )
 
-// Ensure that COSI controller is installed in namespace "driver-ns"
-func CheckCOSIControllerInstallation(clientset *kubernetes.Clientset, namespace string) {
+// Ensure that COSI controller 'cosi-controller' is installed in namespace "driver-ns"
+func CheckCOSIControllerInstallation(clientset *kubernetes.Clientset, controllerName string, namespace string) {
 	// TODO: Implementation goes here
 	// check if COSI controller is installed in namespace "driver-ns"
 	// if not, fail the test

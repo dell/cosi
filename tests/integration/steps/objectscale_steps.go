@@ -25,3 +25,36 @@ func CreateObjectStore(objectscale *objectscaleRest.ClientSet, objectstore strin
 	// TODO: Implementation goes here
 	Fail("UNIMPLEMENTED")
 }
+
+// Function for checking Bucket deletion in ObjectStore
+func CheckBucketDeletionInObjectStore(objectscale *objectscaleRest.ClientSet, bucket *v1alpha1.Bucket) {
+	// TODO: Implementation goes here
+	Fail("UNIMPLEMENTED")
+}
+
+func CheckBucketAccessFromSecret(objectscale *objectscaleRest.ClientSet, bucket *v1alpha1.Bucket, secretName string) {
+	// TODO: Implementation goes here
+	Fail("UNIMPLEMENTED")
+}
+
+func CreatePolicy(objectscale *objectscaleRest.ClientSet, policy string, myBucket *v1alpha1.Bucket) {
+	// TODO: Implementation goes here
+	Fail("UNIMPLEMENTED")
+}
+
+func CreateUser(objectscale *objectscaleRest.ClientSet, user string) {
+	// TODO: Implementation goes here
+	Fail("UNIMPLEMENTED")
+}
+
+// Function deleteing policy from ObjectStore
+func DeletePolicy(objectscale *objectscaleRest.ClientSet, bucket *v1alpha1.Bucket) {
+	// TODO: Implementation goes here
+	Fail("UNIMPLEMENTED")
+}
+
+// Function for deleting user from ObjectScale
+func DeleteUser(objectscale *objectscaleRest.ClientSet, user string) {
+	// TODO: Implementation goes here
+	Fail("UNIMPLEMENTED")
+}

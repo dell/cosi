@@ -18,9 +18,9 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-func TestBucketCreation(t *testing.T) {
+func TestBucketAccessRevoke(t *testing.T) {
 	RegisterFailHandler(Fail)
-	RunSpecs(t, "Bucket Creation Suite")
+	RunSpecs(t, "Bucket Access Revoke Suite")
 }
 
 var _ = BeforeSuite(func() {
@@ -55,18 +55,6 @@ var _ = BeforeSuite(func() {
 var _ = Describe("COSI driver", func() {
 	// Resources for scenarios
 	var (
-		bucketClaimValid = &v1alpha1.BucketClaim{
-			ObjectMeta: metav1.ObjectMeta{
-				Name:      "bucket-claim-valid",
-				Namespace: "namespace-1",
-			},
-			Spec: v1alpha1.BucketClaimSpec{
-				BucketClassName: "my-bucket-class",
-				Protocols: []v1alpha1.Protocol{
-					v1alpha1.ProtocolS3,
-				},
-			},
-		}
 		myBucketClass = &v1alpha1.BucketClass{
 			TypeMeta: metav1.TypeMeta{
 				Kind:       "BucketClass",
@@ -83,29 +71,52 @@ var _ = Describe("COSI driver", func() {
 				"accountSecret": "${secretName}",
 			},
 		}
-		bucketClaimInvalid = &v1alpha1.BucketClaim{
+		myBucketClaim = &v1alpha1.BucketClaim{
 			TypeMeta: metav1.TypeMeta{
 				Kind:       "BucketClaim",
 				APIVersion: "storage.k8s.io/v1",
 			},
 			ObjectMeta: metav1.ObjectMeta{
-				Name:      "bucket-claim-invalid",
+				Name:      "my-bucket-claim",
 				Namespace: "namespace-1",
 			},
 			Spec: v1alpha1.BucketClaimSpec{
-				BucketClassName: "bucket-class-invalid",
+				BucketClassName: "my-bucket-class",
 				Protocols: []v1alpha1.Protocol{
 					v1alpha1.ProtocolS3,
 				},
 			},
 		}
-		validBucket = &v1alpha1.Bucket{
+		myBucket = &v1alpha1.Bucket{
 			Spec: v1alpha1.BucketSpec{
 				BucketClassName: "my-bucket-class",
-				BucketClaim:     &v1.ObjectReference{Kind: "BucketClass", Name: "bucket-claim-valid", Namespace: "namespace-1"},
+				BucketClaim:     &v1.ObjectReference{Kind: "BucketClass", Name: "my-bucket-claim", Namespace: "namespace-1"},
 				Protocols: []v1alpha1.Protocol{
 					v1alpha1.ProtocolS3,
 				},
+			},
+		}
+		myBucketAccessClass = &v1alpha1.BucketAccessClass{
+			ObjectMeta: metav1.ObjectMeta{
+				Name: "my-bucket-access-class",
+			},
+			DriverName:         "cosi-driver",
+			AuthenticationType: v1alpha1.AuthenticationTypeKey,
+			Parameters: map[string]string{
+				"objectScaleID": "${objectScaleID}",
+				"objectStoreID": "${objectStoreID}",
+				"accountSecret": "${secretName}",
+			},
+		}
+		myBucketAccess = &v1alpha1.BucketAccess{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "my-bucket-access",
+				Namespace: "namespace-1",
+			},
+			Spec: v1alpha1.BucketAccessSpec{
+				BucketAccessClassName: "my-bucket-access-class",
+				BucketClaimName:       "my-bucket-claim",
+				CredentialsSecretName: "bucket-credentials-1",
 			},
 		}
 	)
@@ -126,36 +137,40 @@ var _ = Describe("COSI driver", func() {
 		steps.CheckCOSIControllerInstallation(clientset, "cosi-controller", "driver-ns")
 		By("Checking if COSI driver 'cosi-driver' is installed in namespace 'driver-ns'")
 		steps.CheckCOSIDriverInstallation(clientset, "cosi-driver", "driver-ns")
-		By("Creating the BucketClass 'my-bucket-class' is created")
+		By("Creating the BucketClass 'my-bucket-class'")
 		steps.CreateBucketClassResource(bucketClient, myBucketClass)
+		By("Creating the BucketClaim 'my-bucket-claim'")
+		steps.CreateBucketClaimResource(bucketClient, myBucketClaim)
+		By("Checking if the Bucket referencing 'my-bucket-claim' is created in ObjectStore 'object-store-1'")
+		steps.CheckBucketResourceInObjectStore(objectscale, myBucket)
+		By("Checking if the Bucket referencing 'my-bucket-claim' is created in namespace 'namespace-1'")
+		steps.CheckBucketClaimStatus(bucketClient, myBucketClaim)
+		By("Checking if the Bucket referencing 'my-bucket-claim' bucketID is not empty")
+		steps.CheckBucketID(bucketClient, myBucket)
+		By("Creating the BucketAccessClass 'my-bucket-access-class'")
+		steps.CreateBucketAccessClassResource(bucketClient, myBucketAccessClass)
+		By("Creating the BucketAccess 'my-bucket-access'")
+		steps.CreateBucketAccessResource(bucketClient, myBucketAccess)
+		By("Checking if the BucketAccess 'my-bucket-access' has status 'accessGranted' set to 'true")
+		steps.CheckBucketAccessStatus(bucketClient, myBucketAccess)
+		By("Creating User '${user}' in account on ObjectScale platform")
+		steps.CreateUser(objectscale, "${user}")
+		By("Creating Policy '${policy}' on ObjectScale platform")
+		steps.CreatePolicy(objectscale, "${policy}", myBucket)
+		By("Checking if BucketAccess resource 'my-bucket-access' in namespace 'namespace-1' status 'accountID' is '${accountID}'")
+		steps.CheckBucketAccessAccountID(bucketClient, myBucketAccess, "${accountID}")
+		By("Checking if Secret ''bucket-credentials-1' is created in namespace 'namespace-1'")
+		steps.CheckSecret(clientset, "bucket-credentials-1", "namespace-1")
 	})
 
-	// STEP: Scenario: Successfull bucket creation
-	It("Successfully creates bucket", func() {
-		// STEP: When BucketClaim resource is created from specification "bucket-claim-valid"
-		By("creating a BucketClaim resource from specification 'bucket-claim-valid'")
-		steps.CreateBucketClaimResource(bucketClient, bucketClaimValid)
-		// STEP: Bucket resource referencing BucketClaim resource "bucket-claim-valid" is created in ObjectStore "object-store-1"
-		By("checking if Bucket resource referencing BucketClaim resource 'bucket-claim-valid' is created in ObjectStore 'object-store-1'")
-		steps.CheckBucketResourceInObjectStore(objectscale, validBucket)
-		// STEP: And BucketClaim resource "bucket-claim-valid" in namespace "namespace-1" status "bucketReady" is "true"
-		By("checking if the status 'bucketReady' of BucketClaim resource 'bucket-claim-valid' in namespace 'namespace-1' is 'true'")
-		steps.CheckBucketClaimStatus(bucketClient, bucketClaimValid)
-		// STEP: And Bucket resource referencing BucketClaim resource "bucket-claim-valid" status "bucketReady" is "true" and bucketID is not empty
-		By("checking the status 'bucketReady' of Bucket resource referencing BucketClaim resource 'bucket-claim-valid'  is 'true'")
-		steps.CheckBucketStatus(bucketClient, validBucket)
-		// STEP: And Bucket resource referencing BucketClaim resource "bucket-claim-valid" status "bucketID" is not empty
-		By("checking the status 'bucketID' of Bucket resource referencing BucketClaim resource 'bucket-claim-valid' is not empty")
-		steps.CheckBucketID(bucketClient, validBucket)
-	})
-	// STEP: Scenario: Unsuccessfull bucket creation
-	It("Unsuccessfully tries to create bucket", func() {
-		// STEP: When BucketClaim resource is created from specification "bucket-claim-invalid"
-		By("creating a BucketClaim resource from specification 'bucket-claim-invalid'")
-		steps.CreateBucketClaimResource(bucketClient, bucketClaimInvalid)
-		// STEP: And BucketClaim resource "bucket-claim-invalid" in namespace "namespace-1" status "bucketReady" is "false"
-		By("checking if the status 'bucketReady' of BucketClaim resource 'bucket-claim-invalid' in namespace 'namespace-1' is 'false'")
-		steps.CheckBucketClaimStatus(bucketClient, bucketClaimInvalid)
+	// STEP: Revoke access to bucket
+	It("Successfully revokes access to bucket", func() {
+		By("Deleting the BucketAccess 'my-bucket-access'")
+		steps.DeleteBucketAccessResource(bucketClient, myBucketAccess)
+		By("Deleting Policy for Bucket referencing BucketClaim 'my-bucket-claim' on ObjectScale platform")
+		steps.DeletePolicy(objectscale, myBucket)
+		By("Deleting User '${user}' in account on ObjectScale platform")
+		steps.DeleteUser(objectscale, "${user}")
 	})
 })
 

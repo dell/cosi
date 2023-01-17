@@ -79,7 +79,7 @@ Feature: BucketAccess deletion on ObjectScale platform
         And Secret "bucket-credentials-1" is created in namespace "namespace-1" and is not empty
 
     @test_KRV-xxx
-    Scenario: 
+    Scenario: Revoke access to bucket
         When BucketAccess resource "my-bucket-access" in namespace "namespace-1" is deleted
         And Policy "${policy}" for Bucket resource referencing BucketClaim resource "my-bucket-claim" on ObjectScale platform is deleted
         Then User "${user}" in account on ObjectScale platform is deleted

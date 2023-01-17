@@ -23,3 +23,8 @@ func CheckBucketClassSpec(clientset *kubernetes.Clientset, bucketClassSpec v1alp
 	// TODO: Implementation goes here
 	Fail("UNIMPLEMENTED")
 }
+
+func CheckSecret(clientset *kubernetes.Clientset, secretName string, namespace string) {
+	// TODO: Implementation goes here
+	Fail("UNIMPLEMENTED")
+}
