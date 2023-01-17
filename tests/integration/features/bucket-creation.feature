@@ -56,7 +56,7 @@ Feature: Bucket creation on ObjectScale platform
         Then Bucket resource referencing BucketClaim resource "bucket-claim-valid" is created in ObjectStore "object-store-1"
         And BucketClaim resource "bucket-claim-valid" in namespace "namespace-1" status "bucketReady" is "true"
         And Bucket resource referencing BucketClaim resource "bucket-claim-valid" status "bucketReady" is "true"
-        And Bucket resource referencing BucketClaim resource "bucket-claim-delete" bucketID is not empty
+        And Bucket resource referencing BucketClaim resource "bucket-claim-valid" bucketID is not empty
 
     Scenario: Unsuccessfull bucket creation
         When BucketClaim resource is created from specification "bucket-claim-invalid"
