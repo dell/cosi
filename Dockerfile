@@ -20,8 +20,7 @@
 #     make build
 
 # Stage to build the driver image
-#FROM $BASEIMAGE@${DIGEST} AS final
-FROM golang:1.19 AS final
+FROM $BASEIMAGE@${DIGEST} AS final
 COPY ./ /go/src/
 WORKDIR /go/src/
 RUN CGO_ENABLED=0 \
