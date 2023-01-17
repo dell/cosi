@@ -45,7 +45,7 @@ Feature: BucketAccess creation in IAM flow on ObjectScale platform
         And Bucket resource referencing BucketClaim resource "my-bucket-claim" is created in ObjectStore "object-store-1"
         And BucketClaim resource "my-bucket-claim" in namespace "namespace-1" status "bucketReady" is "true"
         And Bucket resource referencing BucketClaim resource "my-bucket-claim" status "bucketReady" is "true"
-        And Bucket resource referencing BucketClaim resource "bucket-claim-delete" bucketID is not empty
+        And Bucket resource referencing BucketClaim resource "my-bucket-claim" bucketID is not empty
     
     @test_KRV-xxx
     Scenario: BucketAccess creation with IAM authorization mechanism
