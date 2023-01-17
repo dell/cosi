@@ -66,20 +66,17 @@ jobs:
 
   build-secure-and-push:
     runs-on: ubuntu-latest
-    env: 
-      BASEIMAGE: "registry.access.redhat.com/ubi8/ubi-minimal"
-      DIGEST: "sha256:d0dee2a9ae24eba6b5563cfb4e33e40f4e3f07c9d136ca78cdf6adaff1008687"
     steps:
     - uses: actions/setup-go@v2
       with:
         go-version: ^1.19
         id: go
     - uses: actions/checkout@master
+    - run: env
+    - run: docker build --build-arg BASEIMAGE=$BASEIMAGE --build-arg DIGEST=$DIGEST . -t cosi-driver:latest
       env: 
         BASEIMAGE: "registry.access.redhat.com/ubi8/ubi-minimal"
         DIGEST: "sha256:d0dee2a9ae24eba6b5563cfb4e33e40f4e3f07c9d136ca78cdf6adaff1008687"
-    - run: env
-    - run: docker build --build-arg BASEIMAGE=$BASEIMAGE --build-arg DIGEST=$DIGEST . -t cosi-driver:latest
     - uses: Azure/container-scan@v0
       env: 
         DOCKLE_HOST: "unix:///var/run/docker.sock"
