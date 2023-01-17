@@ -10,6 +10,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License
 
+ARG BASEIMAGE
+ARG DIGEST
+
 # Stage to build the driver
 #FROM golang:${GOVERSION} as builder
 # ARG GOPROXY
