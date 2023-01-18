@@ -123,8 +123,16 @@ var _ = Describe("Bucket Creation", Label("create"), func() {
 		By("creating a BucketClaim resource from specification 'bucket-claim-invalid'")
 		steps.CreateBucketClaimResource(bucketClient, bucketClaimInvalid)
 
+		// STEP: Bucket resource referencing BucketClaim resource "bucket-claim-invalid" is not created in ObjectStore "object-store-1"
+		By("checking if Bucket resource referencing BucketClaim resource 'bucket-claim-invalid' is not created in ObjectStore 'object-store-1'")
+		steps.CheckBucketNotInObjectStore(objectscale, bucketClaimInvalid)
+
 		// STEP: BucketClaim resource "bucket-claim-invalid" in namespace "namespace-1" status "bucketReady" is "false"
 		By("checking if the status 'bucketReady' of BucketClaim resource 'bucket-claim-invalid' in namespace 'namespace-1' is 'false'")
 		steps.CheckBucketClaimStatus(bucketClient, bucketClaimInvalid)
+
+		// STEP: BucketClaim events contains an error: "Cannot create Bucket: BucketClass does not exist"
+		By("checking if the BucketClaim events contains an error: 'Cannot create Bucket: BucketClass does not exist'")
+		steps.CheckBucketClaimEvents(clientset, bucketClaimInvalid)
 	})
 })

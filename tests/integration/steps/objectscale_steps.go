@@ -61,3 +61,9 @@ func DeleteUser(objectscale *objectscaleRest.ClientSet, user string) {
 	// TODO: Implementation goes here
 	Fail("UNIMPLEMENTED")
 }
+
+// Function for checking if bucket is not in objectstore
+func CheckBucketNotInObjectStore(objectscale *objectscaleRest.ClientSet, bucketClaim *v1alpha1.BucketClaim) {
+	// TODO: Implementation goes here
+	Fail("UNIMPLEMENTED")
+}

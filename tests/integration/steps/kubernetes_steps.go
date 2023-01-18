@@ -29,3 +29,9 @@ func CheckSecret(clientset *kubernetes.Clientset, secretName string, namespace s
 	// TODO: Implementation goes here
 	Fail("UNIMPLEMENTED")
 }
+
+// Check BucketClaim events
+func CheckBucketClaimEvents(clientset *kubernetes.Clientset, bucketClaim *v1alpha1.BucketClaim) {
+	// TODO: Implementation goes here
+	Fail("UNIMPLEMENTED")
+}
