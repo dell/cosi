@@ -147,7 +147,3 @@ var _ = Describe("Bucket Access KEY", Label("key-flow"), func() {
 		steps.CheckBucketAccessFromSecret(objectscale, myBucket, "bucket-credentials-1")
 	})
 })
-
-var _ = AfterSuite(func() {
-	// CLean up
-})

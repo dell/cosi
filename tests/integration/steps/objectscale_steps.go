@@ -32,16 +32,19 @@ func CheckBucketDeletionInObjectStore(objectscale *objectscaleRest.ClientSet, bu
 	Fail("UNIMPLEMENTED")
 }
 
+// Check if Bucket can be accessed with data from specified secret
 func CheckBucketAccessFromSecret(objectscale *objectscaleRest.ClientSet, bucket *v1alpha1.Bucket, secretName string) {
 	// TODO: Implementation goes here
 	Fail("UNIMPLEMENTED")
 }
 
+// Function for creating policy in ObjectScale
 func CreatePolicy(objectscale *objectscaleRest.ClientSet, policy string, myBucket *v1alpha1.Bucket) {
 	// TODO: Implementation goes here
 	Fail("UNIMPLEMENTED")
 }
 
+// Function for creating user in ObjectScale
 func CreateUser(objectscale *objectscaleRest.ClientSet, user string) {
 	// TODO: Implementation goes here
 	Fail("UNIMPLEMENTED")

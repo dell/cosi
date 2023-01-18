@@ -43,21 +43,25 @@ func DeleteBucketClaimResource(bucketClient *bucketclientset.Clientset, bucketCl
 	Fail("UNIMPLEMENTED")
 }
 
+// Function for creating BucketAccessClass resource
 func CreateBucketAccessClassResource(bucketClient *bucketclientset.Clientset, bucketAccessClass *v1alpha1.BucketAccessClass) {
 	// TODO: Implementation goes here
 	Fail("UNIMPLEMENTED")
 }
 
+// Function for creating BucketAccess resource
 func CreateBucketAccessResource(bucketClient *bucketclientset.Clientset, bucketAccess *v1alpha1.BucketAccess) {
 	// TODO: Implementation goes here
 	Fail("UNIMPLEMENTED")
 }
 
+// Function for checking BucketAccess status
 func CheckBucketAccessStatus(bucketClient *bucketclientset.Clientset, bucketAccess *v1alpha1.BucketAccess) {
 	// TODO: Implementation goes here
 	Fail("UNIMPLEMENTED")
 }
 
+// Function for checking BucketAccess accountID
 func CheckBucketAccessAccountID(bucketClient *bucketclientset.Clientset, bucketAccess *v1alpha1.BucketAccess, accountID string) {
 	// TODO: Implementation goes here
 	Fail("UNIMPLEMENTED")

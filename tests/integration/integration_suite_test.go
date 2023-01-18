@@ -53,3 +53,7 @@ var _ = BeforeSuite(func() {
 		false,
 	)
 })
+
+var _ = AfterSuite(func() {
+	// Global teardown
+})

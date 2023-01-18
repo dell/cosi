@@ -190,7 +190,3 @@ var _ = Describe("Bucket Deletion", Label("delete"), func() {
 	})
 
 })
-
-var _ = AfterSuite(func() {
-	// CLean up
-})

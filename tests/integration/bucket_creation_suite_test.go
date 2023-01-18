@@ -128,7 +128,3 @@ var _ = Describe("Bucket Creation", Label("create"), func() {
 		steps.CheckBucketClaimStatus(bucketClient, bucketClaimInvalid)
 	})
 })
-
-var _ = AfterSuite(func() {
-	// CLean up
-})

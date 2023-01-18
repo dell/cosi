@@ -24,6 +24,7 @@ func CheckBucketClassSpec(clientset *kubernetes.Clientset, bucketClassSpec v1alp
 	Fail("UNIMPLEMENTED")
 }
 
+// Check if secret exists
 func CheckSecret(clientset *kubernetes.Clientset, secretName string, namespace string) {
 	// TODO: Implementation goes here
 	Fail("UNIMPLEMENTED")

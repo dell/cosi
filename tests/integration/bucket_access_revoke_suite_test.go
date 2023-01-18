@@ -150,7 +150,3 @@ var _ = Describe("Bucket Access Revoke", Label("revoke"), func() {
 		steps.DeleteUser(objectscale, "${user}")
 	})
 })
-
-var _ = AfterSuite(func() {
-	// CLean up
-})
