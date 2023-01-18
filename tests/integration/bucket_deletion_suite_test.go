@@ -12,6 +12,17 @@ import (
 var _ = Describe("Bucket Deletion", Label("delete"), func() {
 	// Resources for scenarios
 	var (
+		bucketClassDelete *v1alpha1.BucketClass
+		bucketClassRetain *v1alpha1.BucketClass
+		bucketClaimDelete *v1alpha1.BucketClaim
+		bucketClaimRetain *v1alpha1.BucketClaim
+		deleteBucket      *v1alpha1.Bucket
+		retainBucket      *v1alpha1.Bucket
+	)
+
+	// Background
+	BeforeEach(func() {
+		// Initialize variables
 		bucketClassDelete = &v1alpha1.BucketClass{
 			TypeMeta: metav1.TypeMeta{
 				Kind:       "BucketClass",
@@ -94,10 +105,7 @@ var _ = Describe("Bucket Deletion", Label("delete"), func() {
 				},
 			},
 		}
-	)
 
-	// Background
-	BeforeEach(func() {
 		// STEP: Kubernetes cluster is up and running
 		By("Checking if the cluster is ready")
 		steps.CheckClusterAvailability(clientset)
@@ -207,5 +215,4 @@ var _ = Describe("Bucket Deletion", Label("delete"), func() {
 			// Cleanup for scenario: BucketClaim deletion with deletionPolicy set to "retain"
 		})
 	})
-
 })

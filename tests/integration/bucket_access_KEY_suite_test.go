@@ -12,6 +12,16 @@ import (
 var _ = Describe("Bucket Access KEY", Label("key-flow"), func() {
 	// Resources for scenarios
 	var (
+		myBucketClass       *v1alpha1.BucketClass
+		myBucketClaim       *v1alpha1.BucketClaim
+		myBucket            *v1alpha1.Bucket
+		myBucketAccessClass *v1alpha1.BucketAccessClass
+		myBucketAccess      *v1alpha1.BucketAccess
+	)
+
+	// Background
+	BeforeEach(func() {
+		// Initialize variables
 		myBucketClass = &v1alpha1.BucketClass{
 			ObjectMeta: metav1.ObjectMeta{
 				Name: "my-bucket-class",
@@ -68,10 +78,7 @@ var _ = Describe("Bucket Access KEY", Label("key-flow"), func() {
 				CredentialsSecretName: "bucket-credentials-1",
 			},
 		}
-	)
 
-	// Background
-	BeforeEach(func() {
 		// STEP: Kubernetes cluster is up and running
 		By("Checking if the cluster is ready")
 		steps.CheckClusterAvailability(clientset)

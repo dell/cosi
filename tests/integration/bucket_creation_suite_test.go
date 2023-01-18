@@ -12,6 +12,15 @@ import (
 var _ = Describe("Bucket Creation", Label("create"), func() {
 	// Resources for scenarios
 	var (
+		myBucketClass      *v1alpha1.BucketClass
+		bucketClaimValid   *v1alpha1.BucketClaim
+		bucketClaimInvalid *v1alpha1.BucketClaim
+		validBucket        *v1alpha1.Bucket
+	)
+
+	// Background
+	BeforeEach(func() {
+		// Initialize variables
 		myBucketClass = &v1alpha1.BucketClass{
 			TypeMeta: metav1.TypeMeta{
 				Kind:       "BucketClass",
@@ -65,10 +74,7 @@ var _ = Describe("Bucket Creation", Label("create"), func() {
 				},
 			},
 		}
-	)
 
-	// Background
-	BeforeEach(func() {
 		// STEP: Kubernetes cluster is up and running
 		By("Checking if the cluster is ready")
 		steps.CheckClusterAvailability(clientset)
