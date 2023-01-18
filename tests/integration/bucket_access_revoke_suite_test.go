@@ -80,72 +80,98 @@ var _ = Describe("Bucket Access Revoke", Label("revoke"), func() {
 
 	// Background
 	BeforeEach(func() {
+		// STEP: Kubernetes cluster is up and running
 		By("Checking if the cluster is ready")
 		steps.CheckClusterAvailability(clientset)
 
+		// STEP: ObjectScale platform is installed on the cluster
 		By("Checking if the ObjectScale platform is ready")
 		steps.CheckObjectScaleInstallation(clientset)
 
+		// STEP: ObjectStore "object-store-1" is created
 		By("Checking if the ObjectStore 'object-store-1' is created")
 		steps.CreateObjectStore(objectscale, "object-store-1")
 
+		// STEP: Kubernetes namespace "driver-ns" is created
 		By("Checking if namespace 'driver-ns' is created")
 		steps.CreateNamespace(clientset, "driver-ns")
 
+		// STEP: Kubernetes namespace "namespace-1" is created
 		By("Checking if namespace 'namespace-1' is created")
 		steps.CreateNamespace(clientset, "namespace-1")
 
+		// STEP: COSI controller "cosi-controller" is installed in namespace "driver-ns"
 		By("Checking if COSI controller 'cosi-controller' is installed in namespace 'driver-ns'")
 		steps.CheckCOSIControllerInstallation(clientset, "cosi-controller", "driver-ns")
 
+		// STEP: COSI driver "cosi-driver" is installed in namespace "driver-ns"
 		By("Checking if COSI driver 'cosi-driver' is installed in namespace 'driver-ns'")
 		steps.CheckCOSIDriverInstallation(clientset, "cosi-driver", "driver-ns")
 
+		// STEP: BucketClass resource is created from specification "my-bucket-class"
 		By("Creating the BucketClass 'my-bucket-class'")
 		steps.CreateBucketClassResource(bucketClient, myBucketClass)
 
+		// STEP: BucketClaim resource is created from specification "my-bucket-claim"
 		By("Creating the BucketClaim 'my-bucket-claim'")
 		steps.CreateBucketClaimResource(bucketClient, myBucketClaim)
 
+		// STEP: Bucket resource referencing BucketClaim resource "my-bucket-claim" is created in ObjectStore "object-store-1"
 		By("Checking if the Bucket referencing 'my-bucket-claim' is created in ObjectStore 'object-store-1'")
 		steps.CheckBucketResourceInObjectStore(objectscale, myBucket)
 
-		By("Checking if the Bucket referencing 'my-bucket-claim' is created in namespace 'namespace-1'")
+		// STEP: BucketClaim resource "my-bucket-claim" in namespace "namespace-1" status "bucketReady" is "true"
+		By("Checking if the BucketClaim 'my-bucket-claim' in namespace 'namespace-1' status 'bucketReady' is 'true'")
 		steps.CheckBucketClaimStatus(bucketClient, myBucketClaim)
 
+		// STEP: Bucket resource referencing BucketClaim resource "my-bucket-claim" status "bucketReady" is "true"
+		By("Checking if the Bucket referencing 'my-bucket-claim' status 'bucketReady' is 'true'")
+		steps.CheckBucketStatus(bucketClient, myBucket)
+
+		// STEP: Bucket resource referencing BucketClaim resource "my-bucket-claim" bucketID is not empty
 		By("Checking if the Bucket referencing 'my-bucket-claim' bucketID is not empty")
 		steps.CheckBucketID(bucketClient, myBucket)
 
+		// STEP: BucketAccessClass resource is created from specification "my-bucket-access-class"
 		By("Creating the BucketAccessClass 'my-bucket-access-class'")
 		steps.CreateBucketAccessClassResource(bucketClient, myBucketAccessClass)
 
+		// STEP: BucketAccess resource is created from specification "my-bucket-access"
 		By("Creating the BucketAccess 'my-bucket-access'")
 		steps.CreateBucketAccessResource(bucketClient, myBucketAccess)
 
+		// STEP: BucketAccess resource "my-bucket-access" in namespace "namespace-1" status "accessGranted" is "true"
 		By("Checking if the BucketAccess 'my-bucket-access' has status 'accessGranted' set to 'true")
 		steps.CheckBucketAccessStatus(bucketClient, myBucketAccess)
 
+		// STEP: User "${user}" in account on ObjectScale platform is created
 		By("Creating User '${user}' in account on ObjectScale platform")
 		steps.CreateUser(objectscale, "${user}")
 
+		// STEP: Policy "${policy}" on ObjectScale platform is created
 		By("Creating Policy '${policy}' on ObjectScale platform")
 		steps.CreatePolicy(objectscale, "${policy}", myBucket)
 
+		// STEP: BucketAccess resource "my-bucket-access" in namespace "namespace-1" status "accountID" is "${accountID}"
 		By("Checking if BucketAccess resource 'my-bucket-access' in namespace 'namespace-1' status 'accountID' is '${accountID}'")
 		steps.CheckBucketAccessAccountID(bucketClient, myBucketAccess, "${accountID}")
 
+		// STEP: Secret "bucket-credentials-1" is created in namespace "namespace-1" and is not empty
 		By("Checking if Secret ''bucket-credentials-1' is created in namespace 'namespace-1'")
 		steps.CheckSecret(clientset, "bucket-credentials-1", "namespace-1")
 	})
 
 	// STEP: Revoke access to bucket
 	It("Successfully revokes access to bucket", func() {
+		// STEP: BucketAccess resource "my-bucket-access" in namespace "namespace-1" is deleted
 		By("Deleting the BucketAccess 'my-bucket-access'")
 		steps.DeleteBucketAccessResource(bucketClient, myBucketAccess)
 
+		// STEP: Policy "${policy}" for Bucket resource referencing BucketClaim resource "my-bucket-claim" on ObjectScale platform is deleted
 		By("Deleting Policy for Bucket referencing BucketClaim 'my-bucket-claim' on ObjectScale platform")
 		steps.DeletePolicy(objectscale, myBucket)
 
+		// STEP: User "${user}" in account on ObjectScale platform is deleted
 		By("Deleting User '${user}' in account on ObjectScale platform")
 		steps.DeleteUser(objectscale, "${user}")
 	})

@@ -72,42 +72,55 @@ var _ = Describe("Bucket Access KEY", Label("key-flow"), func() {
 
 	// Background
 	BeforeEach(func() {
+		// STEP: Kubernetes cluster is up and running
 		By("Checking if the cluster is ready")
 		steps.CheckClusterAvailability(clientset)
 
+		// STEP: ObjectScale platform is installed on the cluster
 		By("Checking if the ObjectScale platform is ready")
 		steps.CheckObjectScaleInstallation(clientset)
 
+		// STEP: ObjectStore "object-store-1" is created
 		By("Checking if the ObjectStore 'object-store-1' is created")
 		steps.CreateObjectStore(objectscale, "object-store-1")
 
+		// STEP: Kubernetes namespace "driver-ns" is created
 		By("Checking if namespace 'driver-ns' is created")
 		steps.CreateNamespace(clientset, "driver-ns")
 
+		// STEP: Kubernetes namespace "namespace-1" is created
 		By("Checking if namespace 'namespace-1' is created")
 		steps.CreateNamespace(clientset, "namespace-1")
 
+		// STEP: COSI controller "cosi-controller" is installed in namespace "driver-ns"
 		By("Checking if COSI controller 'cosi-controller' is installed in namespace 'driver-ns'")
 		steps.CheckCOSIControllerInstallation(clientset, "cosi-controller", "driver-ns")
 
+		// STEP: COSI driver "cosi-driver" is installed in namespace "driver-ns"
 		By("Checking if COSI driver 'cosi-driver' is installed in namespace 'driver-ns'")
 		steps.CheckCOSIDriverInstallation(clientset, "cosi-driver", "driver-ns")
 
+		// STEP: BucketClass resource is created from specification "my-bucket-class"
 		By("Creating the BucketClass 'my-bucket-class' is created")
 		steps.CreateBucketClassResource(bucketClient, myBucketClass)
 
+		// STEP: BucketClaim resource is created from specification "my-bucket-claim"
 		By("Creating the BucketAccessClass 'my-bucket-access-class' is created")
 		steps.CreateBucketClaimResource(bucketClient, myBucketClaim)
 
+		// STEP: Bucket resource referencing BucketClaim resource "my-bucket-claim" is created in ObjectStore "object-store-1"
 		By("Checking if bucket referencing 'my-bucket-claim' is created in ObjectStore 'object-store-1'")
 		steps.CheckBucketResourceInObjectStore(objectscale, myBucket)
 
+		// STEP: BucketClaim resource "my-bucket-claim" in namespace "namespace-1" status "bucketReady" is "true"
 		By("Checking if BucketClaim resource 'my-bucket-claim' status 'bucketReady' is 'true'")
 		steps.CheckBucketClaimStatus(bucketClient, myBucketClaim)
 
+		// STEP: Bucket resource referencing BucketClaim resource "my-bucket-claim" status "bucketReady" is "true"
 		By("Checking if Bucket resource referencing 'my-bucket-claim' status 'bucketReady' is 'true'")
 		steps.CheckBucketStatus(bucketClient, myBucket)
 
+		// STEP: Bucket resource referencing BucketClaim resource "my-bucket" bucketID is not empty
 		By("Checking if Bucket resource 'my-bucket' status 'bucketID' is not empty")
 		steps.CheckBucketID(bucketClient, myBucket)
 	})
