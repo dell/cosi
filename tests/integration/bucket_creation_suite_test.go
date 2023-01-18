@@ -55,18 +55,6 @@ var _ = BeforeSuite(func() {
 var _ = Describe("COSI driver", func() {
 	// Resources for scenarios
 	var (
-		bucketClaimValid = &v1alpha1.BucketClaim{
-			ObjectMeta: metav1.ObjectMeta{
-				Name:      "bucket-claim-valid",
-				Namespace: "namespace-1",
-			},
-			Spec: v1alpha1.BucketClaimSpec{
-				BucketClassName: "my-bucket-class",
-				Protocols: []v1alpha1.Protocol{
-					v1alpha1.ProtocolS3,
-				},
-			},
-		}
 		myBucketClass = &v1alpha1.BucketClass{
 			TypeMeta: metav1.TypeMeta{
 				Kind:       "BucketClass",
@@ -81,6 +69,18 @@ var _ = Describe("COSI driver", func() {
 				"objectScaleID": "${objectScaleID}",
 				"objectStoreID": "${objectStoreID}",
 				"accountSecret": "${secretName}",
+			},
+		}
+		bucketClaimValid = &v1alpha1.BucketClaim{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "bucket-claim-valid",
+				Namespace: "namespace-1",
+			},
+			Spec: v1alpha1.BucketClaimSpec{
+				BucketClassName: "my-bucket-class",
+				Protocols: []v1alpha1.Protocol{
+					v1alpha1.ProtocolS3,
+				},
 			},
 		}
 		bucketClaimInvalid = &v1alpha1.BucketClaim{
@@ -114,18 +114,25 @@ var _ = Describe("COSI driver", func() {
 	BeforeEach(func() {
 		By("Checking if the cluster is ready")
 		steps.CheckClusterAvailability(clientset)
+
 		By("Checking if the ObjectScale platform is ready")
 		steps.CheckObjectScaleInstallation(clientset)
+
 		By("Checking if the ObjectStore 'object-store-1' is created")
 		steps.CreateObjectStore(objectscale, "object-store-1")
+
 		By("Checking if namespace 'driver-ns' is created")
 		steps.CreateNamespace(clientset, "driver-ns")
+
 		By("Checking if namespace 'namespace-1' is created")
 		steps.CreateNamespace(clientset, "namespace-1")
+
 		By("Checking if COSI controller 'cosi-controller' is installed in namespace 'driver-ns'")
 		steps.CheckCOSIControllerInstallation(clientset, "cosi-controller", "driver-ns")
+
 		By("Checking if COSI driver 'cosi-driver' is installed in namespace 'driver-ns'")
 		steps.CheckCOSIDriverInstallation(clientset, "cosi-driver", "driver-ns")
+
 		By("Creating the BucketClass 'my-bucket-class' is created")
 		steps.CreateBucketClassResource(bucketClient, myBucketClass)
 	})
@@ -135,24 +142,30 @@ var _ = Describe("COSI driver", func() {
 		// STEP: BucketClaim resource is created from specification "bucket-claim-valid"
 		By("creating a BucketClaim resource from specification 'bucket-claim-valid'")
 		steps.CreateBucketClaimResource(bucketClient, bucketClaimValid)
+
 		// STEP: Bucket resource referencing BucketClaim resource "bucket-claim-valid" is created in ObjectStore "object-store-1"
 		By("checking if Bucket resource referencing BucketClaim resource 'bucket-claim-valid' is created in ObjectStore 'object-store-1'")
 		steps.CheckBucketResourceInObjectStore(objectscale, validBucket)
+
 		// STEP: BucketClaim resource "bucket-claim-valid" in namespace "namespace-1" status "bucketReady" is "true"
 		By("checking if the status 'bucketReady' of BucketClaim resource 'bucket-claim-valid' in namespace 'namespace-1' is 'true'")
 		steps.CheckBucketClaimStatus(bucketClient, bucketClaimValid)
+
 		// STEP: Bucket resource referencing BucketClaim resource "bucket-claim-valid" status "bucketReady" is "true" and bucketID is not empty
 		By("checking the status 'bucketReady' of Bucket resource referencing BucketClaim resource 'bucket-claim-valid'  is 'true'")
 		steps.CheckBucketStatus(bucketClient, validBucket)
+
 		// STEP: Bucket resource referencing BucketClaim resource "bucket-claim-valid" status "bucketID" is not empty
 		By("checking the status 'bucketID' of Bucket resource referencing BucketClaim resource 'bucket-claim-valid' is not empty")
 		steps.CheckBucketID(bucketClient, validBucket)
 	})
+
 	// STEP: Scenario: Unsuccessfull bucket creation
 	It("Unsuccessfully tries to create bucket", func() {
 		// STEP: BucketClaim resource is created from specification "bucket-claim-invalid"
 		By("creating a BucketClaim resource from specification 'bucket-claim-invalid'")
 		steps.CreateBucketClaimResource(bucketClient, bucketClaimInvalid)
+
 		// STEP: BucketClaim resource "bucket-claim-invalid" in namespace "namespace-1" status "bucketReady" is "false"
 		By("checking if the status 'bucketReady' of BucketClaim resource 'bucket-claim-invalid' in namespace 'namespace-1' is 'false'")
 		steps.CheckBucketClaimStatus(bucketClient, bucketClaimInvalid)

@@ -117,48 +117,75 @@ var _ = Describe("COSI driver", func() {
 	BeforeEach(func() {
 		By("Checking if the cluster is ready")
 		steps.CheckClusterAvailability(clientset)
+
 		By("Checking if the ObjectScale platform is ready")
 		steps.CheckObjectScaleInstallation(clientset)
+
 		By("Checking if the ObjectStore 'object-store-1' is created")
 		steps.CreateObjectStore(objectscale, "object-store-1")
+
 		By("Checking if namespace 'driver-ns' is created")
 		steps.CreateNamespace(clientset, "driver-ns")
+
 		By("Checking if namespace 'namespace-1' is created")
 		steps.CreateNamespace(clientset, "namespace-1")
+
 		By("Checking if COSI controller 'cosi-controller' is installed in namespace 'driver-ns'")
 		steps.CheckCOSIControllerInstallation(clientset, "cosi-controller", "driver-ns")
+
 		By("Checking if COSI driver 'cosi-driver' is installed in namespace 'driver-ns'")
 		steps.CheckCOSIDriverInstallation(clientset, "cosi-driver", "driver-ns")
+
 		By("Creating the BucketClass 'my-bucket-class' is created")
 		steps.CreateBucketClassResource(bucketClient, myBucketClass)
+
 		By("Creating the BucketAccessClass 'my-bucket-access-class' is created")
 		steps.CreateBucketClaimResource(bucketClient, myBucketClaim)
+
 		By("Checking if bucket referencing 'my-bucket-claim' is created in ObjectStore 'object-store-1'")
 		steps.CheckBucketResourceInObjectStore(objectscale, myBucket)
+
 		By("Checking if BucketClaim resource 'my-bucket-claim' status 'bucketReady' is 'true'")
 		steps.CheckBucketClaimStatus(bucketClient, myBucketClaim)
+
 		By("Checking if Bucket resource referencing 'my-bucket-claim' status 'bucketReady' is 'true'")
 		steps.CheckBucketStatus(bucketClient, myBucket)
+
 		By("Checking if Bucket resource 'my-bucket' status 'bucketID' is not empty")
 		steps.CheckBucketID(bucketClient, myBucket)
 	})
 
 	// STEP: Scenario: BucketAccess creation with KEY authorization mechanism
 	It("Creates BucketAccess with KEY authorization mechanism", func() {
+		// STEP: BucketAccessClass resource is created from specification "my-bucket-access-class"
 		By("Creating BucketAccessClass resource 'my-bucket-access-class'")
 		steps.CreateBucketAccessClassResource(bucketClient, myBucketAccessClass)
+
+		// STEP: BucketAccess resource is created from specification "my-bucket-access"
 		By("Creating BucketAccess resource 'my-bucket-access'")
 		steps.CreateBucketAccessResource(bucketClient, myBucketAccess)
+
+		// STEP: BucketAccess resource "my-bucket-access" status "accessGranted" is "true"
 		By("Checking if BucketAccess resource 'my-bucket-access' in namespace 'namespace-1' status 'accessGranted' is 'true'")
 		steps.CheckBucketAccessStatus(bucketClient, myBucketAccess)
+
+		// STEP: User "${user}" in account on ObjectScale platform is created
 		By("Creating User resource '${user}'")
 		steps.CreateUser(objectscale, "${user}")
+
+		// STEP: Policy "${policy}" for Bucket resource referencing BucketClaim resource "my-bucket-claim" on ObjectScale platform is created
 		By("Creating Policy resource '${policy}' for Bucket resource referencing BucketClaim resource 'my-bucket-claim'")
 		steps.CreatePolicy(objectscale, "${policy}", myBucket)
+
+		// STEP: BucketAccess resource "my-bucket-access" in namespace "namespace-1" status "accountID" is "${accountID}"
 		By("Checking if BucketAccess resource 'my-bucket-access' in namespace 'namespace-1' status 'accountID' is '${accountID}'")
 		steps.CheckBucketAccessAccountID(bucketClient, myBucketAccess, "${accountID}")
+
+		// STEP: Secret "bucket-credentials-1" is created in namespace "namespace-1" and is not empty
 		By("Checking if Secret 'bucket-credentials-1' in namespace 'namespace-1' is not empty")
 		steps.CheckSecret(clientset, "bucket-credentials-1", "namespace-1")
+
+		//STEP: Bucket resource referencing BucketClaim resource "bucket-claim-delete" is accessible from Secret "bucket-credentials-1"
 		By("Checking if Bucket resource referencing BucketClaim resource 'my-bucket-claim' is accessible from Secret 'bucket-credentials-1'")
 		steps.CheckBucketAccessFromSecret(objectscale, myBucket, "bucket-credentials-1")
 	})

@@ -143,16 +143,22 @@ var _ = Describe("COSI driver", func() {
 	BeforeEach(func() {
 		By("Checking if the cluster is ready")
 		steps.CheckClusterAvailability(clientset)
+
 		By("Checking if the ObjectScale platform is ready")
 		steps.CheckObjectScaleInstallation(clientset)
+
 		By("Checking if the ObjectStore 'object-store-1' is created")
 		steps.CreateObjectStore(objectscale, "object-store-1")
+
 		By("Checking if namespace 'driver-ns' is created")
 		steps.CreateNamespace(clientset, "driver-ns")
+
 		By("Checking if namespace 'namespace-1' is created")
 		steps.CreateNamespace(clientset, "namespace-1")
+
 		By("Checking if COSI controller 'cosi-controller' is installed in namespace 'driver-ns'")
 		steps.CheckCOSIControllerInstallation(clientset, "cosi-controller", "driver-ns")
+
 		By("Checking if COSI driver 'cosi-driver' is installed in namespace 'driver-ns'")
 		steps.CheckCOSIDriverInstallation(clientset, "cosi-driver", "driver-ns")
 	})
@@ -197,23 +203,30 @@ var _ = Describe("COSI driver", func() {
 		// STEP: BucketClass resource is created from specification "my-bucket-class-retain"
 		By("creating a BucketClass resource from specification 'my-bucket-class-retain'")
 		steps.CreateBucketClassResource(bucketClient, bucketClassRetain)
+
 		// STEP: BucketClaim resource is created from specification "my-bucket-claim-retain"
 		By("creating a BucketClaim resource from specification 'my-bucket-claim-retain'")
 		steps.CreateBucketClaimResource(bucketClient, bucketClaimRetain)
+
 		// STEP: Bucket resource referencing BucketClaim resource "bucket-claim-retain" is created in ObjectStore "object-store-1"
 		By("checking if Bucket resource referencing BucketClaim resource 'bucket-claim-retain' is created in ObjectStore 'object-store-1'")
 		steps.CheckBucketResourceInObjectStore(objectscale, retainBucket)
+
 		// STEP: BucketClaim resource "bucket-claim-retain" in namespace "namespace-1" status "bucketReady" is "true"
 		By("checking if the status 'bucketReady' of BucketClaim resource 'bucket-claim-retain' in namespace 'namespace-1' is 'true'")
 		steps.CheckBucketClaimStatus(bucketClient, bucketClaimRetain)
+
 		// STEP: Bucket resource referencing BucketClaim resource "bucket-claim-retain" status "bucketReady" is "true" and bucketID is not empty
 		By("checking the status 'bucketReady' of Bucket resource referencing BucketClaim resource 'bucket-claim-retain'  is 'true'")
 		steps.CheckBucketStatus(bucketClient, retainBucket)
+
 		// STEP: Bucket resource referencing BucketClaim resource "bucket-claim-retain" status "bucketID" is not empty
 		By("checking the ID of Bucket resource referencing BucketClaim resource 'bucket-claim-retain' is not empty")
+
 		// STEP: BucketClaim resource "my-bucket-claim-retain" is deleted in namespace "namespace-1"
 		By("deleting BucketClaim resource 'my-bucket-claim-retain' in namespace 'namespace-1'")
 		steps.DeleteBucketClaimResource(bucketClient, bucketClaimRetain)
+
 		// STEP: Bucket referencing BucketClaim resource "my-bucket-claim-retain" is available in ObjectStore "object-store-1"
 		By("checking if Bucket referencing BucketClaim resource 'my-bucket-claim-retain' is available in ObjectStore 'object-store-1'")
 		steps.CheckBucketResourceInObjectStore(objectscale, retainBucket)
