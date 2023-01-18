@@ -1,58 +1,15 @@
-package main
+package main_test
 
 import (
-	"net/http"
-	"os"
-	"testing"
-
 	"github.com/dell/cosi-driver/tests/integration/steps"
-	objectscaleRest "github.com/emcecs/objectscale-management-go-sdk/pkg/client/rest"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/client-go/kubernetes"
-	"k8s.io/client-go/tools/clientcmd"
 	"sigs.k8s.io/container-object-storage-interface-api/apis/objectstorage/v1alpha1"
-	bucketclientset "sigs.k8s.io/container-object-storage-interface-api/client/clientset/versioned"
 
 	. "github.com/onsi/ginkgo/v2"
-	. "github.com/onsi/gomega"
 )
 
-func TestBucketCreation(t *testing.T) {
-	RegisterFailHandler(Fail)
-	RunSpecs(t, "Bucket Creation Suite")
-}
-
-var _ = BeforeSuite(func() {
-	// Global setup
-	// a way to inject k8s conifg from env
-	kubeConfig := os.Getenv("KUBECONFIG")
-	cfg, err := clientcmd.BuildConfigFromFlags("", kubeConfig)
-	Expect(err).To(BeNil())
-
-	// k8s clientset
-	clientset, err = kubernetes.NewForConfig(cfg)
-	Expect(err).To(BeNil())
-
-	// Bucket clientset
-	bucketClient, err = bucketclientset.NewForConfig(cfg)
-	Expect(err).To(BeNil())
-
-	// ObjectScale clientset
-	// TODO: check how to connect to objectscale with parameters for this function
-	objectscale = objectscaleRest.NewClientSet(
-		"https://testserver",
-		"https://testgateway",
-		"svc-objectscale-domain-c8",
-		"objectscale-graphql-7d754f8499-ng4h6",
-		"OSC234DSF223423",
-		"IgQBVjz4mq1M6wmKjHmfDgoNSC56NGPDbLvnkaiuaZKpwHOMFOMGouNld7GXCC690qgw4nRCzj3EkLFgPitA2y8vagG6r3yrUbBdI8FsGRQqW741eiYykf4dTvcwq8P6",
-		http.DefaultClient,
-		false,
-	)
-})
-
-var _ = Describe("COSI driver", func() {
+var _ = Describe("Bucket Creation", Label("create"), func() {
 	// Resources for scenarios
 	var (
 		myBucketClass = &v1alpha1.BucketClass{
