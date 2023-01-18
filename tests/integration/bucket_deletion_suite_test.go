@@ -98,7 +98,6 @@ var _ = Describe("Bucket Deletion", Label("delete"), func() {
 
 	// Background
 	BeforeEach(func() {
-
 		// STEP: Kubernetes cluster is up and running
 		By("Checking if the cluster is ready")
 		steps.CheckClusterAvailability(clientset)
@@ -126,6 +125,10 @@ var _ = Describe("Bucket Deletion", Label("delete"), func() {
 		// STEP: COSI driver "cosi-driver" is installed in namespace "driver-ns"
 		By("Checking if COSI driver 'cosi-driver' is installed in namespace 'driver-ns'")
 		steps.CheckCOSIDriverInstallation(clientset, "cosi-driver", "driver-ns")
+
+		DeferCleanup(func() {
+			// Cleanup for background
+		})
 	})
 
 	// STEP: Scenario: BucketClaim deletion with deletionPolicy set to "delete"
@@ -161,6 +164,10 @@ var _ = Describe("Bucket Deletion", Label("delete"), func() {
 		// STEP: Bucket referencing BucketClaim resource "my-bucket-claim-delete" is deleted in ObjectStore "object-store-1"
 		By("checking if Bucket referencing BucketClaim resource 'my-bucket-claim-delete' is deleted in ObjectStore 'object-store-1'")
 		steps.CheckBucketDeletionInObjectStore(objectscale, deleteBucket)
+
+		DeferCleanup(func() {
+			// Cleanup for scenario: BucketClaim deletion with deletionPolicy set to "delete"
+		})
 	})
 
 	// STEP: Scenario: BucketClaim deletion with deletionPolicy set to "retain"
@@ -195,6 +202,10 @@ var _ = Describe("Bucket Deletion", Label("delete"), func() {
 		// STEP: Bucket referencing BucketClaim resource "my-bucket-claim-retain" is available in ObjectStore "object-store-1"
 		By("checking if Bucket referencing BucketClaim resource 'my-bucket-claim-retain' is available in ObjectStore 'object-store-1'")
 		steps.CheckBucketResourceInObjectStore(objectscale, retainBucket)
+
+		DeferCleanup(func() {
+			// Cleanup for scenario: BucketClaim deletion with deletionPolicy set to "retain"
+		})
 	})
 
 })

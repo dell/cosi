@@ -100,6 +100,10 @@ var _ = Describe("Bucket Creation", Label("create"), func() {
 		// STEP: BucketClass resource is created from specification "my-bucket-class"
 		By("Creating the BucketClass 'my-bucket-class' is created")
 		steps.CreateBucketClassResource(bucketClient, myBucketClass)
+
+		DeferCleanup(func() {
+			// Cleanup for background
+		})
 	})
 
 	// STEP: Scenario: Successfull bucket creation
@@ -123,6 +127,10 @@ var _ = Describe("Bucket Creation", Label("create"), func() {
 		// STEP: Bucket resource referencing BucketClaim resource "bucket-claim-valid" status "bucketID" is not empty
 		By("checking the status 'bucketID' of Bucket resource referencing BucketClaim resource 'bucket-claim-valid' is not empty")
 		steps.CheckBucketID(bucketClient, validBucket)
+
+		DeferCleanup(func() {
+			// Cleanup for scenario: Successfull bucket creation
+		})
 	})
 
 	// STEP: Scenario: Unsuccessfull bucket creation
@@ -142,5 +150,10 @@ var _ = Describe("Bucket Creation", Label("create"), func() {
 		// STEP: BucketClaim events contains an error: "Cannot create Bucket: BucketClass does not exist"
 		By("checking if the BucketClaim events contains an error: 'Cannot create Bucket: BucketClass does not exist'")
 		steps.CheckBucketClaimEvents(clientset, bucketClaimInvalid)
+
+		DeferCleanup(func() {
+			// Cleanup for scenario: Unsuccessfull bucket creation
+		})
 	})
+
 })

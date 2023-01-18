@@ -159,6 +159,10 @@ var _ = Describe("Bucket Access Revoke", Label("revoke"), func() {
 		// STEP: Secret "bucket-credentials-1" is created in namespace "namespace-1" and is not empty
 		By("Checking if Secret ''bucket-credentials-1' is created in namespace 'namespace-1'")
 		steps.CheckSecret(clientset, "bucket-credentials-1", "namespace-1")
+
+		DeferCleanup(func() {
+			// Cleanup for background
+		})
 	})
 
 	// STEP: Revoke access to bucket
@@ -174,5 +178,9 @@ var _ = Describe("Bucket Access Revoke", Label("revoke"), func() {
 		// STEP: User "${user}" in account on ObjectScale platform is deleted
 		By("Deleting User '${user}' in account on ObjectScale platform")
 		steps.DeleteUser(objectscale, "${user}")
+
+		DeferCleanup(func() {
+			// Cleanup for scenario: Revoke access to bucket
+		})
 	})
 })

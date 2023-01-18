@@ -123,6 +123,10 @@ var _ = Describe("Bucket Access KEY", Label("key-flow"), func() {
 		// STEP: Bucket resource referencing BucketClaim resource "my-bucket" bucketID is not empty
 		By("Checking if Bucket resource 'my-bucket' status 'bucketID' is not empty")
 		steps.CheckBucketID(bucketClient, myBucket)
+
+		DeferCleanup(func() {
+			// Cleanup for background
+		})
 	})
 
 	// STEP: Scenario: BucketAccess creation with KEY authorization mechanism
@@ -158,5 +162,9 @@ var _ = Describe("Bucket Access KEY", Label("key-flow"), func() {
 		//STEP: Bucket resource referencing BucketClaim resource "bucket-claim-delete" is accessible from Secret "bucket-credentials-1"
 		By("Checking if Bucket resource referencing BucketClaim resource 'my-bucket-claim' is accessible from Secret 'bucket-credentials-1'")
 		steps.CheckBucketAccessFromSecret(objectscale, myBucket, "bucket-credentials-1")
+
+		DeferCleanup(func() {
+			// Cleanup for scenario: BucketAccess creation with KEY authorization mechanism
+		})
 	})
 })
