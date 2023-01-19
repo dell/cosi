@@ -19,7 +19,11 @@ jobs:
   gosec:
     runs-on: ubuntu-latest
     env:
+<<<<<<< HEAD
       GO111MODULE: off
+=======
+      GO111MODULE: on
+>>>>>>> c1c4bc45ed5afd4a7d44438c4c333205efb9dccb
     steps:
       - name: Checkout Source
         uses: actions/checkout@v2
@@ -85,4 +89,3 @@ jobs:
     # TODO: There is no registry for now 
     # - run: make push
     # if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }} 
- 
