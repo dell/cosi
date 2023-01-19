@@ -81,8 +81,6 @@ jobs:
         DOCKLE_HOST: "unix:///var/run/docker.sock"
       with:
         image-name: cosi-driver:latest
-        severity-threshold: HIGH
     # TODO: There is no registry for now 
     # - run: make push
     # if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }} 
- 
