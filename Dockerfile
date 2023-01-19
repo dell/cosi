@@ -24,5 +24,5 @@ ARG DIGEST
 
 # Stage to build the driver image
 FROM $BASEIMAGE@${DIGEST} AS final
-COPY ./ /go/src/
-WORKDIR /go/src/
+RUN microdnf update -y && \
+    microdnf clean all
