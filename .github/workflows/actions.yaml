@@ -4,6 +4,8 @@ on:
     branches: [ main ]
   pull_request:
     branches: [ main ] 
+env:
+  GOPRIVATE: "*.company.com"
 jobs:
   code-check:
     name: Check formatting, linting, vetting
@@ -21,12 +23,16 @@ jobs:
     env:
       GO111MODULE: on
     steps:
+      - name: Configure git for private modules
+        env:
+          TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+        run: git config --global url."https://adamginna-dell:${TOKEN}@github.com".insteadOf "https://github.com"
       - name: Checkout Source
         uses: actions/checkout@v2
       - name: Run Gosec Security Scanner
         uses: securego/gosec@master
         with:
-          args: -exclude-dir=core,tests ./... 
+          args: -exclude-dir=core -exclude-dir=coretests ./... 
 
   malware_security_scan:
       name: Malware Scanner
@@ -62,7 +68,7 @@ jobs:
         with:
           threshold: 90
           test-folder: "."
-          skip-list: "github.com/dell/cosi-driver/core"
+          skip-list: "github.com/dell/cosi-driver/core,github.com/dell/cosi-driver/tests"
 
   build-secure-and-push:
     runs-on: ubuntu-latest
