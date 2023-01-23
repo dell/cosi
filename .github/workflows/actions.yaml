@@ -6,6 +6,7 @@ on:
     branches: [ main ] 
 env:
   TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+  GOPRIVATE: https://github.com/EMCECS/objectscale-management-go-sdk
 jobs:
   code-check:
     name: Check formatting, linting, vetting
