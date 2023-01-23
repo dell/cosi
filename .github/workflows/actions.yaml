@@ -65,7 +65,7 @@ jobs:
         with:
           threshold: 90
           test-folder: "."
-          skip-list: "github.com/dell/cosi-driver/core,github.com/dell/cosi-driver/tests/*"
+          skip-list: "github.com/dell/cosi-driver/core,github.com/dell/cosi-driver/tests/intergation/main_test"
 
   build-secure-and-push:
     runs-on: ubuntu-latest
