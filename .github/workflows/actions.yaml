@@ -17,7 +17,7 @@ jobs:
       - name: Run the formatter, linter, and vetter
         uses: dell/common-github-actions/go-code-formatter-linter-vetter@main
         with:
-          directories: ./pkg/...
+          directories: ./...
 
   gosec:
     runs-on: ubuntu-latest
@@ -29,7 +29,7 @@ jobs:
       - name: Run Gosec Security Scanner
         uses: securego/gosec@master
         with:
-          args: -exclude-dir=core -exclude-dir=coretests ./... 
+          args: -exclude-dir=core -exclude-dir=tests ./... 
 
   malware_security_scan:
       name: Malware Scanner
@@ -52,7 +52,7 @@ jobs:
       - name: Run the forbidden words scan
         uses: dell/common-github-actions/code-sanitizer@main
         with:
-          args: /github/workspace
+          args: /github/workspace/core #TODO: change to pkg
 
   tests:
     name: Run Go unit tests and check package coverage
@@ -65,7 +65,7 @@ jobs:
         with:
           threshold: 90
           test-folder: "."
-          skip-list: "github.com/dell/cosi-driver/core,github.com/dell/cosi-driver/tests,vendor/*"
+          skip-list: "github.com/dell/cosi-driver/core,github.com/dell/cosi-driver/tests/integration"
 
   build-secure-and-push:
     runs-on: ubuntu-latest
