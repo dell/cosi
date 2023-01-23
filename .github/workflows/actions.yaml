@@ -5,7 +5,7 @@ on:
   pull_request:
     branches: [ main ] 
 env:
-  TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+  TOKEN: ${{ secrets.GH_TOKEN }}
   GOPRIVATE: https://github.com/EMCECS/objectscale-management-go-sdk
 jobs:
   code-check:
