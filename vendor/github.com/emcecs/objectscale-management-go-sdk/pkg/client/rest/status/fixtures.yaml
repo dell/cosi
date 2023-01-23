@@ -1,0 +1,45 @@
+---
+version: 1
+interactions:
+- request:
+    body: ""
+    form: {}
+    headers: {}
+    url: https://testgateway/mgmt/serviceLogin
+    method: GET
+  response:
+    body: <?xml version="1.0" encoding="UTF-8" standalone="yes"?><loggedIn><user>130820808912778549-admin</user></loggedIn>
+    headers:
+      Content-Length:
+      - "113"
+      Content-Type:
+      - application/xml
+      Date:
+        - Mon, 10 Jun 2019 21:04:52 GMT
+      X-Sds-Auth-Token:
+        - OSTOKEN-eyJ4NXUiOiJkdW1teVVybCIsImFsZyI6IlJTMjU2In0.eyJzdWIiOiJyb290Iiwib3Nfcm9sIjpbIlNZU1RFTV9BRE1JTiIsIlNZU1RFTV9NT05JVE9SIiwiU0VDVVJJVFlfQURNSU4iXSwiaXNzIjoiZmVkc3ZjIiwiZXhwIjoxNjIzNDQwNTgwLCJpYXQiOjE2MjM0MzY5ODAsImp0aSI6ImMyNjljNTUzLTJmM2MtNDc3OC1iZDI4LTIyM2RiNWJiZWZkNiJ9.CNFKStCNRy-iYzd7-3gawOx5hwDmNIh5B2O8T2-J3K-W4t3v3ORHWv0tIf3eluk4Md6oCuUBKrAJXq0fZlxw8zSVNxccRNjJaRt6qiDLaMiXhL1rEwDIT4du6g56Yaxh8lQsgHYHxEhESmXzTmWNmEsJnb3___JjTR0qELJjEs298xwtME7LUKoH0xMygs1vH_su7X5bHfuPTyapP8hkx84TBSnco41tslNGii9KnQzdt3bIlsCOrPACiCJsjbQpsQGEOR9B4qwo47VKNry9JOl1Q47Sww4kIV2v-ZakZVWinHpgTGaYjR-jOWAqcFPCcPXB_KbVmTEkuJpmdnrXDQ
+    status: 200 OK
+    code: 200
+    duration: ""
+- request:
+    body: "null"
+    form: {}
+    headers:
+      Accept:
+        - application/json
+      Content-Type:
+        - application/json
+      X-Sds-Auth-Token:
+        - OSTOKEN-eyJ4NXUiOiJkdW1teVVybCIsImFsZyI6IlJTMjU2In0.eyJzdWIiOiJyb290Iiwib3Nfcm9sIjpbIlNZU1RFTV9BRE1JTiIsIlNZU1RFTV9NT05JVE9SIiwiU0VDVVJJVFlfQURNSU4iXSwiaXNzIjoiZmVkc3ZjIiwiZXhwIjoxNjIzNDQwNTgwLCJpYXQiOjE2MjM0MzY5ODAsImp0aSI6ImMyNjljNTUzLTJmM2MtNDc3OC1iZDI4LTIyM2RiNWJiZWZkNiJ9.CNFKStCNRy-iYzd7-3gawOx5hwDmNIh5B2O8T2-J3K-W4t3v3ORHWv0tIf3eluk4Md6oCuUBKrAJXq0fZlxw8zSVNxccRNjJaRt6qiDLaMiXhL1rEwDIT4du6g56Yaxh8lQsgHYHxEhESmXzTmWNmEsJnb3___JjTR0qELJjEs298xwtME7LUKoH0xMygs1vH_su7X5bHfuPTyapP8hkx84TBSnco41tslNGii9KnQzdt3bIlsCOrPACiCJsjbQpsQGEOR9B4qwo47VKNry9JOl1Q47Sww4kIV2v-ZakZVWinHpgTGaYjR-jOWAqcFPCcPXB_KbVmTEkuJpmdnrXDQ
+    url: https://testserver/vdc/recovery-status/devices/testdevice1-ss-0.testdevice1-ss.testdomain.svc.cluster.local/levels/1
+    method: GET
+  response:
+    body: '{"level":"1","progress":"","message":"Recovery status for device testauto2-ss-4.testauto2-ss.dellemc-objectscale-domain-c8.svc.cluster.local is not available, check if device is down or not","host":"testauto2-ss-4.testauto2-ss.dellemc-objectscale-domain-c8.svc.cluster.local","status":"NORECOVERY","remaining_bytes":"1024","total_bytes":"2048"}'
+    headers:
+      Content-Type:
+        - application/json
+      Date:
+        - Mon, 10 Jun 2019 21:04:55 GMT
+    status: 200 OK
+    code: 200
+    duration: ""

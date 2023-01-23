@@ -6,14 +6,12 @@ on:
     branches: [ main ] 
 env:
   TOKEN: ${{ secrets.GH_TOKEN }}
-  GOPRIVATE: https://github.com/EMCECS/objectscale-management-go-sdk
+  GOPRIVATE: https://github.com/emcecs/*
 jobs:
   code-check:
     name: Check formatting, linting, vetting
     runs-on: ubuntu-latest
     steps:
-      - name: Configure git for private modules
-        run: git config --global url."https://adamginna-dell:${TOKEN}@github.com".insteadOf "https://github.com"
       - name: Checkout the code
         uses: actions/checkout@v2
       - name: Run the formatter, linter, and vetter
@@ -26,8 +24,6 @@ jobs:
     env:
       GO111MODULE: on
     steps:
-      - name: Configure git for private modules
-        run: git config --global url."https://adamginna-dell:${TOKEN}@github.com".insteadOf "https://github.com"
       - name: Checkout Source
         uses: actions/checkout@v2
       - name: Run Gosec Security Scanner
@@ -62,8 +58,6 @@ jobs:
     name: Run Go unit tests and check package coverage
     runs-on: ubuntu-latest
     steps:
-      - name: Configure git for private modules
-        run: git config --global url."https://adamginna-dell:${TOKEN}@github.com".insteadOf "https://github.com"
       - name: Checkout the code
         uses: actions/checkout@v2
       - name: Run unit tests and check package coverage
