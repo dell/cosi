@@ -5,12 +5,14 @@ on:
   pull_request:
     branches: [ main ] 
 env:
-  GOPRIVATE: "*.company.com"
+  TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
 jobs:
   code-check:
     name: Check formatting, linting, vetting
     runs-on: ubuntu-latest
     steps:
+      - name: Configure git for private modules
+        run: git config --global url."https://adamginna-dell:${TOKEN}@github.com".insteadOf "https://github.com"
       - name: Checkout the code
         uses: actions/checkout@v2
       - name: Run the formatter, linter, and vetter
@@ -24,8 +26,6 @@ jobs:
       GO111MODULE: on
     steps:
       - name: Configure git for private modules
-        env:
-          TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
         run: git config --global url."https://adamginna-dell:${TOKEN}@github.com".insteadOf "https://github.com"
       - name: Checkout Source
         uses: actions/checkout@v2
@@ -61,6 +61,8 @@ jobs:
     name: Run Go unit tests and check package coverage
     runs-on: ubuntu-latest
     steps:
+      - name: Configure git for private modules
+        run: git config --global url."https://adamginna-dell:${TOKEN}@github.com".insteadOf "https://github.com"
       - name: Checkout the code
         uses: actions/checkout@v2
       - name: Run unit tests and check package coverage
