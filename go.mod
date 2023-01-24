@@ -6,12 +6,9 @@ require (
 	github.com/emcecs/objectscale-management-go-sdk v0.31.2
 	github.com/onsi/ginkgo/v2 v2.7.0
 	github.com/onsi/gomega v1.25.0
-	k8s.io/client-go v0.26.1
-)
-
-require (
 	k8s.io/api v0.26.1
 	k8s.io/apimachinery v0.26.1
+	k8s.io/client-go v0.26.1
 	sigs.k8s.io/container-object-storage-interface-api v0.1.0
 )
 
