@@ -1,0 +1,87 @@
+name: Workflow
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ] 
+jobs:
+  code-check:
+    name: Check formatting, linting, vetting
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout the code
+        uses: actions/checkout@v2
+      - name: Run the formatter, linter, and vetter
+        uses: dell/common-github-actions/go-code-formatter-linter-vetter@main
+        with:
+          directories: ./core/... #TODO: change to pkg
+
+  gosec:
+    runs-on: ubuntu-latest
+    env:
+      GO111MODULE: on
+    steps:
+      - name: Checkout Source
+        uses: actions/checkout@v2
+      - name: Run Gosec Security Scanner
+        uses: securego/gosec@master
+        with:
+          args: -exclude-dir=core -exclude-dir=tests ./... 
+
+  malware_security_scan:
+      name: Malware Scanner
+      runs-on: ubuntu-latest
+      steps:
+        - name: Checkout the code
+          uses: actions/checkout@v2
+        - name: Malware Scanner
+          uses: dell/common-github-actions/malware-scanner@main
+          with:
+            directories: .
+            options: -ri
+
+  code-sanitizer:
+    name: Check for forbidden words
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout the code
+        uses: actions/checkout@v2
+      - name: Run the forbidden words scan
+        uses: dell/common-github-actions/code-sanitizer@main
+        with:
+          args: /github/workspace/core #TODO: change to pkg
+
+  tests:
+    name: Run Go unit tests and check package coverage
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout the code
+        uses: actions/checkout@v2
+      - name: Run unit tests and check package coverage
+        uses: dell/common-github-actions/go-code-tester@main
+        with:
+          threshold: 90
+          test-folder: "."
+          skip-list: "github.com/dell/cosi-driver/core,github.com/dell/cosi-driver/tests/intergation/main_test"
+
+  build-secure-and-push:
+    runs-on: ubuntu-latest
+    env: 
+        BASEIMAGE: "registry.access.redhat.com/ubi8/ubi-minimal"
+        DIGEST: "sha256:c7036d048252451451bfc70493c2a849737e91c5517559ec508a0dbe7dfb6d15"
+    steps:
+    - uses: actions/setup-go@v2
+      with:
+        go-version: ^1.19
+        id: go
+    - uses: actions/checkout@master
+    - run: docker build --build-arg BASEIMAGE=$BASEIMAGE --build-arg DIGEST=$DIGEST . -t cosi-driver:latest
+    - uses: Azure/container-scan@v0
+      env: 
+        DOCKLE_HOST: "unix:///var/run/docker.sock"
+      with:
+        image-name: cosi-driver:latest
+        severity-threshold: HIGH
+    # TODO: There is no registry for now 
+    # - run: make push
+    # if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }} 

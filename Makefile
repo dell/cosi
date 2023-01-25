@@ -12,6 +12,8 @@
 #
 all: clean build
 
+include overrides.mk
+
 # Get the currently used golang install path (in GOPATH/bin, unless GOBIN is set)
 ifeq (,$(shell go env GOBIN))
 GOBIN=$(shell go env GOPATH)/bin
@@ -34,7 +36,7 @@ clean:
 	rm -f core/core_generated.go
 	go clean
 
-build: golint check
+build: golint 
 	go generate
 	CGO_ENABLED=0 GOOS=linux go build
 
