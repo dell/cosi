@@ -1,0 +1,271 @@
+---
+version: 1
+interactions:
+- request:
+    body: ""
+    form: {}
+    headers: {}
+    url: https://testgateway/mgmt/serviceLogin
+    method: GET
+  response:
+    body: <?xml version="1.0" encoding="UTF-8" standalone="yes"?><loggedIn><user>130820808912778549-admin</user></loggedIn>
+    headers:
+      Content-Length:
+      - "113"
+      Content-Type:
+      - application/xml
+      Date:
+        - Mon, 10 Jun 2019 21:04:52 GMT
+      X-Sds-Auth-Token:
+        - BAAcaUFwZ2hFRGc4WWozdHp2ZGRKcHQ2RjJEdE4wPQMAjAQASHVybjpzdG9yYWdlb3M6VmlydHVhbERhdGFDZW50ZXJEYXRhOjAwOWYwNDZlLThkMDYtNDc4Ni1iN2NmLWY2MzM3NmZkNzg5ZQIADTI4MjE3MjU2ODIxMjUDAC51cm46VG9rZW46MjY0OGI3ODMtYWU2MS00MDQxLTg2MTQtODEwNjcyZjFlNmY0AgAC0A8=
+    status: 200 OK
+    code: 200
+    duration: ""
+- request:
+    body: ""
+    form: {}
+    headers:
+      Accept:
+      - application/xml
+      Content-Type:
+      - application/xml
+      X-Sds-Auth-Token:
+        - BAAcaUFwZ2hFRGc4WWozdHp2ZGRKcHQ2RjJEdE4wPQMAjAQASHVybjpzdG9yYWdlb3M6VmlydHVhbERhdGFDZW50ZXJEYXRhOjAwOWYwNDZlLThkMDYtNDc4Ni1iN2NmLWY2MzM3NmZkNzg5ZQIADTI4MjE3MjU2ODIxMjUDAC51cm46VG9rZW46MjY0OGI3ODMtYWU2MS00MDQxLTg2MTQtODEwNjcyZjFlNmY0AgAC0A8=
+    url: https://testserver/object/tenants
+    method: GET
+  response:
+    body: <?xml version="1.0" encoding="UTF-8" standalone="yes"?><tenants><Filter>name=*</Filter><tenant><id>10d9817c-3696-4625-854e-82b21d8c0795</id><default_bucket_block_size>-1</default_bucket_block_size><is_compliance_enabled>false</is_compliance_enabled><is_encryption_enabled>false</is_encryption_enabled><default_data_services_vpool>urn:storageos:ReplicationGroupInfo:0618ee4c-7ede-444b-8fc5-7289b2951875:global</default_data_services_vpool></tenant></tenants>
+    headers:
+      Content-Length:
+        - "457"
+      Content-Type:
+      - application/xml
+      Date:
+        - Mon, 10 Jun 2019 21:04:52 GMT
+    status: 200 OK
+    code: 200
+    duration: ""
+- request:
+    body: ""
+    form: {}
+    headers: {}
+    url: https://testserver/login
+    method: GET
+  response:
+    body: <?xml version="1.0" encoding="UTF-8" standalone="yes"?><loggedIn><user>130820808912778549-admin</user></loggedIn>
+    headers:
+      Content-Length:
+      - "113"
+      Content-Type:
+      - application/xml
+      Date:
+        - Mon, 10 Jun 2019 21:04:52 GMT
+      X-Sds-Auth-Token:
+        - BAAcaUFwZ2hFRGc4WWozdHp2ZGRKcHQ2RjJEdE4wPQMAjAQASHVybjpzdG9yYWdlb3M6VmlydHVhbERhdGFDZW50ZXJEYXRhOjAwOWYwNDZlLThkMDYtNDc4Ni1iN2NmLWY2MzM3NmZkNzg5ZQIADTI4MjE3MjU2ODIxMjUDAC51cm46VG9rZW46MjY0OGI3ODMtYWU2MS00MDQxLTg2MTQtODEwNjcyZjFlNmY0AgAC0A8=
+    status: 200 OK
+    code: 200
+    duration: ""
+- request:
+    body: ""
+    form: {}
+    headers:
+      Accept:
+      - application/xml
+      Content-Type:
+      - application/xml
+      X-Sds-Auth-Token:
+        - BAAcaUFwZ2hFRGc4WWozdHp2ZGRKcHQ2RjJEdE4wPQMAjAQASHVybjpzdG9yYWdlb3M6VmlydHVhbERhdGFDZW50ZXJEYXRhOjAwOWYwNDZlLThkMDYtNDc4Ni1iN2NmLWY2MzM3NmZkNzg5ZQIADTI4MjE3MjU2ODIxMjUDAC51cm46VG9rZW46MjY0OGI3ODMtYWU2MS00MDQxLTg2MTQtODEwNjcyZjFlNmY0AgAC0A8=
+    url: https://testserver/object/tenants
+    method: GET
+  response:
+    body: <?xml version="1.0" encoding="UTF-8" standalone="yes"?><tenants><Filter>name=*</Filter><tenant><id>10d9817c-3696-4625-854e-82b21d8c0795</id><default_bucket_block_size>-1</default_bucket_block_size><is_compliance_enabled>false</is_compliance_enabled><is_encryption_enabled>false</is_encryption_enabled><default_data_services_vpool>urn:storageos:ReplicationGroupInfo:0618ee4c-7ede-444b-8fc5-7289b2951875:global</default_data_services_vpool></tenant></tenants>
+    headers:
+      Content-Length:
+        - "457"
+      Content-Type:
+      - application/xml
+      Date:
+        - Mon, 10 Jun 2019 21:04:52 GMT
+    status: 200 OK
+    code: 200
+    duration: ""
+- request:
+    body: ""
+    form: {}
+    headers:
+      Accept:
+      - application/xml
+      Content-Type:
+      - application/xml
+      Authorization: 
+      - Basic cm9vdDpDaGFuZ2VNZQ==
+    url: https://testgateway/mgmt/serviceLogin
+    method: GET
+  response:
+    body: <?xml version="1.0" encoding="UTF-8" standalone="yes"?><loggedIn><user>root</user></loggedIn>
+    headers:
+      Content-Length:
+      - "93"
+      Content-Type:
+      - application/xml
+      Date:
+      - Mon, 10 Jun 2019 21:04:53 GMT
+      X-Sds-Auth-Token:
+      - OSTOKEN-eyJ4NXUiOiJkdW1teVVybCIsImFsZyI6IlJTMjU2In0.eyJzdWIiOiJyb290Iiwib3Nfcm9sIjpbIlNZU1RFTV9BRE1JTiIsIlNZU1RFTV9NT05JVE9SIiwiU0VDVVJJVFlfQURNSU4iXSwiaWF0IjoxNjI0NTU3OTg1LCJleHAiOjE2MjQ1NjE1ODUsImlzcyI6ImZlZHN2YyIsImp0aSI6ImYzNzMwZTU5LTY3YTQtNGFhNS04Mjg1LTc1MGY1MTBhZjYxZSJ9.No6nH4Q8BYNZnwuxyYkIcknrbVGAeAP8Xh8wFkaXHKp1dLf_4ffOpMgRCYqIu2Q6slB4Iqw1KQo1V5_9QG1bWuAvAJWrNgZAH0iRGezaQjASjh6KTT9wDV4jmgLYJxsyD8QcKMeI41R6iloci0z6k6mWVvPuVLv0Oi73vU9tP6Qx-_ohVnj5Kj7JcXk4mpjZIi_bZfTlhJpow65yOpDDu-issGdfIHPNezZ2AN3WHVHAB_AHLjQ_BzxjTymqLkno5X7fEROb6XC5fcR6FUpUnOxoGdfdKQ2CYK_yJ6oJhEc8h7tcFgs2rbxtvDVxfJPOl-TpHBUIIUAhiIJ0Zgh0NA
+    status: 200 OK
+    code: 200
+    duration: ""
+- request:
+    body: ""
+    form: {}
+    headers:
+      Accept:
+        - application/xml
+      Content-Type:
+        - application/xml
+      X-Sds-Auth-Token:
+        - BAAcaUFwZ2hFRGc4WWozdHp2ZGRKcHQ2RjJEdE4wPQMAjAQASHVybjpzdG9yYWdlb3M6VmlydHVhbERhdGFDZW50ZXJEYXRhOjAwOWYwNDZlLThkMDYtNDc4Ni1iN2NmLWY2MzM3NmZkNzg5ZQIADTI4MjE3MjU2ODIxMjUDAC51cm46VG9rZW46MjY0OGI3ODMtYWU2MS00MDQxLTg2MTQtODEwNjcyZjFlNmY0AgAC0A8=
+    url: https://testserver/object/tenants/tenant/10d9817c-3696-4625-854e-82b21d8c0795
+    method: GET
+  response:
+    body: <?xml version="1.0" encoding="UTF-8" standalone="yes"?><tenant><id>10d9817c-3696-4625-854e-82b21d8c0795</id><default_bucket_block_size>-1</default_bucket_block_size><is_compliance_enabled>false</is_compliance_enabled><is_encryption_enabled>false</is_encryption_enabled><default_data_services_vpool>urn:storageos:ReplicationGroupInfo:0618ee4c-7ede-444b-8fc5-7289b2951875:global</default_data_services_vpool></tenant>
+    headers:
+      Content-Type:
+        - application/xml
+      Date:
+        - Mon, 10 Jun 2019 21:04:52 GMT
+    status: 200 OK
+    code: 200
+    duration: ""
+- request:
+    body: ""
+    form: {}
+    headers:
+      Accept:
+        - application/xml
+      Content-Type:
+        - application/xml
+      X-Sds-Auth-Token:
+        - BAAcaUFwZ2hFRGc4WWozdHp2ZGRKcHQ2RjJEdE4wPQMAjAQASHVybjpzdG9yYWdlb3M6VmlydHVhbERhdGFDZW50ZXJEYXRhOjAwOWYwNDZlLThkMDYtNDc4Ni1iN2NmLWY2MzM3NmZkNzg5ZQIADTI4MjE3MjU2ODIxMjUDAC51cm46VG9rZW46MjY0OGI3ODMtYWU2MS00MDQxLTg2MTQtODEwNjcyZjFlNmY0AgAC0A8=
+    url: https://testserver/object/tenants/tenant/
+    method: POST
+  response:
+    body: <?xml version="1.0" encoding="UTF-8" standalone="yes"?><tenant><id>test-account</id><default_bucket_block_size></default_bucket_block_size><is_compliance_enabled></is_compliance_enabled><is_encryption_enabled></is_encryption_enabled><retention_classes/><notificationSize></notificationSize><blockSize></blockSize><blockSizeInCount></blockSizeInCount><notificationSizeInCount></notificationSizeInCount><alias></alias><default_data_services_vpool></default_data_services_vpool></tenant>
+    headers:
+      Content-Type:
+        - application/xml
+      Date:
+        - Mon, 10 Jun 2019 21:04:52 GMT
+    status: 200 OK
+    code: 200
+    duration: ""
+- request:
+    body: ""
+    form: {}
+    headers:
+      Accept:
+        - application/xml
+      Content-Type:
+        - application/xml
+      X-Sds-Auth-Token:
+        - BAAcaUFwZ2hFRGc4WWozdHp2ZGRKcHQ2RjJEdE4wPQMAjAQASHVybjpzdG9yYWdlb3M6VmlydHVhbERhdGFDZW50ZXJEYXRhOjAwOWYwNDZlLThkMDYtNDc4Ni1iN2NmLWY2MzM3NmZkNzg5ZQIADTI4MjE3MjU2ODIxMjUDAC51cm46VG9rZW46MjY0OGI3ODMtYWU2MS00MDQxLTg2MTQtODEwNjcyZjFlNmY0AgAC0A8=
+    url: https://testserver/object/tenants/tenant/test-account/delete/
+    method: POST
+  response:
+    body: ""
+    headers:
+      Content-Type:
+        - application/xml
+      Date:
+        - Mon, 10 Jun 2019 21:04:52 GMT
+    status: 200 OK
+    code: 200
+    duration: ""
+- request:
+    body: ""
+    form: {}
+    headers:
+      Accept:
+        - application/xml
+      Content-Type:
+        - application/xml
+      X-Sds-Auth-Token:
+        - BAAcaUFwZ2hFRGc4WWozdHp2ZGRKcHQ2RjJEdE4wPQMAjAQASHVybjpzdG9yYWdlb3M6VmlydHVhbERhdGFDZW50ZXJEYXRhOjAwOWYwNDZlLThkMDYtNDc4Ni1iN2NmLWY2MzM3NmZkNzg5ZQIADTI4MjE3MjU2ODIxMjUDAC51cm46VG9rZW46MjY0OGI3ODMtYWU2MS00MDQxLTg2MTQtODEwNjcyZjFlNmY0AgAC0A8=
+    url: https://testserver/object/tenants/tenant/test-account/
+    method: POST
+  response:
+    body: ""
+    headers:
+      Content-Type:
+        - application/xml
+      Date:
+        - Mon, 10 Jun 2019 21:04:52 GMT
+    status: 200 OK
+    code: 200
+    duration: ""
+- request:
+    body: ""
+    form: {}
+    headers:
+      Accept:
+        - application/xml
+      Content-Type:
+        - application/xml
+      X-Sds-Auth-Token:
+        - BAAcaUFwZ2hFRGc4WWozdHp2ZGRKcHQ2RjJEdE4wPQMAjAQASHVybjpzdG9yYWdlb3M6VmlydHVhbERhdGFDZW50ZXJEYXRhOjAwOWYwNDZlLThkMDYtNDc4Ni1iN2NmLWY2MzM3NmZkNzg5ZQIADTI4MjE3MjU2ODIxMjUDAC51cm46VG9rZW46MjY0OGI3ODMtYWU2MS00MDQxLTg2MTQtODEwNjcyZjFlNmY0AgAC0A8=
+    url: https://testserver/object/tenants/tenant/test-account/quota
+    method: PUT
+  response:
+    body: ""
+    headers:
+      Content-Type:
+        - application/xml
+      Date:
+        - Mon, 10 Jun 2019 21:04:52 GMT
+    status: 200 OK
+    code: 200
+    duration: ""
+- request:
+    body: ""
+    form: {}
+    headers:
+      Accept:
+        - application/xml
+      Content-Type:
+        - application/xml
+      X-Sds-Auth-Token:
+        - BAAcaUFwZ2hFRGc4WWozdHp2ZGRKcHQ2RjJEdE4wPQMAjAQASHVybjpzdG9yYWdlb3M6VmlydHVhbERhdGFDZW50ZXJEYXRhOjAwOWYwNDZlLThkMDYtNDc4Ni1iN2NmLWY2MzM3NmZkNzg5ZQIADTI4MjE3MjU2ODIxMjUDAC51cm46VG9rZW46MjY0OGI3ODMtYWU2MS00MDQxLTg2MTQtODEwNjcyZjFlNmY0AgAC0A8=
+    url: https://testserver/object/tenants/tenant/test-account/quota
+    method: GET
+  response:
+    body: <?xml version="1.0" encoding="UTF-8" standalone="yes"?><tenant_quota_details><blockSize>5</blockSize><notificationSize>6</notificationSize><blockSizeInCount>7</blockSizeInCount><notificationSizeInCount>8</notificationSizeInCount><tenant>10d9817c-3696-4625-854e-82b21d8c0795</tenant></tenant_quota_details>
+    headers:
+      Content-Type:
+        - application/xml
+      Date:
+        - Mon, 10 Jun 2019 21:04:52 GMT
+    status: 200 OK
+    code: 200
+    duration: ""
+- request:
+    body: ""
+    form: {}
+    headers:
+      Accept:
+        - application/xml
+      Content-Type:
+        - application/xml
+      X-Sds-Auth-Token:
+        - BAAcaUFwZ2hFRGc4WWozdHp2ZGRKcHQ2RjJEdE4wPQMAjAQASHVybjpzdG9yYWdlb3M6VmlydHVhbERhdGFDZW50ZXJEYXRhOjAwOWYwNDZlLThkMDYtNDc4Ni1iN2NmLWY2MzM3NmZkNzg5ZQIADTI4MjE3MjU2ODIxMjUDAC51cm46VG9rZW46MjY0OGI3ODMtYWU2MS00MDQxLTg2MTQtODEwNjcyZjFlNmY0AgAC0A8=
+    url: https://testserver/object/tenants/tenant/test-account/quota
+    method: DELETE
+  response:
+    body: ""
+    headers:
+      Content-Type:
+        - application/xml
+      Date:
+        - Mon, 10 Jun 2019 21:04:52 GMT
+    status: 200 OK
+    code: 200
+    duration: ""
