@@ -1,9 +1,11 @@
 package steps
 
 import (
+	"context"
+	"github.com/aws/aws-sdk-go/service/iam"
 	objectscaleRest "github.com/emcecs/objectscale-management-go-sdk/pkg/client/rest"
 	ginkgo "github.com/onsi/ginkgo/v2"
-	gomega "github.com/onsi/gomega"
+	"github.com/onsi/gomega"
 	"sigs.k8s.io/container-object-storage-interface-api/apis/objectstorage/v1alpha1"
 )
 
@@ -41,12 +43,40 @@ func CheckBucketAccessFromSecret(objectscale *objectscaleRest.ClientSet, bucket 
 // CreatePolicy Function for creating policy in ObjectScale
 func CreatePolicy(objectscale *objectscaleRest.ClientSet, policy string, myBucket *v1alpha1.Bucket) {
 	// TODO: Implementation goes here
+	err := objectscale.Buckets().UpdatePolicy(myBucket.Name, policy, nil)
+	gomega.Expect(err).To(gomega.BeNil())
 	ginkgo.Fail("UNIMPLEMENTED")
 }
 
-// CreateUser Function for creating user in ObjectScale
-func CreateUser(objectscale *objectscaleRest.ClientSet, user string) {
+// Function for checking if policy exists in ObjectScale
+func CheckPolicy(objectscale *objectscaleRest.ClientSet, policy string, myBucket *v1alpha1.Bucket) {
 	// TODO: Implementation goes here
+	actualPolicy, err := objectscale.Buckets().GetPolicy(myBucket.Name, nil)
+	gomega.Expect(err).To(gomega.BeNil())
+	gomega.Expect(actualPolicy).NotTo(gomega.BeIdenticalTo(policy))
+	ginkgo.Fail("UNIMPLEMENTED")
+}
+
+// Function for creating user in ObjectScale
+func CreateUser(ctx context.Context, iamClient *iam.IAM, user, arn string) {
+	// TODO: Implementation goes here
+	userOut, err := iamClient.CreateUserWithContext(ctx, &iam.CreateUserInput{
+		UserName:            &user,
+		PermissionsBoundary: &arn,
+	})
+	if gomega.Expect(err).To(gomega.BeNil()) {
+		gomega.Expect(userOut.User).NotTo(gomega.BeNil())
+	}
+	ginkgo.Fail("UNIMPLEMENTED")
+}
+
+// Function for checking if user exists in ObjectScale
+func CheckUser(ctx context.Context, iamClient *iam.IAM, user string) {
+	// TODO: Implementation goes here
+	userOut, err := iamClient.GetUserWithContext(ctx, &iam.GetUserInput{UserName: &user})
+	if gomega.Expect(err).To(gomega.BeNil()) {
+		gomega.Expect(userOut.User).NotTo(gomega.BeNil())
+	}
 	ginkgo.Fail("UNIMPLEMENTED")
 }
 

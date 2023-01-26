@@ -3,12 +3,12 @@
 package main_test
 
 import (
+	. "github.com/onsi/ginkgo/v2"
+
 	"github.com/dell/cosi-driver/tests/integration/steps"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/container-object-storage-interface-api/apis/objectstorage/v1alpha1"
-
-	. "github.com/onsi/ginkgo/v2"
 )
 
 var _ = Describe("Bucket Access KEY", Label("key-flow"), func() {
@@ -153,20 +153,23 @@ var _ = Describe("Bucket Access KEY", Label("key-flow"), func() {
 		steps.CheckBucketAccessStatus(ctx, bucketClient, myBucketAccess, true)
 
 		// STEP: User "${user}" in account on ObjectScale platform is created
-		By("Creating User resource '${user}'")
-		steps.CreateUser(objectscale, "${user}")
+		// TODO: responisbility of @shanduur-dell
+		By("Checking if User '${user}' in account on ObjectScale platform was created")
+		steps.CheckUser(ctx, iamClient, "${user}")
 
 		// STEP: Policy "${policy}" for Bucket resource referencing BucketClaim resource "my-bucket-claim" on ObjectScale platform is created
-		By("Creating Policy resource '${policy}' for Bucket resource referencing BucketClaim resource 'my-bucket-claim'")
-		steps.CreatePolicy(objectscale, "${policy}", myBucket)
+		// TODO: responisbility of @shanduur-dell
+		By("Checking if Policy '${policy}' for Bucket resource referencing BucketClaim resource 'my-bucket-claim' was created")
+		steps.CheckPolicy(objectscale, "${policy}", myBucket)
 
 		// STEP: BucketAccess resource "my-bucket-access" in namespace "namespace-1" status "accountID" is "${accountID}"
 		By("Checking if BucketAccess resource 'my-bucket-access' in namespace 'namespace-1' status 'accountID' is '${accountID}'")
 		steps.CheckBucketAccessAccountID(ctx, bucketClient, myBucketAccess, "${accountID}")
 
 		// STEP: Secret "bucket-credentials-1" is created in namespace "namespace-1" and is not empty
+		// TODO: responisbility of @shanduur-dell
 		By("Checking if Secret 'bucket-credentials-1' in namespace 'namespace-1' is not empty")
-		steps.CheckSecret(clientset, "bucket-credentials-1", "namespace-1")
+		steps.CheckSecret(ctx, clientset, "bucket-credentials-1", "namespace-1")
 
 		//STEP: Bucket resource referencing BucketClaim resource "bucket-claim-delete" is accessible from Secret "bucket-credentials-1"
 		By("Checking if Bucket resource referencing BucketClaim resource 'my-bucket-claim' is accessible from Secret 'bucket-credentials-1'")

@@ -1,6 +1,8 @@
 package steps
 
 import (
+	"context"
+
 	ginkgo "github.com/onsi/ginkgo/v2"
 	"github.com/onsi/gomega"
 	v1 "k8s.io/api/core/v1"
@@ -41,10 +43,15 @@ func CheckBucketClassSpec(clientset *kubernetes.Clientset, bucketClassSpec v1alp
 	ginkgo.Fail("UNIMPLEMENTED")
 }
 
-// CheckSecret Check if secret exists
-func CheckSecret(clientset *kubernetes.Clientset, secretName string, namespace string) {
-	// TODO: Implementation goes here
-	ginkgo.Fail("UNIMPLEMENTED")
+// Check if secret exists
+func CheckSecret(ctx context.Context, clientset *kubernetes.Clientset, secretName string, namespace string) {
+	sec, err := clientset.CoreV1().Secrets(namespace).Get(ctx, secretName, metav1.GetOptions{})
+	gomega.Expect(err).To(gomega.BeNil())
+	if gomega.Expect(sec).NotTo(gomega.BeNil()) {
+		gomega.Expect(sec.Name).To(gomega.BeIdenticalTo(secretName))
+		gomega.Expect(sec.Namespace).To(gomega.BeIdenticalTo(namespace))
+		gomega.Expect(sec.Data).NotTo(gomega.Or(gomega.BeNil(), gomega.BeEmpty()))
+	}
 }
 
 // CheckBucketClaimEvents Check BucketClaim events

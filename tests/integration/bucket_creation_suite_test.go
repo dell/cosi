@@ -3,6 +3,8 @@
 package main_test
 
 import (
+	. "github.com/onsi/ginkgo/v2"
+
 	"github.com/dell/cosi-driver/tests/integration/steps"
 	. "github.com/onsi/ginkgo/v2"
 	v1 "k8s.io/api/core/v1"
@@ -151,10 +153,12 @@ var _ = Describe("Bucket Creation", Serial, Label("create"), func() {
 		steps.CheckBucketNotInObjectStore(objectscale, bucketClaimInvalid)
 
 		// STEP: BucketClaim resource "bucket-claim-invalid" in namespace "namespace-1" status "bucketReady" is "false"
+		// TODO: responisbility of @shanduur-dell
 		By("checking if the status 'bucketReady' of BucketClaim resource 'bucket-claim-invalid' in namespace 'namespace-1' is 'false'")
 		steps.CheckBucketClaimStatus(ctx, bucketClient, bucketClaimInvalid, false)
 
 		// STEP: BucketClaim events contains an error: "Cannot create Bucket: BucketClass does not exist"
+		// TODO: responisbility of @shanduur-dell
 		By("checking if the BucketClaim events contains an error: 'Cannot create Bucket: BucketClass does not exist'")
 		steps.CheckBucketClaimEvents(clientset, bucketClaimInvalid)
 
