@@ -12,8 +12,45 @@
 
 package main
 
-import "fmt"
+import (
+	"context"
+	"encoding/json"
+	"fmt"
+	"log"
+	"os"
+
+	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/tools/clientcmd"
+)
 
 func main() {
-	fmt.Println("Here will be driver!")
+	path, ok := os.LookupEnv("KUBECONFIG")
+	if !ok {
+		path = "~/.kube/config"
+	}
+
+	cfg, err := clientcmd.BuildConfigFromFlags("", path)
+	if err != nil {
+		panic(err)
+	}
+
+	log.Println("new config")
+	cs, err := kubernetes.NewForConfig(cfg)
+	if err != nil {
+		panic(err)
+	}
+
+	log.Println("list events")
+	el, err := cs.EventsV1().Events("objectscale-system-dev").List(context.TODO(), v1.ListOptions{}) // FIXME
+	if err != nil {
+		panic(err)
+	}
+
+	b, err := json.MarshalIndent(el.Items, "", "  ")
+	if err != nil {
+		panic(err)
+	}
+
+	fmt.Println(string(b))
 }

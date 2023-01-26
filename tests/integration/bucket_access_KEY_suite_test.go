@@ -11,7 +11,7 @@ import (
 	"sigs.k8s.io/container-object-storage-interface-api/apis/objectstorage/v1alpha1"
 )
 
-var _ = Describe("Bucket Access KEY", Label("key-flow"), func() {
+var _ = Describe("Bucket Access KEY", Label("key-flow"), func(ctx SpecContext) {
 	// Resources for scenarios
 	var (
 		myBucketClass       *v1alpha1.BucketClass
@@ -19,6 +19,7 @@ var _ = Describe("Bucket Access KEY", Label("key-flow"), func() {
 		myBucket            *v1alpha1.Bucket
 		myBucketAccessClass *v1alpha1.BucketAccessClass
 		myBucketAccess      *v1alpha1.BucketAccess
+		validSecret         *v1.Secret
 	)
 
 	// Background
@@ -78,6 +79,12 @@ var _ = Describe("Bucket Access KEY", Label("key-flow"), func() {
 				BucketAccessClassName: "my-bucket-access-class",
 				BucketClaimName:       "my-bucket-claim",
 				CredentialsSecretName: "bucket-credentials-1",
+			},
+		}
+		validSecret = &v1.Secret{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "valid-secret-1",
+				Namespace: "namespace-1",
 			},
 		}
 
@@ -153,12 +160,10 @@ var _ = Describe("Bucket Access KEY", Label("key-flow"), func() {
 		steps.CheckBucketAccessStatus(ctx, bucketClient, myBucketAccess, true)
 
 		// STEP: User "${user}" in account on ObjectScale platform is created
-		// TODO: responisbility of @shanduur-dell
 		By("Checking if User '${user}' in account on ObjectScale platform was created")
 		steps.CheckUser(ctx, iamClient, "${user}")
 
 		// STEP: Policy "${policy}" for Bucket resource referencing BucketClaim resource "my-bucket-claim" on ObjectScale platform is created
-		// TODO: responisbility of @shanduur-dell
 		By("Checking if Policy '${policy}' for Bucket resource referencing BucketClaim resource 'my-bucket-claim' was created")
 		steps.CheckPolicy(objectscale, "${policy}", myBucket)
 
@@ -167,9 +172,8 @@ var _ = Describe("Bucket Access KEY", Label("key-flow"), func() {
 		steps.CheckBucketAccessAccountID(ctx, bucketClient, myBucketAccess, "${accountID}")
 
 		// STEP: Secret "bucket-credentials-1" is created in namespace "namespace-1" and is not empty
-		// TODO: responisbility of @shanduur-dell
 		By("Checking if Secret 'bucket-credentials-1' in namespace 'namespace-1' is not empty")
-		steps.CheckSecret(ctx, clientset, "bucket-credentials-1", "namespace-1")
+		steps.CheckSecret(ctx, clientset, validSecret)
 
 		//STEP: Bucket resource referencing BucketClaim resource "bucket-claim-delete" is accessible from Secret "bucket-credentials-1"
 		By("Checking if Bucket resource referencing BucketClaim resource 'my-bucket-claim' is accessible from Secret 'bucket-credentials-1'")

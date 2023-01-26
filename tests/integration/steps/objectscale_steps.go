@@ -70,11 +70,13 @@ func CreateUser(ctx context.Context, iamClient *iam.IAM, user, arn string) {
 }
 
 // Function for checking if user exists in ObjectScale
-// TODO: responisbility of @shanduur-dell
+// ASSIGNEE: @shanduur-dell
 func CheckUser(ctx context.Context, iamClient *iam.IAM, user string) {
 	userOut, err := iamClient.GetUserWithContext(ctx, &iam.GetUserInput{UserName: &user})
 	if gomega.Expect(err).To(gomega.BeNil()) {
 		gomega.Expect(userOut.User).NotTo(gomega.BeNil())
+		gomega.Expect(*(userOut.User.UserName)).To(gomega.Equal(user))
+		gomega.Expect(userOut.User.Arn).To(gomega.Or(gomega.BeNil(), gomega.BeEmpty()))
 	}
 }
 
@@ -91,7 +93,7 @@ func DeleteUser(objectscale *objectscaleRest.ClientSet, user string) {
 }
 
 // CheckBucketNotInObjectStore Function for checking if bucket is not in objectstore
-// TODO: responisbility of @shanduur-dell
+// ASSIGNEE: @shanduur-dell
 func CheckBucketNotInObjectStore(objectscale *objectscaleRest.ClientSet, bucketClaim *v1alpha1.BucketClaim) {
 	bucket, err := objectscale.Buckets().Get(bucketClaim.Name, map[string]string{})
 	gomega.Expect(err).NotTo(gomega.BeNil())

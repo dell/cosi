@@ -19,6 +19,7 @@ var _ = Describe("Bucket Access Revoke", Serial, Label("revoke"), func() {
 		myBucket            *v1alpha1.Bucket
 		myBucketAccessClass *v1alpha1.BucketAccessClass
 		myBucketAccess      *v1alpha1.BucketAccess
+		validSecret         *v1.Secret
 	)
 
 	// Background
@@ -86,6 +87,12 @@ var _ = Describe("Bucket Access Revoke", Serial, Label("revoke"), func() {
 				BucketAccessClassName: "my-bucket-access-class",
 				BucketClaimName:       "my-bucket-claim",
 				CredentialsSecretName: "bucket-credentials-1",
+			},
+		}
+		validSecret = &v1.Secret{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "valid-secret-1",
+				Namespace: "namespace-1",
 			},
 		}
 
@@ -167,7 +174,7 @@ var _ = Describe("Bucket Access Revoke", Serial, Label("revoke"), func() {
 
 		// STEP: Secret "bucket-credentials-1" is created in namespace "namespace-1" and is not empty
 		By("Checking if Secret ''bucket-credentials-1' is created in namespace 'namespace-1'")
-		steps.CheckSecret(ctx, clientset, "bucket-credentials-1", "namespace-1")
+		steps.CheckSecret(ctx, clientset, validSecret)
 
 		DeferCleanup(func() {
 			// Cleanup for background

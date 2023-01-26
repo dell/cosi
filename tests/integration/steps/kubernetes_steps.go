@@ -44,19 +44,20 @@ func CheckBucketClassSpec(clientset *kubernetes.Clientset, bucketClassSpec v1alp
 }
 
 // Check if secret exists
-func CheckSecret(ctx context.Context, clientset *kubernetes.Clientset, secretName string, namespace string) {
-	sec, err := clientset.CoreV1().Secrets(namespace).Get(ctx, secretName, metav1.GetOptions{})
+// ASSIGNEE: @shanduur-dell
+func CheckSecret(ctx context.Context, clientset *kubernetes.Clientset, secret *v1.Secret) {
+	sec, err := clientset.CoreV1().Secrets(secret.Namespace).Get(ctx, secret.Name, metav1.GetOptions{})
 	gomega.Expect(err).To(gomega.BeNil())
 	if gomega.Expect(sec).NotTo(gomega.BeNil()) {
-		gomega.Expect(sec.Name).To(gomega.BeIdenticalTo(secretName))
-		gomega.Expect(sec.Namespace).To(gomega.BeIdenticalTo(namespace))
+		gomega.Expect(sec.Name).To(gomega.Equal(secret.Namespace))
+		gomega.Expect(sec.Namespace).To(gomega.Equal(secret.Namespace))
 		gomega.Expect(sec.Data).NotTo(gomega.Or(gomega.BeNil(), gomega.BeEmpty()))
 	}
 }
 
 // CheckBucketClaimEvents Check BucketClaim events
+// ASSIGNEE: @shanduur-dell
 func CheckBucketClaimEvents(ctx context.Context, clientset *kubernetes.Clientset, bucketClaim *v1alpha1.BucketClaim, expected string) {
-	// TODO: Implementation goes here
 	el, err := clientset.EventsV1().Events(bucketClaim.Namespace).List(ctx, metav1.ListOptions{
 		FieldSelector: "involvedObject.name=" + bucketClaim.Name, // FIXME: this is not valid, and fails
 	})
