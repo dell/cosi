@@ -160,7 +160,7 @@ var _ = Describe("Bucket Creation", Serial, Label("create"), func() {
 		// STEP: BucketClaim events contains an error: "Cannot create Bucket: BucketClass does not exist"
 		// TODO: responisbility of @shanduur-dell
 		By("checking if the BucketClaim events contains an error: 'Cannot create Bucket: BucketClass does not exist'")
-		steps.CheckBucketClaimEvents(clientset, bucketClaimInvalid)
+		steps.CheckBucketClaimEvents(ctx, clientset, bucketClaimInvalid, "Cannot create Bucket: BucketClass does not exist")
 
 		DeferCleanup(func() {
 			// Cleanup for scenario: Unsuccessfull bucket creation

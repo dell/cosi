@@ -49,12 +49,11 @@ func CreatePolicy(objectscale *objectscaleRest.ClientSet, policy string, myBucke
 }
 
 // Function for checking if policy exists in ObjectScale
+// TODO: responisbility of @shanduur-dell
 func CheckPolicy(objectscale *objectscaleRest.ClientSet, policy string, myBucket *v1alpha1.Bucket) {
-	// TODO: Implementation goes here
 	actualPolicy, err := objectscale.Buckets().GetPolicy(myBucket.Name, nil)
 	gomega.Expect(err).To(gomega.BeNil())
-	gomega.Expect(actualPolicy).NotTo(gomega.BeIdenticalTo(policy))
-	ginkgo.Fail("UNIMPLEMENTED")
+	gomega.Expect(actualPolicy).To(gomega.BeIdenticalTo(policy))
 }
 
 // Function for creating user in ObjectScale
@@ -71,13 +70,12 @@ func CreateUser(ctx context.Context, iamClient *iam.IAM, user, arn string) {
 }
 
 // Function for checking if user exists in ObjectScale
+// TODO: responisbility of @shanduur-dell
 func CheckUser(ctx context.Context, iamClient *iam.IAM, user string) {
-	// TODO: Implementation goes here
 	userOut, err := iamClient.GetUserWithContext(ctx, &iam.GetUserInput{UserName: &user})
 	if gomega.Expect(err).To(gomega.BeNil()) {
 		gomega.Expect(userOut.User).NotTo(gomega.BeNil())
 	}
-	ginkgo.Fail("UNIMPLEMENTED")
 }
 
 // DeletePolicy Function deleteing policy from ObjectStore
@@ -93,7 +91,9 @@ func DeleteUser(objectscale *objectscaleRest.ClientSet, user string) {
 }
 
 // CheckBucketNotInObjectStore Function for checking if bucket is not in objectstore
+// TODO: responisbility of @shanduur-dell
 func CheckBucketNotInObjectStore(objectscale *objectscaleRest.ClientSet, bucketClaim *v1alpha1.BucketClaim) {
-	// TODO: Implementation goes here
-	ginkgo.Fail("UNIMPLEMENTED")
+	bucket, err := objectscale.Buckets().Get(bucketClaim.Name, map[string]string{})
+	gomega.Expect(err).NotTo(gomega.BeNil())
+	gomega.Expect(bucket).To(gomega.BeNil())
 }

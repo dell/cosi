@@ -55,7 +55,20 @@ func CheckSecret(ctx context.Context, clientset *kubernetes.Clientset, secretNam
 }
 
 // CheckBucketClaimEvents Check BucketClaim events
-func CheckBucketClaimEvents(clientset *kubernetes.Clientset, bucketClaim *v1alpha1.BucketClaim) {
+func CheckBucketClaimEvents(ctx context.Context, clientset *kubernetes.Clientset, bucketClaim *v1alpha1.BucketClaim, expected string) {
 	// TODO: Implementation goes here
-	ginkgo.Fail("UNIMPLEMENTED")
+	el, err := clientset.EventsV1().Events(bucketClaim.Namespace).List(ctx, metav1.ListOptions{
+		FieldSelector: "involvedObject.name=" + bucketClaim.Name, // FIXME: this is not valid, and fails
+	})
+	gomega.Expect(err).To(gomega.BeNil())
+	if gomega.Expect(el).NotTo(gomega.Or(gomega.BeNil(), gomega.BeEmpty())) {
+		found := false
+		for _, event := range el.Items {
+			if event.Reason == expected {
+				found = true
+				break
+			}
+		}
+		gomega.Expect(found).To(gomega.Equal(true))
+	}
 }
