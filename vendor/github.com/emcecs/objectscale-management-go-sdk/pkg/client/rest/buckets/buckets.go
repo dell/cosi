@@ -12,7 +12,7 @@ import (
 
 // Buckets is a REST implementation of the Buckets interface
 type Buckets struct {
-	Client *client.Client
+	Client client.RemoteCaller
 }
 
 // Get implements the buckets interface

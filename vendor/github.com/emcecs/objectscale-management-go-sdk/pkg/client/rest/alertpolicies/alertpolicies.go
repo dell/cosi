@@ -11,7 +11,7 @@ import (
 
 // AlertPolicies is a REST implementation of the AlertPolicies interface
 type AlertPolicies struct {
-	Client *client.Client
+	Client client.RemoteCaller
 }
 
 var _ api.AlertPoliciesInterface = &AlertPolicies{}

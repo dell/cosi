@@ -10,7 +10,7 @@ import (
 
 // FederatedObjectStores is a REST implementation of the FederateObjectStores interface
 type FederatedObjectStores struct {
-	Client *client.Client
+	Client client.RemoteCaller
 }
 
 var _ api.FederatedObjectStoresInterface = &FederatedObjectStores{}

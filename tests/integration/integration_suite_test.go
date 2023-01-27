@@ -1,13 +1,16 @@
-// +build integration
+//go:build integration
 
 package main_test
 
 import (
+	"crypto/tls"
+	"fmt"
 	"net/http"
 	"os"
 	"testing"
 
 	objectscaleRest "github.com/emcecs/objectscale-management-go-sdk/pkg/client/rest"
+	objectscaleClient "github.com/emcecs/objectscale-management-go-sdk/pkg/client/rest/client"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"k8s.io/client-go/kubernetes"
@@ -29,10 +32,21 @@ func TestIntegration(t *testing.T) {
 
 var _ = BeforeSuite(func() {
 	// Global setup
-	// a way to inject k8s conifg from env
-	kubeConfig := os.Getenv("KUBECONFIG")
+	// Load environment variables
+
+	kubeConfig, exists := os.LookupEnv("KUBECONFIG")
+	Expect(exists).To(BeTrue())
 	cfg, err := clientcmd.BuildConfigFromFlags("", kubeConfig)
 	Expect(err).To(BeNil())
+
+	objectscaleURL, exists := os.LookupEnv("OBJECTSCALE_URL")
+	Expect(exists).To(BeTrue())
+
+	objectscaleUser, exists := os.LookupEnv("OBJECTSCALE_USER")
+	Expect(exists).To(BeTrue())
+
+	objectscalePassword, exists := os.LookupEnv("OBJECTSCALE_PASSWORD")
+	Expect(exists).To(BeTrue())
 
 	// k8s clientset
 	clientset, err = kubernetes.NewForConfig(cfg)
@@ -43,16 +57,22 @@ var _ = BeforeSuite(func() {
 	Expect(err).To(BeNil())
 
 	// ObjectScale clientset
-	// TODO: check how to connect to objectscale with parameters for this function
+	transport := &http.Transport{
+		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+	}
+	unsafeClient := &http.Client{Transport: transport}
+	objectscaleLoginAddress := fmt.Sprintf("%s:31613", objectscaleURL)
+	objectscaleManagementAddress := fmt.Sprintf("%s:30007", objectscaleURL)
+
 	objectscale = objectscaleRest.NewClientSet(
-		"https://testserver",
-		"https://testgateway",
-		"svc-objectscale-domain-c8",
-		"objectscale-graphql-7d754f8499-ng4h6",
-		"OSC234DSF223423",
-		"IgQBVjz4mq1M6wmKjHmfDgoNSC56NGPDbLvnkaiuaZKpwHOMFOMGouNld7GXCC690qgw4nRCzj3EkLFgPitA2y8vagG6r3yrUbBdI8FsGRQqW741eiYykf4dTvcwq8P6",
-		http.DefaultClient,
-		false,
+		objectscaleClient.NewClient(
+			objectscaleManagementAddress,
+			objectscaleLoginAddress,
+			objectscaleUser,
+			objectscalePassword,
+			unsafeClient,
+			false,
+		),
 	)
 })
 
