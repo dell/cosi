@@ -12,15 +12,15 @@ import (
 // CheckClusterAvailability Ensure that Kubernetes cluster is available
 func CheckClusterAvailability(ctx ginkgo.SpecContext, clientset *kubernetes.Clientset) {
 	value, err := clientset.ServerVersion()
-	gomega.Expect(err).Should(gomega.BeNil())
-	gomega.Expect(value).ShouldNot(gomega.BeNil())
+	gomega.Expect(err).To(gomega.BeNil())
+	gomega.Expect(value).ToNot(gomega.BeNil())
 }
 
 // CreateNamespace Ensure that Kubernetes namespace is created
 func CreateNamespace(ctx ginkgo.SpecContext, clientset *kubernetes.Clientset, namespace string) {
 	namespaceObj := &v1.Namespace{ObjectMeta: metav1.ObjectMeta{Name: namespace}}
 	_, err := clientset.CoreV1().Namespaces().Create(ctx, namespaceObj, metav1.CreateOptions{})
-	gomega.Expect(err).Should(gomega.BeNil())
+	gomega.Expect(err).To(gomega.BeNil())
 }
 
 // CheckBucketClassSpec Ensure that specification of custom resource "my-bucket-class" is correct
