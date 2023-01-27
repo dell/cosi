@@ -11,7 +11,7 @@ import (
 
 // ObjectUser is a REST implementation of the object user interface
 type ObjectUser struct {
-	Client *client.Client
+	Client client.RemoteCaller
 }
 
 // GetInfo returns information about an object user within the ObjectScale object store.

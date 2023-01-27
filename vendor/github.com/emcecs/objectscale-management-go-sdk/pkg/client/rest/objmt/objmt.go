@@ -3,9 +3,10 @@ package objmt
 import (
 	"encoding/xml"
 	"fmt"
+	"net/http"
+
 	"github.com/emcecs/objectscale-management-go-sdk/pkg/client/model"
 	"github.com/emcecs/objectscale-management-go-sdk/pkg/client/rest/client"
-	"net/http"
 )
 
 type bucketIdsReqBody struct {
@@ -45,7 +46,7 @@ func newReplicationIds(ids [][]string) *replicationPairsReqBody {
 
 // Objmt is a REST implementation of the Objmt interface
 type Objmt struct {
-	Client *client.Client
+	Client client.RemoteCaller
 }
 
 // GetAccountBillingInfo returns billing info metrics for defined accounts

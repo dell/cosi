@@ -10,7 +10,7 @@ import (
 
 // CRR is a REST implementation of the CRR interface
 type CRR struct {
-	Client *client.Client
+	Client client.RemoteCaller
 }
 
 // PauseReplication implements the CRR interface

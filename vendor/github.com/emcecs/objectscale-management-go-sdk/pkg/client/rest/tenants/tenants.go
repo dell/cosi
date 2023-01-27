@@ -11,7 +11,7 @@ import (
 
 // Tenants is a REST implementation of the Tenants interface
 type Tenants struct {
-	Client *client.Client
+	Client client.RemoteCaller
 }
 
 var _ api.TenantsInterface = &Tenants{}
