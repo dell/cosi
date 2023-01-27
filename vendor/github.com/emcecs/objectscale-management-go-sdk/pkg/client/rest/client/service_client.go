@@ -2,6 +2,9 @@ package client
 
 import (
 	"bytes"
+	"crypto/hmac"
+	"crypto/sha256"
+	"encoding/base64"
 	"encoding/json"
 	"encoding/xml"
 	"errors"
@@ -9,23 +12,32 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/url"
+	"strconv"
 	"strings"
+	"time"
 
 	"github.com/emcecs/objectscale-management-go-sdk/pkg/client/model"
 )
 
-type Client struct {
+// Client is a REST client that communicates with the ObjectScale management API
+type ServiceClient struct {
 	// Endpoint is the URL of the management API
 	Endpoint string `json:"endpoint"`
 
 	// Gateway is the auth endpoint
 	Gateway string `json:"gateway"`
 
-	// Username used to authenticate management user
-	Username string `json:"username"`
+	// SharedSecret is the fedsvc shared secret
+	SharedSecret string `json:"sharedSecret"`
 
-	// Password used to authenticate management user
-	Password string `json:"password"`
+	// PodName is the GraphQL Pod name
+	PodName string `json:"podName"`
+
+	// Namespace is the GraphQL Namespace name
+	Namespace string `json:"namespace"`
+
+	// ObjectScaleID is just that
+	ObjectScaleID string `json:"objectScaleID"`
 
 	HTTPClient  *http.Client
 	token       string
@@ -35,30 +47,48 @@ type Client struct {
 	OverrideHeader bool
 }
 
-var _ RemoteCaller = (*Client)(nil)
+var _ RemoteCaller = (*ServiceClient)(nil)
 
-func NewClient(endpoint, gateway, username, password string, h *http.Client, overrideHdr bool) *Client {
-	return &Client{
+func NewServiceClient(endpoint, gateway, namespace, podName, sharedSecret, objectscaleId string, h *http.Client, overrideHdr bool) *ServiceClient {
+	return &ServiceClient{
 		Endpoint:       endpoint,
 		Gateway:        gateway,
-		Username:       username,
-		Password:       password,
+		Namespace:      namespace,
+		PodName:        podName,
+		SharedSecret:   sharedSecret,
+		ObjectScaleID:  objectscaleId,
 		HTTPClient:     h,
 		OverrideHeader: overrideHdr,
 	}
 }
 
-func (c *Client) login() error {
+func (c *ServiceClient) login() error {
+	// urn:osc:{ObjectScaleId}:{ObjectStoreId}:service/{ServiceNameId}
+	serviceUrn := fmt.Sprintf("urn:osc:%s:%s:service/%s", c.ObjectScaleID, "", c.PodName)
+	// B64-{ObjectScaleId},{ObjectStoreId},{ServiceK8SNamespace},{ServiceNameId}
+	userNameRaw := fmt.Sprintf("%s,%s,%s,%s", c.ObjectScaleID, "", c.Namespace, c.PodName)
+	userNameEncoded := base64.StdEncoding.EncodeToString([]byte(userNameRaw))
+	userName := "B64-" + userNameEncoded
+	// current time in milliseconds (rounded to nearest 30 seconds)
+	timeFactor := time.Now().UTC().Round(30*time.Second).UnixNano() / int64(time.Millisecond)
+
+	data := serviceUrn + strconv.FormatInt(timeFactor, 10)
+	h := hmac.New(sha256.New, []byte(c.SharedSecret))
+	if _, wrr := h.Write([]byte(data)); wrr != nil {
+		return fmt.Errorf("server error: problem writing hmac sha256 %w", wrr)
+	}
+	password := base64.StdEncoding.EncodeToString(h.Sum(nil))
+
 	u, err := url.Parse(c.Gateway)
 	if err != nil {
 		return err
 	}
-	u.Path = "/mgmt/login"
+	u.Path = "/mgmt/serviceLogin"
 	req, err := http.NewRequest(http.MethodGet, u.String(), nil)
 	if err != nil {
 		return err
 	}
-	req.SetBasicAuth(c.Username, c.Password)
+	req.SetBasicAuth(userName, password)
 	resp, err := c.HTTPClient.Do(req)
 	if err != nil {
 		return err
@@ -75,14 +105,14 @@ func (c *Client) login() error {
 	return nil
 }
 
-func (c *Client) isLoggedIn() bool {
+func (c *ServiceClient) isLoggedIn() bool {
 	return c.token != ""
 }
 
 // MakeRemoteCall executes an API request against the client endpoint, returning
 // the object body of the response into a response object
-// NOTE: this is WET not DRY, as the same code is copied for ServiceClient
-func (c *Client) MakeRemoteCall(r Request, into interface{}) error {
+// NOTE: this is WET not DRY, as the same code is copied for Client
+func (c *ServiceClient) MakeRemoteCall(r Request, into interface{}) error {
 	var (
 		obj []byte
 		err error

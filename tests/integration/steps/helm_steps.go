@@ -15,7 +15,7 @@ func CheckCOSIControllerInstallation(clientset *kubernetes.Clientset, controller
 }
 
 // CheckObjectScaleInstallation Ensure that ObjectScale platform is installed on the cluster
-func CheckObjectScaleInstallation(clientset *kubernetes.Clientset) {
+func CheckObjectScaleInstallation(ctx ginkgo.SpecContext, clientset *kubernetes.Clientset) {
 	// TODO: Implementation goes here
 	// check if ObjectScale is installed
 	// if not, fail the test

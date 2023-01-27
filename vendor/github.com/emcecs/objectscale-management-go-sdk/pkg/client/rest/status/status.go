@@ -9,7 +9,7 @@ import (
 
 // Status is a REST implementation of the Status interface
 type Status struct {
-	Client *client.Client
+	Client client.RemoteCaller
 }
 
 // GetRebuildStatus implements the status interface

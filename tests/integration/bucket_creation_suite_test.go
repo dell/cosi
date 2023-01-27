@@ -1,4 +1,4 @@
-// +build integration
+//go:build integration
 
 package main_test
 
@@ -21,7 +21,7 @@ var _ = Describe("Bucket Creation", Label("create"), func() {
 	)
 
 	// Background
-	BeforeEach(func() {
+	BeforeEach(func(ctx SpecContext) {
 		// Initialize variables
 		myBucketClass = &v1alpha1.BucketClass{
 			TypeMeta: metav1.TypeMeta{
@@ -79,23 +79,23 @@ var _ = Describe("Bucket Creation", Label("create"), func() {
 
 		// STEP: Kubernetes cluster is up and running
 		By("Checking if the cluster is ready")
-		steps.CheckClusterAvailability(clientset)
+		steps.CheckClusterAvailability(ctx, clientset)
 
 		// STEP: ObjectScale platform is installed on the cluster
 		By("Checking if the ObjectScale platform is ready")
-		steps.CheckObjectScaleInstallation(clientset)
+		steps.CheckObjectScaleInstallation(ctx, clientset)
 
 		// STEP: ObjectStore "object-store-1" is created
 		By("Checking if the ObjectStore 'object-store-1' is created")
-		steps.CreateObjectStore(objectscale, "object-store-1")
+		steps.CreateObjectStore(ctx, objectscale, "object-store-1")
 
 		// STEP: Kubernetes namespace "driver-ns" is created
 		By("Checking if namespace 'driver-ns' is created")
-		steps.CreateNamespace(clientset, "driver-ns")
+		steps.CreateNamespace(ctx, clientset, "driver-ns")
 
 		// STEP: Kubernetes namespace "namespace-1" is created
 		By("Checking if namespace 'namespace-1' is created")
-		steps.CreateNamespace(clientset, "namespace-1")
+		steps.CreateNamespace(ctx, clientset, "namespace-1")
 
 		// STEP: COSI controller "cosi-controller" is installed in namespace "driver-ns"
 		By("Checking if COSI controller 'cosi-controller' is installed in namespace 'driver-ns'")

@@ -7,7 +7,7 @@ import (
 )
 
 // CheckObjectStoreCreation Ensure that ObjectStore "object-store-1" is created
-func CheckObjectStoreCreation(objectscale *objectscaleRest.ClientSet, objectstore string) {
+func CheckObjectStoreCreation(ctx ginkgo.SpecContext, objectscale *objectscaleRest.ClientSet, objectstore string) {
 	// TODO: Implementation goes here
 	// check if ObjectStore "object-store-1" is created
 	// if not, fail the test
@@ -21,7 +21,7 @@ func CheckBucketResourceInObjectStore(objectscale *objectscaleRest.ClientSet, bu
 }
 
 // CreateObjectStore Function for creating ObejctStore
-func CreateObjectStore(objectscale *objectscaleRest.ClientSet, objectstore string) {
+func CreateObjectStore(ctx ginkgo.SpecContext, objectscale *objectscaleRest.ClientSet, objectstore string) {
 	// TODO: Implementation goes here
 	ginkgo.Fail("UNIMPLEMENTED")
 }
