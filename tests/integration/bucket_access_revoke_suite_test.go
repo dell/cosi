@@ -178,7 +178,7 @@ var _ = Describe("Bucket Access Revoke", Label("revoke"), func() {
 	It("Successfully revokes access to bucket", func(ctx SpecContext) {
 		// STEP: BucketAccess resource "my-bucket-access" in namespace "namespace-1" is deleted
 		By("Deleting the BucketAccess 'my-bucket-access'")
-		steps.DeleteBucketAccessResource(bucketClient, myBucketAccess)
+		steps.DeleteBucketAccessResource(ctx, bucketClient, myBucketAccess)
 
 		// STEP: Policy "${policy}" for Bucket resource referencing BucketClaim resource "my-bucket-claim" on ObjectScale platform is deleted
 		By("Deleting Policy for Bucket referencing BucketClaim 'my-bucket-claim' on ObjectScale platform")

@@ -54,9 +54,9 @@ func CreateBucketClassResource(ctx ginkgo.SpecContext, bucketClient *bucketclien
 }
 
 // DeleteBucketClaimResource Function for deleting BucketClaim resource
-func DeleteBucketClaimResource(bucketClient *bucketclientset.Clientset, bucketClaim *v1alpha1.BucketClaim) {
-	// TODO: Implementation goes here
-	ginkgo.Fail("UNIMPLEMENTED")
+func DeleteBucketClaimResource(ctx ginkgo.SpecContext, bucketClient *bucketclientset.Clientset, bucketClaim *v1alpha1.BucketClaim) {
+	err := bucketClient.ObjectstorageV1alpha1().BucketClaims(bucketClaim.Namespace).Delete(ctx, bucketClaim.Name, v1.DeleteOptions{})
+	gomega.Expect(err).To(gomega.BeNil())
 }
 
 // CreateBucketAccessClassResource Function for creating BucketAccessClass resource
@@ -90,7 +90,7 @@ func CheckBucketAccessAccountID(ctx ginkgo.SpecContext, bucketClient *bucketclie
 }
 
 // DeleteBucketAccessResource Function for deleting BucketAccess resource
-func DeleteBucketAccessResource(bucketClient *bucketclientset.Clientset, bucketAccess *v1alpha1.BucketAccess) {
-	// TODO: Implementation goes here
-	ginkgo.Fail("UNIMPLEMENTED")
+func DeleteBucketAccessResource(ctx ginkgo.SpecContext, bucketClient *bucketclientset.Clientset, bucketAccess *v1alpha1.BucketAccess) {
+	err := bucketClient.ObjectstorageV1alpha1().BucketAccessClasses().Delete(ctx, bucketAccess.Name, v1.DeleteOptions{})
+	gomega.Expect(err).To(gomega.BeNil())
 }

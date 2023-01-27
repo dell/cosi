@@ -169,7 +169,7 @@ var _ = Describe("Bucket Deletion", Label("delete"), func() {
 
 		// STEP: BucketClaim resource "my-bucket-claim-delete" is deleted in namespace "namespace-1"
 		By("deleting BucketClaim resource 'my-bucket-claim-delete' in namespace 'namespace-1'")
-		steps.DeleteBucketClaimResource(bucketClient, bucketClaimDelete)
+		steps.DeleteBucketClaimResource(ctx, bucketClient, bucketClaimDelete)
 
 		// STEP: Bucket referencing BucketClaim resource "my-bucket-claim-delete" is deleted in ObjectStore "object-store-1"
 		By("checking if Bucket referencing BucketClaim resource 'my-bucket-claim-delete' is deleted in ObjectStore 'object-store-1'")
@@ -208,7 +208,7 @@ var _ = Describe("Bucket Deletion", Label("delete"), func() {
 
 		// STEP: BucketClaim resource "my-bucket-claim-retain" is deleted in namespace "namespace-1"
 		By("deleting BucketClaim resource 'my-bucket-claim-retain' in namespace 'namespace-1'")
-		steps.DeleteBucketClaimResource(bucketClient, bucketClaimRetain)
+		steps.DeleteBucketClaimResource(ctx, bucketClient, bucketClaimRetain)
 
 		// STEP: Bucket referencing BucketClaim resource "my-bucket-claim-retain" is available in ObjectStore "object-store-1"
 		By("checking if Bucket referencing BucketClaim resource 'my-bucket-claim-retain' is available in ObjectStore 'object-store-1'")
