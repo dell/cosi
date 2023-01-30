@@ -4,7 +4,6 @@ package main_test
 
 import (
 	"crypto/tls"
-	"fmt"
 	"net/http"
 	"os"
 	"testing"
@@ -43,7 +42,10 @@ var _ = BeforeSuite(func() {
 	cfg, err := clientcmd.BuildConfigFromFlags("", kubeConfig)
 	Expect(err).To(BeNil())
 
-	objectscaleURL, exists := os.LookupEnv("OBJECTSCALE_URL")
+	objectscaleGateway, exists := os.LookupEnv("OBJECTSCALE_GATEWAY")
+	Expect(exists).To(BeTrue())
+
+	objectstoreGateway, exists := os.LookupEnv("OBJECTSCALE_OBJECTSTORE_GATEWAY")
 	Expect(exists).To(BeTrue())
 
 	objectscaleUser, exists := os.LookupEnv("OBJECTSCALE_USER")
@@ -65,13 +67,11 @@ var _ = BeforeSuite(func() {
 		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
 	}
 	unsafeClient := &http.Client{Transport: transport}
-	objectscaleLoginAddress := fmt.Sprintf("%s:31613", objectscaleURL)
-	objectscaleManagementAddress := fmt.Sprintf("%s:30007", objectscaleURL)
 
 	objectscale = objectscaleRest.NewClientSet(
 		objectscaleClient.NewClient(
-			objectscaleManagementAddress,
-			objectscaleLoginAddress,
+			objectstoreGateway,
+			objectscaleGateway,
 			objectscaleUser,
 			objectscalePassword,
 			unsafeClient,
@@ -81,7 +81,7 @@ var _ = BeforeSuite(func() {
 
 	// IAM clientset
 	var (
-		endpoint = objectscaleLoginAddress
+		endpoint = objectscaleGateway
 		region   = "us-west-2"
 	)
 	iamSession, err := session.NewSession(&aws.Config{
