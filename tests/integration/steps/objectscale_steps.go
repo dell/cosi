@@ -42,14 +42,11 @@ func CheckBucketAccessFromSecret(objectscale *objectscaleRest.ClientSet, bucket 
 
 // CreatePolicy Function for creating policy in ObjectScale
 func CreatePolicy(objectscale *objectscaleRest.ClientSet, policy string, myBucket *v1alpha1.Bucket) {
-	// TODO: Implementation goes here
 	err := objectscale.Buckets().UpdatePolicy(myBucket.Name, policy, nil)
 	gomega.Expect(err).To(gomega.BeNil())
-	ginkgo.Fail("UNIMPLEMENTED")
 }
 
 // Function for checking if policy exists in ObjectScale
-// TODO: responisbility of @shanduur-dell
 func CheckPolicy(objectscale *objectscaleRest.ClientSet, policy string, myBucket *v1alpha1.Bucket) {
 	actualPolicy, err := objectscale.Buckets().GetPolicy(myBucket.Name, nil)
 	gomega.Expect(err).To(gomega.BeNil())
@@ -58,7 +55,6 @@ func CheckPolicy(objectscale *objectscaleRest.ClientSet, policy string, myBucket
 
 // Function for creating user in ObjectScale
 func CreateUser(ctx context.Context, iamClient *iam.IAM, user, arn string) {
-	// TODO: Implementation goes here
 	userOut, err := iamClient.CreateUserWithContext(ctx, &iam.CreateUserInput{
 		UserName:            &user,
 		PermissionsBoundary: &arn,
@@ -66,11 +62,9 @@ func CreateUser(ctx context.Context, iamClient *iam.IAM, user, arn string) {
 	if gomega.Expect(err).To(gomega.BeNil()) {
 		gomega.Expect(userOut.User).NotTo(gomega.BeNil())
 	}
-	ginkgo.Fail("UNIMPLEMENTED")
 }
 
 // Function for checking if user exists in ObjectScale
-// ASSIGNEE: @shanduur-dell
 func CheckUser(ctx context.Context, iamClient *iam.IAM, user string) {
 	userOut, err := iamClient.GetUserWithContext(ctx, &iam.GetUserInput{UserName: &user})
 	if gomega.Expect(err).To(gomega.BeNil()) {
@@ -93,7 +87,6 @@ func DeleteUser(objectscale *objectscaleRest.ClientSet, user string) {
 }
 
 // CheckBucketNotInObjectStore Function for checking if bucket is not in objectstore
-// ASSIGNEE: @shanduur-dell
 func CheckBucketNotInObjectStore(objectscale *objectscaleRest.ClientSet, bucketClaim *v1alpha1.BucketClaim) {
 	bucket, err := objectscale.Buckets().Get(bucketClaim.Name, map[string]string{})
 	gomega.Expect(err).NotTo(gomega.BeNil())

@@ -44,7 +44,6 @@ func CheckBucketClassSpec(clientset *kubernetes.Clientset, bucketClassSpec v1alp
 }
 
 // Check if secret exists
-// ASSIGNEE: @shanduur-dell
 func CheckSecret(ctx context.Context, clientset *kubernetes.Clientset, secret *v1.Secret) {
 	sec, err := clientset.CoreV1().Secrets(secret.Namespace).Get(ctx, secret.Name, metav1.GetOptions{})
 	gomega.Expect(err).To(gomega.BeNil())
@@ -56,7 +55,6 @@ func CheckSecret(ctx context.Context, clientset *kubernetes.Clientset, secret *v
 }
 
 // CheckBucketClaimEvents Check BucketClaim events
-// ASSIGNEE: @shanduur-dell
 func CheckBucketClaimEvents(ctx context.Context, clientset *kubernetes.Clientset, bucketClaim *v1alpha1.BucketClaim, expected string) {
 	el, err := clientset.EventsV1().Events(bucketClaim.Namespace).List(ctx, metav1.ListOptions{
 		FieldSelector: "involvedObject.name=" + bucketClaim.Name, // FIXME: this is not valid, and fails

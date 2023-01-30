@@ -1,8 +1,6 @@
 package steps
 
 import (
-	"context"
-
 	ginkgo "github.com/onsi/ginkgo/v2"
 	gomega "github.com/onsi/gomega"
 
