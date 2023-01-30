@@ -11,7 +11,7 @@ import (
 	"sigs.k8s.io/container-object-storage-interface-api/apis/objectstorage/v1alpha1"
 )
 
-var _ = Describe("Bucket Access KEY", Label("key-flow"), func(ctx SpecContext) {
+var _ = Describe("Bucket Access KEY", Label("key-flow"), func() {
 	// Resources for scenarios
 	var (
 		myBucketClass       *v1alpha1.BucketClass
