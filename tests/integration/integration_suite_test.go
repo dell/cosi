@@ -9,6 +9,9 @@ import (
 	"os"
 	"testing"
 
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/aws/aws-sdk-go/service/iam"
 	objectscaleRest "github.com/emcecs/objectscale-management-go-sdk/pkg/client/rest"
 	objectscaleClient "github.com/emcecs/objectscale-management-go-sdk/pkg/client/rest/client"
 	. "github.com/onsi/ginkgo/v2"
@@ -23,6 +26,7 @@ var (
 	clientset    *kubernetes.Clientset
 	bucketClient *bucketclientset.Clientset
 	objectscale  *objectscaleRest.ClientSet
+	iamClient    *iam.IAM
 )
 
 func TestIntegration(t *testing.T) {
@@ -74,6 +78,23 @@ var _ = BeforeSuite(func() {
 			false,
 		),
 	)
+
+	// IAM clientset
+	var (
+		endpoint = objectscaleLoginAddress
+		region   = "us-west-2"
+	)
+	iamSession, err := session.NewSession(&aws.Config{
+		Endpoint: &endpoint,
+		Region:   &region,
+		HTTPClient: &http.Client{
+			Transport: &http.Transport{
+				TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+			},
+		},
+	})
+	Expect(err).To(BeNil())
+	iamClient = iam.New(iamSession)
 })
 
 var _ = AfterSuite(func() {
