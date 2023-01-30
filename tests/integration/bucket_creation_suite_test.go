@@ -11,7 +11,7 @@ import (
 	. "github.com/onsi/ginkgo/v2"
 )
 
-var _ = Describe("Bucket Creation", Label("create"), func() {
+var _ = Describe("Bucket Creation", Serial, Label("create"), func() {
 	// Resources for scenarios
 	var (
 		myBucketClass      *v1alpha1.BucketClass
@@ -126,11 +126,11 @@ var _ = Describe("Bucket Creation", Label("create"), func() {
 
 		// STEP: BucketClaim resource "bucket-claim-valid" in namespace "namespace-1" status "bucketReady" is "true"
 		By("checking if the status 'bucketReady' of BucketClaim resource 'bucket-claim-valid' in namespace 'namespace-1' is 'true'")
-		steps.CheckBucketClaimStatus(ctx, bucketClient, bucketClaimValid)
+		steps.CheckBucketClaimStatus(ctx, bucketClient, bucketClaimValid, true)
 
 		// STEP: Bucket resource referencing BucketClaim resource "bucket-claim-valid" status "bucketReady" is "true" and bucketID is not empty
 		By("checking the status 'bucketReady' of Bucket resource referencing BucketClaim resource 'bucket-claim-valid'  is 'true'")
-		steps.CheckBucketStatus(ctx, bucketClient, validBucket)
+		steps.CheckBucketStatus(ctx, bucketClient, validBucket, true)
 
 		// STEP: Bucket resource referencing BucketClaim resource "bucket-claim-valid" status "bucketID" is not empty
 		By("checking the status 'bucketID' of Bucket resource referencing BucketClaim resource 'bucket-claim-valid' is not empty")
@@ -153,7 +153,7 @@ var _ = Describe("Bucket Creation", Label("create"), func() {
 
 		// STEP: BucketClaim resource "bucket-claim-invalid" in namespace "namespace-1" status "bucketReady" is "false"
 		By("checking if the status 'bucketReady' of BucketClaim resource 'bucket-claim-invalid' in namespace 'namespace-1' is 'false'")
-		steps.CheckBucketClaimStatus(ctx, bucketClient, bucketClaimInvalid)
+		steps.CheckBucketClaimStatus(ctx, bucketClient, bucketClaimInvalid, false)
 
 		// STEP: BucketClaim events contains an error: "Cannot create Bucket: BucketClass does not exist"
 		By("checking if the BucketClaim events contains an error: 'Cannot create Bucket: BucketClass does not exist'")

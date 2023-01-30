@@ -11,7 +11,7 @@ import (
 	. "github.com/onsi/ginkgo/v2"
 )
 
-var _ = Describe("Bucket Deletion", Label("delete"), func() {
+var _ = Describe("Bucket Deletion", Serial, Label("delete"), func() {
 	// Resources for scenarios
 	var (
 		bucketClassDelete *v1alpha1.BucketClass
@@ -92,7 +92,7 @@ var _ = Describe("Bucket Deletion", Label("delete"), func() {
 		deleteBucket = &v1alpha1.Bucket{
 			Spec: v1alpha1.BucketSpec{
 				BucketClassName: "my-bucket-class-delete",
-				BucketClaim:     &v1.ObjectReference{Kind: "BucketClass", Name: "bucket-claim-delete", Namespace: "namespace-1"},
+				BucketClaim:     &v1.ObjectReference{Kind: "BucketClass", Name: "my-bucket-claim-delete", Namespace: "namespace-1"},
 				Protocols: []v1alpha1.Protocol{
 					v1alpha1.ProtocolS3,
 				},
@@ -101,7 +101,7 @@ var _ = Describe("Bucket Deletion", Label("delete"), func() {
 		retainBucket = &v1alpha1.Bucket{
 			Spec: v1alpha1.BucketSpec{
 				BucketClassName: "my-bucket-class-retain",
-				BucketClaim:     &v1.ObjectReference{Kind: "BucketClass", Name: "bucket-claim-retain", Namespace: "namespace-1"},
+				BucketClaim:     &v1.ObjectReference{Kind: "BucketClass", Name: "my-bucket-claim-retain", Namespace: "namespace-1"},
 				Protocols: []v1alpha1.Protocol{
 					v1alpha1.ProtocolS3,
 				},
@@ -157,11 +157,11 @@ var _ = Describe("Bucket Deletion", Label("delete"), func() {
 
 		// STEP: BucketClaim resource "bucket-claim-delete" in namespace "namespace-1" status "bucketReady" is "true"
 		By("checking if the status 'bucketReady' of BucketClaim resource 'bucket-claim-delete' in namespace 'namespace-1' is 'true'")
-		steps.CheckBucketClaimStatus(ctx, bucketClient, bucketClaimDelete)
+		steps.CheckBucketClaimStatus(ctx, bucketClient, bucketClaimDelete, true)
 
 		// STEP: Bucket resource referencing BucketClaim resource "bucket-claim-delete" status "bucketReady" is "true" and bucketID is not empty
 		By("checking the status 'bucketReady' of Bucket resource referencing BucketClaim resource 'bucket-claim-delete'  is 'true'")
-		steps.CheckBucketStatus(ctx, bucketClient, deleteBucket)
+		steps.CheckBucketStatus(ctx, bucketClient, deleteBucket, true)
 
 		// STEP: Bucket resource referencing BucketClaim resource "bucket-claim-delete" status "bucketID" is not empty
 		By("checking the status 'bucketID' of Bucket resource referencing BucketClaim resource 'bucket-claim-delete' is not empty")
@@ -196,11 +196,11 @@ var _ = Describe("Bucket Deletion", Label("delete"), func() {
 
 		// STEP: BucketClaim resource "bucket-claim-retain" in namespace "namespace-1" status "bucketReady" is "true"
 		By("checking if the status 'bucketReady' of BucketClaim resource 'bucket-claim-retain' in namespace 'namespace-1' is 'true'")
-		steps.CheckBucketClaimStatus(ctx, bucketClient, bucketClaimRetain)
+		steps.CheckBucketClaimStatus(ctx, bucketClient, bucketClaimRetain, true)
 
 		// STEP: Bucket resource referencing BucketClaim resource "bucket-claim-retain" status "bucketReady" is "true" and bucketID is not empty
 		By("checking the status 'bucketReady' of Bucket resource referencing BucketClaim resource 'bucket-claim-retain'  is 'true'")
-		steps.CheckBucketStatus(ctx, bucketClient, retainBucket)
+		steps.CheckBucketStatus(ctx, bucketClient, retainBucket, true)
 
 		// STEP: Bucket resource referencing BucketClaim resource "bucket-claim-retain" status "bucketID" is not empty
 		By("checking the ID of Bucket resource referencing BucketClaim resource 'bucket-claim-retain' is not empty")

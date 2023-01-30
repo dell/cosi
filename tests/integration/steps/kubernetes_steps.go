@@ -23,6 +23,12 @@ func CreateNamespace(ctx ginkgo.SpecContext, clientset *kubernetes.Clientset, na
 	gomega.Expect(err).To(gomega.BeNil())
 }
 
+// DeleteNamespace Ensure that Kubernetes namespace is deleted
+func DeleteNamespace(ctx ginkgo.SpecContext, clientset *kubernetes.Clientset, namespace string) {
+	err := clientset.CoreV1().Namespaces().Delete(ctx, namespace, metav1.DeleteOptions{})
+	gomega.Expect(err).To(gomega.BeNil())
+}
+
 // CheckBucketClassSpec Ensure that specification of custom resource "my-bucket-class" is correct
 func CheckBucketClassSpec(clientset *kubernetes.Clientset, bucketClassSpec v1alpha1.BucketClaimSpec) {
 	// TODO: Implementation goes here

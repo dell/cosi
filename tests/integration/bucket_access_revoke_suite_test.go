@@ -11,7 +11,7 @@ import (
 	. "github.com/onsi/ginkgo/v2"
 )
 
-var _ = Describe("Bucket Access Revoke", Label("revoke"), func() {
+var _ = Describe("Bucket Access Revoke", Serial, Label("revoke"), func() {
 	// Resources for scenarios
 	var (
 		myBucketClass       *v1alpha1.BucketClass
@@ -131,11 +131,11 @@ var _ = Describe("Bucket Access Revoke", Label("revoke"), func() {
 
 		// STEP: BucketClaim resource "my-bucket-claim" in namespace "namespace-1" status "bucketReady" is "true"
 		By("Checking if the BucketClaim 'my-bucket-claim' in namespace 'namespace-1' status 'bucketReady' is 'true'")
-		steps.CheckBucketClaimStatus(ctx, bucketClient, myBucketClaim)
+		steps.CheckBucketClaimStatus(ctx, bucketClient, myBucketClaim, true)
 
 		// STEP: Bucket resource referencing BucketClaim resource "my-bucket-claim" status "bucketReady" is "true"
 		By("Checking if the Bucket referencing 'my-bucket-claim' status 'bucketReady' is 'true'")
-		steps.CheckBucketStatus(ctx, bucketClient, myBucket)
+		steps.CheckBucketStatus(ctx, bucketClient, myBucket, true)
 
 		// STEP: Bucket resource referencing BucketClaim resource "my-bucket-claim" bucketID is not empty
 		By("Checking if the Bucket referencing 'my-bucket-claim' bucketID is not empty")
@@ -151,7 +151,7 @@ var _ = Describe("Bucket Access Revoke", Label("revoke"), func() {
 
 		// STEP: BucketAccess resource "my-bucket-access" in namespace "namespace-1" status "accessGranted" is "true"
 		By("Checking if the BucketAccess 'my-bucket-access' has status 'accessGranted' set to 'true")
-		steps.CheckBucketAccessStatus(ctx, bucketClient, myBucketAccess)
+		steps.CheckBucketAccessStatus(ctx, bucketClient, myBucketAccess, true)
 
 		// STEP: User "${user}" in account on ObjectScale platform is created
 		By("Creating User '${user}' in account on ObjectScale platform")

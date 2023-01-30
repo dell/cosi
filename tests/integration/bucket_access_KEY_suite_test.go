@@ -123,11 +123,11 @@ var _ = Describe("Bucket Access KEY", Label("key-flow"), func() {
 
 		// STEP: BucketClaim resource "my-bucket-claim" in namespace "namespace-1" status "bucketReady" is "true"
 		By("Checking if BucketClaim resource 'my-bucket-claim' status 'bucketReady' is 'true'")
-		steps.CheckBucketClaimStatus(ctx, bucketClient, myBucketClaim)
+		steps.CheckBucketClaimStatus(ctx, bucketClient, myBucketClaim, true)
 
 		// STEP: Bucket resource referencing BucketClaim resource "my-bucket-claim" status "bucketReady" is "true"
 		By("Checking if Bucket resource referencing 'my-bucket-claim' status 'bucketReady' is 'true'")
-		steps.CheckBucketStatus(ctx, bucketClient, myBucket)
+		steps.CheckBucketStatus(ctx, bucketClient, myBucket, true)
 
 		// STEP: Bucket resource referencing BucketClaim resource "my-bucket" bucketID is not empty
 		By("Checking if Bucket resource 'my-bucket' status 'bucketID' is not empty")
@@ -150,7 +150,7 @@ var _ = Describe("Bucket Access KEY", Label("key-flow"), func() {
 
 		// STEP: BucketAccess resource "my-bucket-access" status "accessGranted" is "true"
 		By("Checking if BucketAccess resource 'my-bucket-access' in namespace 'namespace-1' status 'accessGranted' is 'true'")
-		steps.CheckBucketAccessStatus(ctx, bucketClient, myBucketAccess)
+		steps.CheckBucketAccessStatus(ctx, bucketClient, myBucketAccess, true)
 
 		// STEP: User "${user}" in account on ObjectScale platform is created
 		By("Creating User resource '${user}'")
