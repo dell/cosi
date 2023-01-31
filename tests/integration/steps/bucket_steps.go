@@ -4,6 +4,7 @@ import (
 	ginkgo "github.com/onsi/ginkgo/v2"
 	gomega "github.com/onsi/gomega"
 
+	errors "k8s.io/apimachinery/pkg/api/errors"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/container-object-storage-interface-api/apis/objectstorage/v1alpha1"
 
@@ -16,6 +17,8 @@ func CreateBucketClaimResource(ctx ginkgo.SpecContext, bucketClient *bucketclien
 	if errors.IsNotFound(err) {
 		_, err := bucketClient.ObjectstorageV1alpha1().BucketClaims(bucketClaim.Namespace).Create(ctx, bucketClaim, v1.CreateOptions{})
 		gomega.Expect(err).To(gomega.BeNil())
+	} else {
+		gomega.Expect(err).To(gomega.BeNil())
 	}
 }
 
@@ -24,8 +27,7 @@ func CheckBucketClaimStatus(ctx ginkgo.SpecContext, bucketClient *bucketclientse
 	myBucketClaim, err := bucketClient.ObjectstorageV1alpha1().BucketClaims(bucketClaim.Namespace).Get(ctx, bucketClaim.Name, v1.GetOptions{})
 	gomega.Expect(err).To(gomega.BeNil())
 	gomega.Expect(myBucketClaim).NotTo(gomega.BeNil())
-		gomega.Expect(myBucketClaim.Status.BucketReady).To(gomega.Equal(status))
-	
+	gomega.Expect(myBucketClaim.Status.BucketReady).To(gomega.Equal(status))
 }
 
 // CheckBucketStatus Function for checking Bucket status
@@ -35,8 +37,7 @@ func CheckBucketStatus(ctx ginkgo.SpecContext, bucketClient *bucketclientset.Cli
 	myBucket, err := bucketClient.ObjectstorageV1alpha1().Buckets().Get(ctx, myBucketClaim.Status.BucketName, v1.GetOptions{})
 	gomega.Expect(err).To(gomega.BeNil())
 	gomega.Expect(myBucket).NotTo(gomega.BeNil())
-		gomega.Expect(myBucket.Status.BucketReady).To(gomega.Equal(status))
-	
+	gomega.Expect(myBucket.Status.BucketReady).To(gomega.Equal(status))
 }
 
 // CheckBucketID Function for checking bucketID
@@ -46,8 +47,7 @@ func CheckBucketID(ctx ginkgo.SpecContext, bucketClient *bucketclientset.Clients
 	myBucket, err := bucketClient.ObjectstorageV1alpha1().Buckets().Get(ctx, myBucketClaim.Status.BucketName, v1.GetOptions{})
 	gomega.Expect(err).To(gomega.BeNil())
 	gomega.Expect(myBucket).NotTo(gomega.BeNil())
-		gomega.Expect(myBucket.Status.BucketID).NotTo(gomega.Or(gomega.BeEmpty(), gomega.BeNil()))
-	
+	gomega.Expect(myBucket.Status.BucketID).NotTo(gomega.Or(gomega.BeEmpty(), gomega.BeNil()))
 }
 
 // CreateBucketClassResource Function for creating BucketClass resource
@@ -55,6 +55,8 @@ func CreateBucketClassResource(ctx ginkgo.SpecContext, bucketClient *bucketclien
 	_, err := bucketClient.ObjectstorageV1alpha1().BucketClasses().Get(ctx, bucketClass.Name, v1.GetOptions{})
 	if errors.IsNotFound(err) {
 		_, err := bucketClient.ObjectstorageV1alpha1().BucketClasses().Create(ctx, bucketClass, v1.CreateOptions{})
+		gomega.Expect(err).To(gomega.BeNil())
+	} else {
 		gomega.Expect(err).To(gomega.BeNil())
 	}
 }
@@ -77,6 +79,8 @@ func CreateBucketAccessClassResource(ctx ginkgo.SpecContext, bucketClient *bucke
 	if errors.IsNotFound(err) {
 		_, err := bucketClient.ObjectstorageV1alpha1().BucketAccessClasses().Create(ctx, bucketAccessClass, v1.CreateOptions{})
 		gomega.Expect(err).To(gomega.BeNil())
+	} else {
+		gomega.Expect(err).To(gomega.BeNil())
 	}
 }
 
@@ -86,6 +90,8 @@ func CreateBucketAccessResource(ctx ginkgo.SpecContext, bucketClient *bucketclie
 	if errors.IsNotFound(err) {
 		_, err := bucketClient.ObjectstorageV1alpha1().BucketAccesses(bucketAccess.Namespace).Create(ctx, bucketAccess, v1.CreateOptions{})
 		gomega.Expect(err).To(gomega.BeNil())
+	} else {
+		gomega.Expect(err).To(gomega.BeNil())
 	}
 }
 
@@ -94,8 +100,7 @@ func CheckBucketAccessStatus(ctx ginkgo.SpecContext, bucketClient *bucketclients
 	myBucketAccess, err := bucketClient.ObjectstorageV1alpha1().BucketAccesses(bucketAccess.Namespace).Get(ctx, bucketAccess.Name, v1.GetOptions{})
 	gomega.Expect(err).To(gomega.BeNil())
 	gomega.Expect(myBucketAccess).NotTo(gomega.BeNil())
-		gomega.Expect(myBucketAccess.Status.AccessGranted).To(gomega.Equal(status))
-	
+	gomega.Expect(myBucketAccess.Status.AccessGranted).To(gomega.Equal(status))
 }
 
 // CheckBucketAccessAccountID Function for checking BucketAccess accountID
@@ -103,8 +108,7 @@ func CheckBucketAccessAccountID(ctx ginkgo.SpecContext, bucketClient *bucketclie
 	myBucketAccess, err := bucketClient.ObjectstorageV1alpha1().BucketAccesses(bucketAccess.Namespace).Get(ctx, bucketAccess.Name, v1.GetOptions{})
 	gomega.Expect(err).To(gomega.BeNil())
 	gomega.Expect(myBucketAccess).NotTo(gomega.BeNil())
-		gomega.Expect(myBucketAccess.Status.AccountID).To(gomega.Equal(accountID))
-	
+	gomega.Expect(myBucketAccess.Status.AccountID).To(gomega.Equal(accountID))
 }
 
 // DeleteBucketAccessResource Function for deleting BucketAccess resource
