@@ -11,7 +11,7 @@ import (
 	. "github.com/onsi/ginkgo/v2"
 )
 
-var _ = Describe("Bucket Creation", Label("create"), func() {
+var _ = Describe("Bucket Creation", Serial, Label("create"), func() {
 	// Resources for scenarios
 	var (
 		myBucketClass      *v1alpha1.BucketClass
@@ -107,7 +107,7 @@ var _ = Describe("Bucket Creation", Label("create"), func() {
 
 		// STEP: BucketClass resource is created from specification "my-bucket-class"
 		By("Creating the BucketClass 'my-bucket-class' is created")
-		steps.CreateBucketClassResource(bucketClient, myBucketClass)
+		steps.CreateBucketClassResource(ctx, bucketClient, myBucketClass)
 
 		DeferCleanup(func() {
 			// Cleanup for background
@@ -115,10 +115,10 @@ var _ = Describe("Bucket Creation", Label("create"), func() {
 	})
 
 	// STEP: Scenario: Successfull bucket creation
-	It("Successfully creates bucket", func() {
+	It("Successfully creates bucket", func(ctx SpecContext) {
 		// STEP: BucketClaim resource is created from specification "bucket-claim-valid"
 		By("creating a BucketClaim resource from specification 'bucket-claim-valid'")
-		steps.CreateBucketClaimResource(bucketClient, bucketClaimValid)
+		steps.CreateBucketClaimResource(ctx, bucketClient, bucketClaimValid)
 
 		// STEP: Bucket resource referencing BucketClaim resource "bucket-claim-valid" is created in ObjectStore "object-store-1"
 		By("checking if Bucket resource referencing BucketClaim resource 'bucket-claim-valid' is created in ObjectStore 'object-store-1'")
@@ -126,15 +126,15 @@ var _ = Describe("Bucket Creation", Label("create"), func() {
 
 		// STEP: BucketClaim resource "bucket-claim-valid" in namespace "namespace-1" status "bucketReady" is "true"
 		By("checking if the status 'bucketReady' of BucketClaim resource 'bucket-claim-valid' in namespace 'namespace-1' is 'true'")
-		steps.CheckBucketClaimStatus(bucketClient, bucketClaimValid)
+		steps.CheckBucketClaimStatus(ctx, bucketClient, bucketClaimValid, true)
 
 		// STEP: Bucket resource referencing BucketClaim resource "bucket-claim-valid" status "bucketReady" is "true" and bucketID is not empty
 		By("checking the status 'bucketReady' of Bucket resource referencing BucketClaim resource 'bucket-claim-valid'  is 'true'")
-		steps.CheckBucketStatus(bucketClient, validBucket)
+		steps.CheckBucketStatus(ctx, bucketClient, validBucket, true)
 
 		// STEP: Bucket resource referencing BucketClaim resource "bucket-claim-valid" status "bucketID" is not empty
 		By("checking the status 'bucketID' of Bucket resource referencing BucketClaim resource 'bucket-claim-valid' is not empty")
-		steps.CheckBucketID(bucketClient, validBucket)
+		steps.CheckBucketID(ctx, bucketClient, validBucket)
 
 		DeferCleanup(func() {
 			// Cleanup for scenario: Successfull bucket creation
@@ -142,10 +142,10 @@ var _ = Describe("Bucket Creation", Label("create"), func() {
 	})
 
 	// STEP: Scenario: Unsuccessfull bucket creation
-	It("Unsuccessfully tries to create bucket", func() {
+	It("Unsuccessfully tries to create bucket", func(ctx SpecContext) {
 		// STEP: BucketClaim resource is created from specification "bucket-claim-invalid"
 		By("creating a BucketClaim resource from specification 'bucket-claim-invalid'")
-		steps.CreateBucketClaimResource(bucketClient, bucketClaimInvalid)
+		steps.CreateBucketClaimResource(ctx, bucketClient, bucketClaimInvalid)
 
 		// STEP: Bucket resource referencing BucketClaim resource "bucket-claim-invalid" is not created in ObjectStore "object-store-1"
 		By("checking if Bucket resource referencing BucketClaim resource 'bucket-claim-invalid' is not created in ObjectStore 'object-store-1'")
@@ -153,7 +153,7 @@ var _ = Describe("Bucket Creation", Label("create"), func() {
 
 		// STEP: BucketClaim resource "bucket-claim-invalid" in namespace "namespace-1" status "bucketReady" is "false"
 		By("checking if the status 'bucketReady' of BucketClaim resource 'bucket-claim-invalid' in namespace 'namespace-1' is 'false'")
-		steps.CheckBucketClaimStatus(bucketClient, bucketClaimInvalid)
+		steps.CheckBucketClaimStatus(ctx, bucketClient, bucketClaimInvalid, false)
 
 		// STEP: BucketClaim events contains an error: "Cannot create Bucket: BucketClass does not exist"
 		By("checking if the BucketClaim events contains an error: 'Cannot create Bucket: BucketClass does not exist'")

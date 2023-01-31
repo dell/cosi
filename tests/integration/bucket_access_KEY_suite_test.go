@@ -111,11 +111,11 @@ var _ = Describe("Bucket Access KEY", Label("key-flow"), func() {
 
 		// STEP: BucketClass resource is created from specification "my-bucket-class"
 		By("Creating the BucketClass 'my-bucket-class' is created")
-		steps.CreateBucketClassResource(bucketClient, myBucketClass)
+		steps.CreateBucketClassResource(ctx, bucketClient, myBucketClass)
 
 		// STEP: BucketClaim resource is created from specification "my-bucket-claim"
 		By("Creating the BucketAccessClass 'my-bucket-access-class' is created")
-		steps.CreateBucketClaimResource(bucketClient, myBucketClaim)
+		steps.CreateBucketClaimResource(ctx, bucketClient, myBucketClaim)
 
 		// STEP: Bucket resource referencing BucketClaim resource "my-bucket-claim" is created in ObjectStore "object-store-1"
 		By("Checking if bucket referencing 'my-bucket-claim' is created in ObjectStore 'object-store-1'")
@@ -123,15 +123,15 @@ var _ = Describe("Bucket Access KEY", Label("key-flow"), func() {
 
 		// STEP: BucketClaim resource "my-bucket-claim" in namespace "namespace-1" status "bucketReady" is "true"
 		By("Checking if BucketClaim resource 'my-bucket-claim' status 'bucketReady' is 'true'")
-		steps.CheckBucketClaimStatus(bucketClient, myBucketClaim)
+		steps.CheckBucketClaimStatus(ctx, bucketClient, myBucketClaim, true)
 
 		// STEP: Bucket resource referencing BucketClaim resource "my-bucket-claim" status "bucketReady" is "true"
 		By("Checking if Bucket resource referencing 'my-bucket-claim' status 'bucketReady' is 'true'")
-		steps.CheckBucketStatus(bucketClient, myBucket)
+		steps.CheckBucketStatus(ctx, bucketClient, myBucket, true)
 
 		// STEP: Bucket resource referencing BucketClaim resource "my-bucket" bucketID is not empty
 		By("Checking if Bucket resource 'my-bucket' status 'bucketID' is not empty")
-		steps.CheckBucketID(bucketClient, myBucket)
+		steps.CheckBucketID(ctx, bucketClient, myBucket)
 
 		DeferCleanup(func() {
 			// Cleanup for background
@@ -139,18 +139,18 @@ var _ = Describe("Bucket Access KEY", Label("key-flow"), func() {
 	})
 
 	// STEP: Scenario: BucketAccess creation with KEY authorization mechanism
-	It("Creates BucketAccess with KEY authorization mechanism", func() {
+	It("Creates BucketAccess with KEY authorization mechanism", func(ctx SpecContext) {
 		// STEP: BucketAccessClass resource is created from specification "my-bucket-access-class"
 		By("Creating BucketAccessClass resource 'my-bucket-access-class'")
-		steps.CreateBucketAccessClassResource(bucketClient, myBucketAccessClass)
+		steps.CreateBucketAccessClassResource(ctx, bucketClient, myBucketAccessClass)
 
 		// STEP: BucketAccess resource is created from specification "my-bucket-access"
 		By("Creating BucketAccess resource 'my-bucket-access'")
-		steps.CreateBucketAccessResource(bucketClient, myBucketAccess)
+		steps.CreateBucketAccessResource(ctx, bucketClient, myBucketAccess)
 
 		// STEP: BucketAccess resource "my-bucket-access" status "accessGranted" is "true"
 		By("Checking if BucketAccess resource 'my-bucket-access' in namespace 'namespace-1' status 'accessGranted' is 'true'")
-		steps.CheckBucketAccessStatus(bucketClient, myBucketAccess)
+		steps.CheckBucketAccessStatus(ctx, bucketClient, myBucketAccess, true)
 
 		// STEP: User "${user}" in account on ObjectScale platform is created
 		By("Creating User resource '${user}'")
@@ -162,7 +162,7 @@ var _ = Describe("Bucket Access KEY", Label("key-flow"), func() {
 
 		// STEP: BucketAccess resource "my-bucket-access" in namespace "namespace-1" status "accountID" is "${accountID}"
 		By("Checking if BucketAccess resource 'my-bucket-access' in namespace 'namespace-1' status 'accountID' is '${accountID}'")
-		steps.CheckBucketAccessAccountID(bucketClient, myBucketAccess, "${accountID}")
+		steps.CheckBucketAccessAccountID(ctx, bucketClient, myBucketAccess, "${accountID}")
 
 		// STEP: Secret "bucket-credentials-1" is created in namespace "namespace-1" and is not empty
 		By("Checking if Secret 'bucket-credentials-1' in namespace 'namespace-1' is not empty")
