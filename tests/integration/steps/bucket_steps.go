@@ -24,7 +24,7 @@ func CheckBucketClaimStatus(ctx ginkgo.SpecContext, bucketClient *bucketclientse
 	myBucketClaim, err := bucketClient.ObjectstorageV1alpha1().BucketClaims(bucketClaim.Namespace).Get(ctx, bucketClaim.Name, v1.GetOptions{})
 	gomega.Expect(err).To(gomega.BeNil())
 	if gomega.Expect(myBucketClaim).NotTo(gomega.BeNil()) {
-		gomega.Expect(myBucketClaim.Status.BucketReady).To(gomega.BeIdenticalTo(status))
+		gomega.Expect(myBucketClaim.Status.BucketReady).To(gomega.Equal(status))
 	}
 }
 
@@ -35,7 +35,7 @@ func CheckBucketStatus(ctx ginkgo.SpecContext, bucketClient *bucketclientset.Cli
 	myBucket, err := bucketClient.ObjectstorageV1alpha1().Buckets().Get(ctx, myBucketClaim.Status.BucketName, v1.GetOptions{})
 	gomega.Expect(err).To(gomega.BeNil())
 	if gomega.Expect(myBucket).NotTo(gomega.BeNil()) {
-		gomega.Expect(myBucket.Status.BucketReady).To(gomega.BeIdenticalTo(status))
+		gomega.Expect(myBucket.Status.BucketReady).To(gomega.Equal(status))
 	}
 }
 
@@ -94,7 +94,7 @@ func CheckBucketAccessStatus(ctx ginkgo.SpecContext, bucketClient *bucketclients
 	myBucketAccess, err := bucketClient.ObjectstorageV1alpha1().BucketAccesses(bucketAccess.Namespace).Get(ctx, bucketAccess.Name, v1.GetOptions{})
 	gomega.Expect(err).To(gomega.BeNil())
 	if gomega.Expect(myBucketAccess).NotTo(gomega.BeNil()) {
-		gomega.Expect(myBucketAccess.Status.AccessGranted).To(gomega.BeIdenticalTo(status))
+		gomega.Expect(myBucketAccess.Status.AccessGranted).To(gomega.Equal(status))
 	}
 }
 
@@ -103,7 +103,7 @@ func CheckBucketAccessAccountID(ctx ginkgo.SpecContext, bucketClient *bucketclie
 	myBucketAccess, err := bucketClient.ObjectstorageV1alpha1().BucketAccesses(bucketAccess.Namespace).Get(ctx, bucketAccess.Name, v1.GetOptions{})
 	gomega.Expect(err).To(gomega.BeNil())
 	if gomega.Expect(myBucketAccess).NotTo(gomega.BeNil()) {
-		gomega.Expect(myBucketAccess.Status.AccountID).To(gomega.BeIdenticalTo(accountID))
+		gomega.Expect(myBucketAccess.Status.AccountID).To(gomega.Equal(accountID))
 	}
 }
 
