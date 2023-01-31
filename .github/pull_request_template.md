@@ -40,7 +40,7 @@ Please describe the tests that you ran to verify your changes. Please also list 
 - [ ] Integration testing
 
 # Special Notes For Your Reviewer:
-Please describe the parts of cod reviewers should focuse on.
+Please describe the parts of code reviewers should focus on.
 
 # Additional documentation
 - [ ] Enhancement proposals

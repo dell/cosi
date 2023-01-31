@@ -65,7 +65,7 @@ unit-test: golint check
 
 # Linux only; populate env.sh with the hardware parameters
 integration-test:
-	( cd test/integration; sh run.sh )
+	( cd tests/integration; sh run.sh )
 
 release:
 	BUILD_TYPE="R" $(MAKE) clean build docker push

@@ -4,11 +4,13 @@ package main_test
 
 import (
 	"crypto/tls"
-	"fmt"
 	"net/http"
 	"os"
 	"testing"
 
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/aws/aws-sdk-go/service/iam"
 	objectscaleRest "github.com/emcecs/objectscale-management-go-sdk/pkg/client/rest"
 	objectscaleClient "github.com/emcecs/objectscale-management-go-sdk/pkg/client/rest/client"
 	. "github.com/onsi/ginkgo/v2"
@@ -23,6 +25,7 @@ var (
 	clientset    *kubernetes.Clientset
 	bucketClient *bucketclientset.Clientset
 	objectscale  *objectscaleRest.ClientSet
+	iamClient    *iam.IAM
 )
 
 func TestIntegration(t *testing.T) {
@@ -39,7 +42,10 @@ var _ = BeforeSuite(func() {
 	cfg, err := clientcmd.BuildConfigFromFlags("", kubeConfig)
 	Expect(err).To(BeNil())
 
-	objectscaleURL, exists := os.LookupEnv("OBJECTSCALE_URL")
+	objectscaleGateway, exists := os.LookupEnv("OBJECTSCALE_GATEWAY")
+	Expect(exists).To(BeTrue())
+
+	objectstoreGateway, exists := os.LookupEnv("OBJECTSCALE_OBJECTSTORE_GATEWAY")
 	Expect(exists).To(BeTrue())
 
 	objectscaleUser, exists := os.LookupEnv("OBJECTSCALE_USER")
@@ -61,19 +67,34 @@ var _ = BeforeSuite(func() {
 		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
 	}
 	unsafeClient := &http.Client{Transport: transport}
-	objectscaleLoginAddress := fmt.Sprintf("%s:31613", objectscaleURL)
-	objectscaleManagementAddress := fmt.Sprintf("%s:30007", objectscaleURL)
 
 	objectscale = objectscaleRest.NewClientSet(
 		objectscaleClient.NewClient(
-			objectscaleManagementAddress,
-			objectscaleLoginAddress,
+			objectstoreGateway,
+			objectscaleGateway,
 			objectscaleUser,
 			objectscalePassword,
 			unsafeClient,
 			false,
 		),
 	)
+
+	// IAM clientset
+	var (
+		endpoint = objectscaleGateway
+		region   = "us-west-2"
+	)
+	iamSession, err := session.NewSession(&aws.Config{
+		Endpoint: &endpoint,
+		Region:   &region,
+		HTTPClient: &http.Client{
+			Transport: &http.Transport{
+				TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+			},
+		},
+	})
+	Expect(err).To(BeNil())
+	iamClient = iam.New(iamSession)
 })
 
 var _ = AfterSuite(func() {
