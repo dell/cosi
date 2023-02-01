@@ -114,7 +114,7 @@ var _ = Describe("Bucket Deletion", Serial, Label("delete"), func() {
 
 		// STEP: ObjectScale platform is installed on the cluster
 		By("Checking if the ObjectScale platform is ready")
-		steps.CheckObjectScaleInstallation(ctx, clientset)
+		steps.CheckObjectScaleInstallation(ctx, objectscale)
 
 		// STEP: ObjectStore "object-store-1" is created
 		By("Checking if the ObjectStore 'object-store-1' is created")
@@ -130,11 +130,11 @@ var _ = Describe("Bucket Deletion", Serial, Label("delete"), func() {
 
 		// STEP: COSI controller "cosi-controller" is installed in namespace "driver-ns"
 		By("Checking if COSI controller 'cosi-controller' is installed in namespace 'driver-ns'")
-		steps.CheckCOSIControllerInstallation(clientset, "cosi-controller", "driver-ns")
+		steps.CheckCOSIControllerInstallation(ctx, clientset, "cosi-controller", "driver-ns")
 
 		// STEP: COSI driver "cosi-driver" is installed in namespace "driver-ns"
 		By("Checking if COSI driver 'cosi-driver' is installed in namespace 'driver-ns'")
-		steps.CheckCOSIDriverInstallation(clientset, "cosi-driver", "driver-ns")
+		steps.CheckCOSIDriverInstallation(ctx, clientset, "cosi-driver", "driver-ns")
 
 		DeferCleanup(func() {
 			// Cleanup for background

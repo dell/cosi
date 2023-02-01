@@ -3,15 +3,15 @@ package steps
 import (
 	objectscaleRest "github.com/emcecs/objectscale-management-go-sdk/pkg/client/rest"
 	ginkgo "github.com/onsi/ginkgo/v2"
+	gomega "github.com/onsi/gomega"
 	"sigs.k8s.io/container-object-storage-interface-api/apis/objectstorage/v1alpha1"
 )
 
 // CheckObjectStoreCreation Ensure that ObjectStore "object-store-1" is created
 func CheckObjectStoreCreation(ctx ginkgo.SpecContext, objectscale *objectscaleRest.ClientSet, objectstore string) {
-	// TODO: Implementation goes here
-	// check if ObjectStore "object-store-1" is created
-	// if not, fail the test
-	ginkgo.Fail("UNIMPLEMENTED")
+	objectstores, err := objectscale.FederatedObjectStores().List(make(map[string]string))
+	gomega.Expect(err).To(gomega.BeNil())
+	gomega.Expect(objectstores).To(gomega.ContainElement(gomega.ContainSubstring(objectstore)))
 }
 
 // CheckBucketResourceInObjectStore Function checking if Bucket resource is in objectstore
