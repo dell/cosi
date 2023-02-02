@@ -7,7 +7,9 @@ import (
 	"github.com/onsi/gomega"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
+	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/fields"
 	"k8s.io/client-go/kubernetes"
 	"sigs.k8s.io/container-object-storage-interface-api/apis/objectstorage/v1alpha1"
 )
@@ -55,15 +57,39 @@ func CheckSecret(ctx context.Context, clientset *kubernetes.Clientset, secret *v
 }
 
 // CheckBucketClaimEvents Check BucketClaim events
-func CheckBucketClaimEvents(ctx context.Context, clientset *kubernetes.Clientset, bucketClaim *v1alpha1.BucketClaim, expected string) {
-	el, err := clientset.EventsV1().Events(bucketClaim.Namespace).List(ctx, metav1.ListOptions{
-		FieldSelector: "involvedObject.name=" + bucketClaim.Name, // FIXME: this is not valid, and fails
-	})
-	gomega.Expect(err).To(gomega.BeNil())
-	if gomega.Expect(el).NotTo(gomega.Or(gomega.BeNil(), gomega.BeEmpty())) {
+func CheckBucketClaimEvents(ctx context.Context, clientset *kubernetes.Clientset, bucketClaim *v1alpha1.BucketClaim, expected *v1.Event) {
+	listOptions := metav1.ListOptions{}
+
+	listOptions.FieldSelector = fields.AndSelectors(
+		fields.OneTermEqualSelector("involvedObject.kind", bucketClaim.Kind),
+		fields.OneTermEqualSelector("involvedObject.name", bucketClaim.Name),
+		fields.OneTermEqualSelector("type", expected.Type),
+	).String()
+
+	e := clientset.CoreV1().Events(bucketClaim.Namespace)
+	el := &v1.EventList{
+		TypeMeta: metav1.TypeMeta{
+			Kind:       "EventList",
+			APIVersion: "v1",
+		},
+	}
+
+	for {
+		list, err := e.List(ctx, listOptions)
+		gomega.Expect(err).To(gomega.BeNil())
+
+		nextContinueToken, _ := meta.NewAccessor().Continue(list)
+		if len(nextContinueToken) == 0 {
+			break
+		}
+		listOptions.Continue = nextContinueToken
+	}
+
+	// check if there is event having required reason
+	if gomega.Expect(el.Items).NotTo(gomega.BeEmpty()) {
 		found := false
 		for _, event := range el.Items {
-			if event.Reason == expected {
+			if event.Reason == expected.Reason {
 				found = true
 				break
 			}
