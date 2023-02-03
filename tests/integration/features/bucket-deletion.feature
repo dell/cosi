@@ -7,7 +7,7 @@ Feature: Bucket deletion from ObjectScale platform
     I want to delete BucketClaim
     so that existing Bucket is deleted or left regarding to deletionPolicy
 
-    Background: 
+    Background:
         Given Kubernetes cluster is up and running
         And ObjectScale platform is installed on the cluster
         And ObjectStore "objectstore-dev" is created
@@ -29,7 +29,7 @@ Feature: Bucket deletion from ObjectScale platform
         parameters:
             objectScaleID: ${objectScaleID}
             objectStoreID: ${objectStoreID}
-            accountSecret: ${secretName}                   
+            accountSecret: ${secretName}
         """
         And specification of custom resource "my-bucket-claim-delete" is:
         """
@@ -38,12 +38,12 @@ Feature: Bucket deletion from ObjectScale platform
         metadata:
             name: my-bucket-claim-delete
             namespace: namespace-1
-        spec:                                            
+        spec:
             bucketClassName: my-bucket-class-delete
             protocol: S3
-        """  
+        """
         And BucketClass resource is created from specification "my-bucket-class-delete"
-        And BucketClaim resource is created from specification "my-bucket-claim-delete"  
+        And BucketClaim resource is created from specification "my-bucket-claim-delete"
         And Bucket resource referencing BucketClaim resource "bucket-claim-delete" is created in ObjectStore "objectstore-dev"
         And BucketClaim resource "bucket-claim-delete" in namespace "namespace-1" status "bucketReady" is "true"
         And Bucket resource referencing BucketClaim resource "bucket-claim-delete" status "bucketReady" is "true"
@@ -60,11 +60,11 @@ Feature: Bucket deletion from ObjectScale platform
         metadata:
             name: my-bucket-class-retain
         deletionPolicy: retain
-        driverName: cosi-driver  
+        driverName: cosi-driver
         parameters:
-            objectScaleID: ${objectScaleID}            
+            objectScaleID: ${objectScaleID}
             objectStoreID: ${objectStoreID}
-            accountSecret: ${secretName}               
+            accountSecret: ${secretName}
         """
         And specification of custom resource "my-bucket-claim-retain" is:
         """
@@ -73,10 +73,10 @@ Feature: Bucket deletion from ObjectScale platform
         metadata:
             name: my-bucket-claim-retain
             namespace: namespace-1
-        spec:                                            
+        spec:
             bucketClassName: my-bucket-class-retain
             protocol: S3
-        """  
+        """
         And BucketClass resource is created from specification "my-bucket-class-retain"
         And BucketClaim resource is created from specification "my-bucket-claim-retain"
         And Bucket resource referencing BucketClaim resource "bucket-claim-retain" is created in ObjectStore "objectstore-dev"

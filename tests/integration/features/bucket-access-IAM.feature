@@ -4,11 +4,11 @@
 Feature: BucketAccess creation in IAM flow on ObjectScale platform
 
     As an ObjectScale platform user
-    I want to add BucketAccess via IAM authentication, which is a request access to a Bucket for particular account 
+    I want to add BucketAccess via IAM authentication, which is a request access to a Bucket for particular account
     so that access credentials for a Bucket are created, unique identifier for the account (accountID) is returned
     and ServiceAccount is mapped to appropriate account on ObjectScale platform
 
-    Background: 
+    Background:
         Given Kubernetes cluster is up and running
         And ObjectScale platform is installed on the cluster
         And ObjectStore "objectstore-dev" is created
@@ -36,7 +36,7 @@ Feature: BucketAccess creation in IAM flow on ObjectScale platform
         metadata:
             name: my-bucket-claim
             namespace: namespace-1
-        spec:                                            
+        spec:
             bucketClassName: my-bucket-class
             protocol: S3
         """
@@ -46,7 +46,7 @@ Feature: BucketAccess creation in IAM flow on ObjectScale platform
         And BucketClaim resource "my-bucket-claim" in namespace "namespace-1" status "bucketReady" is "true"
         And Bucket resource referencing BucketClaim resource "my-bucket-claim" status "bucketReady" is "true"
         And Bucket resource referencing BucketClaim resource "my-bucket-claim" bucketID is not empty
-    
+
     @test_KRV-xxx
     Scenario: BucketAccess creation with IAM authorization mechanism
         And specification of custom resource "my-bucket-access-class" is:
@@ -54,13 +54,13 @@ Feature: BucketAccess creation in IAM flow on ObjectScale platform
         apiVersion: storage.k8s.io/v1
         kind: BucketAccessClass
         metadata:
-            name: my-bucket-access-class                                         
-        driverName: cosi-driver  
+            name: my-bucket-access-class
+        driverName: cosi-driver
         authenticationType: IAM
         parameters:
             objectScaleID: ${objectScaleID}
             objectStoreID: ${objectStoreID}
-            accountSecret: ${secretName}  
+            accountSecret: ${secretName}
         """
         And specification of custom resource "my-bucket-access" is:
         """
@@ -68,13 +68,13 @@ Feature: BucketAccess creation in IAM flow on ObjectScale platform
         kind: BucketAccess
         metadata:
             name: my-bucket-access
-            namespace: namespace-1                                
-        spec:                                               
-            bucketAccessClassName: my-bucket-access-class                           
-            bucketClaimName: my-bucket-claim                              
+            namespace: namespace-1
+        spec:
+            bucketAccessClassName: my-bucket-access-class
+            bucketClaimName: my-bucket-claim
             credentialsSecretName: bucket-credentials-1
             serviceAccountName: service-account-1
-        """ 
+        """
         When BucketAccessClass resource is created from specification "my-bucket-access-class"
         And BucketAccess resource is created from specification "my-bucket-access"
         Then BucketAccess resource "my-bucket-access" in namespace "namespace-1" status "accessGranted" is "true"
