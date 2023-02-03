@@ -1,5 +1,5 @@
 @component_COSI
-@story_KRV-xxx
+@story_KRV-10830
 
 Feature: BucketAccess creation in IAM flow on ObjectScale platform
 
@@ -47,7 +47,7 @@ Feature: BucketAccess creation in IAM flow on ObjectScale platform
         And Bucket resource referencing BucketClaim resource "my-bucket-claim" status "bucketReady" is "true"
         And Bucket resource referencing BucketClaim resource "my-bucket-claim" bucketID is not empty
     
-    @test_KRV-xxx
+    @test_KRV-10830-A
     Scenario: BucketAccess creation with IAM authorization mechanism
         And specification of custom resource "my-bucket-access-class" is:
         """

@@ -11,7 +11,7 @@ import (
 	. "github.com/onsi/ginkgo/v2"
 )
 
-var _ = Describe("Bucket Access Revoke", Label("revoke"), func() {
+var _ = Describe("Bucket Access Revoke", Label("revoke", "story_KRV-10336"), func() {
 	// Resources for scenarios
 	var (
 		myBucketClass       *v1alpha1.BucketClass
@@ -175,7 +175,7 @@ var _ = Describe("Bucket Access Revoke", Label("revoke"), func() {
 	})
 
 	// STEP: Revoke access to bucket
-	It("Successfully revokes access to bucket", func() {
+	It("Successfully revokes access to bucket", Label("test_KRV-10336-A"), func() {
 		// STEP: BucketAccess resource "my-bucket-access" in namespace "namespace-1" is deleted
 		By("Deleting the BucketAccess 'my-bucket-access'")
 		steps.DeleteBucketAccessResource(bucketClient, myBucketAccess)
