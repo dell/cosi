@@ -1,11 +1,7 @@
 package steps
 
 import (
-	"net/http"
-	"path"
-
 	objectscaleRest "github.com/emcecs/objectscale-management-go-sdk/pkg/client/rest"
-	"github.com/emcecs/objectscale-management-go-sdk/pkg/client/rest/client"
 	ginkgo "github.com/onsi/ginkgo/v2"
 	"github.com/onsi/gomega"
 	v1 "k8s.io/api/core/v1"
@@ -31,13 +27,7 @@ func CheckCOSIControllerInstallation(ctx ginkgo.SpecContext, clientset *kubernet
 
 // CheckObjectScaleInstallation Ensure that ObjectScale platform is installed on the cluster
 func CheckObjectScaleInstallation(ctx ginkgo.SpecContext, objectscale *objectscaleRest.ClientSet) {
-	req := client.Request{
-		Method:      http.MethodGet,
-		Path:        path.Join("fedsvc", "objectScaleName"),
-		ContentType: client.ContentTypeXML,
-	}
-	var objectscaleName string
-	err := objectscale.Client().MakeRemoteCall(req, &objectscaleName)
+	_, err := objectscale.FederatedObjectStores().List(map[string]string{})
 	gomega.Expect(err).To(gomega.BeNil())
 }
 

@@ -8,7 +8,7 @@ import (
 )
 
 // CheckObjectStoreCreation Ensure that ObjectStore "object-store-1" is created
-func CheckObjectStoreCreation(ctx ginkgo.SpecContext, objectscale *objectscaleRest.ClientSet, objectstore string) {
+func CheckObjectStoreExists(ctx ginkgo.SpecContext, objectscale *objectscaleRest.ClientSet, objectstore string) {
 	objectstores, err := objectscale.FederatedObjectStores().List(make(map[string]string))
 	gomega.Expect(err).To(gomega.BeNil())
 	gomega.Expect(objectstores).To(gomega.ContainElement(gomega.ContainSubstring(objectstore)))
@@ -16,12 +16,6 @@ func CheckObjectStoreCreation(ctx ginkgo.SpecContext, objectscale *objectscaleRe
 
 // CheckBucketResourceInObjectStore Function checking if Bucket resource is in objectstore
 func CheckBucketResourceInObjectStore(objectscale *objectscaleRest.ClientSet, bucket *v1alpha1.Bucket) {
-	// TODO: Implementation goes here
-	ginkgo.Fail("UNIMPLEMENTED")
-}
-
-// CreateObjectStore Function for creating ObejctStore
-func CreateObjectStore(ctx ginkgo.SpecContext, objectscale *objectscaleRest.ClientSet, objectstore string) {
 	// TODO: Implementation goes here
 	ginkgo.Fail("UNIMPLEMENTED")
 }

@@ -91,7 +91,7 @@ var _ = Describe("Bucket Access KEY", Label("key-flow"), func() {
 
 		// STEP: ObjectStore "object-store-1" is created
 		By("Checking if the ObjectStore 'object-store-1' is created")
-		steps.CreateObjectStore(ctx, objectscale, "object-store-1")
+		steps.CheckObjectStoreExists(ctx, objectscale, "object-store-1")
 
 		// STEP: Kubernetes namespace "driver-ns" is created
 		By("Checking if namespace 'driver-ns' is created")
