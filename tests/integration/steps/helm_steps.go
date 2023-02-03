@@ -12,16 +12,8 @@ import (
 
 // CheckCOSIControllerInstallation Ensure that COSI controller 'cosi-controller' is installed in namespace "driver-ns"
 func CheckCOSIControllerInstallation(ctx ginkgo.SpecContext, clientset *kubernetes.Clientset, controllerName string, namespace string) {
-	pods, err := clientset.CoreV1().Pods(namespace).List(ctx, metav1.ListOptions{})
+	pod, err := clientset.CoreV1().Pods(namespace).Get(ctx, controllerName, metav1.GetOptions{})
 	gomega.Expect(err).To(gomega.BeNil())
-	gomega.Expect(len(pods.Items)).To(gomega.BeNumerically(">", 0))
-	pod := pods.Items[0]
-	for p := range pods.Items {
-		if pods.Items[p].Name == controllerName {
-			pod = pods.Items[p]
-			break
-		}
-	}
 	gomega.Expect(pod.Status.Phase).To(gomega.Equal(v1.PodRunning))
 }
 
@@ -33,15 +25,7 @@ func CheckObjectScaleInstallation(ctx ginkgo.SpecContext, objectscale *objectsca
 
 // CheckCOSIDriverInstallation Ensure that COSI driver is installed in namespace "driver-ns"
 func CheckCOSIDriverInstallation(ctx ginkgo.SpecContext, clientset *kubernetes.Clientset, driver string, namespace string) {
-	pods, err := clientset.CoreV1().Pods(namespace).List(ctx, metav1.ListOptions{})
+	pod, err := clientset.CoreV1().Pods(namespace).Get(ctx, driver, metav1.GetOptions{})
 	gomega.Expect(err).To(gomega.BeNil())
-	gomega.Expect(len(pods.Items)).To(gomega.BeNumerically(">", 0))
-	pod := pods.Items[0]
-	for p := range pods.Items {
-		if pods.Items[p].Name == driver {
-			pod = pods.Items[p]
-			break
-		}
-	}
 	gomega.Expect(pod.Status.Phase).To(gomega.Equal(v1.PodRunning))
 }
