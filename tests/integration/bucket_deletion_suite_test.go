@@ -11,7 +11,7 @@ import (
 	. "github.com/onsi/ginkgo/v2"
 )
 
-var _ = Describe("Bucket Deletion", Label("delete"), func() {
+var _ = Describe("Bucket Deletion", Label("delete", func() {
 	// Resources for scenarios
 	var (
 		bucketClassDelete *v1alpha1.BucketClass
