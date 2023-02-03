@@ -1,8 +1,6 @@
 package steps
 
 import (
-	"context"
-
 	ginkgo "github.com/onsi/ginkgo/v2"
 	"github.com/onsi/gomega"
 	v1 "k8s.io/api/core/v1"
@@ -46,18 +44,17 @@ func CheckBucketClassSpec(clientset *kubernetes.Clientset, bucketClassSpec v1alp
 }
 
 // Check if secret exists
-func CheckSecret(ctx context.Context, clientset *kubernetes.Clientset, secret *v1.Secret) {
+func CheckSecret(ctx ginkgo.SpecContext, clientset *kubernetes.Clientset, secret *v1.Secret) {
 	sec, err := clientset.CoreV1().Secrets(secret.Namespace).Get(ctx, secret.Name, metav1.GetOptions{})
 	gomega.Expect(err).To(gomega.BeNil())
-	if gomega.Expect(sec).NotTo(gomega.BeNil()) {
-		gomega.Expect(sec.Name).To(gomega.Equal(secret.Namespace))
-		gomega.Expect(sec.Namespace).To(gomega.Equal(secret.Namespace))
-		gomega.Expect(sec.Data).NotTo(gomega.Or(gomega.BeNil(), gomega.BeEmpty()))
-	}
+	gomega.Expect(sec).NotTo(gomega.BeNil())
+	gomega.Expect(sec.Name).To(gomega.Equal(secret.Namespace))
+	gomega.Expect(sec.Namespace).To(gomega.Equal(secret.Namespace))
+	gomega.Expect(sec.Data).NotTo(gomega.Or(gomega.BeNil(), gomega.BeEmpty()))
 }
 
 // CheckBucketClaimEvents Check BucketClaim events
-func CheckBucketClaimEvents(ctx context.Context, clientset *kubernetes.Clientset, bucketClaim *v1alpha1.BucketClaim, expected *v1.Event) {
+func CheckBucketClaimEvents(ctx ginkgo.SpecContext, clientset *kubernetes.Clientset, bucketClaim *v1alpha1.BucketClaim, expected *v1.Event) {
 	listOptions := metav1.ListOptions{}
 
 	listOptions.FieldSelector = fields.AndSelectors(
@@ -86,14 +83,14 @@ func CheckBucketClaimEvents(ctx context.Context, clientset *kubernetes.Clientset
 	}
 
 	// check if there is event having required reason
-	if gomega.Expect(el.Items).NotTo(gomega.BeEmpty()) {
-		found := false
-		for _, event := range el.Items {
-			if event.Reason == expected.Reason {
-				found = true
-				break
-			}
+	gomega.Expect(el.Items).NotTo(gomega.BeEmpty())
+	found := false
+	for _, event := range el.Items {
+		if event.Reason == expected.Reason {
+			found = true
+			break
 		}
-		gomega.Expect(found).To(gomega.Equal(true))
 	}
+	gomega.Expect(found).To(gomega.Equal(true))
+
 }

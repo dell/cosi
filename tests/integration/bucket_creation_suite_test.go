@@ -17,6 +17,7 @@ var _ = Describe("Bucket Creation", Serial, Label("create"), func() {
 		validBucketClaim   *v1alpha1.BucketClaim
 		invalidBucketClaim *v1alpha1.BucketClaim
 		validBucket        *v1alpha1.Bucket
+		myEvent            *v1.Event
 	)
 
 	// Background
@@ -74,6 +75,10 @@ var _ = Describe("Bucket Creation", Serial, Label("create"), func() {
 					v1alpha1.ProtocolS3,
 				},
 			},
+		}
+		myEvent = &v1.Event{
+			Type:   "Warning",
+			Reason: "FIXME: reason is simple, machine readable description of failure",
 		}
 
 		// STEP: Kubernetes cluster is up and running
@@ -156,10 +161,7 @@ var _ = Describe("Bucket Creation", Serial, Label("create"), func() {
 
 		// STEP: BucketClaim events contains an error: "Cannot create Bucket: BucketClass does not exist"
 		By("checking if the BucketClaim events contains an error: 'Cannot create Bucket: BucketClass does not exist'")
-		steps.CheckBucketClaimEvents(ctx, clientset, invalidBucketClaim, &v1.Event{
-			Type:   "Warning",
-			Reason: "FIXME: reason is simple, machine readable description of failure",
-		})
+		steps.CheckBucketClaimEvents(ctx, clientset, invalidBucketClaim, myEvent)
 
 		DeferCleanup(func() {
 			// Cleanup for scenario: Unsuccessfull bucket creation

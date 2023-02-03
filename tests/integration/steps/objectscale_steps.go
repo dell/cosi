@@ -1,7 +1,6 @@
 package steps
 
 import (
-	"context"
 	"github.com/aws/aws-sdk-go/service/iam"
 	objectscaleRest "github.com/emcecs/objectscale-management-go-sdk/pkg/client/rest"
 	ginkgo "github.com/onsi/ginkgo/v2"
@@ -54,24 +53,22 @@ func CheckPolicy(objectscale *objectscaleRest.ClientSet, policy string, myBucket
 }
 
 // Function for creating user in ObjectScale
-func CreateUser(ctx context.Context, iamClient *iam.IAM, user, arn string) {
+func CreateUser(ctx ginkgo.SpecContext, iamClient *iam.IAM, user, arn string) {
 	userOut, err := iamClient.CreateUserWithContext(ctx, &iam.CreateUserInput{
 		UserName:            &user,
 		PermissionsBoundary: &arn,
 	})
-	if gomega.Expect(err).To(gomega.BeNil()) {
-		gomega.Expect(userOut.User).NotTo(gomega.BeNil())
-	}
+	gomega.Expect(err).To(gomega.BeNil())
+	gomega.Expect(userOut.User).NotTo(gomega.BeNil())
 }
 
 // Function for checking if user exists in ObjectScale
-func CheckUser(ctx context.Context, iamClient *iam.IAM, user string) {
+func CheckUser(ctx ginkgo.SpecContext, iamClient *iam.IAM, user string) {
 	userOut, err := iamClient.GetUserWithContext(ctx, &iam.GetUserInput{UserName: &user})
-	if gomega.Expect(err).To(gomega.BeNil()) {
-		gomega.Expect(userOut.User).NotTo(gomega.BeNil())
-		gomega.Expect(*(userOut.User.UserName)).To(gomega.Equal(user))
-		gomega.Expect(userOut.User.Arn).To(gomega.Or(gomega.BeNil(), gomega.BeEmpty()))
-	}
+	gomega.Expect(err).To(gomega.BeNil())
+	gomega.Expect(userOut.User).NotTo(gomega.BeNil())
+	gomega.Expect(*(userOut.User.UserName)).To(gomega.Equal(user))
+	gomega.Expect(userOut.User.Arn).To(gomega.Or(gomega.BeNil(), gomega.BeEmpty()))
 }
 
 // DeletePolicy Function deleteing policy from ObjectStore
