@@ -11,7 +11,7 @@ import (
 func CheckObjectStoreExists(ctx ginkgo.SpecContext, objectscale *objectscaleRest.ClientSet, objectstore string) {
 	objectstores, err := objectscale.FederatedObjectStores().List(make(map[string]string))
 	gomega.Expect(err).To(gomega.BeNil())
-	gomega.Expect(objectstores).To(gomega.ContainElement(gomega.ContainSubstring(objectstore)))
+	gomega.Expect(objectstores.Items).To(gomega.ContainElement(gomega.HaveField("ObjectStoreName", objectstore)))
 }
 
 // CheckBucketResourceInObjectStore Function checking if Bucket resource is in objectstore
