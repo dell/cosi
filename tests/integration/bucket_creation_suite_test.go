@@ -11,7 +11,7 @@ import (
 	. "github.com/onsi/ginkgo/v2"
 )
 
-var _ = Describe("Bucket Creation", Label("create"), func() {
+var _ = Describe("Bucket Creation", Label("create", "story_KRV-10253"), func() {
 	// Resources for scenarios
 	var (
 		myBucketClass      *v1alpha1.BucketClass
@@ -115,7 +115,7 @@ var _ = Describe("Bucket Creation", Label("create"), func() {
 	})
 
 	// STEP: Scenario: Successfull bucket creation
-	It("Successfully creates bucket", func() {
+	It("Successfully creates bucket", Label("test_KRV-10253-A"), func() {
 		// STEP: BucketClaim resource is created from specification "bucket-claim-valid"
 		By("creating a BucketClaim resource from specification 'bucket-claim-valid'")
 		steps.CreateBucketClaimResource(bucketClient, bucketClaimValid)
@@ -142,7 +142,7 @@ var _ = Describe("Bucket Creation", Label("create"), func() {
 	})
 
 	// STEP: Scenario: Unsuccessfull bucket creation
-	It("Unsuccessfully tries to create bucket", func() {
+	It("Unsuccessfully tries to create bucket", Label("test_KRV-10253-B"), func() {
 		// STEP: BucketClaim resource is created from specification "bucket-claim-invalid"
 		By("creating a BucketClaim resource from specification 'bucket-claim-invalid'")
 		steps.CreateBucketClaimResource(bucketClient, bucketClaimInvalid)

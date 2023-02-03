@@ -1,5 +1,5 @@
 @component_COSI
-@story_KRV-xxx
+@story_KRV-10335
 
 Feature: BucketAccess creation in KEY flow on ObjectScale platform
 
@@ -46,7 +46,7 @@ Feature: BucketAccess creation in KEY flow on ObjectScale platform
         And Bucket resource referencing BucketClaim resource "my-bucket-claim" status "bucketReady" is "true"
         And Bucket resource referencing BucketClaim resource "my-bucket-claim" bucketID is not empty
 
-    @test_KRV-xxx
+    @test_KRV-10335-A
     Scenario: BucketAccess creation with KEY authorization mechanism 
         And specification of custom resource "my-bucket-access-class" is:
         """

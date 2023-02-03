@@ -11,7 +11,7 @@ import (
 	. "github.com/onsi/ginkgo/v2"
 )
 
-var _ = Describe("Bucket Access KEY", Label("key-flow"), func() {
+var _ = Describe("Bucket Access KEY", Label("key-flow", "story_KRV-10335"), func() {
 	// Resources for scenarios
 	var (
 		myBucketClass       *v1alpha1.BucketClass
@@ -139,7 +139,7 @@ var _ = Describe("Bucket Access KEY", Label("key-flow"), func() {
 	})
 
 	// STEP: Scenario: BucketAccess creation with KEY authorization mechanism
-	It("Creates BucketAccess with KEY authorization mechanism", func() {
+	It("Creates BucketAccess with KEY authorization mechanism", Label("test_KRV-10335-A"), func() {
 		// STEP: BucketAccessClass resource is created from specification "my-bucket-access-class"
 		By("Creating BucketAccessClass resource 'my-bucket-access-class'")
 		steps.CreateBucketAccessClassResource(bucketClient, myBucketAccessClass)

@@ -1,5 +1,5 @@
 @component_COSI
-@story_KRV-xxx
+@story_KRV-10253
 
 Feature: Bucket creation on ObjectScale platform
 
@@ -52,7 +52,7 @@ Feature: Bucket creation on ObjectScale platform
         """
         And BucketClass resource is created from specification "my-bucket-class"
     
-    @test_KRV-xxx
+    @test_KRV-10253-A
     Scenario: Successfull bucket creation
         When BucketClaim resource is created from specification "bucket-claim-valid"
         Then Bucket resource referencing BucketClaim resource "bucket-claim-valid" is created in ObjectStore "object-store-1"
@@ -60,7 +60,7 @@ Feature: Bucket creation on ObjectScale platform
         And Bucket resource referencing BucketClaim resource "bucket-claim-valid" status "bucketReady" is "true"
         And Bucket resource referencing BucketClaim resource "bucket-claim-valid" bucketID is not empty
 
-    @test_KRV-xxx
+    @test_KRV-10253-B
     Scenario: Unsuccessfull bucket creation
         When BucketClaim resource is created from specification "bucket-claim-invalid"
         Then Bucket resource referencing BucketClaim resource "bucket-claim-invalid" is not created in ObjectStore "object-store-1"

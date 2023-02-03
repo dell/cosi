@@ -11,7 +11,7 @@ import (
 	. "github.com/onsi/ginkgo/v2"
 )
 
-var _ = Describe("Bucket Deletion", Label("delete"), func() {
+var _ = Describe("Bucket Deletion", Label("delete", "story_KRV-10254"), func() {
 	// Resources for scenarios
 	var (
 		bucketClassDelete *v1alpha1.BucketClass
@@ -142,7 +142,7 @@ var _ = Describe("Bucket Deletion", Label("delete"), func() {
 	})
 
 	// STEP: Scenario: BucketClaim deletion with deletionPolicy set to "delete"
-	It("Delets the bucket when deletionPolicy is set to 'delete'", func() {
+	It("Delets the bucket when deletionPolicy is set to 'delete'", Label("test_KRV-10254-A"), func() {
 		// STEP: BucketClass resource is created from specification "my-bucket-class-delete"
 		By("creating a BucketClass resource from specification 'my-bucket-class-delete'")
 		steps.CreateBucketClassResource(bucketClient, bucketClassDelete)
@@ -181,7 +181,7 @@ var _ = Describe("Bucket Deletion", Label("delete"), func() {
 	})
 
 	// STEP: Scenario: BucketClaim deletion with deletionPolicy set to "retain"
-	It("Does not delete the bucket when deletionPolicy is set to 'retain'", func() {
+	It("Does not delete the bucket when deletionPolicy is set to 'retain'", Label("test_KRV-10254-B"), func() {
 		// STEP: BucketClass resource is created from specification "my-bucket-class-retain"
 		By("creating a BucketClass resource from specification 'my-bucket-class-retain'")
 		steps.CreateBucketClassResource(bucketClient, bucketClassRetain)
