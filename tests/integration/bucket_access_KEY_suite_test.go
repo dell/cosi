@@ -85,6 +85,9 @@ var _ = Describe("Bucket Access KEY", Label("key-flow"), func() {
 				Name:      "valid-secret-1",
 				Namespace: "namespace-1",
 			},
+			Data: map[string][]byte{
+				"this": []byte("is template for data"), // FIXME: when we know exact format of the secret
+			},
 		}
 
 		// STEP: Kubernetes cluster is up and running

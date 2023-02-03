@@ -14,8 +14,8 @@ var _ = Describe("Bucket Creation", Serial, Label("create"), func() {
 	// Resources for scenarios
 	var (
 		myBucketClass      *v1alpha1.BucketClass
-		bucketClaimValid   *v1alpha1.BucketClaim
-		bucketClaimInvalid *v1alpha1.BucketClaim
+		validBucketClaim   *v1alpha1.BucketClaim
+		invalidBucketClaim *v1alpha1.BucketClaim
 		validBucket        *v1alpha1.Bucket
 	)
 
@@ -38,7 +38,7 @@ var _ = Describe("Bucket Creation", Serial, Label("create"), func() {
 				"accountSecret": "${secretName}",
 			},
 		}
-		bucketClaimValid = &v1alpha1.BucketClaim{
+		validBucketClaim = &v1alpha1.BucketClaim{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      "bucket-claim-valid",
 				Namespace: "namespace-1",
@@ -50,7 +50,7 @@ var _ = Describe("Bucket Creation", Serial, Label("create"), func() {
 				},
 			},
 		}
-		bucketClaimInvalid = &v1alpha1.BucketClaim{
+		invalidBucketClaim = &v1alpha1.BucketClaim{
 			TypeMeta: metav1.TypeMeta{
 				Kind:       "BucketClaim",
 				APIVersion: "storage.k8s.io/v1",
@@ -117,7 +117,7 @@ var _ = Describe("Bucket Creation", Serial, Label("create"), func() {
 	It("Successfully creates bucket", func(ctx SpecContext) {
 		// STEP: BucketClaim resource is created from specification "bucket-claim-valid"
 		By("creating a BucketClaim resource from specification 'bucket-claim-valid'")
-		steps.CreateBucketClaimResource(ctx, bucketClient, bucketClaimValid)
+		steps.CreateBucketClaimResource(ctx, bucketClient, validBucketClaim)
 
 		// STEP: Bucket resource referencing BucketClaim resource "bucket-claim-valid" is created in ObjectStore "objectstore-dev"
 		By("checking if Bucket resource referencing BucketClaim resource 'bucket-claim-valid' is created in ObjectStore 'objectstore-dev'")
@@ -125,7 +125,7 @@ var _ = Describe("Bucket Creation", Serial, Label("create"), func() {
 
 		// STEP: BucketClaim resource "bucket-claim-valid" in namespace "namespace-1" status "bucketReady" is "true"
 		By("checking if the status 'bucketReady' of BucketClaim resource 'bucket-claim-valid' in namespace 'namespace-1' is 'true'")
-		steps.CheckBucketClaimStatus(ctx, bucketClient, bucketClaimValid, true)
+		steps.CheckBucketClaimStatus(ctx, bucketClient, validBucketClaim, true)
 
 		// STEP: Bucket resource referencing BucketClaim resource "bucket-claim-valid" status "bucketReady" is "true" and bucketID is not empty
 		By("checking the status 'bucketReady' of Bucket resource referencing BucketClaim resource 'bucket-claim-valid'  is 'true'")
@@ -144,19 +144,19 @@ var _ = Describe("Bucket Creation", Serial, Label("create"), func() {
 	It("Unsuccessfully tries to create bucket", func(ctx SpecContext) {
 		// STEP: BucketClaim resource is created from specification "bucket-claim-invalid"
 		By("creating a BucketClaim resource from specification 'bucket-claim-invalid'")
-		steps.CreateBucketClaimResource(ctx, bucketClient, bucketClaimInvalid)
+		steps.CreateBucketClaimResource(ctx, bucketClient, invalidBucketClaim)
 
 		// STEP: Bucket resource referencing BucketClaim resource "bucket-claim-invalid" is not created in ObjectStore "objectstore-dev"
 		By("checking if Bucket resource referencing BucketClaim resource 'bucket-claim-invalid' is not created in ObjectStore 'objectstore-dev'")
-		steps.CheckBucketNotInObjectStore(objectscale, bucketClaimInvalid)
+		steps.CheckBucketNotInObjectStore(objectscale, invalidBucketClaim)
 
 		// STEP: BucketClaim resource "bucket-claim-invalid" in namespace "namespace-1" status "bucketReady" is "false"
 		By("checking if the status 'bucketReady' of BucketClaim resource 'bucket-claim-invalid' in namespace 'namespace-1' is 'false'")
-		steps.CheckBucketClaimStatus(ctx, bucketClient, bucketClaimInvalid, false)
+		steps.CheckBucketClaimStatus(ctx, bucketClient, invalidBucketClaim, false)
 
 		// STEP: BucketClaim events contains an error: "Cannot create Bucket: BucketClass does not exist"
 		By("checking if the BucketClaim events contains an error: 'Cannot create Bucket: BucketClass does not exist'")
-		steps.CheckBucketClaimEvents(ctx, clientset, bucketClaimInvalid, &v1.Event{
+		steps.CheckBucketClaimEvents(ctx, clientset, invalidBucketClaim, &v1.Event{
 			Type:   "Warning",
 			Reason: "FIXME: reason is simple, machine readable description of failure",
 		})
