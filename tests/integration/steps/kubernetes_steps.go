@@ -63,8 +63,7 @@ func CheckBucketClaimEvents(ctx ginkgo.SpecContext, clientset *kubernetes.Client
 		fields.OneTermEqualSelector("type", expected.Type),
 	).String()
 
-	e := clientset.CoreV1().Events(bucketClaim.Namespace)
-	el := &v1.EventList{
+	eventList := &v1.EventList{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "EventList",
 			APIVersion: "v1",
@@ -72,7 +71,7 @@ func CheckBucketClaimEvents(ctx ginkgo.SpecContext, clientset *kubernetes.Client
 	}
 
 	for {
-		list, err := e.List(ctx, listOptions)
+		list, err := clientset.CoreV1().Events(bucketClaim.Namespace).List(ctx, listOptions)
 		gomega.Expect(err).To(gomega.BeNil())
 
 		nextContinueToken, _ := meta.NewAccessor().Continue(list)
@@ -83,14 +82,13 @@ func CheckBucketClaimEvents(ctx ginkgo.SpecContext, clientset *kubernetes.Client
 	}
 
 	// check if there is event having required reason
-	gomega.Expect(el.Items).NotTo(gomega.BeEmpty())
+	gomega.Expect(eventList.Items).NotTo(gomega.BeEmpty())
 	found := false
-	for _, event := range el.Items {
+	for _, event := range eventList.Items {
 		if event.Reason == expected.Reason {
 			found = true
 			break
 		}
 	}
 	gomega.Expect(found).To(gomega.Equal(true))
-
 }

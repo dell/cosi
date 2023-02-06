@@ -76,8 +76,8 @@ Feature: BucketAccess creation in KEY flow on ObjectScale platform
         When BucketAccessClass resource is created from specification "my-bucket-access-class"
         And BucketAccess resource is created from specification "my-bucket-access"
         Then BucketAccess resource "my-bucket-access" in namespace "namespace-1" status "accessGranted" is "true"
-        And User "${user}" in account on ObjectScale platform was created
-        And Policy "${policy}" for Bucket resource referencing BucketClaim resource "my-bucket-claim" on ObjectScale platform was created
+        And User "${user}" in account on ObjectScale platform is created
+        And Policy "${policy}" for Bucket resource referencing BucketClaim resource "my-bucket-claim" on ObjectScale platform is created
         And BucketAccess resource "my-bucket-access" in namespace "namespace-1" status "accountID" is "${accountID}"
         And Secret "bucket-credentials-1" is created in namespace "namespace-1" and is not empty
         And Bucket resource referencing BucketClaim resource "bucket-claim-delete" is accessible from Secret "bucket-credentials-1"

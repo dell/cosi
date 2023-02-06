@@ -161,12 +161,12 @@ var _ = Describe("Bucket Access KEY", Label("key-flow"), func() {
 		By("Checking if BucketAccess resource 'my-bucket-access' in namespace 'namespace-1' status 'accessGranted' is 'true'")
 		steps.CheckBucketAccessStatus(ctx, bucketClient, myBucketAccess, true)
 
-		// STEP: User "${user}" in account on ObjectScale platform was created
-		By("Checking if User '${user}' in account on ObjectScale platform was created")
+		// STEP: User "${user}" in account on ObjectScale platform is created
+		By("Checking if User '${user}' in account on ObjectScale platform is created")
 		steps.CheckUser(ctx, iamClient, "${user}")
 
-		// STEP: Policy "${policy}" for Bucket resource referencing BucketClaim resource "my-bucket-claim" on ObjectScale platform was created
-		By("Checking if Policy '${policy}' for Bucket resource referencing BucketClaim resource 'my-bucket-claim' was created")
+		// STEP: Policy "${policy}" for Bucket resource referencing BucketClaim resource "my-bucket-claim" on ObjectScale platform is created
+		By("Checking if Policy '${policy}' for Bucket resource referencing BucketClaim resource 'my-bucket-claim' is created")
 		steps.CheckPolicy(objectscale, "${policy}", myBucket)
 
 		// STEP: BucketAccess resource "my-bucket-access" in namespace "namespace-1" status "accountID" is "${accountID}"
