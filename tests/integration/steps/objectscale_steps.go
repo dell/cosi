@@ -7,6 +7,12 @@ import (
 	"sigs.k8s.io/container-object-storage-interface-api/apis/objectstorage/v1alpha1"
 )
 
+// CheckObjectScaleInstallation Ensure that ObjectScale platform is installed on the cluster
+func CheckObjectScaleInstallation(ctx ginkgo.SpecContext, objectscale *objectscaleRest.ClientSet) {
+	_, err := objectscale.FederatedObjectStores().List(map[string]string{})
+	gomega.Expect(err).To(gomega.BeNil())
+}
+
 // CheckObjectStoreCreation Ensure that ObjectStore "object-store-1" is created
 func CheckObjectStoreExists(ctx ginkgo.SpecContext, objectscale *objectscaleRest.ClientSet, objectstore string) {
 	objectstores, err := objectscale.FederatedObjectStores().List(make(map[string]string))
