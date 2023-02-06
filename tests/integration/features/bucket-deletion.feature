@@ -13,7 +13,7 @@ Feature: Bucket deletion from ObjectScale platform
         And ObjectStore "objectstore-dev" is created
         And Kubernetes namespace "driver-ns" is created
         And Kubernetes namespace "namespace-1" is created
-        And COSI controller "objectstore-controller" is installed in namespace "default"
+        And COSI controller "objectstorage-controller" is installed in namespace "default"
         And COSI driver "cosi-driver" is installed in namespace "driver-ns"
 
     @test_KRV-xxx

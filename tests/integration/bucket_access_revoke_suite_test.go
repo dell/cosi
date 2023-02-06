@@ -109,7 +109,7 @@ var _ = Describe("Bucket Access Revoke", Serial, Label("revoke"), func() {
 		By("Checking if namespace 'namespace-1' is created")
 		steps.CreateNamespace(ctx, clientset, "namespace-1")
 
-		// STEP: COSI controller "objectstore-controller" is installed in namespace "default"
+		// STEP: COSI controller "objectstorage-controller" is installed in namespace "default"
 		By("Checking if COSI controller 'objectstorecontroller' is installed in namespace 'default'")
 		steps.CheckCOSIControllerInstallation(ctx, clientset, "objectstorage-controller", "default")
 
