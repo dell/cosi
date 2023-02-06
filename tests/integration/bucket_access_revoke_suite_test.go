@@ -97,9 +97,9 @@ var _ = Describe("Bucket Access Revoke", Serial, Label("revoke"), func() {
 		By("Checking if the ObjectScale platform is ready")
 		steps.CheckObjectScaleInstallation(ctx, objectscale)
 
-		// STEP: ObjectStore "object-store-1" is created
-		By("Checking if the ObjectStore 'object-store-1' is created")
-		steps.CheckObjectStoreExists(ctx, objectscale, "object-store-1")
+		// STEP: ObjectStore "objectstore-dev" is created
+		By("Checking if the ObjectStore 'objectstore-dev' is created")
+		steps.CheckObjectStoreExists(ctx, objectscale, "objectstore-dev")
 
 		// STEP: Kubernetes namespace "driver-ns" is created
 		By("Checking if namespace 'driver-ns' is created")
@@ -125,8 +125,8 @@ var _ = Describe("Bucket Access Revoke", Serial, Label("revoke"), func() {
 		By("Creating the BucketClaim 'my-bucket-claim'")
 		steps.CreateBucketClaimResource(ctx, bucketClient, myBucketClaim)
 
-		// STEP: Bucket resource referencing BucketClaim resource "my-bucket-claim" is created in ObjectStore "object-store-1"
-		By("Checking if the Bucket referencing 'my-bucket-claim' is created in ObjectStore 'object-store-1'")
+		// STEP: Bucket resource referencing BucketClaim resource "my-bucket-claim" is created in ObjectStore "objectstore-dev"
+		By("Checking if the Bucket referencing 'my-bucket-claim' is created in ObjectStore 'objectstore-dev'")
 		steps.CheckBucketResourceInObjectStore(objectscale, myBucket)
 
 		// STEP: BucketClaim resource "my-bucket-claim" in namespace "namespace-1" status "bucketReady" is "true"

@@ -10,7 +10,7 @@ Feature: Bucket deletion from ObjectScale platform
     Background: 
         Given Kubernetes cluster is up and running
         And ObjectScale platform is installed on the cluster
-        And ObjectStore "object-store-1" is created
+        And ObjectStore "objectstore-dev" is created
         And Kubernetes namespace "driver-ns" is created
         And Kubernetes namespace "namespace-1" is created
         And COSI controller "objectstore-controller" is installed in namespace "default"
@@ -44,12 +44,12 @@ Feature: Bucket deletion from ObjectScale platform
         """  
         And BucketClass resource is created from specification "my-bucket-class-delete"
         And BucketClaim resource is created from specification "my-bucket-claim-delete"  
-        And Bucket resource referencing BucketClaim resource "bucket-claim-delete" is created in ObjectStore "object-store-1"
+        And Bucket resource referencing BucketClaim resource "bucket-claim-delete" is created in ObjectStore "objectstore-dev"
         And BucketClaim resource "bucket-claim-delete" in namespace "namespace-1" status "bucketReady" is "true"
         And Bucket resource referencing BucketClaim resource "bucket-claim-delete" status "bucketReady" is "true"
         And Bucket resource referencing BucketClaim resource "bucket-claim-delete" bucketID is not empty
         When BucketClaim resource "my-bucket-claim-delete" is deleted in namespace "namespace-1"
-        Then Bucket referencing BucketClaim resource "my-bucket-claim-delete" is deleted in ObjectStore "object-store-1"
+        Then Bucket referencing BucketClaim resource "my-bucket-claim-delete" is deleted in ObjectStore "objectstore-dev"
 
     @test_KRV-xxx
     Scenario: BucketClaim deletion with deletionPolicy set to "retain" (default)
@@ -79,9 +79,9 @@ Feature: Bucket deletion from ObjectScale platform
         """  
         And BucketClass resource is created from specification "my-bucket-class-retain"
         And BucketClaim resource is created from specification "my-bucket-claim-retain"
-        And Bucket resource referencing BucketClaim resource "bucket-claim-retain" is created in ObjectStore "object-store-1"
+        And Bucket resource referencing BucketClaim resource "bucket-claim-retain" is created in ObjectStore "objectstore-dev"
         And BucketClaim resource "bucket-claim-retain" in namespace "namespace-1" status "bucketReady" is "true"
         And Bucket resource referencing BucketClaim resource "bucket-claim-retain" status "bucketReady" is "true"
         And Bucket resource referencing BucketClaim resource "bucket-claim-retain" bucketID is not empty
         When BucketClaim resource "my-bucket-claim-retain" is deleted in namespace "namespace-1"
-        Then Bucket referencing BucketClaim resource "my-bucket-claim-retain" is available in ObjectStore "object-store-1"
+        Then Bucket referencing BucketClaim resource "my-bucket-claim-retain" is available in ObjectStore "objectstore-dev"

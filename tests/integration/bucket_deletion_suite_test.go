@@ -116,9 +116,9 @@ var _ = Describe("Bucket Deletion", Serial, Label("delete"), func() {
 		By("Checking if the ObjectScale platform is ready")
 		steps.CheckObjectScaleInstallation(ctx, objectscale)
 
-		// STEP: ObjectStore "object-store-1" is created
-		By("Checking if the ObjectStore 'object-store-1' is created")
-		steps.CheckObjectStoreExists(ctx, objectscale, "object-store-1")
+		// STEP: ObjectStore "objectstore-dev" is created
+		By("Checking if the ObjectStore 'objectstore-dev' is created")
+		steps.CheckObjectStoreExists(ctx, objectscale, "objectstore-dev")
 
 		// STEP: Kubernetes namespace "driver-ns" is created
 		By("Checking if namespace 'driver-ns' is created")
@@ -151,8 +151,8 @@ var _ = Describe("Bucket Deletion", Serial, Label("delete"), func() {
 		By("creating a BucketClaim resource from specification 'my-bucket-claim-delete'")
 		steps.CreateBucketClaimResource(ctx, bucketClient, bucketClaimDelete)
 
-		// STEP: Bucket resource referencing BucketClaim resource "bucket-claim-delete" is created in ObjectStore "object-store-1"
-		By("checking if Bucket resource referencing BucketClaim resource 'bucket-claim-delete' is created in ObjectStore 'object-store-1'")
+		// STEP: Bucket resource referencing BucketClaim resource "bucket-claim-delete" is created in ObjectStore "objectstore-dev"
+		By("checking if Bucket resource referencing BucketClaim resource 'bucket-claim-delete' is created in ObjectStore 'objectstore-dev'")
 		steps.CheckBucketResourceInObjectStore(objectscale, deleteBucket)
 
 		// STEP: BucketClaim resource "bucket-claim-delete" in namespace "namespace-1" status "bucketReady" is "true"
@@ -171,8 +171,8 @@ var _ = Describe("Bucket Deletion", Serial, Label("delete"), func() {
 		By("deleting BucketClaim resource 'my-bucket-claim-delete' in namespace 'namespace-1'")
 		steps.DeleteBucketClaimResource(ctx, bucketClient, bucketClaimDelete)
 
-		// STEP: Bucket referencing BucketClaim resource "my-bucket-claim-delete" is deleted in ObjectStore "object-store-1"
-		By("checking if Bucket referencing BucketClaim resource 'my-bucket-claim-delete' is deleted in ObjectStore 'object-store-1'")
+		// STEP: Bucket referencing BucketClaim resource "my-bucket-claim-delete" is deleted in ObjectStore "objectstore-dev"
+		By("checking if Bucket referencing BucketClaim resource 'my-bucket-claim-delete' is deleted in ObjectStore 'objectstore-dev'")
 		steps.CheckBucketDeletionInObjectStore(objectscale, deleteBucket)
 
 		DeferCleanup(func() {
@@ -190,8 +190,8 @@ var _ = Describe("Bucket Deletion", Serial, Label("delete"), func() {
 		By("creating a BucketClaim resource from specification 'my-bucket-claim-retain'")
 		steps.CreateBucketClaimResource(ctx, bucketClient, bucketClaimRetain)
 
-		// STEP: Bucket resource referencing BucketClaim resource "bucket-claim-retain" is created in ObjectStore "object-store-1"
-		By("checking if Bucket resource referencing BucketClaim resource 'bucket-claim-retain' is created in ObjectStore 'object-store-1'")
+		// STEP: Bucket resource referencing BucketClaim resource "bucket-claim-retain" is created in ObjectStore "objectstore-dev"
+		By("checking if Bucket resource referencing BucketClaim resource 'bucket-claim-retain' is created in ObjectStore 'objectstore-dev'")
 		steps.CheckBucketResourceInObjectStore(objectscale, retainBucket)
 
 		// STEP: BucketClaim resource "bucket-claim-retain" in namespace "namespace-1" status "bucketReady" is "true"
@@ -210,8 +210,8 @@ var _ = Describe("Bucket Deletion", Serial, Label("delete"), func() {
 		By("deleting BucketClaim resource 'my-bucket-claim-retain' in namespace 'namespace-1'")
 		steps.DeleteBucketClaimResource(ctx, bucketClient, bucketClaimRetain)
 
-		// STEP: Bucket referencing BucketClaim resource "my-bucket-claim-retain" is available in ObjectStore "object-store-1"
-		By("checking if Bucket referencing BucketClaim resource 'my-bucket-claim-retain' is available in ObjectStore 'object-store-1'")
+		// STEP: Bucket referencing BucketClaim resource "my-bucket-claim-retain" is available in ObjectStore "objectstore-dev"
+		By("checking if Bucket referencing BucketClaim resource 'my-bucket-claim-retain' is available in ObjectStore 'objectstore-dev'")
 		steps.CheckBucketResourceInObjectStore(objectscale, retainBucket)
 
 		DeferCleanup(func() {

@@ -84,9 +84,9 @@ var _ = Describe("Bucket Creation", Serial, Label("create"), func() {
 		By("Checking if the ObjectScale platform is ready")
 		steps.CheckObjectScaleInstallation(ctx, objectscale)
 
-		// STEP: ObjectStore "object-store-1" is created
-		By("Checking if the ObjectStore 'object-store-1' is created")
-		steps.CheckObjectStoreExists(ctx, objectscale, "object-store-1")
+		// STEP: ObjectStore "objectstore-dev" is created
+		By("Checking if the ObjectStore 'objectstore-dev' is created")
+		steps.CheckObjectStoreExists(ctx, objectscale, "objectstore-dev")
 
 		// STEP: Kubernetes namespace "driver-ns" is created
 		By("Checking if namespace 'driver-ns' is created")
@@ -119,8 +119,8 @@ var _ = Describe("Bucket Creation", Serial, Label("create"), func() {
 		By("creating a BucketClaim resource from specification 'bucket-claim-valid'")
 		steps.CreateBucketClaimResource(ctx, bucketClient, bucketClaimValid)
 
-		// STEP: Bucket resource referencing BucketClaim resource "bucket-claim-valid" is created in ObjectStore "object-store-1"
-		By("checking if Bucket resource referencing BucketClaim resource 'bucket-claim-valid' is created in ObjectStore 'object-store-1'")
+		// STEP: Bucket resource referencing BucketClaim resource "bucket-claim-valid" is created in ObjectStore "objectstore-dev"
+		By("checking if Bucket resource referencing BucketClaim resource 'bucket-claim-valid' is created in ObjectStore 'objectstore-dev'")
 		steps.CheckBucketResourceInObjectStore(objectscale, validBucket)
 
 		// STEP: BucketClaim resource "bucket-claim-valid" in namespace "namespace-1" status "bucketReady" is "true"
@@ -146,8 +146,8 @@ var _ = Describe("Bucket Creation", Serial, Label("create"), func() {
 		By("creating a BucketClaim resource from specification 'bucket-claim-invalid'")
 		steps.CreateBucketClaimResource(ctx, bucketClient, bucketClaimInvalid)
 
-		// STEP: Bucket resource referencing BucketClaim resource "bucket-claim-invalid" is not created in ObjectStore "object-store-1"
-		By("checking if Bucket resource referencing BucketClaim resource 'bucket-claim-invalid' is not created in ObjectStore 'object-store-1'")
+		// STEP: Bucket resource referencing BucketClaim resource "bucket-claim-invalid" is not created in ObjectStore "objectstore-dev"
+		By("checking if Bucket resource referencing BucketClaim resource 'bucket-claim-invalid' is not created in ObjectStore 'objectstore-dev'")
 		steps.CheckBucketNotInObjectStore(objectscale, bucketClaimInvalid)
 
 		// STEP: BucketClaim resource "bucket-claim-invalid" in namespace "namespace-1" status "bucketReady" is "false"
