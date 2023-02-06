@@ -95,11 +95,11 @@ var _ = Describe("Bucket Access Revoke", Serial, Label("revoke"), func() {
 
 		// STEP: ObjectScale platform is installed on the cluster
 		By("Checking if the ObjectScale platform is ready")
-		steps.CheckObjectScaleInstallation(ctx, clientset)
+		steps.CheckObjectScaleInstallation(ctx, objectscale)
 
-		// STEP: ObjectStore "object-store-1" is created
-		By("Checking if the ObjectStore 'object-store-1' is created")
-		steps.CreateObjectStore(ctx, objectscale, "object-store-1")
+		// STEP: ObjectStore "objectstore-dev" is created
+		By("Checking if the ObjectStore 'objectstore-dev' is created")
+		steps.CheckObjectStoreExists(ctx, objectscale, "objectstore-dev")
 
 		// STEP: Kubernetes namespace "driver-ns" is created
 		By("Checking if namespace 'driver-ns' is created")
@@ -109,13 +109,13 @@ var _ = Describe("Bucket Access Revoke", Serial, Label("revoke"), func() {
 		By("Checking if namespace 'namespace-1' is created")
 		steps.CreateNamespace(ctx, clientset, "namespace-1")
 
-		// STEP: COSI controller "cosi-controller" is installed in namespace "driver-ns"
-		By("Checking if COSI controller 'cosi-controller' is installed in namespace 'driver-ns'")
-		steps.CheckCOSIControllerInstallation(clientset, "cosi-controller", "driver-ns")
+		// STEP: COSI controller "objectstorage-controller" is installed in namespace "default"
+		By("Checking if COSI controller 'objectstorage-controller' is installed in namespace 'default'")
+		steps.CheckCOSIControllerInstallation(ctx, clientset, "objectstorage-controller", "default")
 
 		// STEP: COSI driver "cosi-driver" is installed in namespace "driver-ns"
 		By("Checking if COSI driver 'cosi-driver' is installed in namespace 'driver-ns'")
-		steps.CheckCOSIDriverInstallation(clientset, "cosi-driver", "driver-ns")
+		steps.CheckCOSIDriverInstallation(ctx, clientset, "cosi-driver", "driver-ns")
 
 		// STEP: BucketClass resource is created from specification "my-bucket-class"
 		By("Creating the BucketClass 'my-bucket-class'")
@@ -125,8 +125,8 @@ var _ = Describe("Bucket Access Revoke", Serial, Label("revoke"), func() {
 		By("Creating the BucketClaim 'my-bucket-claim'")
 		steps.CreateBucketClaimResource(ctx, bucketClient, myBucketClaim)
 
-		// STEP: Bucket resource referencing BucketClaim resource "my-bucket-claim" is created in ObjectStore "object-store-1"
-		By("Checking if the Bucket referencing 'my-bucket-claim' is created in ObjectStore 'object-store-1'")
+		// STEP: Bucket resource referencing BucketClaim resource "my-bucket-claim" is created in ObjectStore "objectstore-dev"
+		By("Checking if the Bucket referencing 'my-bucket-claim' is created in ObjectStore 'objectstore-dev'")
 		steps.CheckBucketResourceInObjectStore(objectscale, myBucket)
 
 		// STEP: BucketClaim resource "my-bucket-claim" in namespace "namespace-1" status "bucketReady" is "true"

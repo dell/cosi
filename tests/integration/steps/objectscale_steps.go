@@ -3,25 +3,25 @@ package steps
 import (
 	objectscaleRest "github.com/emcecs/objectscale-management-go-sdk/pkg/client/rest"
 	ginkgo "github.com/onsi/ginkgo/v2"
+	gomega "github.com/onsi/gomega"
 	"sigs.k8s.io/container-object-storage-interface-api/apis/objectstorage/v1alpha1"
 )
 
-// CheckObjectStoreCreation Ensure that ObjectStore "object-store-1" is created
-func CheckObjectStoreCreation(ctx ginkgo.SpecContext, objectscale *objectscaleRest.ClientSet, objectstore string) {
-	// TODO: Implementation goes here
-	// check if ObjectStore "object-store-1" is created
-	// if not, fail the test
-	ginkgo.Fail("UNIMPLEMENTED")
+// CheckObjectScaleInstallation Ensure that ObjectScale platform is installed on the cluster
+func CheckObjectScaleInstallation(ctx ginkgo.SpecContext, objectscale *objectscaleRest.ClientSet) {
+	_, err := objectscale.FederatedObjectStores().List(map[string]string{})
+	gomega.Expect(err).To(gomega.BeNil())
+}
+
+// CheckObjectStoreCreation Ensure that ObjectStore "objectstore-dev" is created
+func CheckObjectStoreExists(ctx ginkgo.SpecContext, objectscale *objectscaleRest.ClientSet, objectstore string) {
+	objectstores, err := objectscale.FederatedObjectStores().List(make(map[string]string))
+	gomega.Expect(err).To(gomega.BeNil())
+	gomega.Expect(objectstores.Items).To(gomega.ContainElement(gomega.HaveField("ObjectStoreName", objectstore)))
 }
 
 // CheckBucketResourceInObjectStore Function checking if Bucket resource is in objectstore
 func CheckBucketResourceInObjectStore(objectscale *objectscaleRest.ClientSet, bucket *v1alpha1.Bucket) {
-	// TODO: Implementation goes here
-	ginkgo.Fail("UNIMPLEMENTED")
-}
-
-// CreateObjectStore Function for creating ObejctStore
-func CreateObjectStore(ctx ginkgo.SpecContext, objectscale *objectscaleRest.ClientSet, objectstore string) {
 	// TODO: Implementation goes here
 	ginkgo.Fail("UNIMPLEMENTED")
 }

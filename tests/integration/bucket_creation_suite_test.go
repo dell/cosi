@@ -4,11 +4,10 @@ package main_test
 
 import (
 	"github.com/dell/cosi-driver/tests/integration/steps"
+	. "github.com/onsi/ginkgo/v2"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/container-object-storage-interface-api/apis/objectstorage/v1alpha1"
-
-	. "github.com/onsi/ginkgo/v2"
 )
 
 var _ = Describe("Bucket Creation", Serial, Label("create"), func() {
@@ -83,11 +82,11 @@ var _ = Describe("Bucket Creation", Serial, Label("create"), func() {
 
 		// STEP: ObjectScale platform is installed on the cluster
 		By("Checking if the ObjectScale platform is ready")
-		steps.CheckObjectScaleInstallation(ctx, clientset)
+		steps.CheckObjectScaleInstallation(ctx, objectscale)
 
-		// STEP: ObjectStore "object-store-1" is created
-		By("Checking if the ObjectStore 'object-store-1' is created")
-		steps.CreateObjectStore(ctx, objectscale, "object-store-1")
+		// STEP: ObjectStore "objectstore-dev" is created
+		By("Checking if the ObjectStore 'objectstore-dev' is created")
+		steps.CheckObjectStoreExists(ctx, objectscale, "objectstore-dev")
 
 		// STEP: Kubernetes namespace "driver-ns" is created
 		By("Checking if namespace 'driver-ns' is created")
@@ -97,13 +96,13 @@ var _ = Describe("Bucket Creation", Serial, Label("create"), func() {
 		By("Checking if namespace 'namespace-1' is created")
 		steps.CreateNamespace(ctx, clientset, "namespace-1")
 
-		// STEP: COSI controller "cosi-controller" is installed in namespace "driver-ns"
-		By("Checking if COSI controller 'cosi-controller' is installed in namespace 'driver-ns'")
-		steps.CheckCOSIControllerInstallation(clientset, "cosi-controller", "driver-ns")
+		// STEP: COSI controller "objectstorage-controller" is installed in namespace "default"
+		By("Checking if COSI controller 'objectstorage-controller' is installed in namespace 'default'")
+		steps.CheckCOSIControllerInstallation(ctx, clientset, "objectstorage-controller", "default")
 
 		// STEP: COSI driver "cosi-driver" is installed in namespace "driver-ns"
 		By("Checking if COSI driver 'cosi-driver' is installed in namespace 'driver-ns'")
-		steps.CheckCOSIDriverInstallation(clientset, "cosi-driver", "driver-ns")
+		steps.CheckCOSIDriverInstallation(ctx, clientset, "cosi-driver", "driver-ns")
 
 		// STEP: BucketClass resource is created from specification "my-bucket-class"
 		By("Creating the BucketClass 'my-bucket-class' is created")
@@ -120,8 +119,8 @@ var _ = Describe("Bucket Creation", Serial, Label("create"), func() {
 		By("creating a BucketClaim resource from specification 'bucket-claim-valid'")
 		steps.CreateBucketClaimResource(ctx, bucketClient, bucketClaimValid)
 
-		// STEP: Bucket resource referencing BucketClaim resource "bucket-claim-valid" is created in ObjectStore "object-store-1"
-		By("checking if Bucket resource referencing BucketClaim resource 'bucket-claim-valid' is created in ObjectStore 'object-store-1'")
+		// STEP: Bucket resource referencing BucketClaim resource "bucket-claim-valid" is created in ObjectStore "objectstore-dev"
+		By("checking if Bucket resource referencing BucketClaim resource 'bucket-claim-valid' is created in ObjectStore 'objectstore-dev'")
 		steps.CheckBucketResourceInObjectStore(objectscale, validBucket)
 
 		// STEP: BucketClaim resource "bucket-claim-valid" in namespace "namespace-1" status "bucketReady" is "true"
@@ -147,8 +146,8 @@ var _ = Describe("Bucket Creation", Serial, Label("create"), func() {
 		By("creating a BucketClaim resource from specification 'bucket-claim-invalid'")
 		steps.CreateBucketClaimResource(ctx, bucketClient, bucketClaimInvalid)
 
-		// STEP: Bucket resource referencing BucketClaim resource "bucket-claim-invalid" is not created in ObjectStore "object-store-1"
-		By("checking if Bucket resource referencing BucketClaim resource 'bucket-claim-invalid' is not created in ObjectStore 'object-store-1'")
+		// STEP: Bucket resource referencing BucketClaim resource "bucket-claim-invalid" is not created in ObjectStore "objectstore-dev"
+		By("checking if Bucket resource referencing BucketClaim resource 'bucket-claim-invalid' is not created in ObjectStore 'objectstore-dev'")
 		steps.CheckBucketNotInObjectStore(objectscale, bucketClaimInvalid)
 
 		// STEP: BucketClaim resource "bucket-claim-invalid" in namespace "namespace-1" status "bucketReady" is "false"

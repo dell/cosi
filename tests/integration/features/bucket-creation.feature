@@ -10,10 +10,10 @@ Feature: Bucket creation on ObjectScale platform
     Background: 
         Given Kubernetes cluster is up and running
         And ObjectScale platform is installed on the cluster
-        And ObjectStore "object-store-1" is created
+        And ObjectStore "objectstore-dev" is created
         And Kubernetes namespace "driver-ns" is created
         And Kubernetes namespace "namespace-1" is created
-        And COSI controller "cosi-controller" is installed in namespace "driver-ns"
+        And COSI controller "objectstorage-controller" is installed in namespace "default"
         And COSI driver "cosi-driver" is installed in namespace "driver-ns"
         And specification of custom resource "my-bucket-class" is:
         """
@@ -55,7 +55,7 @@ Feature: Bucket creation on ObjectScale platform
     @test_KRV-xxx
     Scenario: Successfull bucket creation
         When BucketClaim resource is created from specification "bucket-claim-valid"
-        Then Bucket resource referencing BucketClaim resource "bucket-claim-valid" is created in ObjectStore "object-store-1"
+        Then Bucket resource referencing BucketClaim resource "bucket-claim-valid" is created in ObjectStore "objectstore-dev"
         And BucketClaim resource "bucket-claim-valid" in namespace "namespace-1" status "bucketReady" is "true"
         And Bucket resource referencing BucketClaim resource "bucket-claim-valid" status "bucketReady" is "true"
         And Bucket resource referencing BucketClaim resource "bucket-claim-valid" bucketID is not empty
@@ -63,6 +63,6 @@ Feature: Bucket creation on ObjectScale platform
     @test_KRV-xxx
     Scenario: Unsuccessfull bucket creation
         When BucketClaim resource is created from specification "bucket-claim-invalid"
-        Then Bucket resource referencing BucketClaim resource "bucket-claim-invalid" is not created in ObjectStore "object-store-1"
+        Then Bucket resource referencing BucketClaim resource "bucket-claim-invalid" is not created in ObjectStore "objectstore-dev"
         And BucketClaim resource "bucket-claim-invalid" in namespace "namespace-1" status "bucketReady" is "false"
         And BucketClaim events contains an error: "Cannot create Bucket: BucketClass does not exist"
