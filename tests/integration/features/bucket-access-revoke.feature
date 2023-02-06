@@ -7,7 +7,7 @@ Feature: BucketAccess deletion on ObjectScale platform
     I want to delete BucketAccess
     so that access for a Bucket is deleted for particular account
 
-    Background: 
+    Background:
         Given Kubernetes cluster is up and running
         And ObjectScale platform is installed on the cluster
         And ObjectStore "objectstore-dev" is created
@@ -26,7 +26,7 @@ Feature: BucketAccess deletion on ObjectScale platform
         parameters:
             objectScaleID: ${objectScaleID}
             objectStoreID: ${objectStoreID}
-            accountSecret: ${secretName} 
+            accountSecret: ${secretName}
         """
         And specification of custom resource "my-bucket-claim" is:
         """
@@ -35,7 +35,7 @@ Feature: BucketAccess deletion on ObjectScale platform
         metadata:
             name: my-bucket-claim
             namespace: namespace-1
-        spec:                                            
+        spec:
             bucketClassName: my-bucket-class
             protocol: S3
         """
@@ -50,8 +50,8 @@ Feature: BucketAccess deletion on ObjectScale platform
         apiVersion: storage.k8s.io/v1
         kind: BucketAccessClass
         metadata:
-            name: my-bucket-access-class                                         
-        driverName: cosi-driver  
+            name: my-bucket-access-class
+        driverName: cosi-driver
         authenticationType: KEY
         parameters:
             objectScaleID: ${objectScaleID}
@@ -64,12 +64,12 @@ Feature: BucketAccess deletion on ObjectScale platform
         kind: BucketAccess
         metadata:
             name: my-bucket-access
-            namespace: namespace-1                             
-        spec:                                               
-            bucketAccessClassName: my-bucket-access-class                           
-            bucketClaimName: my-bucket-claim                              
+            namespace: namespace-1
+        spec:
+            bucketAccessClassName: my-bucket-access-class
+            bucketClaimName: my-bucket-claim
             credentialsSecretName: bucket-credentials-1
-        """ 
+        """
         And BucketAccessClass resource is created from specification "my-bucket-access-class"
         And BucketAccess resource is created from specification "my-bucket-access"
         And BucketAccess resource "my-bucket-access" in namespace "namespace-1" status "accessGranted" is "true"
@@ -83,5 +83,5 @@ Feature: BucketAccess deletion on ObjectScale platform
         When BucketAccess resource "my-bucket-access" in namespace "namespace-1" is deleted
         And Policy "${policy}" for Bucket resource referencing BucketClaim resource "my-bucket-claim" on ObjectScale platform is deleted
         Then User "${user}" in account on ObjectScale platform is deleted
-        
+
 

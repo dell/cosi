@@ -3,12 +3,12 @@
 package main_test
 
 import (
+	. "github.com/onsi/ginkgo/v2"
+
 	"github.com/dell/cosi-driver/tests/integration/steps"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/container-object-storage-interface-api/apis/objectstorage/v1alpha1"
-
-	. "github.com/onsi/ginkgo/v2"
 )
 
 var _ = Describe("Bucket Access Revoke", Serial, Label("revoke"), func() {
@@ -19,6 +19,7 @@ var _ = Describe("Bucket Access Revoke", Serial, Label("revoke"), func() {
 		myBucket            *v1alpha1.Bucket
 		myBucketAccessClass *v1alpha1.BucketAccessClass
 		myBucketAccess      *v1alpha1.BucketAccess
+		validSecret         *v1.Secret
 	)
 
 	// Background
@@ -88,6 +89,15 @@ var _ = Describe("Bucket Access Revoke", Serial, Label("revoke"), func() {
 				CredentialsSecretName: "bucket-credentials-1",
 			},
 		}
+		validSecret = &v1.Secret{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "valid-secret-1",
+				Namespace: "namespace-1",
+			},
+			Data: map[string][]byte{
+				"this": []byte("is template for data"), // FIXME: when we know exact format of the secret
+			},
+		}
 
 		// STEP: Kubernetes cluster is up and running
 		By("Checking if the cluster is ready")
@@ -155,7 +165,7 @@ var _ = Describe("Bucket Access Revoke", Serial, Label("revoke"), func() {
 
 		// STEP: User "${user}" in account on ObjectScale platform is created
 		By("Creating User '${user}' in account on ObjectScale platform")
-		steps.CreateUser(objectscale, "${user}")
+		steps.CreateUser(ctx, iamClient, "${user}", "${arn}")
 
 		// STEP: Policy "${policy}" on ObjectScale platform is created
 		By("Creating Policy '${policy}' on ObjectScale platform")
@@ -167,7 +177,7 @@ var _ = Describe("Bucket Access Revoke", Serial, Label("revoke"), func() {
 
 		// STEP: Secret "bucket-credentials-1" is created in namespace "namespace-1" and is not empty
 		By("Checking if Secret ''bucket-credentials-1' is created in namespace 'namespace-1'")
-		steps.CheckSecret(clientset, "bucket-credentials-1", "namespace-1")
+		steps.CheckSecret(ctx, clientset, validSecret)
 
 		DeferCleanup(func() {
 			// Cleanup for background

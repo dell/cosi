@@ -4,10 +4,10 @@
 Feature: Bucket creation on ObjectScale platform
 
     As an ObjectScale platform user
-    I want to add BucketClaim, which is a request for a new Bucket 
+    I want to add BucketClaim, which is a request for a new Bucket
     so that the information about new Bucket (e.g. BucketID) are returned
 
-    Background: 
+    Background:
         Given Kubernetes cluster is up and running
         And ObjectScale platform is installed on the cluster
         And ObjectStore "objectstore-dev" is created
@@ -22,11 +22,11 @@ Feature: Bucket creation on ObjectScale platform
         metadata:
             name: my-bucket-class
         deletionPolicy: delete
-        driverName: cosi-driver 
+        driverName: cosi-driver
         parameters:
             objectScaleID: ${objectScaleID}
             objectStoreID: ${objectStoreID}
-            accountSecret: ${secretName} 
+            accountSecret: ${secretName}
         """
         And specification of custom resource "bucket-claim-valid" is:
         """
@@ -35,7 +35,7 @@ Feature: Bucket creation on ObjectScale platform
         metadata:
             name: bucket-claim-valid
             namespace: namespace-1
-        spec:                                            
+        spec:
             bucketClassName: my-bucket-class
             protocol: S3
         """
@@ -46,12 +46,12 @@ Feature: Bucket creation on ObjectScale platform
         metadata:
             name: bucket-claim-invalid
             namespace: namespace-1
-        spec:                                            
+        spec:
             bucketClassName: bucket-class-invalid
             protocol: S3
         """
         And BucketClass resource is created from specification "my-bucket-class"
-    
+
     @test_KRV-xxx
     Scenario: Successfull bucket creation
         When BucketClaim resource is created from specification "bucket-claim-valid"
