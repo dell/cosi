@@ -12,12 +12,12 @@ import (
 func CheckCOSIControllerInstallation(ctx ginkgo.SpecContext, clientset *kubernetes.Clientset, controllerName string, namespace string) {
 	deployment, err := clientset.AppsV1().Deployments(namespace).Get(ctx, controllerName, metav1.GetOptions{})
 	gomega.Expect(err).To(gomega.BeNil())
-	gomega.Expect(deployment.Status.Conditions).To(gomega.ContainElement(gomega.HaveField("Type", "Available")))
+	gomega.Expect(deployment.Status.Conditions).To(gomega.ContainElement(gomega.HaveField("Type", gomega.Equal("Available"))))
 }
 
 // CheckCOSIDriverInstallation Ensure that COSI driver is installed in namespace "driver-ns"
 func CheckCOSIDriverInstallation(ctx ginkgo.SpecContext, clientset *kubernetes.Clientset, driver string, namespace string) {
 	deployment, err := clientset.AppsV1().Deployments(namespace).Get(ctx, driver, metav1.GetOptions{})
 	gomega.Expect(err).To(gomega.BeNil())
-	gomega.Expect(deployment.Status.Conditions).To(gomega.ContainElement(gomega.HaveField("Type", "Available")))
+	gomega.Expect(deployment.Status.Conditions).To(gomega.ContainElement(gomega.HaveField("Type", gomega.Equal("Available"))))
 }
