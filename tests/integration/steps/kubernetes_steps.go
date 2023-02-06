@@ -74,6 +74,8 @@ func CheckBucketClaimEvents(ctx ginkgo.SpecContext, clientset *kubernetes.Client
 		list, err := clientset.CoreV1().Events(bucketClaim.Namespace).List(ctx, listOptions)
 		gomega.Expect(err).To(gomega.BeNil())
 
+		eventList.Items = append(eventList.Items, list.Items...)
+
 		nextContinueToken, _ := meta.NewAccessor().Continue(list)
 		if len(nextContinueToken) == 0 {
 			break
