@@ -1,11 +1,10 @@
 package steps
 
 import (
-	ginkgo "github.com/onsi/ginkgo/v2"
-	gomega "github.com/onsi/gomega"
-  
 	"github.com/aws/aws-sdk-go/service/iam"
 	objectscaleRest "github.com/emcecs/objectscale-management-go-sdk/pkg/client/rest"
+	ginkgo "github.com/onsi/ginkgo/v2"
+	gomega "github.com/onsi/gomega"
 	"sigs.k8s.io/container-object-storage-interface-api/apis/objectstorage/v1alpha1"
 )
 
@@ -14,7 +13,6 @@ func CheckObjectScaleInstallation(ctx ginkgo.SpecContext, objectscale *objectsca
 	_, err := objectscale.FederatedObjectStores().List(map[string]string{})
 	gomega.Expect(err).To(gomega.BeNil())
 }
-
 
 // CheckObjectStoreCreation Ensure that ObjectStore "objectstore-dev" is created
 func CheckObjectStoreExists(ctx ginkgo.SpecContext, objectscale *objectscaleRest.ClientSet, objectstore string) {

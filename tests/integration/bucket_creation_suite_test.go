@@ -67,6 +67,10 @@ var _ = Describe("Bucket Creation", Serial, Label("create"), func() {
 				},
 			},
 		}
+		myEvent = &v1.Event{
+			Type:   "Warning",
+			Reason: "FIXME: reason is simple, machine readable description of failure",
+		}
 
 		// STEP: Kubernetes cluster is up and running
 		By("Checking if the cluster is ready")
