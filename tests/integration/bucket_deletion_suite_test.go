@@ -3,12 +3,12 @@
 package main_test
 
 import (
+	. "github.com/onsi/ginkgo/v2"
+
 	"github.com/dell/cosi-driver/tests/integration/steps"
 	gomega "github.com/onsi/gomega"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/container-object-storage-interface-api/apis/objectstorage/v1alpha1"
-
-	. "github.com/onsi/ginkgo/v2"
 )
 
 var _ = Describe("Bucket Deletion", Serial, Label("delete"), func() {
@@ -96,11 +96,11 @@ var _ = Describe("Bucket Deletion", Serial, Label("delete"), func() {
 
 		// STEP: ObjectScale platform is installed on the cluster
 		By("Checking if the ObjectScale platform is ready")
-		steps.CheckObjectScaleInstallation(ctx, clientset)
+		steps.CheckObjectScaleInstallation(ctx, objectscale)
 
-		// STEP: ObjectStore "object-store-1" is created
-		By("Checking if the ObjectStore 'object-store-1' is created")
-		steps.CreateObjectStore(ctx, objectscale, "object-store-1")
+		// STEP: ObjectStore "objectstore-dev" is created
+		By("Checking if the ObjectStore 'objectstore-dev' is created")
+		steps.CheckObjectStoreExists(ctx, objectscale, "objectstore-dev")
 
 		// STEP: Kubernetes namespace "driver-ns" is created
 		By("Checking if namespace 'driver-ns' is created")
@@ -110,13 +110,13 @@ var _ = Describe("Bucket Deletion", Serial, Label("delete"), func() {
 		By("Checking if namespace 'namespace-1' is created")
 		steps.CreateNamespace(ctx, clientset, "namespace-1")
 
-		// STEP: COSI controller "cosi-controller" is installed in namespace "driver-ns"
-		By("Checking if COSI controller 'cosi-controller' is installed in namespace 'driver-ns'")
-		steps.CheckCOSIControllerInstallation(clientset, "cosi-controller", "driver-ns")
+		// STEP: COSI controller "objectstorage-controller" is installed in namespace "default"
+		By("Checking if COSI controller objectstorage-controller is installed in namespace 'default'")
+		steps.CheckCOSIControllerInstallation(ctx, clientset, "objectstorage-controller", "default")
 
 		// STEP: COSI driver "cosi-driver" is installed in namespace "driver-ns"
 		By("Checking if COSI driver 'cosi-driver' is installed in namespace 'driver-ns'")
-		steps.CheckCOSIDriverInstallation(clientset, "cosi-driver", "driver-ns")
+		steps.CheckCOSIDriverInstallation(ctx, clientset, "cosi-driver", "driver-ns")
 
 		DeferCleanup(func() {
 			// Cleanup for background
@@ -134,12 +134,13 @@ var _ = Describe("Bucket Deletion", Serial, Label("delete"), func() {
 		By("creating a BucketClaim resource from specification 'my-bucket-claim-delete'")
 		steps.CreateBucketClaimResource(ctx, bucketClient, bucketClaimDelete)
 
+
 		// STEP: Bucket resource referencing BucketClaim resource "my-bucket-claim-delete' is created
 		By("checking if Bucket resource referencing BucketClaim resource 'my-bucket-claim-delete' is created")
 		deleteBucket = steps.GetBucketResource(ctx, bucketClient, bucketClaimDelete)
 
-		// STEP: Bucket resource referencing BucketClaim resource "bucket-claim-delete" is created in ObjectStore "object-store-1"
-		By("checking if Bucket resource referencing BucketClaim resource 'bucket-claim-delete' is created in ObjectStore 'object-store-1'")
+		// STEP: Bucket resource referencing BucketClaim resource "bucket-claim-delete" is created in ObjectStore "objectstore-dev"
+		By("checking if Bucket resource referencing BucketClaim resource 'bucket-claim-delete' is created in ObjectStore 'objectstore-dev'")
 		steps.CheckBucketResourceInObjectStore(objectscale, deleteBucket)
 
 		// STEP: BucketClaim resource "bucket-claim-delete" in namespace "namespace-1" status "bucketReady" is "true"
@@ -158,8 +159,8 @@ var _ = Describe("Bucket Deletion", Serial, Label("delete"), func() {
 		By("deleting BucketClaim resource 'my-bucket-claim-delete' in namespace 'namespace-1'")
 		steps.DeleteBucketClaimResource(ctx, bucketClient, bucketClaimDelete)
 
-		// STEP: Bucket referencing BucketClaim resource "my-bucket-claim-delete" is deleted in ObjectStore "object-store-1"
-		By("checking if Bucket referencing BucketClaim resource 'my-bucket-claim-delete' is deleted in ObjectStore 'object-store-1'")
+		// STEP: Bucket referencing BucketClaim resource "my-bucket-claim-delete" is deleted in ObjectStore "objectstore-dev"
+		By("checking if Bucket referencing BucketClaim resource 'my-bucket-claim-delete' is deleted in ObjectStore 'objectstore-dev'")
 		steps.CheckBucketDeletionInObjectStore(objectscale, deleteBucket)
 
 		DeferCleanup(func() {
@@ -181,8 +182,8 @@ var _ = Describe("Bucket Deletion", Serial, Label("delete"), func() {
 		By("checking if Bucket resource referencing BucketClaim resource 'my-bucket-claim-retain' is created")
 		retainBucket = steps.GetBucketResource(ctx, bucketClient, bucketClaimRetain)
 
-		// STEP: Bucket resource referencing BucketClaim resource "bucket-claim-retain" is created in ObjectStore "object-store-1"
-		By("checking if Bucket resource referencing BucketClaim resource 'bucket-claim-retain' is created in ObjectStore 'object-store-1'")
+		// STEP: Bucket resource referencing BucketClaim resource "bucket-claim-retain" is created in ObjectStore "objectstore-dev"
+		By("checking if Bucket resource referencing BucketClaim resource 'bucket-claim-retain' is created in ObjectStore 'objectstore-dev'")
 		steps.CheckBucketResourceInObjectStore(objectscale, retainBucket)
 
 		// STEP: BucketClaim resource "bucket-claim-retain" in namespace "namespace-1" status "bucketReady" is "true"
@@ -201,8 +202,8 @@ var _ = Describe("Bucket Deletion", Serial, Label("delete"), func() {
 		By("deleting BucketClaim resource 'my-bucket-claim-retain' in namespace 'namespace-1'")
 		steps.DeleteBucketClaimResource(ctx, bucketClient, bucketClaimRetain)
 
-		// STEP: Bucket referencing BucketClaim resource "my-bucket-claim-retain" is available in ObjectStore "object-store-1"
-		By("checking if Bucket referencing BucketClaim resource 'my-bucket-claim-retain' is available in ObjectStore 'object-store-1'")
+		// STEP: Bucket referencing BucketClaim resource "my-bucket-claim-retain" is available in ObjectStore "objectstore-dev"
+		By("checking if Bucket referencing BucketClaim resource 'my-bucket-claim-retain' is available in ObjectStore 'objectstore-dev'")
 		steps.CheckBucketResourceInObjectStore(objectscale, retainBucket)
 
 		DeferCleanup(func() {

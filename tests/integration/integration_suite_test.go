@@ -8,14 +8,14 @@ import (
 	"os"
 	"testing"
 
+	. "github.com/onsi/ginkgo/v2"
+	. "github.com/onsi/gomega"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/iam"
 	objectscaleRest "github.com/emcecs/objectscale-management-go-sdk/pkg/client/rest"
 	objectscaleClient "github.com/emcecs/objectscale-management-go-sdk/pkg/client/rest/client"
-	. "github.com/onsi/ginkgo/v2"
-	ginkgo "github.com/onsi/ginkgo/v2"
-	. "github.com/onsi/gomega"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/clientcmd"
 	bucketclientset "sigs.k8s.io/container-object-storage-interface-api/client/clientset/versioned"

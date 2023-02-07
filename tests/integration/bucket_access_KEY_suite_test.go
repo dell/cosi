@@ -3,11 +3,11 @@
 package main_test
 
 import (
+	. "github.com/onsi/ginkgo/v2"
+
 	"github.com/dell/cosi-driver/tests/integration/steps"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/container-object-storage-interface-api/apis/objectstorage/v1alpha1"
-
-	. "github.com/onsi/ginkgo/v2"
 )
 
 var _ = Describe("Bucket Access KEY", Label("key-flow"), func() {
@@ -18,6 +18,7 @@ var _ = Describe("Bucket Access KEY", Label("key-flow"), func() {
 		myBucket            *v1alpha1.Bucket
 		myBucketAccessClass *v1alpha1.BucketAccessClass
 		myBucketAccess      *v1alpha1.BucketAccess
+		validSecret         *v1.Secret
 	)
 
 	// Background
@@ -70,6 +71,15 @@ var _ = Describe("Bucket Access KEY", Label("key-flow"), func() {
 				CredentialsSecretName: "bucket-credentials-1",
 			},
 		}
+		validSecret = &v1.Secret{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "valid-secret-1",
+				Namespace: "namespace-1",
+			},
+			Data: map[string][]byte{
+				"this": []byte("is template for data"), // FIXME: when we know exact format of the secret
+			},
+		}
 
 		// STEP: Kubernetes cluster is up and running
 		By("Checking if the cluster is ready")
@@ -77,11 +87,11 @@ var _ = Describe("Bucket Access KEY", Label("key-flow"), func() {
 
 		// STEP: ObjectScale platform is installed on the cluster
 		By("Checking if the ObjectScale platform is ready")
-		steps.CheckObjectScaleInstallation(ctx, clientset)
+		steps.CheckObjectScaleInstallation(ctx, objectscale)
 
-		// STEP: ObjectStore "object-store-1" is created
-		By("Checking if the ObjectStore 'object-store-1' is created")
-		steps.CreateObjectStore(ctx, objectscale, "object-store-1")
+		// STEP: ObjectStore "objectstore-dev" is created
+		By("Checking if the ObjectStore 'objectstore-dev' is created")
+		steps.CheckObjectStoreExists(ctx, objectscale, "objectstore-dev")
 
 		// STEP: Kubernetes namespace "driver-ns" is created
 		By("Checking if namespace 'driver-ns' is created")
@@ -91,13 +101,13 @@ var _ = Describe("Bucket Access KEY", Label("key-flow"), func() {
 		By("Checking if namespace 'namespace-1' is created")
 		steps.CreateNamespace(ctx, clientset, "namespace-1")
 
-		// STEP: COSI controller "cosi-controller" is installed in namespace "driver-ns"
-		By("Checking if COSI controller 'cosi-controller' is installed in namespace 'driver-ns'")
-		steps.CheckCOSIControllerInstallation(clientset, "cosi-controller", "driver-ns")
+		// STEP: COSI controller "objectstorage-controller" is installed in namespace "default"
+		By("Checking if COSI controller 'objectstorage-controller' is installed in namespace 'default'")
+		steps.CheckCOSIControllerInstallation(ctx, clientset, "objectstorage-controller", "default")
 
 		// STEP: COSI driver "cosi-driver" is installed in namespace "driver-ns"
 		By("Checking if COSI driver 'cosi-driver' is installed in namespace 'driver-ns'")
-		steps.CheckCOSIDriverInstallation(clientset, "cosi-driver", "driver-ns")
+		steps.CheckCOSIDriverInstallation(ctx, clientset, "cosi-driver", "driver-ns")
 
 		// STEP: BucketClass resource is created from specification "my-bucket-class"
 		By("Creating the BucketClass 'my-bucket-class' is created")
@@ -111,8 +121,8 @@ var _ = Describe("Bucket Access KEY", Label("key-flow"), func() {
 		By("Checking if Bucket resource referencing BucketClaim resource 'my-bucket-access-class' is created")
 		myBucket = steps.GetBucketResource(ctx, bucketClient, myBucketClaim)
 
-		// STEP: Bucket resource referencing BucketClaim resource "my-bucket-claim" is created in ObjectStore "object-store-1"
-		By("Checking if bucket referencing 'my-bucket-claim' is created in ObjectStore 'object-store-1'")
+		// STEP: Bucket resource referencing BucketClaim resource "my-bucket-claim" is created in ObjectStore "objectstore-dev"
+		By("Checking if bucket referencing 'my-bucket-claim' is created in ObjectStore 'objectstore-dev'")
 		steps.CheckBucketResourceInObjectStore(objectscale, myBucket)
 
 		// STEP: BucketClaim resource "my-bucket-claim" in namespace "namespace-1" status "bucketReady" is "true"
@@ -147,12 +157,12 @@ var _ = Describe("Bucket Access KEY", Label("key-flow"), func() {
 		steps.CheckBucketAccessStatus(ctx, bucketClient, myBucketAccess, true)
 
 		// STEP: User "${user}" in account on ObjectScale platform is created
-		By("Creating User resource '${user}'")
-		steps.CreateUser(objectscale, "${user}")
+		By("Checking if User '${user}' in account on ObjectScale platform is created")
+		steps.CheckUser(ctx, iamClient, "${user}")
 
 		// STEP: Policy "${policy}" for Bucket resource referencing BucketClaim resource "my-bucket-claim" on ObjectScale platform is created
-		By("Creating Policy resource '${policy}' for Bucket resource referencing BucketClaim resource 'my-bucket-claim'")
-		steps.CreatePolicy(objectscale, "${policy}", myBucket)
+		By("Checking if Policy '${policy}' for Bucket resource referencing BucketClaim resource 'my-bucket-claim' is created")
+		steps.CheckPolicy(objectscale, "${policy}", myBucket)
 
 		// STEP: BucketAccess resource "my-bucket-access" in namespace "namespace-1" status "accountID" is "${accountID}"
 		By("Checking if BucketAccess resource 'my-bucket-access' in namespace 'namespace-1' status 'accountID' is '${accountID}'")
@@ -160,7 +170,7 @@ var _ = Describe("Bucket Access KEY", Label("key-flow"), func() {
 
 		// STEP: Secret "bucket-credentials-1" is created in namespace "namespace-1" and is not empty
 		By("Checking if Secret 'bucket-credentials-1' in namespace 'namespace-1' is not empty")
-		steps.CheckSecret(clientset, "bucket-credentials-1", "namespace-1")
+		steps.CheckSecret(ctx, clientset, validSecret)
 
 		//STEP: Bucket resource referencing BucketClaim resource "bucket-claim-delete" is accessible from Secret "bucket-credentials-1"
 		By("Checking if Bucket resource referencing BucketClaim resource 'my-bucket-claim' is accessible from Secret 'bucket-credentials-1'")
