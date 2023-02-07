@@ -6,7 +6,6 @@ import (
 	. "github.com/onsi/ginkgo/v2"
 
 	"github.com/dell/cosi-driver/tests/integration/steps"
-	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/container-object-storage-interface-api/apis/objectstorage/v1alpha1"
 )
@@ -52,15 +51,6 @@ var _ = Describe("Bucket Access Revoke", Serial, Label("revoke"), func() {
 			},
 			Spec: v1alpha1.BucketClaimSpec{
 				BucketClassName: "my-bucket-class",
-				Protocols: []v1alpha1.Protocol{
-					v1alpha1.ProtocolS3,
-				},
-			},
-		}
-		myBucket = &v1alpha1.Bucket{
-			Spec: v1alpha1.BucketSpec{
-				BucketClassName: "my-bucket-class",
-				BucketClaim:     &v1.ObjectReference{Kind: "BucketClass", Name: "my-bucket-claim", Namespace: "namespace-1"},
 				Protocols: []v1alpha1.Protocol{
 					v1alpha1.ProtocolS3,
 				},
@@ -134,6 +124,10 @@ var _ = Describe("Bucket Access Revoke", Serial, Label("revoke"), func() {
 		// STEP: BucketClaim resource is created from specification "my-bucket-claim"
 		By("Creating the BucketClaim 'my-bucket-claim'")
 		steps.CreateBucketClaimResource(ctx, bucketClient, myBucketClaim)
+
+		// STEP: Bucket resource referencing BucketClaim resource 'my-bucket-claim' is created
+		By("Checking if Bucket resource referencing BucketClaim resource 'my-bucket-claim' is created")
+		myBucket = steps.GetBucketResource(ctx, bucketClient, myBucketClaim)
 
 		// STEP: Bucket resource referencing BucketClaim resource "my-bucket-claim" is created in ObjectStore "objectstore-dev"
 		By("Checking if the Bucket referencing 'my-bucket-claim' is created in ObjectStore 'objectstore-dev'")

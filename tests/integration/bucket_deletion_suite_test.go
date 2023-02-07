@@ -6,7 +6,6 @@ import (
 	. "github.com/onsi/ginkgo/v2"
 
 	"github.com/dell/cosi-driver/tests/integration/steps"
-	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/container-object-storage-interface-api/apis/objectstorage/v1alpha1"
 )
@@ -89,24 +88,6 @@ var _ = Describe("Bucket Deletion", Serial, Label("delete"), func() {
 				},
 			},
 		}
-		deleteBucket = &v1alpha1.Bucket{
-			Spec: v1alpha1.BucketSpec{
-				BucketClassName: "my-bucket-class-delete",
-				BucketClaim:     &v1.ObjectReference{Kind: "BucketClass", Name: "my-bucket-claim-delete", Namespace: "namespace-1"},
-				Protocols: []v1alpha1.Protocol{
-					v1alpha1.ProtocolS3,
-				},
-			},
-		}
-		retainBucket = &v1alpha1.Bucket{
-			Spec: v1alpha1.BucketSpec{
-				BucketClassName: "my-bucket-class-retain",
-				BucketClaim:     &v1.ObjectReference{Kind: "BucketClass", Name: "my-bucket-claim-retain", Namespace: "namespace-1"},
-				Protocols: []v1alpha1.Protocol{
-					v1alpha1.ProtocolS3,
-				},
-			},
-		}
 
 		// STEP: Kubernetes cluster is up and running
 		By("Checking if the cluster is ready")
@@ -142,7 +123,8 @@ var _ = Describe("Bucket Deletion", Serial, Label("delete"), func() {
 	})
 
 	// STEP: Scenario: BucketClaim deletion with deletionPolicy set to "delete"
-	It("Delets the bucket when deletionPolicy is set to 'delete'", func(ctx SpecContext) {
+	It("Delete the bucket when deletionPolicy is set to 'delete'", func(ctx SpecContext) {
+
 		// STEP: BucketClass resource is created from specification "my-bucket-class-delete"
 		By("creating a BucketClass resource from specification 'my-bucket-class-delete'")
 		steps.CreateBucketClassResource(ctx, bucketClient, bucketClassDelete)
@@ -150,6 +132,11 @@ var _ = Describe("Bucket Deletion", Serial, Label("delete"), func() {
 		// STEP: BucketClaim resource is created from specification "my-bucket-claim-delete"
 		By("creating a BucketClaim resource from specification 'my-bucket-claim-delete'")
 		steps.CreateBucketClaimResource(ctx, bucketClient, bucketClaimDelete)
+
+
+		// STEP: Bucket resource referencing BucketClaim resource "my-bucket-claim-delete' is created
+		By("checking if Bucket resource referencing BucketClaim resource 'my-bucket-claim-delete' is created")
+		deleteBucket = steps.GetBucketResource(ctx, bucketClient, bucketClaimDelete)
 
 		// STEP: Bucket resource referencing BucketClaim resource "bucket-claim-delete" is created in ObjectStore "objectstore-dev"
 		By("checking if Bucket resource referencing BucketClaim resource 'bucket-claim-delete' is created in ObjectStore 'objectstore-dev'")
@@ -189,6 +176,10 @@ var _ = Describe("Bucket Deletion", Serial, Label("delete"), func() {
 		// STEP: BucketClaim resource is created from specification "my-bucket-claim-retain"
 		By("creating a BucketClaim resource from specification 'my-bucket-claim-retain'")
 		steps.CreateBucketClaimResource(ctx, bucketClient, bucketClaimRetain)
+
+		// STEP: Bucket resource referencing BucketClaim resource 'my-bucket-claim-retain' is created"
+		By("checking if Bucket resource referencing BucketClaim resource 'my-bucket-claim-retain' is created")
+		retainBucket = steps.GetBucketResource(ctx, bucketClient, bucketClaimRetain)
 
 		// STEP: Bucket resource referencing BucketClaim resource "bucket-claim-retain" is created in ObjectStore "objectstore-dev"
 		By("checking if Bucket resource referencing BucketClaim resource 'bucket-claim-retain' is created in ObjectStore 'objectstore-dev'")
