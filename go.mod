@@ -5,7 +5,6 @@ go 1.19
 require (
 	github.com/aws/aws-sdk-go v1.44.189
 	github.com/emcecs/objectscale-management-go-sdk v0.31.3-0.20230126114106-0a3f91bbcfd7
-	github.com/google/go-cmp v0.5.9
 	github.com/onsi/ginkgo/v2 v2.7.0
 	github.com/onsi/gomega v1.25.0
 	k8s.io/api v0.26.1
@@ -15,6 +14,7 @@ require (
 )
 
 require (
+	github.com/google/go-cmp v0.5.9 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/emicklei/go-restful/v3 v3.9.0 // indirect
 	github.com/go-logr/logr v1.2.3 // indirect
