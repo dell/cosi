@@ -71,11 +71,13 @@ func CheckUser(ctx ginkgo.SpecContext, iamClient *iam.IAM, user string) {
 	gomega.Expect(userOut.User.Arn).To(gomega.Or(gomega.BeNil(), gomega.BeEmpty()))
 }
 
-// DeletePolicy Function deleteing policy from ObjectStore
+// DeletePolicy is a function deleting a policy from the ObjectStore
 func DeletePolicy(objectscale *objectscaleRest.ClientSet, bucket *v1alpha1.Bucket) {
-
-	// TODO: Implementation goes here
-	ginkgo.Fail("UNIMPLEMENTED")
+	existing, err := objectscale.Buckets().GetPolicy(bucket.Name, nil)
+	gomega.Expect(err).To(gomega.BeNil())
+	gomega.Expect(existing).NotTo(gomega.BeNil())
+	err = objectscale.Buckets().DeletePolicy(bucket.Name, nil)
+	gomega.Expect(err).To(gomega.BeNil())
 }
 
 // DeleteUser Function for deleting user from ObjectScale
