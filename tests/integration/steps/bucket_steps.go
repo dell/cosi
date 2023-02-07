@@ -4,6 +4,8 @@ import (
 	ginkgo "github.com/onsi/ginkgo/v2"
 	gomega "github.com/onsi/gomega"
 
+	"time"
+
 	errors "k8s.io/apimachinery/pkg/api/errors"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/container-object-storage-interface-api/apis/objectstorage/v1alpha1"
@@ -19,7 +21,7 @@ func CreateBucketClaimResource(ctx ginkgo.SpecContext, bucketClient *bucketclien
 	} else {
 		gomega.Expect(err).To(gomega.BeNil())
 	}
-	ginkgo.GinkgoWriter.Printf("%+v\n", kubernetesBucketClaim)
+	ginkgo.GinkgoWriter.Printf("Kubernetes BucketClaim: %+v\n", kubernetesBucketClaim)
 }
 
 // CheckBucketClaimStatus Function for checking BucketClaim status
@@ -107,14 +109,18 @@ func DeleteBucketAccessResource(ctx ginkgo.SpecContext, bucketClient *bucketclie
 	gomega.Expect(err).To(gomega.BeNil())
 }
 
-// CheckBucketResource Function getting Bucket
+// CheckBucketResource Function for getting Bucket resource
 func GetBucketResource(ctx ginkgo.SpecContext, bucketClient *bucketclientset.Clientset, bucketClaim *v1alpha1.BucketClaim) *v1alpha1.Bucket {
-	// TODO: Implementation goes here
+	time.Sleep(2 * time.Second) // Wait for creations of bucket in cluster
+
 	myBucketClaim, err := bucketClient.ObjectstorageV1alpha1().BucketClaims(bucketClaim.Namespace).Get(ctx, bucketClaim.Name, v1.GetOptions{})
 	gomega.Expect(err).To(gomega.BeNil())
+	gomega.Expect(myBucketClaim.Status.BucketName).NotTo(gomega.BeNil())
+
 	bucket, err := bucketClient.ObjectstorageV1alpha1().Buckets().Get(ctx, myBucketClaim.Status.BucketName, v1.GetOptions{})
 	gomega.Expect(err).To(gomega.BeNil())
 	gomega.Expect(bucket).NotTo(gomega.BeNil())
-	ginkgo.GinkgoWriter.Printf("%+v\n", bucket)
+
+	ginkgo.GinkgoWriter.Printf("Kubernetes Bucket: %+v\n", bucket)
 	return bucket
 }
