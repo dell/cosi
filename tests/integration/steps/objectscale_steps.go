@@ -63,6 +63,7 @@ func DeletePolicy(objectscale *objectscaleRest.ClientSet, bucket *v1alpha1.Bucke
 
 // Function for creating user in ObjectScale
 func CreateUser(ctx ginkgo.SpecContext, iamClient *iam.IAM, user, arn string) {
+	// TODO: verify it's working correctly once all the steps are integrated
 	userOut, err := iamClient.CreateUserWithContext(ctx, &iam.CreateUserInput{
 		UserName:            &user,
 		PermissionsBoundary: &arn,
@@ -73,6 +74,7 @@ func CreateUser(ctx ginkgo.SpecContext, iamClient *iam.IAM, user, arn string) {
 
 // Function for checking if user exists in ObjectScale
 func CheckUser(ctx ginkgo.SpecContext, iamClient *iam.IAM, user string) {
+	// TODO: verify it's working correctly once all the steps are integrated
 	userOut, err := iamClient.GetUserWithContext(ctx, &iam.GetUserInput{UserName: &user})
 	gomega.Expect(err).To(gomega.BeNil())
 	gomega.Expect(userOut.User).NotTo(gomega.BeNil())
