@@ -53,8 +53,18 @@ func CheckPolicy(objectscale *objectscaleRest.ClientSet, policy string, myBucket
 	gomega.Expect(actualPolicy).To(gomega.BeIdenticalTo(policy))
 }
 
+// DeletePolicy is a function deleting a policy from the ObjectStore
+func DeletePolicy(objectscale *objectscaleRest.ClientSet, bucket *v1alpha1.Bucket) {
+	existing, err := objectscale.Buckets().GetPolicy(bucket.Name, nil)
+	gomega.Expect(err).To(gomega.BeNil())
+	gomega.Expect(existing).NotTo(gomega.BeNil())
+	err = objectscale.Buckets().DeletePolicy(bucket.Name, nil)
+	gomega.Expect(err).To(gomega.BeNil())
+}
+
 // Function for creating user in ObjectScale
 func CreateUser(ctx ginkgo.SpecContext, iamClient *iam.IAM, user, arn string) {
+	// TODO: verify it's working correctly once all the steps are integrated
 	userOut, err := iamClient.CreateUserWithContext(ctx, &iam.CreateUserInput{
 		UserName:            &user,
 		PermissionsBoundary: &arn,
@@ -65,6 +75,7 @@ func CreateUser(ctx ginkgo.SpecContext, iamClient *iam.IAM, user, arn string) {
 
 // Function for checking if user exists in ObjectScale
 func CheckUser(ctx ginkgo.SpecContext, iamClient *iam.IAM, user string) {
+	// TODO: verify it's working correctly once all the steps are integrated
 	userOut, err := iamClient.GetUserWithContext(ctx, &iam.GetUserInput{UserName: &user})
 	gomega.Expect(err).To(gomega.BeNil())
 	gomega.Expect(userOut.User).NotTo(gomega.BeNil())
@@ -72,16 +83,14 @@ func CheckUser(ctx ginkgo.SpecContext, iamClient *iam.IAM, user string) {
 	gomega.Expect(userOut.User.Arn).To(gomega.Or(gomega.BeNil(), gomega.BeEmpty()))
 }
 
-// DeletePolicy Function deleteing policy from ObjectStore
-func DeletePolicy(objectscale *objectscaleRest.ClientSet, bucket *v1alpha1.Bucket) {
-	// TODO: Implementation goes here
-	ginkgo.Fail("UNIMPLEMENTED")
-}
-
 // DeleteUser Function for deleting user from ObjectScale
-func DeleteUser(objectscale *objectscaleRest.ClientSet, user string) {
-	// TODO: Implementation goes here
-	ginkgo.Fail("UNIMPLEMENTED")
+func DeleteUser(ctx ginkgo.SpecContext, iamClient *iam.IAM, user string) {
+	existing, err := iamClient.GetUserWithContext(ctx, &iam.GetUserInput{UserName: &user})
+	gomega.Expect(err).To(gomega.BeNil())
+	gomega.Expect(existing.User).NotTo(gomega.BeNil())
+	// TODO: verify it's working correctly once all the steps are integrated
+	_, err = iamClient.DeleteUser(&iam.DeleteUserInput{UserName: existing.User.UserName})
+	gomega.Expect(err).To(gomega.BeNil())
 }
 
 // CheckBucketNotInObjectStore Function for checking if bucket is not in objectstore
@@ -89,4 +98,12 @@ func CheckBucketNotInObjectStore(objectscale *objectscaleRest.ClientSet, bucketC
 	bucket, err := objectscale.Buckets().Get(bucketClaim.Name, map[string]string{})
 	gomega.Expect(err).NotTo(gomega.BeNil())
 	gomega.Expect(bucket).To(gomega.BeNil())
+}
+
+// CheckBucketInObjectStore Function for checking if the bucket object is in the objectstore
+func CheckBucketInObjectStore(objectscale *objectscaleRest.ClientSet, bucketClaim *v1alpha1.BucketClaim) {
+	params := map[string]string{}
+	bucket, err := objectscale.Buckets().Get(bucketClaim.Name, params)
+	gomega.Expect(err).To(gomega.BeNil())
+	gomega.Expect(bucket).NotTo(gomega.BeNil())
 }

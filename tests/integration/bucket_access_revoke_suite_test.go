@@ -196,7 +196,7 @@ var _ = Describe("Bucket Access Revoke", Serial, Label("revoke"), func() {
 
 		// STEP: User "${user}" in account on ObjectScale platform is deleted
 		By("Deleting User '${user}' in account on ObjectScale platform")
-		steps.DeleteUser(objectscale, "${user}")
+		steps.DeleteUser(ctx, iamClient, "${user}")
 
 		DeferCleanup(func() {
 			// Cleanup for scenario: Revoke access to bucket
