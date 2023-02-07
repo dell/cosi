@@ -13,13 +13,14 @@ import (
 
 // CreateBucketClaimResource Function creating a BucketClaim resource from specification
 func CreateBucketClaimResource(ctx ginkgo.SpecContext, bucketClient *bucketclientset.Clientset, bucketClaim *v1alpha1.BucketClaim) {
-	_, err := bucketClient.ObjectstorageV1alpha1().BucketClaims(bucketClaim.Namespace).Get(ctx, bucketClaim.Name, v1.GetOptions{})
+	kubernetesBucketClaim, err := bucketClient.ObjectstorageV1alpha1().BucketClaims(bucketClaim.Namespace).Get(ctx, bucketClaim.Name, v1.GetOptions{})
 	if errors.IsNotFound(err) {
-		_, err := bucketClient.ObjectstorageV1alpha1().BucketClaims(bucketClaim.Namespace).Create(ctx, bucketClaim, v1.CreateOptions{})
+		kubernetesBucketClaim, err = bucketClient.ObjectstorageV1alpha1().BucketClaims(bucketClaim.Namespace).Create(ctx, bucketClaim, v1.CreateOptions{})
 		gomega.Expect(err).To(gomega.BeNil())
 	} else {
 		gomega.Expect(err).To(gomega.BeNil())
 	}
+	ginkgo.GinkgoWriter.Printf("%+v\n", kubernetesBucketClaim)
 }
 
 // CheckBucketClaimStatus Function for checking BucketClaim status
@@ -32,22 +33,12 @@ func CheckBucketClaimStatus(ctx ginkgo.SpecContext, bucketClient *bucketclientse
 
 // CheckBucketStatus Function for checking Bucket status
 func CheckBucketStatus(ctx ginkgo.SpecContext, bucketClient *bucketclientset.Clientset, bucket *v1alpha1.Bucket, status bool) {
-	myBucketClaim, err := bucketClient.ObjectstorageV1alpha1().BucketClaims(bucket.Spec.BucketClaim.Namespace).Get(ctx, bucket.Spec.BucketClaim.Name, v1.GetOptions{})
-	gomega.Expect(err).To(gomega.BeNil())
-	myBucket, err := bucketClient.ObjectstorageV1alpha1().Buckets().Get(ctx, myBucketClaim.Status.BucketName, v1.GetOptions{})
-	gomega.Expect(err).To(gomega.BeNil())
-	gomega.Expect(myBucket).NotTo(gomega.BeNil())
-	gomega.Expect(myBucket.Status.BucketReady).To(gomega.Equal(status))
+	gomega.Expect(bucket.Status.BucketReady).To(gomega.Equal(status))
 }
 
 // CheckBucketID Function for checking bucketID
 func CheckBucketID(ctx ginkgo.SpecContext, bucketClient *bucketclientset.Clientset, bucket *v1alpha1.Bucket) {
-	myBucketClaim, err := bucketClient.ObjectstorageV1alpha1().BucketClaims(bucket.Spec.BucketClaim.Namespace).Get(ctx, bucket.Spec.BucketClaim.Name, v1.GetOptions{})
-	gomega.Expect(err).To(gomega.BeNil())
-	myBucket, err := bucketClient.ObjectstorageV1alpha1().Buckets().Get(ctx, myBucketClaim.Status.BucketName, v1.GetOptions{})
-	gomega.Expect(err).To(gomega.BeNil())
-	gomega.Expect(myBucket).NotTo(gomega.BeNil())
-	gomega.Expect(myBucket.Status.BucketID).NotTo(gomega.Or(gomega.BeEmpty(), gomega.BeNil()))
+	gomega.Expect(bucket.Status.BucketID).NotTo(gomega.Or(gomega.BeEmpty(), gomega.BeNil()))
 }
 
 // CreateBucketClassResource Function for creating BucketClass resource
@@ -115,4 +106,16 @@ func CheckBucketAccessAccountID(ctx ginkgo.SpecContext, bucketClient *bucketclie
 func DeleteBucketAccessResource(ctx ginkgo.SpecContext, bucketClient *bucketclientset.Clientset, bucketAccess *v1alpha1.BucketAccess) {
 	err := bucketClient.ObjectstorageV1alpha1().BucketAccessClasses().Delete(ctx, bucketAccess.Name, v1.DeleteOptions{})
 	gomega.Expect(err).To(gomega.BeNil())
+}
+
+// CheckBucketResource Function getting Bucket
+func GetBucketResource(ctx ginkgo.SpecContext, bucketClient *bucketclientset.Clientset, bucketClaim *v1alpha1.BucketClaim) *v1alpha1.Bucket {
+	// TODO: Implementation goes here
+	myBucketClaim, err := bucketClient.ObjectstorageV1alpha1().BucketClaims(bucketClaim.Namespace).Get(ctx, bucketClaim.Name, v1.GetOptions{})
+	gomega.Expect(err).To(gomega.BeNil())
+	bucket, err := bucketClient.ObjectstorageV1alpha1().Buckets().Get(ctx, myBucketClaim.Status.BucketName, v1.GetOptions{})
+	gomega.Expect(err).To(gomega.BeNil())
+	gomega.Expect(bucket).NotTo(gomega.BeNil())
+	ginkgo.GinkgoWriter.Printf("%+v\n", bucket)
+	return bucket
 }

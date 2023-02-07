@@ -14,6 +14,7 @@ import (
 	objectscaleRest "github.com/emcecs/objectscale-management-go-sdk/pkg/client/rest"
 	objectscaleClient "github.com/emcecs/objectscale-management-go-sdk/pkg/client/rest/client"
 	. "github.com/onsi/ginkgo/v2"
+	ginkgo "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/clientcmd"

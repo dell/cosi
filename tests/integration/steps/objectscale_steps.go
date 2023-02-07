@@ -3,6 +3,7 @@ package steps
 import (
 	objectscaleRest "github.com/emcecs/objectscale-management-go-sdk/pkg/client/rest"
 	ginkgo "github.com/onsi/ginkgo/v2"
+	gomega "github.com/onsi/gomega"
 	"sigs.k8s.io/container-object-storage-interface-api/apis/objectstorage/v1alpha1"
 )
 
@@ -16,8 +17,11 @@ func CheckObjectStoreCreation(ctx ginkgo.SpecContext, objectscale *objectscaleRe
 
 // CheckBucketResourceInObjectStore Function checking if Bucket resource is in objectstore
 func CheckBucketResourceInObjectStore(objectscale *objectscaleRest.ClientSet, bucket *v1alpha1.Bucket) {
-	// TODO: Implementation goes here
-	ginkgo.Fail("UNIMPLEMENTED")
+	param := make(map[string]string)
+	param["namespace"] = "TODO:Separate-ObjectStoreID-from-bucket"
+	objectScaleBucket, err := objectscale.Buckets().Get(bucket.Status.BucketID, param)
+	gomega.Expect(err).To(gomega.BeNil())
+	gomega.Expect(objectScaleBucket).NotTo(gomega.BeNil())
 }
 
 // CreateObjectStore Function for creating ObejctStore
@@ -28,8 +32,11 @@ func CreateObjectStore(ctx ginkgo.SpecContext, objectscale *objectscaleRest.Clie
 
 // CheckBucketDeletionInObjectStore Function for checking Bucket deletion in ObjectStore
 func CheckBucketDeletionInObjectStore(objectscale *objectscaleRest.ClientSet, bucket *v1alpha1.Bucket) {
-	// TODO: Implementation goes here
-	ginkgo.Fail("UNIMPLEMENTED")
+	param := make(map[string]string)
+	param["namespace"] = "TODO:Separate-ObjectStoreID-from-bucket"
+	objectScaleBucket, err := objectscale.Buckets().Get(bucket.Status.BucketID, param)
+	gomega.Expect(err).NotTo(gomega.BeNil())
+	gomega.Expect(objectScaleBucket).To(gomega.BeNil())
 }
 
 // CheckBucketAccessFromSecret Check if Bucket can be accessed with data from specified secret

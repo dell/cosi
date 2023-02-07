@@ -55,6 +55,7 @@ Feature: Bucket creation on ObjectScale platform
     @test_KRV-xxx
     Scenario: Successfull bucket creation
         When BucketClaim resource is created from specification "bucket-claim-valid"
+        And Bucket resource referencing BucketClaim resource "bucket-claim-valid" is created
         Then Bucket resource referencing BucketClaim resource "bucket-claim-valid" is created in ObjectStore "object-store-1"
         And BucketClaim resource "bucket-claim-valid" in namespace "namespace-1" status "bucketReady" is "true"
         And Bucket resource referencing BucketClaim resource "bucket-claim-valid" status "bucketReady" is "true"
@@ -63,6 +64,7 @@ Feature: Bucket creation on ObjectScale platform
     @test_KRV-xxx
     Scenario: Unsuccessfull bucket creation
         When BucketClaim resource is created from specification "bucket-claim-invalid"
+        And Bucket resource referencing BucketClaim resource "bucket-claim-invalid" is created
         Then Bucket resource referencing BucketClaim resource "bucket-claim-invalid" is not created in ObjectStore "object-store-1"
         And BucketClaim resource "bucket-claim-invalid" in namespace "namespace-1" status "bucketReady" is "false"
         And BucketClaim events contains an error: "Cannot create Bucket: BucketClass does not exist"
