@@ -6,11 +6,12 @@ import (
 	. "github.com/onsi/ginkgo/v2"
 
 	"github.com/dell/cosi-driver/tests/integration/steps"
+	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/container-object-storage-interface-api/apis/objectstorage/v1alpha1"
 )
 
-var _ = Describe("Bucket Creation", Serial, Label("create"), func() {
+var _ = Describe("Bucket Creation", Serial, Label("create", "story_KRV-10253"), func() {
 	// Resources for scenarios
 	var (
 		myBucketClass      *v1alpha1.BucketClass
@@ -110,15 +111,14 @@ var _ = Describe("Bucket Creation", Serial, Label("create"), func() {
 	})
 
 	// STEP: Scenario: Successfull bucket creation
-	It("Successfully creates bucket", func(ctx SpecContext) {
+	It("Successfully creates bucket", Label("test_KRV-10253-A"), func(ctx SpecContext) {
 		// STEP: BucketClaim resource is created from specification "bucket-claim-valid"
 		By("creating a BucketClaim resource from specification 'bucket-claim-valid'")
 		steps.CreateBucketClaimResource(ctx, bucketClient, validBucketClaim)
 
-
 		// STEP: Bucket resource referencing BucketClaim resource 'bucket-claim-valid' is created
 		By("checking if Bucket resource referencing BucketClaim resource 'bucket-claim-valid' is created")
-		validBucket = steps.GetBucketResource(ctx, bucketClient, bucketClaimValid)
+		validBucket = steps.GetBucketResource(ctx, bucketClient, validBucketClaim)
 
 		// STEP: Bucket resource referencing BucketClaim resource "bucket-claim-valid" is created in ObjectStore "objectstore-dev"
 		By("checking if Bucket resource referencing BucketClaim resource 'bucket-claim-valid' is created in ObjectStore 'objectstore-dev'")
@@ -143,14 +143,14 @@ var _ = Describe("Bucket Creation", Serial, Label("create"), func() {
 	})
 
 	// STEP: Scenario: Unsuccessfull bucket creation
-	It("Unsuccessfully tries to create bucket", func(ctx SpecContext) {
+	It("Unsuccessfully tries to create bucket", Label("test_KRV-10253-B"), func(ctx SpecContext) {
 		// STEP: BucketClaim resource is created from specification "bucket-claim-invalid"
 		By("creating a BucketClaim resource from specification 'bucket-claim-invalid'")
 		steps.CreateBucketClaimResource(ctx, bucketClient, invalidBucketClaim)
-    
+
 		// STEP: Bucket resource referencing BucketClaim resource 'bucket-claim-invalid' is created
 		By("checking if Bucket resource referencing BucketClaim resource 'bucket-claim-invalid' is created")
-		_ = steps.GetBucketResource(ctx, bucketClient, bucketClaimInvalid)
+		_ = steps.GetBucketResource(ctx, bucketClient, invalidBucketClaim)
 
 		// STEP: Bucket resource referencing BucketClaim resource "bucket-claim-invalid" is not created in ObjectStore "objectstore-dev"
 		By("checking if Bucket resource referencing BucketClaim resource 'bucket-claim-invalid' is not created in ObjectStore 'objectstore-dev'")

@@ -6,11 +6,12 @@ import (
 	. "github.com/onsi/ginkgo/v2"
 
 	"github.com/dell/cosi-driver/tests/integration/steps"
+	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/container-object-storage-interface-api/apis/objectstorage/v1alpha1"
 )
 
-var _ = Describe("Bucket Access Revoke", Serial, Label("revoke"), func() {
+var _ = Describe("Bucket Access Revoke", Serial, Label("revoke", "story_KRV-10336"), func() {
 	// Resources for scenarios
 	var (
 		myBucketClass       *v1alpha1.BucketClass
@@ -179,7 +180,7 @@ var _ = Describe("Bucket Access Revoke", Serial, Label("revoke"), func() {
 	})
 
 	// STEP: Revoke access to bucket
-	It("Successfully revokes access to bucket", func(ctx SpecContext) {
+	It("Successfully revokes access to bucket", Label("test_KRV-10336-A"), func(ctx SpecContext) {
 		// STEP: BucketAccess resource "my-bucket-access" in namespace "namespace-1" is deleted
 		By("Deleting the BucketAccess 'my-bucket-access'")
 		steps.DeleteBucketAccessResource(ctx, bucketClient, myBucketAccess)

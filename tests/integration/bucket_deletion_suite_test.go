@@ -10,7 +10,7 @@ import (
 	"sigs.k8s.io/container-object-storage-interface-api/apis/objectstorage/v1alpha1"
 )
 
-var _ = Describe("Bucket Deletion", Serial, Label("delete"), func() {
+var _ = Describe("Bucket Deletion", Serial, Label("delete", "story_KRV-10254"), func() {
 	// Resources for scenarios
 	var (
 		bucketClassDelete *v1alpha1.BucketClass
@@ -123,8 +123,7 @@ var _ = Describe("Bucket Deletion", Serial, Label("delete"), func() {
 	})
 
 	// STEP: Scenario: BucketClaim deletion with deletionPolicy set to "delete"
-	It("Delete the bucket when deletionPolicy is set to 'delete'", func(ctx SpecContext) {
-
+	It("Delets the bucket when deletionPolicy is set to 'delete'", Label("test_KRV-10254-A"), func(ctx SpecContext) {
 		// STEP: BucketClass resource is created from specification "my-bucket-class-delete"
 		By("creating a BucketClass resource from specification 'my-bucket-class-delete'")
 		steps.CreateBucketClassResource(ctx, bucketClient, bucketClassDelete)
@@ -132,7 +131,6 @@ var _ = Describe("Bucket Deletion", Serial, Label("delete"), func() {
 		// STEP: BucketClaim resource is created from specification "my-bucket-claim-delete"
 		By("creating a BucketClaim resource from specification 'my-bucket-claim-delete'")
 		steps.CreateBucketClaimResource(ctx, bucketClient, bucketClaimDelete)
-
 
 		// STEP: Bucket resource referencing BucketClaim resource "my-bucket-claim-delete' is created
 		By("checking if Bucket resource referencing BucketClaim resource 'my-bucket-claim-delete' is created")
@@ -168,7 +166,7 @@ var _ = Describe("Bucket Deletion", Serial, Label("delete"), func() {
 	})
 
 	// STEP: Scenario: BucketClaim deletion with deletionPolicy set to "retain"
-	It("Does not delete the bucket when deletionPolicy is set to 'retain'", func(ctx SpecContext) {
+	It("Does not delete the bucket when deletionPolicy is set to 'retain'", Label("test_KRV-10254-B"), func(ctx SpecContext) {
 		// STEP: BucketClass resource is created from specification "my-bucket-class-retain"
 		By("creating a BucketClass resource from specification 'my-bucket-class-retain'")
 		steps.CreateBucketClassResource(ctx, bucketClient, bucketClassRetain)

@@ -1,5 +1,5 @@
 @component_COSI
-@story_KRV-xxx
+@story_KRV-10336
 
 Feature: BucketAccess deletion on ObjectScale platform
 
@@ -79,7 +79,7 @@ Feature: BucketAccess deletion on ObjectScale platform
         And BucketAccess resource "my-bucket-access" in namespace "namespace-1" status "accountID" is "${accountID}"
         And Secret "bucket-credentials-1" is created in namespace "namespace-1" and is not empty
 
-    @test_KRV-xxx
+    @test_KRV-10336-A
     Scenario: Revoke access to bucket
         When BucketAccess resource "my-bucket-access" in namespace "namespace-1" is deleted
         And Policy "${policy}" for Bucket resource referencing BucketClaim resource "my-bucket-claim" on ObjectScale platform is deleted

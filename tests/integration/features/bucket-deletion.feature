@@ -1,5 +1,5 @@
 @component_COSI
-@story_KRV-xxx
+@story_KRV-10254
 
 Feature: Bucket deletion from ObjectScale platform
 
@@ -16,7 +16,7 @@ Feature: Bucket deletion from ObjectScale platform
         And COSI controller "objectstorage-controller" is installed in namespace "default"
         And COSI driver "cosi-driver" is installed in namespace "driver-ns"
 
-    @test_KRV-xxx
+    @test_KRV-10254-A
     Scenario: BucketClaim deletion with deletionPolicy set to "delete"
         Given specification of custom resource "my-bucket-class-delete" is:
         """
@@ -52,7 +52,7 @@ Feature: Bucket deletion from ObjectScale platform
         When BucketClaim resource "my-bucket-claim-delete" is deleted in namespace "namespace-1"
         Then Bucket referencing BucketClaim resource "my-bucket-claim-delete" is deleted in ObjectStore "objectstore-dev"
 
-    @test_KRV-xxx
+    @test_KRV-10254-B
     Scenario: BucketClaim deletion with deletionPolicy set to "retain" (default)
         Given specification of custom resource "my-bucket-class-retain" is:
         """
