@@ -69,7 +69,7 @@ var _ = Describe("Bucket Creation", Serial, Label("create", "story_KRV-10253"), 
 			},
 		}
 		myEvent = &v1.Event{
-			Type:   "Warning",
+			Type:   v1.EventTypeWarning,
 			Reason: "FIXME: reason is simple, machine readable description of failure",
 		}
 
