@@ -70,7 +70,8 @@ var _ = Describe("Bucket Creation", Serial, Label("create", "story_KRV-10253"), 
 		}
 		myEvent = &v1.Event{
 			Type:   v1.EventTypeWarning,
-			Reason: "FIXME: reason is simple, machine readable description of failure",
+			Reason: "MissingBucketClassName",
+			Message: "BucketClassName not defined",
 		}
 
 		// STEP: Kubernetes cluster is up and running
