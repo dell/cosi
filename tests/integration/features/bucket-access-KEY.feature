@@ -6,13 +6,13 @@ Feature: BucketAccess creation in KEY flow on ObjectScale platform
     I want to add BucketAccess via KEY authentication, which is a request access to a Bucket for particular account
     so that access credentials for a Bucket are created and unique identifier for the account (accountID) is returned
 
-    Background: 
+    Background:
         Given Kubernetes cluster is up and running
         And ObjectScale platform is installed on the cluster
-        And ObjectStore "object-store-1" is created
+        And ObjectStore "objectstore-dev" is created
         And Kubernetes namespace "driver-ns" is created
         And Kubernetes namespace "namespace-1" is created
-        And COSI controller "cosi-controller" is installed in namespace "driver-ns"
+        And COSI controller "objectstorage-controller" is installed in namespace "default"
         And COSI driver "cosi-driver" is installed in namespace "driver-ns"
         And specification of custom resource "my-bucket-class" is:
         """
@@ -25,7 +25,7 @@ Feature: BucketAccess creation in KEY flow on ObjectScale platform
         parameters:
             objectScaleID: ${objectScaleID}
             objectStoreID: ${objectStoreID}
-            accountSecret: ${secretName} 
+            accountSecret: ${secretName}
         """
         And specification of custom resource "my-bucket-claim" is:
         """
@@ -34,13 +34,14 @@ Feature: BucketAccess creation in KEY flow on ObjectScale platform
         metadata:
             name: my-bucket-claim
             namespace: namespace-1
-        spec:                                            
+        spec:
             bucketClassName: my-bucket-class
             protocol: S3
         """
         And BucketClass resource is created from specification "my-bucket-class"
         And BucketClaim resource is created from specification "my-bucket-claim"
-        And Bucket resource referencing BucketClaim resource "my-bucket-claim" is created in ObjectStore "object-store-1"
+        And Bucket resource referencing BucketClaim resource "my-bucket-claim" is created
+        And Bucket resource referencing BucketClaim resource "my-bucket-claim" is created in ObjectStore "objectstore-dev"
         And BucketClaim resource "my-bucket-claim" in namespace "namespace-1" status "bucketReady" is "true"
         And Bucket resource referencing BucketClaim resource "my-bucket-claim" status "bucketReady" is "true"
         And Bucket resource referencing BucketClaim resource "my-bucket-claim" bucketID is not empty
@@ -51,13 +52,13 @@ Feature: BucketAccess creation in KEY flow on ObjectScale platform
         apiVersion: storage.k8s.io/v1
         kind: BucketAccessClass
         metadata:
-            name: my-bucket-access-class                                         
-        driverName: cosi-driver  
+            name: my-bucket-access-class
+        driverName: cosi-driver
         authenticationType: KEY
         parameters:
             objectScaleID: ${objectScaleID}
             objectStoreID: ${objectStoreID}
-            accountSecret: ${secretName} 
+            accountSecret: ${secretName}
         """
         And specification of custom resource "my-bucket-access" is:
         """
@@ -65,12 +66,12 @@ Feature: BucketAccess creation in KEY flow on ObjectScale platform
         kind: BucketAccess
         metadata:
             name: my-bucket-access
-            namespace: namespace-1                             
-        spec:                                               
-            bucketAccessClassName: my-bucket-access-class                           
-            bucketClaimName: my-bucket-claim                              
+            namespace: namespace-1
+        spec:
+            bucketAccessClassName: my-bucket-access-class
+            bucketClaimName: my-bucket-claim
             credentialsSecretName: bucket-credentials-1
-        """ 
+        """
         When BucketAccessClass resource is created from specification "my-bucket-access-class"
         And BucketAccess resource is created from specification "my-bucket-access"
         Then BucketAccess resource "my-bucket-access" in namespace "namespace-1" status "accessGranted" is "true"
