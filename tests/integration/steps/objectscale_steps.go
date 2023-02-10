@@ -101,15 +101,20 @@ func DeleteUser(ctx ginkgo.SpecContext, iamClient *iam.IAM, user string) {
 
 // CheckBucketNotInObjectStore Function for checking if bucket is not in objectstore
 func CheckBucketNotInObjectStore(objectscale *objectscaleRest.ClientSet, bucketClaim *v1alpha1.BucketClaim) {
-	bucket, err := objectscale.Buckets().Get(bucketClaim.Name, map[string]string{})
+	bucket, err := objectscale.Buckets().Get(bucketClaim.Status.BucketName, map[string]string{})
 	gomega.Expect(err).NotTo(gomega.BeNil())
 	gomega.Expect(bucket).To(gomega.BeNil())
 }
 
 // CheckBucketInObjectStore Function for checking if the bucket object is in the objectstore
 func CheckBucketInObjectStore(objectscale *objectscaleRest.ClientSet, bucketClaim *v1alpha1.BucketClaim) {
-	params := map[string]string{}
-	bucket, err := objectscale.Buckets().Get(bucketClaim.Name, params)
+	bucket, err := objectscale.Buckets().Get(bucketClaim.Status.BucketName, map[string]string{})
 	gomega.Expect(err).To(gomega.BeNil())
 	gomega.Expect(bucket).NotTo(gomega.BeNil())
+}
+
+// DeleteBucket Function for deleting existing from ObjectScale (useful if BucketClaim deletionPolicy is set to "retain")
+func DeleteBucket(objectscale *objectscaleRest.ClientSet, bucket *v1alpha1.Bucket) {
+	// TODO: Implementation goes here
+	ginkgo.Fail("UNIMPLEMENTED")
 }

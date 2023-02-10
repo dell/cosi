@@ -11,7 +11,7 @@ import (
 	"sigs.k8s.io/container-object-storage-interface-api/apis/objectstorage/v1alpha1"
 )
 
-var _ = Describe("Bucket Access Revoke", Serial, Label("revoke", "story_KRV-10336"), func() {
+var _ = Describe("Bucket Access Revoke", Ordered, Label("revoke", "story_KRV-10336"), func() {
 	// Resources for scenarios
 	var (
 		myBucketClass       *v1alpha1.BucketClass
@@ -195,6 +195,13 @@ var _ = Describe("Bucket Access Revoke", Serial, Label("revoke", "story_KRV-1033
 
 		DeferCleanup(func() {
 			// Cleanup for scenario: Revoke access to bucket
+		})
+	})
+	AfterAll(func() {
+		DeferCleanup(func(ctx SpecContext) {
+			steps.DeleteBucketAccessResource(ctx, bucketClient, myBucketAccess)
+			steps.DeleteBucketClassResource(ctx, bucketClient, myBucketClass)
+			steps.DeleteBucketClaimResource(ctx, bucketClient, myBucketClaim)
 		})
 	})
 })

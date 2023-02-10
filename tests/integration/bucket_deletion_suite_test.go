@@ -10,7 +10,7 @@ import (
 	"sigs.k8s.io/container-object-storage-interface-api/apis/objectstorage/v1alpha1"
 )
 
-var _ = Describe("Bucket Deletion", Serial, Label("delete", "story_KRV-10254"), func() {
+var _ = Describe("Bucket Deletion", Ordered, Label("delete", "story_KRV-10254"), func() {
 	// Resources for scenarios
 	var (
 		bucketClassDelete *v1alpha1.BucketClass
@@ -161,7 +161,7 @@ var _ = Describe("Bucket Deletion", Serial, Label("delete", "story_KRV-10254"), 
 		steps.CheckBucketDeletionInObjectStore(objectscale, deleteBucket)
 
 		DeferCleanup(func() {
-			// Cleanup for scenario: BucketClaim deletion with deletionPolicy set to "delete"
+			steps.DeleteBucketClassResource(ctx, bucketClient, bucketClassDelete)
 		})
 	})
 
@@ -203,8 +203,11 @@ var _ = Describe("Bucket Deletion", Serial, Label("delete", "story_KRV-10254"), 
 		By("checking if Bucket referencing BucketClaim resource 'my-bucket-claim-retain' is available in ObjectStore 'objectstore-dev'")
 		steps.CheckBucketResourceInObjectStore(objectscale, retainBucket)
 
-		DeferCleanup(func() {
-			// Cleanup for scenario: BucketClaim deletion with deletionPolicy set to "retain"
+	})
+	AfterAll(func() {
+		DeferCleanup(func(ctx SpecContext) {
+			steps.DeleteBucket(objectscale, retainBucket)
+			steps.DeleteBucketClassResource(ctx, bucketClient, bucketClassRetain)
 		})
 	})
 })

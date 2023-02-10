@@ -11,7 +11,7 @@ import (
 	"sigs.k8s.io/container-object-storage-interface-api/apis/objectstorage/v1alpha1"
 )
 
-var _ = Describe("Bucket Creation", Serial, Label("create", "story_KRV-10253"), func() {
+var _ = Describe("Bucket Creation", Ordered, Label("create", "story_KRV-10253"), func() {
 	// Resources for scenarios
 	var (
 		myBucketClass      *v1alpha1.BucketClass
@@ -69,8 +69,8 @@ var _ = Describe("Bucket Creation", Serial, Label("create", "story_KRV-10253"), 
 			},
 		}
 		myEvent = &v1.Event{
-			Type:   v1.EventTypeWarning,
-			Reason: "MissingBucketClassName",
+			Type:    v1.EventTypeWarning,
+			Reason:  "MissingBucketClassName",
 			Message: "BucketClassName not defined",
 		}
 
@@ -139,7 +139,7 @@ var _ = Describe("Bucket Creation", Serial, Label("create", "story_KRV-10253"), 
 		steps.CheckBucketID(ctx, bucketClient, validBucket)
 
 		DeferCleanup(func() {
-			// Cleanup for scenario: Successfull bucket creation
+			steps.DeleteBucketClaimResource(ctx, bucketClient, validBucketClaim)
 		})
 	})
 
@@ -166,8 +166,12 @@ var _ = Describe("Bucket Creation", Serial, Label("create", "story_KRV-10253"), 
 		steps.CheckBucketClaimEvents(ctx, clientset, invalidBucketClaim, myEvent)
 
 		DeferCleanup(func() {
-			// Cleanup for scenario: Unsuccessfull bucket creation
+			steps.DeleteBucketClaimResource(ctx, bucketClient, invalidBucketClaim)
 		})
 	})
-
+	AfterAll(func() {
+		DeferCleanup(func(ctx SpecContext) {
+			steps.DeleteBucketClassResource(ctx, bucketClient, myBucketClass)
+		})
+	})
 })

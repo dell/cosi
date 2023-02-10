@@ -11,7 +11,7 @@ import (
 	"sigs.k8s.io/container-object-storage-interface-api/apis/objectstorage/v1alpha1"
 )
 
-var _ = Describe("Bucket Access KEY", Label("key-flow", "story_KRV-10335"), func() {
+var _ = Describe("Bucket Access KEY", Ordered, Label("key-flow", "story_KRV-10335"), func() {
 	// Resources for scenarios
 	var (
 		myBucketClass       *v1alpha1.BucketClass
@@ -178,7 +178,16 @@ var _ = Describe("Bucket Access KEY", Label("key-flow", "story_KRV-10335"), func
 		steps.CheckBucketAccessFromSecret(objectscale, myBucket, "bucket-credentials-1")
 
 		DeferCleanup(func() {
-			// Cleanup for scenario: BucketAccess creation with KEY authorization mechanism
+			steps.DeleteBucketAccessResource(ctx, bucketClient, myBucketAccess)
+			steps.DeletePolicy(objectscale, myBucket)
+			steps.DeleteUser(ctx, iamClient, "${user}")
+			steps.DeleteBucketAccessClassResource(ctx, bucketClient, myBucketAccessClass)
+		})
+	})
+	AfterAll(func() {
+		DeferCleanup(func(ctx SpecContext) {
+			steps.DeleteBucketClassResource(ctx, bucketClient, myBucketClass)
+			steps.DeleteBucketClaimResource(ctx, bucketClient, myBucketClaim)
 		})
 	})
 })
