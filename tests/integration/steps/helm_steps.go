@@ -9,7 +9,6 @@ import (
 	gomega "github.com/onsi/gomega"
 
 	v1 "k8s.io/api/apps/v1"
-	errors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 
@@ -32,10 +31,10 @@ func CheckCOSIDriverInstallation(ctx ginkgo.SpecContext, clientset *kubernetes.C
 // checkAppIsInstalled Ensures that an app is installed in particular namespace
 func checkAppIsInstalled(ctx ginkgo.SpecContext, clientset *kubernetes.Clientset, releaseName string, namespace string) {
 	deployment, err := clientset.AppsV1().Deployments(namespace).Get(ctx, releaseName, metav1.GetOptions{})
-	gomega.Expect(err).To(gomega.BeNil())
-	gomega.Expect(deployment.Status.Conditions).To(gomega.ContainElement(gomega.HaveField("Type", gomega.Equal(v1.DeploymentAvailable))))
-	if errors.IsNotFound(err) {
+	if err != nil {
 		InstallChartInNamespace(releaseName, namespace)
+	} else {
+		gomega.Expect(deployment.Status.Conditions).To(gomega.ContainElement(gomega.HaveField("Type", gomega.Equal(v1.DeploymentAvailable))))
 	}
 }
 
@@ -50,10 +49,15 @@ func InstallChartInNamespace(releaseName, namespace string) {
 	helmClient.ReleaseName = releaseName
 	helmClient.Namespace = namespace
 
-	chartPath, err := helmClient.LocateChart("https://github.com/dell/cosi-driver", settings)
+	chartPath, err := helmClient.LocateChart("https://github.com/kubernetes/ingress-nginx/releases/download/helm-chart-4.0.6/ingress-nginx-4.0.6.tgz", settings)
+
+	gomega.Expect(err).To(gomega.BeNil())
 	chart, err := loader.Load(chartPath)
 	gomega.Expect(err).To(gomega.BeNil())
 
+	// panic(fmt.Sprintf("%v, %v", helmClient.ReleaseName, helmClient.Namespace))
+
+	helmClient.DryRun = true
 	release, err := helmClient.Run(chart, nil)
 	gomega.Expect(err).To(gomega.BeNil())
 

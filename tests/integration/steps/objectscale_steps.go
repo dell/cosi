@@ -115,6 +115,6 @@ func CheckBucketInObjectStore(objectscale *objectscaleRest.ClientSet, bucketClai
 
 // DeleteBucket Function for deleting existing from ObjectScale (useful if BucketClaim deletionPolicy is set to "retain")
 func DeleteBucket(objectscale *objectscaleRest.ClientSet, bucket *v1alpha1.Bucket) {
-	// TODO: Implementation goes here
-	ginkgo.Fail("UNIMPLEMENTED")
+	err := objectscale.Buckets().Delete(bucket.Name, bucket.Namespace)
+	gomega.Expect(err).To(gomega.BeNil())
 }
