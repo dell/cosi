@@ -2,8 +2,9 @@ package steps
 
 import (
 	"fmt"
-	"log"
 	"os"
+
+	log "github.com/sirupsen/logrus"
 
 	ginkgo "github.com/onsi/ginkgo/v2"
 	gomega "github.com/onsi/gomega"
@@ -20,52 +21,64 @@ import (
 
 // CheckCOSIControllerInstallation Ensure that COSI controller objectstorage-controller is installed in particular namespace
 func CheckCOSIControllerInstallation(ctx ginkgo.SpecContext, clientset *kubernetes.Clientset, controllerName string, namespace string) {
-	checkAppIsInstalled(ctx, clientset, controllerName, namespace)
+	// TODO: check if controller can be installed via chart
+	repo := ""
+	chartName := ""
+	version := ""
+	checkAppIsInstalled(ctx, clientset, controllerName, namespace, repo, chartName, version)
 }
 
 // CheckCOSIDriverInstallation Ensure that COSI driver is installed in particular namespace
 func CheckCOSIDriverInstallation(ctx ginkgo.SpecContext, clientset *kubernetes.Clientset, driver string, namespace string) {
-	checkAppIsInstalled(ctx, clientset, driver, namespace)
+	repo := "cosi-driver"
+	chartName := "cosi-driver"
+	version := "0.1.0"
+	checkAppIsInstalled(ctx, clientset, driver, namespace, repo, chartName, version)
 }
 
 // checkAppIsInstalled Ensures that an app is installed in particular namespace
-func checkAppIsInstalled(ctx ginkgo.SpecContext, clientset *kubernetes.Clientset, releaseName string, namespace string) {
+func checkAppIsInstalled(ctx ginkgo.SpecContext, clientset *kubernetes.Clientset, releaseName, namespace, repo, chartName, version string) {
 	deployment, err := clientset.AppsV1().Deployments(namespace).Get(ctx, releaseName, metav1.GetOptions{})
 	if err != nil {
-		InstallChartInNamespace(releaseName, namespace)
+		InstallChartInNamespace(releaseName, namespace, repo, chartName, version)
 	} else {
 		gomega.Expect(deployment.Status.Conditions).To(gomega.ContainElement(gomega.HaveField("Type", gomega.Equal(v1.DeploymentAvailable))))
 	}
 }
 
 // InstallChart
-func InstallChartInNamespace(releaseName, namespace string) {
+func InstallChartInNamespace(releaseName, namespace, repo, chartName, version string) {
 	settings := cli.New()
 	actionConfig := new(action.Configuration)
-	err := actionConfig.Init(settings.RESTClientGetter(), "", os.Getenv("HELM_DRIVER"), log.Printf)
+	err := actionConfig.Init(settings.RESTClientGetter(), namespace, os.Getenv("HELM_DRIVER"), log.Debugf)
 	gomega.Expect(err).To(gomega.BeNil())
 
 	helmClient := action.NewInstall(actionConfig)
 	helmClient.ReleaseName = releaseName
 	helmClient.Namespace = namespace
 
-	chartPath, err := helmClient.LocateChart("https://github.com/kubernetes/ingress-nginx/releases/download/helm-chart-4.0.6/ingress-nginx-4.0.6.tgz", settings)
+	chartPath, err := helmClient.LocateChart(fmt.Sprintf("https://github.com/%s/%s-%s", repo, chartName, version), settings)
 
 	gomega.Expect(err).To(gomega.BeNil())
 	chart, err := loader.Load(chartPath)
 	gomega.Expect(err).To(gomega.BeNil())
 
-	// panic(fmt.Sprintf("%v, %v", helmClient.ReleaseName, helmClient.Namespace))
-
-	helmClient.DryRun = true
 	release, err := helmClient.Run(chart, nil)
 	gomega.Expect(err).To(gomega.BeNil())
 
-	fmt.Println("Successfully installed release: ", release.Name)
+	log.Println("Successfully installed release: ", release.Name)
 }
 
 // UninstallChartReleaseinNamespace Deletes particular relese from k8s chart
-func UninstallChartReleaseinNamespace(releaseName string, namespace string) {
-	// TODO: Implementation goes here
-	ginkgo.Fail("UNIMPLEMENTED")
+func UninstallChartReleaseinNamespace(releaseName, namespace string) {
+	settings := cli.New()
+	actionConfig := new(action.Configuration)
+	err := actionConfig.Init(settings.RESTClientGetter(), namespace, os.Getenv("HELM_DRIVER"), log.Debugf)
+	gomega.Expect(err).To(gomega.BeNil())
+
+	helmClient := action.NewUninstall(actionConfig)
+	release, err := helmClient.Run(releaseName)
+	gomega.Expect(err).To(gomega.BeNil())
+
+	log.Println("Successfully uninstalled release: ", release.Release.Name)
 }
