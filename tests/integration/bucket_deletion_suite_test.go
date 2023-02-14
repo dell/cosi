@@ -1,3 +1,15 @@
+//Copyright © 2023 Dell Inc. or its subsidiaries. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//      http://www.apache.org/licenses/LICENSE-2.0
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 //go:build integration
 
 package main_test
@@ -6,11 +18,12 @@ import (
 	. "github.com/onsi/ginkgo/v2"
 
 	"github.com/dell/cosi-driver/tests/integration/steps"
+	"github.com/dell/cosi-driver/tests/integration/utils"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/container-object-storage-interface-api/apis/objectstorage/v1alpha1"
 )
 
-var _ = Describe("Bucket Deletion", Serial, Label("delete"), func() {
+var _ = Describe("Bucket Deletion", Ordered, Label("delete"), func() {
 	// Resources for scenarios
 	var (
 		bucketClassDelete *v1alpha1.BucketClass
@@ -161,7 +174,7 @@ var _ = Describe("Bucket Deletion", Serial, Label("delete"), func() {
 		steps.CheckBucketDeletionInObjectStore(objectscale, deleteBucket)
 
 		DeferCleanup(func() {
-			// Cleanup for scenario: BucketClaim deletion with deletionPolicy set to "delete"
+			steps.DeleteBucketClassResource(ctx, bucketClient, bucketClassDelete)
 		})
 	})
 
@@ -203,8 +216,12 @@ var _ = Describe("Bucket Deletion", Serial, Label("delete"), func() {
 		By("checking if Bucket referencing BucketClaim resource 'my-bucket-claim-retain' is available in ObjectStore 'objectstore-dev'")
 		steps.CheckBucketResourceInObjectStore(objectscale, retainBucket)
 
-		DeferCleanup(func() {
-			// Cleanup for scenario: BucketClaim deletion with deletionPolicy set to "retain"
+	})
+	AfterAll(func() {
+		DeferCleanup(func(ctx SpecContext) {
+			steps.DeleteBucket(objectscale, retainBucket)
+			steps.DeleteBucketClassResource(ctx, bucketClient, bucketClassRetain)
+			utils.DeleteReleasesAndNamespaces(ctx, clientset, map[string]string{"ns-driver": "cosi-driver"}, []string{"ns-driver"})
 		})
 	})
 })

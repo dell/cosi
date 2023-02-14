@@ -1,3 +1,15 @@
+//Copyright © 2023 Dell Inc. or its subsidiaries. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//      http://www.apache.org/licenses/LICENSE-2.0
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 package steps
 
 import (
@@ -22,6 +34,12 @@ func CreateBucketClaimResource(ctx ginkgo.SpecContext, bucketClient *bucketclien
 		gomega.Expect(err).To(gomega.BeNil())
 	}
 	ginkgo.GinkgoWriter.Printf("Kubernetes BucketClaim: %+v\n", kubernetesBucketClaim)
+}
+
+// DeleteBucketClaimResource Function for deleting BucketClaim resource
+func DeleteBucketClaimResource(ctx ginkgo.SpecContext, bucketClient *bucketclientset.Clientset, bucketClaim *v1alpha1.BucketClaim) {
+	err := bucketClient.ObjectstorageV1alpha1().BucketClaims(bucketClaim.Namespace).Delete(ctx, bucketClaim.Name, v1.DeleteOptions{})
+	gomega.Expect(err).To(gomega.BeNil())
 }
 
 // CheckBucketClaimStatus Function for checking BucketClaim status
@@ -59,12 +77,6 @@ func DeleteBucketClassResource(ctx ginkgo.SpecContext, bucketClient *bucketclien
 	gomega.Expect(err).To(gomega.BeNil())
 }
 
-// DeleteBucketClaimResource Function for deleting BucketClaim resource
-func DeleteBucketClaimResource(ctx ginkgo.SpecContext, bucketClient *bucketclientset.Clientset, bucketClaim *v1alpha1.BucketClaim) {
-	err := bucketClient.ObjectstorageV1alpha1().BucketClaims(bucketClaim.Namespace).Delete(ctx, bucketClaim.Name, v1.DeleteOptions{})
-	gomega.Expect(err).To(gomega.BeNil())
-}
-
 // CreateBucketAccessClassResource Function for creating BucketAccessClass resource
 func CreateBucketAccessClassResource(ctx ginkgo.SpecContext, bucketClient *bucketclientset.Clientset, bucketAccessClass *v1alpha1.BucketAccessClass) {
 	_, err := bucketClient.ObjectstorageV1alpha1().BucketAccessClasses().Get(ctx, bucketAccessClass.Name, v1.GetOptions{})
@@ -76,6 +88,12 @@ func CreateBucketAccessClassResource(ctx ginkgo.SpecContext, bucketClient *bucke
 	}
 }
 
+// DeleteBucketAccessClassResource Function for deleting BucketAccessClass resource
+func DeleteBucketAccessClassResource(ctx ginkgo.SpecContext, bucketClient *bucketclientset.Clientset, bucketAccessClass *v1alpha1.BucketAccessClass) {
+	err := bucketClient.ObjectstorageV1alpha1().BucketAccessClasses().Delete(ctx, bucketAccessClass.Name, v1.DeleteOptions{})
+	gomega.Expect(err).To(gomega.BeNil())
+}
+
 // CreateBucketAccessResource Function for creating BucketAccess resource
 func CreateBucketAccessResource(ctx ginkgo.SpecContext, bucketClient *bucketclientset.Clientset, bucketAccess *v1alpha1.BucketAccess) {
 	_, err := bucketClient.ObjectstorageV1alpha1().BucketAccesses(bucketAccess.Namespace).Get(ctx, bucketAccess.Name, v1.GetOptions{})
@@ -85,6 +103,12 @@ func CreateBucketAccessResource(ctx ginkgo.SpecContext, bucketClient *bucketclie
 	} else {
 		gomega.Expect(err).To(gomega.BeNil())
 	}
+}
+
+// DeleteBucketAccessResource Function for deleting BucketAccess resource
+func DeleteBucketAccessResource(ctx ginkgo.SpecContext, bucketClient *bucketclientset.Clientset, bucketAccess *v1alpha1.BucketAccess) {
+	err := bucketClient.ObjectstorageV1alpha1().BucketAccesses(bucketAccess.Namespace).Delete(ctx, bucketAccess.Name, v1.DeleteOptions{})
+	gomega.Expect(err).To(gomega.BeNil())
 }
 
 // CheckBucketAccessStatus Function for checking BucketAccess status
@@ -101,12 +125,6 @@ func CheckBucketAccessAccountID(ctx ginkgo.SpecContext, bucketClient *bucketclie
 	gomega.Expect(err).To(gomega.BeNil())
 	gomega.Expect(myBucketAccess).NotTo(gomega.BeNil())
 	gomega.Expect(myBucketAccess.Status.AccountID).To(gomega.Equal(accountID))
-}
-
-// DeleteBucketAccessResource Function for deleting BucketAccess resource
-func DeleteBucketAccessResource(ctx ginkgo.SpecContext, bucketClient *bucketclientset.Clientset, bucketAccess *v1alpha1.BucketAccess) {
-	err := bucketClient.ObjectstorageV1alpha1().BucketAccessClasses().Delete(ctx, bucketAccess.Name, v1.DeleteOptions{})
-	gomega.Expect(err).To(gomega.BeNil())
 }
 
 // CheckBucketResource Function for getting Bucket resource
