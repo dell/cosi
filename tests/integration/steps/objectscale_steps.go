@@ -1,3 +1,15 @@
+//Copyright © 2023 Dell Inc. or its subsidiaries. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//      http://www.apache.org/licenses/LICENSE-2.0
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 package steps
 
 import (
@@ -101,15 +113,20 @@ func DeleteUser(ctx ginkgo.SpecContext, iamClient *iam.IAM, user string) {
 
 // CheckBucketNotInObjectStore Function for checking if bucket is not in objectstore
 func CheckBucketNotInObjectStore(objectscale *objectscaleRest.ClientSet, bucketClaim *v1alpha1.BucketClaim) {
-	bucket, err := objectscale.Buckets().Get(bucketClaim.Name, map[string]string{})
+	bucket, err := objectscale.Buckets().Get(bucketClaim.Status.BucketName, map[string]string{})
 	gomega.Expect(err).NotTo(gomega.BeNil())
 	gomega.Expect(bucket).To(gomega.BeNil())
 }
 
 // CheckBucketInObjectStore Function for checking if the bucket object is in the objectstore
 func CheckBucketInObjectStore(objectscale *objectscaleRest.ClientSet, bucketClaim *v1alpha1.BucketClaim) {
-	params := map[string]string{}
-	bucket, err := objectscale.Buckets().Get(bucketClaim.Name, params)
+	bucket, err := objectscale.Buckets().Get(bucketClaim.Status.BucketName, map[string]string{})
 	gomega.Expect(err).To(gomega.BeNil())
 	gomega.Expect(bucket).NotTo(gomega.BeNil())
+}
+
+// DeleteBucket Function for deleting existing from ObjectScale (useful if BucketClaim deletionPolicy is set to "retain")
+func DeleteBucket(objectscale *objectscaleRest.ClientSet, bucket *v1alpha1.Bucket) {
+	err := objectscale.Buckets().Delete(bucket.Name, bucket.Namespace)
+	gomega.Expect(err).To(gomega.BeNil())
 }
