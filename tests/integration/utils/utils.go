@@ -7,6 +7,7 @@ import (
 	"k8s.io/client-go/kubernetes"
 )
 
+// DeleteReleasesAndNamespaces Delete releases and namespaces from k8s cluster
 func DeleteReleasesAndNamespaces(ctx ginkgo.SpecContext, clientset *kubernetes.Clientset, releases map[string]string, namespaces []string) {
 	// uninstall releases
 	for namespace, release := range releases {

@@ -36,7 +36,7 @@ func CheckCOSIDriverInstallation(ctx ginkgo.SpecContext, clientset *kubernetes.C
 	checkAppIsInstalled(ctx, clientset, driver, namespace, repo, chartName, version)
 }
 
-// checkAppIsInstalled Ensures that an app is installed in particular namespace
+// checkAppIsInstalled Ensure that an app is installed in particular namespace
 func checkAppIsInstalled(ctx ginkgo.SpecContext, clientset *kubernetes.Clientset, releaseName, namespace, repo, chartName, version string) {
 	deployment, err := clientset.AppsV1().Deployments(namespace).Get(ctx, releaseName, metav1.GetOptions{})
 	if err != nil {
@@ -46,7 +46,7 @@ func checkAppIsInstalled(ctx ginkgo.SpecContext, clientset *kubernetes.Clientset
 	}
 }
 
-// InstallChart
+// InstallChart Install particular release from k8s chart
 func InstallChartInNamespace(releaseName, namespace, repo, chartName, version string) {
 	settings := cli.New()
 	actionConfig := new(action.Configuration)
@@ -69,7 +69,7 @@ func InstallChartInNamespace(releaseName, namespace, repo, chartName, version st
 	log.Println("Successfully installed release: ", release.Name)
 }
 
-// UninstallChartReleaseinNamespace Deletes particular relese from k8s chart
+// UninstallChartReleaseinNamespace Delete particular release from k8s chart
 func UninstallChartReleaseinNamespace(releaseName, namespace string) {
 	settings := cli.New()
 	actionConfig := new(action.Configuration)
