@@ -15,6 +15,9 @@
 # Description
 A few sentences describing the overall goals of the pull request's commits.
 
+> **⚠ Warning**: 
+> All changes in `vendor` directory should be placed in separate PRs. Remember about simultaneous merging branches with **vendor** changes and **functionality** changes.
+
 # GitHub Issues
 List the GitHub issues impacted by this PR:
 

@@ -24,7 +24,7 @@ import (
 	"sigs.k8s.io/container-object-storage-interface-api/apis/objectstorage/v1alpha1"
 )
 
-var _ = Describe("Bucket Access Revoke", Ordered, Label("revoke"), func() {
+var _ = Describe("Bucket Access Revoke", Ordered, Label("revoke", "objectscale"), func() {
 	// Resources for scenarios
 	var (
 		myBucketClass       *v1alpha1.BucketClass
