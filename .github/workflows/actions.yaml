@@ -3,7 +3,7 @@ on:
   push:
     branches: [ main ]
   pull_request:
-    branches: [ main ] 
+    branches: [ main, pub/** ] 
 jobs:
   code-check:
     name: Check formatting, linting, vetting
