@@ -37,7 +37,7 @@ func TestDriverGetInfo(t *testing.T) {
 
 // FIXME: write valid test
 func testValidServer(t *testing.T) {
-	srv := New("smoke-driver")
+	srv := New(provisioner)
 
 	res, err := srv.DriverGetInfo(context.TODO(), &cosi.DriverGetInfoRequest{})
 	if err != nil {
