@@ -19,6 +19,13 @@ import (
 	cosi "sigs.k8s.io/container-object-storage-interface-spec"
 )
 
+func TestNew(t *testing.T) {
+	provSrv := New()
+	if provSrv == nil {
+		t.Error("server should not be nil")
+	}
+}
+
 // FIXME: those are only smoke tests, no real testing is done here
 func TestServer(t *testing.T) {
 	provSrv := Server{}
