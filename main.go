@@ -12,50 +12,8 @@
 
 package main
 
-import (
-	"context"
-	"log"
-	"os"
-	"os/signal"
-	"syscall"
-
-	"github.com/dell/cosi-driver/pkg"
-	"sigs.k8s.io/container-object-storage-interface-provisioner-sidecar/pkg/provisioner"
-)
-
-const (
-	driverAddress = "unix:///var/lib/cosi/cosi.sock"
-)
+import "fmt"
 
 func main() {
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
-
-	go func() {
-		sigc := make(chan os.Signal, 1)
-		signal.Notify(sigc, syscall.SIGINT)
-		<-sigc
-		cancel()
-	}()
-
-	if err := run(ctx); err != nil {
-		log.Fatalf("error during execution: %s", err.Error())
-	}
-}
-
-func run(ctx context.Context) error {
-	identityServer, bucketProvisioner, err := pkg.NewDriver(ctx, "dell-cosi-driver")
-	if err != nil {
-		return err
-	}
-
-	server, err := provisioner.NewDefaultCOSIProvisionerServer(
-		driverAddress,
-		identityServer,
-		bucketProvisioner)
-	if err != nil {
-		return err
-	}
-
-	return server.Run(ctx)
+	fmt.Println("Here will be driver!")
 }
