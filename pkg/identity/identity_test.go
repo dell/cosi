@@ -10,7 +10,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package pkg
+package identity
 
 import (
 	"context"
@@ -37,9 +37,7 @@ func TestDriverGetInfo(t *testing.T) {
 
 // FIXME: write valid test
 func testValidServer(t *testing.T) {
-	srv := &IdentityServer{
-		provisioner: provisioner,
-	}
+	srv := New("smoke-driver")
 
 	res, err := srv.DriverGetInfo(context.TODO(), &cosi.DriverGetInfoRequest{})
 	if err != nil {
@@ -53,7 +51,7 @@ func testValidServer(t *testing.T) {
 
 // FIXME: write valid test
 func testMissingProvisionerName(t *testing.T) {
-	srv := &IdentityServer{}
+	srv := &Server{}
 
 	_, err := srv.DriverGetInfo(context.TODO(), &cosi.DriverGetInfoRequest{})
 	if err == nil {

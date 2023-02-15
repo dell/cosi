@@ -10,32 +10,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package pkg
+package driver
 
 import (
 	"context"
-	"errors"
-	"log"
 
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
-
-	cosi "sigs.k8s.io/container-object-storage-interface-spec"
+	"github.com/dell/cosi-driver/pkg/identity"
+	"github.com/dell/cosi-driver/pkg/provisioner"
 )
 
-type IdentityServer struct {
-	provisioner string
-}
-
-func (id *IdentityServer) DriverGetInfo(ctx context.Context,
-	req *cosi.DriverGetInfoRequest) (*cosi.DriverGetInfoResponse, error) {
-
-	if id.provisioner == "" {
-		log.Printf("Invalid argument: %v", errors.New("provisioner name cannot be empty"))
-		return nil, status.Error(codes.InvalidArgument, "ProvisionerName is empty")
-	}
-
-	return &cosi.DriverGetInfoResponse{
-		Name: id.provisioner,
-	}, nil
+func New(ctx context.Context, name string) (*identity.Server, *provisioner.Server, error) {
+	return identity.New(name), provisioner.New(), nil
 }

@@ -10,7 +10,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package pkg
+package provisioner
 
 import (
 	"context"
@@ -20,12 +20,10 @@ import (
 )
 
 // FIXME: those are only smoke tests, no real testing is done here
-func TestProvisionerServer(t *testing.T) {
-	provSrv := ProvisionerServer{
-		provisioner: "test",
-	}
+func TestServer(t *testing.T) {
+	provSrv := Server{}
 
-	for scenario, fn := range map[string]func(t *testing.T, srv ProvisionerServer){
+	for scenario, fn := range map[string]func(t *testing.T, srv Server){
 		"smoke/testDriverCreateBucket":       testDriverCreateBucket,
 		"smoke/testDriverDeleteBucket":       testDriverDeleteBucket,
 		"smoke/testDriverGrantBucketAccess":  testDriverGrantBucketAccess,
@@ -38,7 +36,7 @@ func TestProvisionerServer(t *testing.T) {
 }
 
 // FIXME: write valid test
-func testDriverCreateBucket(t *testing.T, srv ProvisionerServer) {
+func testDriverCreateBucket(t *testing.T, srv Server) {
 	_, err := srv.DriverCreateBucket(context.TODO(), &cosi.DriverCreateBucketRequest{})
 	if err == nil {
 		t.Error("expected error")
@@ -46,7 +44,7 @@ func testDriverCreateBucket(t *testing.T, srv ProvisionerServer) {
 }
 
 // FIXME: write valid test
-func testDriverDeleteBucket(t *testing.T, srv ProvisionerServer) {
+func testDriverDeleteBucket(t *testing.T, srv Server) {
 	_, err := srv.DriverDeleteBucket(context.TODO(), &cosi.DriverDeleteBucketRequest{})
 	if err == nil {
 		t.Error("expected error")
@@ -54,7 +52,7 @@ func testDriverDeleteBucket(t *testing.T, srv ProvisionerServer) {
 }
 
 // FIXME: write valid test
-func testDriverGrantBucketAccess(t *testing.T, srv ProvisionerServer) {
+func testDriverGrantBucketAccess(t *testing.T, srv Server) {
 	_, err := srv.DriverGrantBucketAccess(context.TODO(), &cosi.DriverGrantBucketAccessRequest{})
 	if err == nil {
 		t.Error("expected error")
@@ -62,7 +60,7 @@ func testDriverGrantBucketAccess(t *testing.T, srv ProvisionerServer) {
 }
 
 // FIXME: write valid test
-func testDriverRevokeBucketAccess(t *testing.T, srv ProvisionerServer) {
+func testDriverRevokeBucketAccess(t *testing.T, srv Server) {
 	_, err := srv.DriverRevokeBucketAccess(context.TODO(), &cosi.DriverRevokeBucketAccessRequest{})
 	if err == nil {
 		t.Error("expected error")

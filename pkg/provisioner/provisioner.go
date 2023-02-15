@@ -10,7 +10,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package pkg
+package provisioner
 
 import (
 	"context"
@@ -20,37 +20,34 @@ import (
 	cosi "sigs.k8s.io/container-object-storage-interface-spec"
 )
 
-type ProvisionerServer struct {
-	provisioner string
+type Server struct{}
+
+var _ cosi.ProvisionerServer = (*Server)(nil)
+
+// FIXME: this is boilerplate, needs proper constructor
+func New() *Server {
+	return &Server{}
 }
 
-// DriverCreateBucket is an idempotent method for creating buckets
-// It is expected to create the same bucket given a bucketName and protocol
-// If the bucket already exists, then it MUST return codes.AlreadyExists
-// Return values
-//
-//	nil -                   Bucket successfully created
-//	codes.AlreadyExists -   Bucket already exists. No more retries
-//	non-nil err -           Internal error                                [requeue'd with exponential backoff]
-func (s *ProvisionerServer) DriverCreateBucket(ctx context.Context,
+func (s *Server) DriverCreateBucket(ctx context.Context,
 	req *cosi.DriverCreateBucketRequest) (*cosi.DriverCreateBucketResponse, error) {
 
 	return nil, status.Error(codes.Unimplemented, "DriverCreateBucket: not implemented")
 }
 
-func (s *ProvisionerServer) DriverDeleteBucket(ctx context.Context,
+func (s *Server) DriverDeleteBucket(ctx context.Context,
 	req *cosi.DriverDeleteBucketRequest) (*cosi.DriverDeleteBucketResponse, error) {
 
 	return nil, status.Error(codes.Unimplemented, "DriverCreateBucket: not implemented")
 }
 
-func (s *ProvisionerServer) DriverGrantBucketAccess(ctx context.Context,
+func (s *Server) DriverGrantBucketAccess(ctx context.Context,
 	req *cosi.DriverGrantBucketAccessRequest) (*cosi.DriverGrantBucketAccessResponse, error) {
 
 	return nil, status.Error(codes.Unimplemented, "DriverCreateBucket: not implemented")
 }
 
-func (s *ProvisionerServer) DriverRevokeBucketAccess(ctx context.Context,
+func (s *Server) DriverRevokeBucketAccess(ctx context.Context,
 	req *cosi.DriverRevokeBucketAccessRequest) (*cosi.DriverRevokeBucketAccessResponse, error) {
 
 	return nil, status.Error(codes.Unimplemented, "DriverCreateBucket: not implemented")

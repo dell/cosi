@@ -10,16 +10,23 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package pkg
+package driver
 
 import (
 	"context"
+	"testing"
 )
 
-func NewDriver(ctx context.Context, provisioner string) (*IdentityServer, *ProvisionerServer, error) {
-	return &IdentityServer{
-			provisioner: provisioner,
-		}, &ProvisionerServer{
-			provisioner: provisioner,
-		}, nil
+// FIXME: those are only smoke tests, no real testing is done here
+func TestNewDriver(t *testing.T) {
+	idSrv, provSrv, err := New(context.TODO(), "smoke-driver")
+	if err != nil {
+		t.Errorf("should not return error, got: %s", err.Error())
+	}
+	if idSrv == nil {
+		t.Errorf("identity server should not be nil")
+	}
+	if provSrv == nil {
+		t.Errorf("provisioner server should not be nil")
+	}
 }
