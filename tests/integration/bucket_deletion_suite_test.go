@@ -23,7 +23,7 @@ import (
 	"sigs.k8s.io/container-object-storage-interface-api/apis/objectstorage/v1alpha1"
 )
 
-var _ = Describe("Bucket Deletion", Ordered, Label("delete", "story_KRV-10254"), func() {
+var _ = Describe("Bucket Deletion", Ordered, Label("delete", "story_KRV-10254", "objectscale"), func() {
 	// Resources for scenarios
 	var (
 		bucketClassDelete *v1alpha1.BucketClass
