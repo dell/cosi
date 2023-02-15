@@ -24,7 +24,7 @@ import (
 	"sigs.k8s.io/container-object-storage-interface-api/apis/objectstorage/v1alpha1"
 )
 
-var _ = Describe("Bucket Creation", Ordered, Label("create", "story_KRV-10253"), func() {
+var _ = Describe("Bucket Creation", Ordered, Label("create", "story_KRV-10253", "objectscale"), func() {
 	// Resources for scenarios
 	var (
 		myBucketClass      *v1alpha1.BucketClass
