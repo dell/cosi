@@ -16,6 +16,7 @@ import (
 	"context"
 	"testing"
 
+	"github.com/stretchr/testify/assert"
 	cosi "sigs.k8s.io/container-object-storage-interface-spec"
 )
 
@@ -44,9 +45,34 @@ func TestServer(t *testing.T) {
 
 // FIXME: write valid test
 func testDriverCreateBucket(t *testing.T, srv Server) {
-	_, err := srv.DriverCreateBucket(context.TODO(), &cosi.DriverCreateBucketRequest{})
-	if err == nil {
-		t.Error("expected error")
+	type testCases struct {
+		description    string
+		inputName      string
+		inputNamespace string
+		inputProtocol  string
+		expectedError  string
+	}
+	for _, scenario := range []testCases{
+		{
+			description:    "valid bucket creation",
+			inputName:      "bucket-valid",
+			inputNamespace: "namespace-1",
+			inputProtocol:  "S3",
+			expectedError:  "nil",
+		},
+		{
+			description:    "invalid protocol",
+			inputName:      "bucket-invalid",
+			inputNamespace: "namespace-1",
+			inputProtocol:  "",
+			expectedError:  "Protocol not supported",
+		},
+	} {
+		t.Run(scenario.description, func(t *testing.T) {
+			parameters := map[string]string{"namespace": scenario.inputNamespace}
+			_, err := srv.DriverCreateBucket(context.TODO(), &cosi.DriverCreateBucketRequest{Name: scenario.inputName, Parameters: parameters})
+			assert.Contains(t, err.Error(), scenario.expectedError)
+		})
 	}
 }
 

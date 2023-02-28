@@ -14,13 +14,27 @@ package provisioner
 
 import (
 	"context"
+	"os"
+	"strings"
+
+	"github.com/emcecs/objectscale-management-go-sdk/pkg/client/api"
+	"github.com/emcecs/objectscale-management-go-sdk/pkg/client/model"
+	log "github.com/sirupsen/logrus"
+	"k8s.io/utils/strings/slices"
 
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	cosi "sigs.k8s.io/container-object-storage-interface-spec"
 )
 
-type Server struct{}
+func init() {
+	log.SetOutput(os.Stdout)
+	log.SetLevel(log.DebugLevel)
+}
+
+type Server struct {
+	mgmtClient api.ClientSet
+}
 
 var _ cosi.ProvisionerServer = (*Server)(nil)
 
@@ -32,7 +46,68 @@ func New() *Server {
 func (s *Server) DriverCreateBucket(ctx context.Context,
 	req *cosi.DriverCreateBucketRequest) (*cosi.DriverCreateBucketResponse, error) {
 
-	return nil, status.Error(codes.Unimplemented, "DriverCreateBucket: not implemented")
+	log.WithFields(log.Fields{
+		"bucket": req.GetName(),
+	}).Info("Bucket is being created")
+
+	bucket := &model.Bucket{}
+	bucket.Name = req.GetName()
+	bucket.Namespace = req.Parameters["namespace"]
+
+	// display all parameters
+	parameters := ""
+	for key, value := range req.GetParameters() {
+		parameters += key + ":" + value + ";"
+	}
+
+	log.WithFields(log.Fields{
+		"parameters": parameters,
+	}).Debug("Parameters of the bucket")
+
+	//supported protocols
+	protocols := []string{"S3"}
+
+	log.WithFields(log.Fields{
+		"protocols": strings.Join(protocols, ","),
+	}).Debug("Supported protocols")
+
+	// create bucket only if in field protocol is one of the supported protocols
+	if !slices.Contains(protocols, req.GetParameters()["protocol"]) {
+		log.WithFields(log.Fields{
+			"protocol": req.GetParameters()["protocol"],
+		}).Error("DriverCreateBucket: Protocol not supported")
+		return nil, status.Error(codes.InvalidArgument, "Protocol not supported")
+	}
+
+	bucketExisted, err := s.mgmtClient.Buckets().Get(bucket.Name, req.GetParameters())
+	if err != nil {
+		log.Error("DriverCreateBucket: Failed to check bucket existence")
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	// return error status if bucket exists, otherwise create new bucket
+	if bucketExisted != nil {
+		log.WithFields(log.Fields{
+			"existing_bucket": bucket.Name,
+		}).Error("DriverCreateBucket: Bucket already exists")
+		return nil, status.Error(codes.AlreadyExists, "Bucket already exists")
+	}
+
+	bucket, err = s.mgmtClient.Buckets().Create(*bucket)
+	if err != nil {
+		log.WithFields(log.Fields{
+			"bucket": bucket.Name,
+		}).Error("DriverCreateBucket: Bucket was not sucessfully created")
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	log.WithFields(log.Fields{
+		"bucket": bucket.Name,
+	}).Info("Bucket has been successfully created")
+
+	return &cosi.DriverCreateBucketResponse{
+		BucketId: strings.Join([]string{bucket.Name, bucket.Namespace}, "-"),
+	}, nil
 }
 
 func (s *Server) DriverDeleteBucket(ctx context.Context,
