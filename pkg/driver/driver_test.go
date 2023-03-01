@@ -14,10 +14,52 @@ package driver
 
 import (
 	"context"
+	"net"
 	"testing"
+	"time"
 )
 
 // FIXME: some way to test this? probaby refactor is needed
-func TestNewDriver(t *testing.T) {
-	go Run(context.TODO(), "cosi-driver", 9000)
+func TestRun_Successful(t *testing.T) {
+	// Test server starts successfully and stops gracefully
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	errCh := make(chan error, 1)
+	go func() {
+		errCh <- Run(ctx, "test", 8080)
+	}()
+
+	// Wait for server to start
+	time.Sleep(500 * time.Millisecond)
+
+	// Cancel context to stop server gracefully
+	cancel()
+
+	err := <-errCh
+	if err != nil {
+		t.Errorf("Unexpected error: %v", err)
+	}
+}
+
+func TestRun_PortAlreadyInUse(t *testing.T) {
+	// Test error is returned when port is already in use
+	lis, err := net.Listen("tcp", ":8080")
+	if err != nil {
+		t.Fatalf("Failed to start test listener: %v", err)
+	}
+	defer lis.Close()
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	errCh := make(chan error, 1)
+	go func() {
+		errCh <- Run(ctx, "test", 8080)
+	}()
+
+	err = <-errCh
+	if err == nil {
+		t.Errorf("Expected error, but got nil")
+	}
 }
