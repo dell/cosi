@@ -17,7 +17,6 @@ import (
 	"fmt"
 	"net"
 
-	log "github.com/sirupsen/logrus"
 	"google.golang.org/grpc"
 	spec "sigs.k8s.io/container-object-storage-interface-spec"
 
@@ -37,17 +36,12 @@ func Run(ctx context.Context, name string, port int) error {
 	// Register identity and provisioner servers, so they will handle gRPC requests to the server
 	spec.RegisterIdentityServer(server, identityServer)
 	spec.RegisterProvisionerServer(server, provisionerServer)
+
 	// Create shared listener for gRPC server
+	lis, _ := net.Listen("tcp", fmt.Sprintf(":%d", port))
 
-	lis, err := net.Listen("tcp", fmt.Sprintf(":%d", port))
-	if err != nil {
-		log.Fatalf("failed to listen: %v", err)
-	}
-
-	// Setup gRPC servers
-	if err := server.Serve(lis); err != nil {
-		log.Fatalf("failed to serve: %v", err)
-	}
+	// Run gRPC server
+	_ = server.Serve(lis)
 
 	return nil
 }

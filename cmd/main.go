@@ -67,7 +67,8 @@ func main() {
 	}()
 
 	// Run the driver.
-	if err := driver.Run(ctx, "cosi-driver", *port); err != nil {
-		log.Error(err, "Exiting on error")
+	err := driver.Run(ctx, "cosi-driver", *port)
+	if err != nil {
+		log.Fatal(err)
 	}
 }

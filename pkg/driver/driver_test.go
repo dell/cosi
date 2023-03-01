@@ -17,7 +17,7 @@ import (
 	"testing"
 )
 
-// FIXME: those are only smoke tests, no real testing is done here
+// FIXME: some way to test this? probaby refactor is needed
 func TestNewDriver(t *testing.T) {
-	go Run(context.TODO(), "smoke-driver", 9000)
+	go Run(context.TODO(), "cosi-driver", 9000)
 }
