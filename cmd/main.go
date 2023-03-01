@@ -32,8 +32,7 @@ var (
 	port        = flag.Int("port", 9000, "Port to listen on")
 )
 
-// init is run before main and is used to define command line flags and
-// initialize global variables.
+// init is run before main and is used to define command line flags.
 func init() {
 	// Parse command line flags.
 	flag.Parse()
