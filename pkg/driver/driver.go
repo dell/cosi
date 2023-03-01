@@ -41,12 +41,12 @@ func Run(ctx context.Context, name string, port int) error {
 
 	lis, err := net.Listen("tcp", fmt.Sprintf(":%d", port))
 	if err != nil {
-		log.Fatal("failed to listen: %v", err)
+		log.Fatalf("failed to listen: %v", err)
 	}
 
 	// Setup gRPC servers
 	if err := server.Serve(lis); err != nil {
-		log.Fatal("failed to serve: %v", err)
+		log.Fatalf("failed to serve: %v", err)
 	}
 
 	return nil
