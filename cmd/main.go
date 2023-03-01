@@ -18,7 +18,6 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
-	"time"
 
 	log "github.com/sirupsen/logrus"
 
@@ -63,8 +62,6 @@ func main() {
 		log.Info("Signal received", "type", sig)
 		// Cancel the context.
 		cancel()
-		// Wait for 30 seconds.
-		<-time.After(30 * time.Second)
 		// Exit the program with an error.
 		os.Exit(1)
 	}()
