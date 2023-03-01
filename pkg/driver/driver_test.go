@@ -19,14 +19,8 @@ import (
 
 // FIXME: those are only smoke tests, no real testing is done here
 func TestNewDriver(t *testing.T) {
-	idSrv, provSrv, err := New(context.TODO(), "smoke-driver")
+	err := Run(context.TODO(), "smoke-driver", 9000)
 	if err != nil {
 		t.Errorf("should not return error, got: %s", err.Error())
-	}
-	if idSrv == nil {
-		t.Errorf("identity server should not be nil")
-	}
-	if provSrv == nil {
-		t.Errorf("provisioner server should not be nil")
 	}
 }
