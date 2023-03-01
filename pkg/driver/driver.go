@@ -17,11 +17,13 @@ import (
 	"fmt"
 	"net"
 
+	log "github.com/sirupsen/logrus"
+	spec "sigs.k8s.io/container-object-storage-interface-spec"
+
+	"google.golang.org/grpc"
+
 	"github.com/dell/cosi-driver/pkg/identity"
 	"github.com/dell/cosi-driver/pkg/provisioner"
-	log "github.com/sirupsen/logrus"
-	"google.golang.org/grpc"
-	spec "sigs.k8s.io/container-object-storage-interface-spec"
 )
 
 // Run starts the gRPC server for the identity and provisioner servers
