@@ -14,17 +14,18 @@ package provisioner
 
 import (
 	"context"
+	"errors"
 	"os"
 	"strings"
 
+	_ "github.com/emcecs/objectscale-management-go-sdk/pkg/client/fake"
+	log "github.com/sirupsen/logrus"
+	cosi "sigs.k8s.io/container-object-storage-interface-spec"
+
 	"github.com/emcecs/objectscale-management-go-sdk/pkg/client/api"
 	"github.com/emcecs/objectscale-management-go-sdk/pkg/client/model"
-	log "github.com/sirupsen/logrus"
-	"k8s.io/utils/strings/slices"
-
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
-	cosi "sigs.k8s.io/container-object-storage-interface-spec"
 )
 
 func init() {
@@ -34,13 +35,24 @@ func init() {
 
 type Server struct {
 	mgmtClient api.ClientSet
+	backendID  string
+	namespace  string
 }
 
 var _ cosi.ProvisionerServer = (*Server)(nil)
 
 // FIXME: this is boilerplate, needs proper constructor
-func New() *Server {
-	return &Server{}
+func New(mgmtClient api.ClientSet, backendID, namespace string) *Server {
+	// TODO: fill all required fields
+	return &Server{
+		mgmtClient: mgmtClient,
+		backendID:  backendID,
+		namespace:  namespace,
+	}
+}
+
+func (s *Server) ID() string {
+	return s.backendID
 }
 
 func (s *Server) DriverCreateBucket(ctx context.Context,
@@ -52,41 +64,35 @@ func (s *Server) DriverCreateBucket(ctx context.Context,
 
 	bucket := &model.Bucket{}
 	bucket.Name = req.GetName()
-	bucket.Namespace = req.Parameters["namespace"]
+	bucket.Namespace = s.namespace
+
+	if bucket.Name == "" {
+		log.Error("DriverCreateBucket: Empty bucket name")
+		return nil, status.Error(codes.InvalidArgument, "Empty bucket name")
+	}
 
 	// display all parameters
 	parameters := ""
+	parametersCopy := make(map[string]string)
 	for key, value := range req.GetParameters() {
 		parameters += key + ":" + value + ";"
+		parametersCopy[key] = value
 	}
 
 	log.WithFields(log.Fields{
 		"parameters": parameters,
 	}).Debug("Parameters of the bucket")
 
-	//supported protocols
-	protocols := []string{"S3"}
+	// remove backendID, as this is not valid parameter for bucket creation in ObjectScale
+	delete(parametersCopy, "backendID")
 
-	log.WithFields(log.Fields{
-		"protocols": strings.Join(protocols, ","),
-	}).Debug("Supported protocols")
-
-	// create bucket only if in field protocol is one of the supported protocols
-	if !slices.Contains(protocols, req.GetParameters()["protocol"]) {
+	_, err := s.mgmtClient.Buckets().Get(bucket.Name, parametersCopy)
+	if err != nil && errors.Is(err, &model.Error{Code: 404}) == false {
 		log.WithFields(log.Fields{
-			"protocol": req.GetParameters()["protocol"],
-		}).Error("DriverCreateBucket: Protocol not supported")
-		return nil, status.Error(codes.InvalidArgument, "Protocol not supported")
-	}
-
-	bucketExisted, err := s.mgmtClient.Buckets().Get(bucket.Name, req.GetParameters())
-	if err != nil {
-		log.Error("DriverCreateBucket: Failed to check bucket existence")
+			"existing_bucket": bucket.Name,
+		}).Error("DriverCreateBucket: Failed to check bucket existence")
 		return nil, status.Error(codes.Internal, err.Error())
-	}
-
-	// return error status if bucket exists, otherwise create new bucket
-	if bucketExisted != nil {
+	} else if err == nil {
 		log.WithFields(log.Fields{
 			"existing_bucket": bucket.Name,
 		}).Error("DriverCreateBucket: Bucket already exists")
@@ -98,15 +104,15 @@ func (s *Server) DriverCreateBucket(ctx context.Context,
 		log.WithFields(log.Fields{
 			"bucket": bucket.Name,
 		}).Error("DriverCreateBucket: Bucket was not sucessfully created")
-		return nil, status.Error(codes.Internal, err.Error())
+		return nil, status.Error(codes.Internal, "Bucket was not sucessfully created")
 	}
 
 	log.WithFields(log.Fields{
 		"bucket": bucket.Name,
-	}).Info("Bucket has been successfully created")
+	}).Info("DriverCreateBucket: Bucket has been successfully created")
 
 	return &cosi.DriverCreateBucketResponse{
-		BucketId: strings.Join([]string{bucket.Name, bucket.Namespace}, "-"),
+		BucketId: strings.Join([]string{s.backendID, bucket.Name}, "-"),
 	}, nil
 }
 
