@@ -87,12 +87,13 @@ func testDriverCreateBucket(t *testing.T) {
 			},
 		},
 		{
-			description:   "invalid bucket namespace",
-			inputName:     "bucket-valid",
-			expectedError: status.Error(codes.Internal, "Bucket was not sucessfully created"),
+			//TODO:
+			description:   "cannot get existing bucket",
+			inputName:     "",
+			expectedError: status.Error(codes.InvalidArgument, "Empty bucket name"),
 			server: Server{
 				mgmtClient: fake.NewClientSet(),
-				namespace:  "",
+				namespace:  namespace,
 				backendID:  testID,
 			},
 		},
