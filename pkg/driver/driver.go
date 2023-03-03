@@ -17,10 +17,10 @@ import (
 	"fmt"
 	"net"
 
+	"google.golang.org/grpc"
+
 	log "github.com/sirupsen/logrus"
 	spec "sigs.k8s.io/container-object-storage-interface-spec"
-
-	"google.golang.org/grpc"
 
 	"github.com/dell/cosi-driver/pkg/identity"
 	"github.com/dell/cosi-driver/pkg/provisioner"
