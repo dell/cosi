@@ -15,6 +15,7 @@ package provisioner
 import (
 	"context"
 	"errors"
+	"flag"
 	"os"
 	"strings"
 
@@ -26,11 +27,19 @@ import (
 	"github.com/emcecs/objectscale-management-go-sdk/pkg/client/model"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+
+	"github.com/dell/cosi-driver/util"
+)
+
+var (
+	logLevel = flag.String("log-level", "debug", "Log level (debug, info, warn, error, fatal, panic)")
 )
 
 func init() {
+	// Set standard logger output.
 	log.SetOutput(os.Stdout)
-	log.SetLevel(log.DebugLevel)
+	// Set the log level.
+	util.SetLogLevel(*logLevel)
 }
 
 type Server struct {
@@ -41,9 +50,8 @@ type Server struct {
 
 var _ cosi.ProvisionerServer = (*Server)(nil)
 
-// FIXME: this is boilerplate, needs proper constructor
+// Initialize Server based on the config file.
 func New(mgmtClient api.ClientSet, backendID, namespace string) *Server {
-	// TODO: fill all required fields
 	return &Server{
 		mgmtClient: mgmtClient,
 		backendID:  backendID,
@@ -51,10 +59,12 @@ func New(mgmtClient api.ClientSet, backendID, namespace string) *Server {
 	}
 }
 
+// Extend COSI interface by adding ID method.
 func (s *Server) ID() string {
 	return s.backendID
 }
 
+// DriverCreateBucket creates Bucket on specific Object Storage Platform.
 func (s *Server) DriverCreateBucket(ctx context.Context,
 	req *cosi.DriverCreateBucketRequest) (*cosi.DriverCreateBucketResponse, error) {
 
@@ -62,16 +72,18 @@ func (s *Server) DriverCreateBucket(ctx context.Context,
 		"bucket": req.GetName(),
 	}).Info("Bucket is being created")
 
+	// Create bucket model.
 	bucket := &model.Bucket{}
 	bucket.Name = req.GetName()
 	bucket.Namespace = s.namespace
 
+	// Check if bucket name is not empty.
 	if bucket.Name == "" {
 		log.Error("DriverCreateBucket: Empty bucket name")
 		return nil, status.Error(codes.InvalidArgument, "Empty bucket name")
 	}
 
-	// display all parameters
+	// Display all request parameters.
 	parameters := ""
 	parametersCopy := make(map[string]string)
 	for key, value := range req.GetParameters() {
@@ -83,9 +95,10 @@ func (s *Server) DriverCreateBucket(ctx context.Context,
 		"parameters": parameters,
 	}).Debug("Parameters of the bucket")
 
-	// remove backendID, as this is not valid parameter for bucket creation in ObjectScale
+	// Remove backendID, as this is not valid parameter for bucket creation in ObjectScale.
 	delete(parametersCopy, "backendID")
 
+	// Check if bucket with specific name and parameters already exists.
 	_, err := s.mgmtClient.Buckets().Get(bucket.Name, parametersCopy)
 	if err != nil && errors.Is(err, &model.Error{Code: 404}) == false {
 		log.WithFields(log.Fields{
@@ -99,6 +112,7 @@ func (s *Server) DriverCreateBucket(ctx context.Context,
 		return nil, status.Error(codes.AlreadyExists, "Bucket already exists")
 	}
 
+	// Create bucket.
 	bucket, err = s.mgmtClient.Buckets().Create(*bucket)
 	if err != nil {
 		log.WithFields(log.Fields{
@@ -111,6 +125,7 @@ func (s *Server) DriverCreateBucket(ctx context.Context,
 		"bucket": bucket.Name,
 	}).Info("DriverCreateBucket: Bucket has been successfully created")
 
+	// Return response.
 	return &cosi.DriverCreateBucketResponse{
 		BucketId: strings.Join([]string{s.backendID, bucket.Name}, "-"),
 	}, nil

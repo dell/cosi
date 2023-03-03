@@ -33,6 +33,8 @@ var (
 
 // init is run before main and is used to define command line flags.
 func init() {
+	// Set standard logger output.
+	log.SetOutput(os.Stdout)
 	// Parse command line flags.
 	flag.Parse()
 	// Set the log level.

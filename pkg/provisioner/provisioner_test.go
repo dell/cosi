@@ -16,13 +16,13 @@ import (
 	"context"
 	"testing"
 
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 	cosi "sigs.k8s.io/container-object-storage-interface-spec"
 
 	"github.com/emcecs/objectscale-management-go-sdk/pkg/client/fake"
 	"github.com/emcecs/objectscale-management-go-sdk/pkg/client/model"
 	"github.com/stretchr/testify/assert"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 // FIXME: those are only smoke tests, no real testing is done here
@@ -39,8 +39,9 @@ func TestServer(t *testing.T) {
 	}
 }
 
-// FIXME: write valid test
+// testDriverCreateBucket tests bucket creation functionality on ObjectScale platform
 func testDriverCreateBucket(t *testing.T) {
+	// Namespace (ObjectstoreID) and testID (driver ID) provided in the config file
 	const (
 		namespace = "namespace"
 		testID    = "test.id"
@@ -65,7 +66,7 @@ func testDriverCreateBucket(t *testing.T) {
 		{
 			description:   "bucket already exists",
 			inputName:     "bucket-valid",
-			expectedError: status.Error(codes.Internal, "Bucket already exists"),
+			expectedError: status.Error(codes.AlreadyExists, "Bucket already exists"),
 			server: Server{
 				mgmtClient: fake.NewClientSet(&model.Bucket{
 					Name:      "bucket-valid",
