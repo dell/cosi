@@ -14,11 +14,47 @@ package driver
 
 import (
 	"context"
+	"fmt"
+	"net"
+
+	"google.golang.org/grpc"
+
+	log "github.com/sirupsen/logrus"
+	spec "sigs.k8s.io/container-object-storage-interface-spec"
 
 	"github.com/dell/cosi-driver/pkg/identity"
 	"github.com/dell/cosi-driver/pkg/provisioner"
 )
 
-func New(ctx context.Context, name string) (*identity.Server, *provisioner.Server, error) {
-	return identity.New(name), provisioner.New(), nil
+// Run starts the gRPC server for the identity and provisioner servers
+func Run(ctx context.Context, name string, port int) error {
+	// Setup identity server and provisioner server
+	identityServer := identity.New(name)
+	provisionerServer := provisioner.New()
+	// Some options for gRPC server may be needed
+	options := []grpc.ServerOption{}
+	// Crate new gRPC server
+	server := grpc.NewServer(options...)
+	// Register identity and provisioner servers, so they will handle gRPC requests to the server
+	spec.RegisterIdentityServer(server, identityServer)
+	spec.RegisterProvisionerServer(server, provisionerServer)
+
+	// Create shared listener for gRPC server
+	lis, err := net.Listen("tcp", fmt.Sprintf(":%d", port))
+	if err != nil {
+		return err
+	}
+
+	// Run gRPC server in a separate goroutine
+	go func() {
+		if err := server.Serve(lis); err != nil {
+			log.Fatalf("Failed to serve gRPC server: %v", err)
+		}
+	}()
+
+	// Wait for context cancellation or server error
+	<-ctx.Done()
+	server.GracefulStop()
+
+	return nil
 }

@@ -15,18 +15,58 @@ package driver
 import (
 	"context"
 	"testing"
+	"time"
 )
 
-// FIXME: those are only smoke tests, no real testing is done here
-func TestNewDriver(t *testing.T) {
-	idSrv, provSrv, err := New(context.TODO(), "smoke-driver")
-	if err != nil {
-		t.Errorf("should not return error, got: %s", err.Error())
+func TestRun(t *testing.T) {
+	testCases := []struct {
+		name          string
+		port          int
+		expectedError bool
+	}{
+		{
+			name:          "Successful",
+			port:          8080,
+			expectedError: false,
+		},
+		{
+			name:          "PortAlreadyInUse",
+			port:          8080,
+			expectedError: true,
+		},
 	}
-	if idSrv == nil {
-		t.Errorf("identity server should not be nil")
-	}
-	if provSrv == nil {
-		t.Errorf("provisioner server should not be nil")
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			var err error
+
+			// Test server starts successfully and stops gracefully
+			ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+			defer cancel()
+
+			errCh := make(chan error, 1)
+			go func() {
+				errCh <- Run(ctx, "test", tc.port)
+			}()
+
+			// Wait for server to start
+			time.Sleep(500 * time.Millisecond)
+
+			if tc.expectedError {
+				// Test error is returned when port is already in use
+				err = Run(context.Background(), "test", tc.port)
+				if err == nil {
+					t.Errorf("Expected error, but got nil")
+				}
+			} else {
+				// Cancel context to stop server gracefully
+				cancel()
+
+				err = <-errCh
+				if err != nil {
+					t.Errorf("Unexpected error: %v", err)
+				}
+			}
+		})
 	}
 }
