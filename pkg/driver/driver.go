@@ -24,13 +24,14 @@ import (
 
 	"github.com/dell/cosi-driver/pkg/identity"
 	"github.com/dell/cosi-driver/pkg/provisioner"
+	"github.com/emcecs/objectscale-management-go-sdk/pkg/client/api"
 )
 
 // Run starts the gRPC server for the identity and provisioner servers
-func Run(ctx context.Context, name string, port int) error {
+func Run(ctx context.Context, name, backendID, namespace string, port int, mngtClient api.ClientSet) error {
 	// Setup identity server and provisioner server
 	identityServer := identity.New(name)
-	provisionerServer := provisioner.New()
+	provisionerServer := provisioner.New(mngtClient, backendID, namespace)
 	// Some options for gRPC server may be needed
 	options := []grpc.ServerOption{}
 	// Crate new gRPC server
