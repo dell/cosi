@@ -28,6 +28,8 @@ import (
 // FIXME: those are only smoke tests, no real testing is done here
 func TestServer(t *testing.T) {
 	for scenario, fn := range map[string]func(t *testing.T){
+		"smoke/testNew":                      testDriverNew,
+		"smoke/testID":                       testDriverID,
 		"smoke/testDriverCreateBucket":       testDriverCreateBucket,
 		"smoke/testDriverDeleteBucket":       testDriverDeleteBucket,
 		"smoke/testDriverGrantBucketAccess":  testDriverGrantBucketAccess,
@@ -37,6 +39,20 @@ func TestServer(t *testing.T) {
 			fn(t)
 		})
 	}
+}
+
+// testDriverNew tests server initialization
+func testDriverNew(t *testing.T) {
+	driver := New(fake.NewClientSet(), "id", "namespace")
+	assert.Equal(t, "id", driver.backendID)
+	assert.Equal(t, "namespace", driver.namespace)
+	assert.NotNil(t, driver.mgmtClient)
+}
+
+// testDriverID tests extending COSI interface by adding driver ID
+func testDriverID(t *testing.T) {
+	driver := New(fake.NewClientSet(), "id", "namespace")
+	assert.Equal(t, "id", driver.ID())
 }
 
 // testDriverCreateBucket tests bucket creation functionality on ObjectScale platform
@@ -52,6 +68,7 @@ func testDriverCreateBucket(t *testing.T) {
 		inputName     string
 		expectedError error
 		server        Server
+		parameters    map[string]string
 	}{
 		{
 			description:   "valid bucket creation",
@@ -61,6 +78,9 @@ func testDriverCreateBucket(t *testing.T) {
 				mgmtClient: fake.NewClientSet(),
 				namespace:  namespace,
 				backendID:  testID,
+			},
+			parameters: map[string]string{
+				"clientID": testID,
 			},
 		},
 		{
@@ -75,6 +95,9 @@ func testDriverCreateBucket(t *testing.T) {
 				namespace: namespace,
 				backendID: testID,
 			},
+			parameters: map[string]string{
+				"clientID": testID,
+			},
 		},
 		{
 			description:   "invalid bucket name",
@@ -85,28 +108,30 @@ func testDriverCreateBucket(t *testing.T) {
 				namespace:  namespace,
 				backendID:  testID,
 			},
+			parameters: map[string]string{
+				"clientID": testID,
+			},
 		},
 		{
-			//TODO:
 			description:   "cannot get existing bucket",
-			inputName:     "",
-			expectedError: status.Error(codes.InvalidArgument, "Empty bucket name"),
+			inputName:     "bucket-valid",
+			expectedError: status.Error(codes.Internal, "An unexpected error occurred"),
 			server: Server{
 				mgmtClient: fake.NewClientSet(),
 				namespace:  namespace,
 				backendID:  testID,
+			},
+			parameters: map[string]string{
+				"clientID":                      testID,
+				"X-TEST/Buckets/Get/force-fail": "abc",
 			},
 		},
 	}
 
 	for _, scenario := range testCases {
 		t.Run(scenario.description, func(t *testing.T) {
-			parameters := map[string]string{
-				"clientID": testID,
-			}
-
-			_, err := scenario.server.DriverCreateBucket(context.TODO(), &cosi.DriverCreateBucketRequest{Name: scenario.inputName, Parameters: parameters})
-			assert.ErrorIs(t, err, scenario.expectedError)
+			_, err := scenario.server.DriverCreateBucket(context.TODO(), &cosi.DriverCreateBucketRequest{Name: scenario.inputName, Parameters: scenario.parameters})
+			assert.ErrorIs(t, err, scenario.expectedError, err)
 		})
 	}
 }

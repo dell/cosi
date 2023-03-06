@@ -100,11 +100,11 @@ func (s *Server) DriverCreateBucket(ctx context.Context,
 
 	// Check if bucket with specific name and parameters already exists.
 	_, err := s.mgmtClient.Buckets().Get(bucket.Name, parametersCopy)
-	if err != nil && errors.Is(err, &model.Error{Code: 404}) == false {
+	if err != nil && errors.Is(err, model.Error{Code: 1004}) == false {
 		log.WithFields(log.Fields{
 			"existing_bucket": bucket.Name,
 		}).Error("DriverCreateBucket: Failed to check bucket existence")
-		return nil, status.Error(codes.Internal, err.Error())
+		return nil, status.Error(codes.Internal, "An unexpected error occurred")
 	} else if err == nil {
 		log.WithFields(log.Fields{
 			"existing_bucket": bucket.Name,
