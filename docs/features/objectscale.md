@@ -7,13 +7,15 @@ Description: Code features for ObjectScale COSI Driver
 
 ## Bucket Creation Feature
 
-In order to use COSI Driver on ObjectScale platform, ensure the following omponents are deployed to your cluster:
+In order to use COSI Driver on ObjectScale platform, ensure the following components are deployed to your cluster:
 - Kubernetes Container Object Storage Interface CRDs
 - Container Object Storage Interface Controller
 
 ### Bucket Class
 
-Installation of ObjectScale COSI driver does not create BucketClass resource. The default sample is shown below:
+Installation of ObjectScale COSI driver does not create `BucketClass` resource. `BucketClass` represents a class of `Buckets` with similar characteristics. 
+Dell COSI Driver is a multi-backend driver, meaning that for every platform the specific `BucketClass` should be created. The `BucketClass` resource should contain the name of multi-backend driver and driverID for specific Object Storage Platform. 
+The default sample is shown below:
 
 ```yaml
 kind: BucketClass
@@ -28,7 +30,7 @@ parameters:
 
 ### Bucket Claim
 
-The following is a sample manifest for creating a BucketClaim resource:
+`BucketClaim` represents a claim to provision a `Bucket`. The following is a sample manifest for creating a BucketClaim resource:
 
 ```yaml
 kind: BucketClaim
@@ -42,6 +44,8 @@ spec:
 ```
 
 ### Bucket
+
+`Bucket` represents a Bucket or its equivalent in the storage backend. The following is a sample manifest of `Bucket` resource:
 
 ```yaml
 kind: Bucket
