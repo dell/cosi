@@ -14,23 +14,20 @@
 //
 //
 
-package model
+package client
 
-import "encoding/xml"
+import "io"
 
-// CRR is Cross Region Replication
-type CRR struct {
-	XMLName xml.Name `xml:"ReplicationAdminConfiguration"`
+var _ io.Writer = (*CountWriter)(nil) // interface guard
 
-	DestObjectScale string `xml:"destinationObjectScale"`
+// CountWriter is an io.Writer that counts bytes written without actually writing anything.
+type CountWriter struct {
+	N int
+}
 
-	DestObjectStore string `xml:"destinationObjectStore"`
-
-	PauseStartMills int64 `xml:"pauseStartMills"`
-
-	PauseEndMills int64 `xml:"pauseEndMills"`
-
-	SuspendStartMills int64 `xml:"suspendStartMills"`
-
-	ThrottleBandwidth int `xml:"throttleBandwidth"`
+// Write adds len(p) to the current value of N and returns len(p) without
+// writing anything.
+func (w *CountWriter) Write(p []byte) (int, error) {
+	w.N += len(p)
+	return len(p), nil
 }
