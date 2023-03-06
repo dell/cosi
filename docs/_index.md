@@ -12,7 +12,6 @@ Dell COSI Driver is a multi-backend driver, meaning that it can connect to multi
 ## Features and capabilities
 
 ### COSI Driver Capabilities
-{{<table "table table-striped table-bordered table-sm">}}
 | Features                 | ObjectStore | ECS       | PowerScale  |
 |--------------------------|:-----------:|:---------:|:-----------:|
 | Bucket Creation          | yes         | no        | no          |
