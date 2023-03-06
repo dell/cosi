@@ -1,5 +1,21 @@
+#
+#
+#  Copyright © 2021 - 2023 Dell Inc. or its subsidiaries. All Rights Reserved.
+#
+#  Licensed under the Apache License, Version 2.0 (the "License");
+#  you may not use this file except in compliance with the License.
+#  You may obtain a copy of the License at
+#       http://www.apache.org/licenses/LICENSE-2.0
+#  Unless required by applicable law or agreed to in writing, software
+#  distributed under the License is distributed on an "AS IS" BASIS,
+#  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#  See the License for the specific language governing permissions and
+#  limitations under the License.
+#
+#
+
 ---
-version: 1
+version: 2
 interactions:
 - request:
     body: ""
@@ -26,7 +42,7 @@ interactions:
       - root
     status: 200 OK
     code: 200
-    duration: ""
+    duration:
 - request:
     body: "null"
     form: {}
@@ -38,7 +54,7 @@ interactions:
       - application/json
       X-Sds-Auth-Token:
       - BAAcK2ZTQ0tGWU1nbHFIUE1DQ0lOY2dMVCszNjN3PQMAjAQASHVybjpzdG9yYWdlb3M6VmlydHVhbERhdGFDZW50ZXJEYXRhOjUzYTA2NjJmLTNhOWMtNDI2My04ZTUyLTEzZDY2ZjUxMTBmOQIADTE1NzQ3NjEyMTQzNTkDAC51cm46VG9rZW46YjQ2MmM3YWYtZDljZi00ODI3LWE2MzAtNzIwOGZiZDNmOTdmAgAC0A8=
-    url: https://testserver:443/object/users
+    url: https://testserver/object/users
     method: GET
   response:
     body: '{"blobuser":[{"namespace":"small-operator-acceptance","userid":"zmvodjnrbmjxagvwcxf5cg=="}],"Filter":"userid=*"}'
@@ -51,12 +67,12 @@ interactions:
       - Wed, 27 Nov 2019 07:53:11 GMT
     status: 200 OK
     code: 200
-    duration: ""
+    duration:
 - request:
     body: ""
     form: {}
     headers: {}
-    url: https://testserver:443/login
+    url: https://testserver/login
     method: GET
   response:
     body: <?xml version="1.0" encoding="UTF-8" standalone="yes"?><loggedIn><user>root</user></loggedIn>
@@ -77,7 +93,7 @@ interactions:
       - root
     status: 200 OK
     code: 200
-    duration: ""
+    duration:
 - request:
     body: "null"
     form: {}
@@ -89,7 +105,7 @@ interactions:
       - application/json
       X-Sds-Auth-Token:
       - BAAcVndyMS9GSmZuVCtQRThCRXBFeGVndHo4ZU5BPQMAjAQASHVybjpzdG9yYWdlb3M6VmlydHVhbERhdGFDZW50ZXJEYXRhOjUzYTA2NjJmLTNhOWMtNDI2My04ZTUyLTEzZDY2ZjUxMTBmOQIADTE1NzQ3NjEyMTQzNTkDAC51cm46VG9rZW46MDExYmE4ZWItYjM0Yy00MDk0LWIzYzctODNhOTJjNDczOWUwAgAC0A8=
-    url: https://testserver:443/object/users/zmvodjnrbmjxagvwcxf5cg==/info
+    url: https://testserver/object/users/zmvodjnrbmjxagvwcxf5cg==/info
     method: GET
   response:
     body: '{"namespace":"small-operator-acceptance","name":"zmvodjnrbmjxagvwcxf5cg==","locked":false,"created":"Mon
@@ -103,12 +119,12 @@ interactions:
       - Wed, 27 Nov 2019 07:53:12 GMT
     status: 200 OK
     code: 200
-    duration: ""
+    duration:
 - request:
     body: ""
     form: {}
     headers: {}
-    url: https://testserver:443/login
+    url: https://testserver/login
     method: GET
   response:
     body: <?xml version="1.0" encoding="UTF-8" standalone="yes"?><loggedIn><user>root</user></loggedIn>
@@ -129,7 +145,7 @@ interactions:
       - root
     status: 200 OK
     code: 200
-    duration: ""
+    duration:
 - request:
     body: "null"
     form: {}
@@ -141,7 +157,7 @@ interactions:
       - application/json
       X-Sds-Auth-Token:
       - BAAcaUkxTjFiOER3bU1rVTNIVEdwa2s4WGlGcUFrPQMAjAQASHVybjpzdG9yYWdlb3M6VmlydHVhbERhdGFDZW50ZXJEYXRhOjUzYTA2NjJmLTNhOWMtNDI2My04ZTUyLTEzZDY2ZjUxMTBmOQIADTE1NzQ3NjEyMTQzNTkDAC51cm46VG9rZW46MDRmNGUzZmItYjVhOS00ZmQ2LWJkNjMtY2E5NzQ2YzhkYjIwAgAC0A8=
-    url: https://testserver:443/object/user-secret-keys/zmvodjnrbmjxagvwcxf5cg==
+    url: https://testserver/object/user-secret-keys/zmvodjnrbmjxagvwcxf5cg==
     method: GET
   response:
     body: '{"secret_key_1":"cmowa2dxeXZrM2U1NWptdHdrdTB6a3B4YnRub3RwZHY=","secret_key_1_exist":true,"key_timestamp_1":"2019-11-25
@@ -155,7 +171,7 @@ interactions:
       - Wed, 27 Nov 2019 07:53:13 GMT
     status: 200 OK
     code: 200
-    duration: ""
+    duration:
 - request:
     body: '{"namespace": "ecs-cluster", "secretkey": "aaaaaa"}'
     form: {}
@@ -167,7 +183,7 @@ interactions:
         - application/json
       X-Sds-Auth-Token:
         - BAAcaUkxTjFiOER3bU1rVTNIVEdwa2s4WGlGcUFrPQMAjAQASHVybjpzdG9yYWdlb3M6VmlydHVhbERhdGFDZW50ZXJEYXRhOjUzYTA2NjJmLTNhOWMtNDI2My04ZTUyLTEzZDY2ZjUxMTBmOQIADTE1NzQ3NjEyMTQzNTkDAC51cm46VG9rZW46MDRmNGUzZmItYjVhOS00ZmQ2LWJkNjMtY2E5NzQ2YzhkYjIwAgAC0A8=
-    url: https://testserver:443/object/user-secret-keys/zmvodjnrbmjxagvwcxf5cg==
+    url: https://testserver/object/user-secret-keys/zmvodjnrbmjxagvwcxf5cg==
     method: POST
   response:
     body: '{"secret_key": "aaaaaa","key_timestamp": "2020-03-12 19:45:00.333","key_expiry_timestamp": ""}'
@@ -180,7 +196,7 @@ interactions:
         - Wed, 27 Nov 2019 07:53:13 GMT
     status: 200 OK
     code: 200
-    duration: ""
+    duration:
 - request:
     body: '{"namespace": "ecs-cluster", "secretkey": "aaaaaa"}'
     form: {}
@@ -192,7 +208,7 @@ interactions:
         - application/json
       X-Sds-Auth-Token:
         - BAAcaUkxTjFiOER3bU1rVTNIVEdwa2s4WGlGcUFrPQMAjAQASHVybjpzdG9yYWdlb3M6VmlydHVhbERhdGFDZW50ZXJEYXRhOjUzYTA2NjJmLTNhOWMtNDI2My04ZTUyLTEzZDY2ZjUxMTBmOQIADTE1NzQ3NjEyMTQzNTkDAC51cm46VG9rZW46MDRmNGUzZmItYjVhOS00ZmQ2LWJkNjMtY2E5NzQ2YzhkYjIwAgAC0A8=
-    url: https://testserver:443/object/user-secret-keys/zmvodjnrbmjxagvwcxf5cg==/deactivate
+    url: https://testserver/object/user-secret-keys/zmvodjnrbmjxagvwcxf5cg==/deactivate
     method: POST
   response:
     body: 'null'
@@ -205,7 +221,7 @@ interactions:
         - Wed, 27 Nov 2019 07:53:13 GMT
     status: 200 OK
     code: 200
-    duration: ""
+    duration:
 - request:
     body: ""
     form: {}
@@ -231,4 +247,4 @@ interactions:
       - OSTOKEN-eyJ4NXUiOiJkdW1teVVybCIsImFsZyI6IlJTMjU2In0.eyJzdWIiOiJyb290Iiwib3Nfcm9sIjpbIlNZU1RFTV9BRE1JTiIsIlNZU1RFTV9NT05JVE9SIiwiU0VDVVJJVFlfQURNSU4iXSwiaWF0IjoxNjI0NTU3OTg1LCJleHAiOjE2MjQ1NjE1ODUsImlzcyI6ImZlZHN2YyIsImp0aSI6ImYzNzMwZTU5LTY3YTQtNGFhNS04Mjg1LTc1MGY1MTBhZjYxZSJ9.No6nH4Q8BYNZnwuxyYkIcknrbVGAeAP8Xh8wFkaXHKp1dLf_4ffOpMgRCYqIu2Q6slB4Iqw1KQo1V5_9QG1bWuAvAJWrNgZAH0iRGezaQjASjh6KTT9wDV4jmgLYJxsyD8QcKMeI41R6iloci0z6k6mWVvPuVLv0Oi73vU9tP6Qx-_ohVnj5Kj7JcXk4mpjZIi_bZfTlhJpow65yOpDDu-issGdfIHPNezZ2AN3WHVHAB_AHLjQ_BzxjTymqLkno5X7fEROb6XC5fcR6FUpUnOxoGdfdKQ2CYK_yJ6oJhEc8h7tcFgs2rbxtvDVxfJPOl-TpHBUIIUAhiIJ0Zgh0NA
     status: 200 OK
     code: 200
-    duration: ""
+    duration:

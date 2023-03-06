@@ -1,3 +1,19 @@
+//
+//
+//  Copyright © 2021 - 2023 Dell Inc. or its subsidiaries. All Rights Reserved.
+//
+//  Licensed under the Apache License, Version 2.0 (the "License");
+//  you may not use this file except in compliance with the License.
+//  You may obtain a copy of the License at
+//       http://www.apache.org/licenses/LICENSE-2.0
+//  Unless required by applicable law or agreed to in writing, software
+//  distributed under the License is distributed on an "AS IS" BASIS,
+//  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+//  See the License for the specific language governing permissions and
+//  limitations under the License.
+//
+//
+
 package rest
 
 import (
@@ -26,7 +42,7 @@ type ClientSet struct {
 	federatedObjectStores api.FederatedObjectStoresInterface
 }
 
-// Returns a new client set based on the provided REST client parameters
+// NewClientSet returns a new client set based on the provided REST client parameters
 func NewClientSet(c client.RemoteCaller) *ClientSet {
 	return &ClientSet{
 		client:                c,
@@ -71,7 +87,7 @@ func (c *ClientSet) ObjectMt() api.ObjmtInterface {
 	return c.objmt
 }
 
-// ObjectMt implements the client API for objMT metrics
+// CRR implements the client API for Cross Region Replication
 func (c *ClientSet) CRR() api.CRRInterface {
 	return c.crr
 }
@@ -81,7 +97,7 @@ func (c *ClientSet) Status() api.StatusInterfaces {
 	return c.status
 }
 
-// ObjectMt implements the client API for objMT metrics
+// FederatedObjectStores implements the client API
 func (c *ClientSet) FederatedObjectStores() api.FederatedObjectStoresInterface {
 	return c.federatedObjectStores
 }
