@@ -16,9 +16,6 @@ import (
 	"context"
 	"testing"
 	"time"
-
-	"github.com/emcecs/objectscale-management-go-sdk/pkg/client/api"
-	"github.com/emcecs/objectscale-management-go-sdk/pkg/client/fake"
 )
 
 func TestRun(t *testing.T) {
@@ -27,7 +24,6 @@ func TestRun(t *testing.T) {
 		port          int
 		backendID     string
 		namespace     string
-		mngtClient    api.ClientSet
 		expectedError bool
 	}{
 		{
@@ -35,7 +31,6 @@ func TestRun(t *testing.T) {
 			port:          8090,
 			backendID:     "123",
 			namespace:     "namespace1",
-			mngtClient:    fake.NewClientSet(),
 			expectedError: false,
 		},
 		{
@@ -43,7 +38,6 @@ func TestRun(t *testing.T) {
 			port:          8090,
 			backendID:     "123",
 			namespace:     "namespace1",
-			mngtClient:    fake.NewClientSet(),
 			expectedError: true,
 		},
 	}
@@ -58,7 +52,7 @@ func TestRun(t *testing.T) {
 
 			errCh := make(chan error, 1)
 			go func() {
-				errCh <- Run(ctx, "test", tc.backendID, tc.namespace, tc.port, tc.mngtClient)
+				errCh <- Run(ctx, "test", tc.backendID, tc.namespace, tc.port)
 			}()
 
 			// Wait for server to start
@@ -66,7 +60,7 @@ func TestRun(t *testing.T) {
 
 			if tc.expectedError {
 				// Test error is returned when port is already in use
-				err = Run(context.Background(), "test", tc.backendID, tc.namespace, tc.port, tc.mngtClient)
+				err = Run(context.Background(), "test", tc.backendID, tc.namespace, tc.port)
 				if err == nil {
 					t.Errorf("Expected error, but got nil")
 				}

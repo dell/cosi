@@ -14,23 +14,57 @@ package driver
 
 import (
 	"context"
+	"crypto/tls"
+	"flag"
 	"fmt"
 	"net"
+	"net/http"
 
 	"google.golang.org/grpc"
 
+	objectscaleRest "github.com/emcecs/objectscale-management-go-sdk/pkg/client/rest"
+	objectscaleClient "github.com/emcecs/objectscale-management-go-sdk/pkg/client/rest/client"
 	log "github.com/sirupsen/logrus"
 	spec "sigs.k8s.io/container-object-storage-interface-spec"
 
 	"github.com/dell/cosi-driver/pkg/identity"
 	"github.com/dell/cosi-driver/pkg/provisioner"
-	"github.com/emcecs/objectscale-management-go-sdk/pkg/client/api"
+)
+
+var (
+	objectscaleGateway  = flag.String("objectscale-gateway", "https://localhost:9443", "ObjectScale Gateway")
+	objectscaleUser     = flag.String("objectscale-user", "admin", "ObjectScale User")
+	objectscalePassword = flag.String("objectscale-password", "admin", "ObjectScale Password")
+	objectstoreGateway  = flag.String("objectstore-gateway", "https://localhost:9443", "ObjectStore Gateway")
+	unsafeClient        = flag.Bool("unsafe-client", false, "Use unsafe client")
 )
 
 // Run starts the gRPC server for the identity and provisioner servers
-func Run(ctx context.Context, name, backendID, namespace string, port int, mngtClient api.ClientSet) error {
+func Run(ctx context.Context, name, backendID, namespace string, port int) error {
 	// Setup identity server and provisioner server
 	identityServer := identity.New(name)
+
+	// ObjectScale clientset
+	transport := &http.Transport{
+		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+	}
+	// FIXME: not validating if client should be secure
+	unsafeClient := &http.Client{Transport: transport}
+
+	objectscaleAuthUser := objectscaleClient.AuthUser{
+		Gateway:  *objectscaleGateway,
+		Username: *objectscaleUser,
+		Password: *objectscalePassword,
+	}
+	mngtClient := objectscaleRest.NewClientSet(
+		&objectscaleClient.Simple{
+			Endpoint:       *objectstoreGateway,
+			Authenticator:  &objectscaleAuthUser,
+			HTTPClient:     unsafeClient,
+			OverrideHeader: false,
+		},
+	)
+
 	provisionerServer := provisioner.New(mngtClient, backendID, namespace)
 	// Some options for gRPC server may be needed
 	options := []grpc.ServerOption{}
