@@ -158,7 +158,7 @@ github.com/docker/go-metrics
 # github.com/docker/go-units v0.4.0
 ## explicit
 github.com/docker/go-units
-# github.com/emcecs/objectscale-management-go-sdk v0.34.1-0.20230306083903-d0ba4f1f148f
+# github.com/emcecs/objectscale-management-go-sdk v0.34.1-0.20230306121516-33c96e16d125
 ## explicit; go 1.18
 github.com/emcecs/objectscale-management-go-sdk/pkg/client/api
 github.com/emcecs/objectscale-management-go-sdk/pkg/client/fake

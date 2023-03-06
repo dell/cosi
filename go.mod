@@ -4,7 +4,7 @@ go 1.19
 
 require (
 	github.com/aws/aws-sdk-go v1.44.189
-	github.com/emcecs/objectscale-management-go-sdk v0.34.1-0.20230306083903-d0ba4f1f148f
+	github.com/emcecs/objectscale-management-go-sdk v0.34.1-0.20230306121516-33c96e16d125
 	github.com/onsi/ginkgo/v2 v2.7.0
 	github.com/onsi/gomega v1.25.0
 	github.com/sirupsen/logrus v1.9.0
