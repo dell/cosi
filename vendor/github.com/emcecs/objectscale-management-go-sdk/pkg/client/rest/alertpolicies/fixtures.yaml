@@ -1,5 +1,21 @@
+#
+#
+#  Copyright © 2021 - 2023 Dell Inc. or its subsidiaries. All Rights Reserved.
+#
+#  Licensed under the Apache License, Version 2.0 (the "License");
+#  you may not use this file except in compliance with the License.
+#  You may obtain a copy of the License at
+#       http://www.apache.org/licenses/LICENSE-2.0
+#  Unless required by applicable law or agreed to in writing, software
+#  distributed under the License is distributed on an "AS IS" BASIS,
+#  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#  See the License for the specific language governing permissions and
+#  limitations under the License.
+#
+#
+
 ---
-version: 1
+version: 2
 interactions:
 - request:
     body: ""
@@ -20,7 +36,7 @@ interactions:
         - OSTOKEN-eyJ4NXUiOiJkdW1teVVybCIsImFsZyI6IlJTMjU2In0.eyJzdWIiOiJyb290Iiwib3Nfcm9sIjpbIlNZU1RFTV9BRE1JTiIsIlNZU1RFTV9NT05JVE9SIiwiU0VDVVJJVFlfQURNSU4iXSwiaXNzIjoiZmVkc3ZjIiwiZXhwIjoxNjIzNDQwNTgwLCJpYXQiOjE2MjM0MzY5ODAsImp0aSI6ImMyNjljNTUzLTJmM2MtNDc3OC1iZDI4LTIyM2RiNWJiZWZkNiJ9.CNFKStCNRy-iYzd7-3gawOx5hwDmNIh5B2O8T2-J3K-W4t3v3ORHWv0tIf3eluk4Md6oCuUBKrAJXq0fZlxw8zSVNxccRNjJaRt6qiDLaMiXhL1rEwDIT4du6g56Yaxh8lQsgHYHxEhESmXzTmWNmEsJnb3___JjTR0qELJjEs298xwtME7LUKoH0xMygs1vH_su7X5bHfuPTyapP8hkx84TBSnco41tslNGii9KnQzdt3bIlsCOrPACiCJsjbQpsQGEOR9B4qwo47VKNry9JOl1Q47Sww4kIV2v-ZakZVWinHpgTGaYjR-jOWAqcFPCcPXB_KbVmTEkuJpmdnrXDQ=
     status: 200 OK
     code: 200
-    duration: ""
+    duration:
 - request:
     body: <alert_policy><policyName>testPolicy</policyName><metricType>Geo Replication Statistics</metricType><metricName>RPO</metricName><createdBy>USER</createdBy><isEnabled>true</isEnabled><isPerInstanceMetric>false</isPerInstanceMetric><period>7000000</period><periodUnits>MILLISECONDS</periodUnits><datapointsToConsider>1</datapointsToConsider><datapointsToAlert>1</datapointsToAlert><statistic>MAX</statistic><operator>GREATER_THAN</operator><condition><thresholdUnits>HOURS</thresholdUnits><thresholdValue>1</thresholdValue><severityType>WARNING</severityType></condition></alert_policy>
     form: {}
@@ -44,7 +60,7 @@ interactions:
         - Mon, 10 Jun 2019 21:04:52 GMT
     status: 200 OK
     code: 200
-    duration: ""
+    duration:
 - request:
     body: ""
     form: {}
@@ -68,7 +84,7 @@ interactions:
         - Mon, 10 Jun 2019 21:04:52 GMT
     status: 200 OK
     code: 200
-    duration: ""
+    duration:
 - request:
     body: ""
     form: {}
@@ -92,7 +108,7 @@ interactions:
         - Mon, 10 Jun 2019 21:04:52 GMT
     status: 200 OK
     code: 200
-    duration: ""
+    duration:
 - request:
     body: ""
     form: {}
@@ -116,7 +132,7 @@ interactions:
         - Mon, 10 Jun 2019 21:04:52 GMT
     status: 200 OK
     code: 200
-    duration: ""
+    duration:
 - request:
     body: <alert_policy><policyName>testPolicy</policyName><metricType>Geo Replication Statistics</metricType><metricName>RPO</metricName><createdBy>USER</createdBy><isEnabled>true</isEnabled><isPerInstanceMetric>false</isPerInstanceMetric><period>7000000</period><periodUnits>MILLISECONDS</periodUnits><datapointsToConsider>1</datapointsToConsider><datapointsToAlert>1</datapointsToAlert><statistic>MAX</statistic><operator>GREATER_THAN</operator><condition><thresholdUnits>HOURS</thresholdUnits><thresholdValue>1</thresholdValue><severityType>WARNING</severityType></condition></alert_policy>
     form: {}
@@ -140,4 +156,4 @@ interactions:
         - Mon, 10 Jun 2019 21:04:52 GMT
     status: 200 OK
     code: 200
-    duration: ""
+    duration:

@@ -1,6 +1,6 @@
 //
 //
-//  Copyright © 2021 - 2023 Dell Inc. or its subsidiaries. All Rights Reserved.
+//  Copyright © 2023 Dell Inc. or its subsidiaries. All Rights Reserved.
 //
 //  Licensed under the Apache License, Version 2.0 (the "License");
 //  you may not use this file except in compliance with the License.
@@ -14,23 +14,14 @@
 //
 //
 
-package model
+package client
 
-import "encoding/xml"
+import "errors"
 
-// CRR is Cross Region Replication
-type CRR struct {
-	XMLName xml.Name `xml:"ReplicationAdminConfiguration"`
+var (
+	// ErrAuthorization is returned when the client is unable to authenticate with the server.
+	ErrAuthorization = errors.New("authorization")
 
-	DestObjectScale string `xml:"destinationObjectScale"`
-
-	DestObjectStore string `xml:"destinationObjectStore"`
-
-	PauseStartMills int64 `xml:"pauseStartMills"`
-
-	PauseEndMills int64 `xml:"pauseEndMills"`
-
-	SuspendStartMills int64 `xml:"suspendStartMills"`
-
-	ThrottleBandwidth int `xml:"throttleBandwidth"`
-}
+	// ErrContentType is returned when the client or server responds with an unknown content type header.
+	ErrContentType = errors.New("content type")
+)

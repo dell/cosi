@@ -1,3 +1,19 @@
+//
+//
+//  Copyright © 2021 - 2023 Dell Inc. or its subsidiaries. All Rights Reserved.
+//
+//  Licensed under the Apache License, Version 2.0 (the "License");
+//  you may not use this file except in compliance with the License.
+//  You may obtain a copy of the License at
+//       http://www.apache.org/licenses/LICENSE-2.0
+//  Unless required by applicable law or agreed to in writing, software
+//  distributed under the License is distributed on an "AS IS" BASIS,
+//  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+//  See the License for the specific language governing permissions and
+//  limitations under the License.
+//
+//
+
 package api
 
 import (
@@ -80,7 +96,7 @@ type ObjectUserInterface interface {
 	DeleteSecret(uid string, req model.ObjectUserSecretKeyDeleteReq, params map[string]string) error
 }
 
-// AlertPolicyInterface represents a alert policy resource client interface.
+// AlertPoliciesInterface represents a alert policy resource client interface.
 type AlertPoliciesInterface interface {
 	// List returns a list of alert policies within the ObjectScale object store.
 	List(params map[string]string) (*model.AlertPolicies, error)
@@ -125,7 +141,7 @@ type TenantsInterface interface {
 	SetQuota(name string, payload model.TenantQuotaSet) error
 }
 
-// ObjectUserInterface represents an interface for objMT service metrics.
+// ObjmtInterface represents an interface for objMT service metrics.
 type ObjmtInterface interface {
 	// GetAccountBillingInfo returns billing info metrics for defined accounts
 	GetAccountBillingInfo(ids []string, params map[string]string) (*model.AccountBillingInfoList, error)
