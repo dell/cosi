@@ -22,15 +22,16 @@ import (
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+	bucketclientset "sigs.k8s.io/container-object-storage-interface-api/client/clientset/versioned"
+	objectscaleRest "github.com/emcecs/objectscale-management-go-sdk/pkg/client/rest"
+	objectscaleClient "github.com/emcecs/objectscale-management-go-sdk/pkg/client/rest/client"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/iam"
-	objectscaleRest "github.com/emcecs/objectscale-management-go-sdk/pkg/client/rest"
-	objectscaleClient "github.com/emcecs/objectscale-management-go-sdk/pkg/client/rest/client"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/clientcmd"
-	bucketclientset "sigs.k8s.io/container-object-storage-interface-api/client/clientset/versioned"
+	
 )
 
 // place for storing global variables like specs
@@ -81,15 +82,18 @@ var _ = BeforeSuite(func() {
 	}
 	unsafeClient := &http.Client{Transport: transport}
 
+	objectscaleAuthUser := objectscaleClient.AuthUser{
+		Gateway:  objectscaleGateway,
+		Username: objectscaleUser,
+		Password: objectscalePassword,
+	}
 	objectscale = objectscaleRest.NewClientSet(
-		objectscaleClient.NewClient(
-			objectstoreGateway,
-			objectscaleGateway,
-			objectscaleUser,
-			objectscalePassword,
-			unsafeClient,
-			false,
-		),
+		&objectscaleClient.Simple{
+			Endpoint:       objectstoreGateway,
+			Authenticator:  &objectscaleAuthUser,
+			HTTPClient:     unsafeClient,
+			OverrideHeader: false,
+		},
 	)
 
 	// IAM clientset

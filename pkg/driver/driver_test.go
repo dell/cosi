@@ -22,16 +22,22 @@ func TestRun(t *testing.T) {
 	testCases := []struct {
 		name          string
 		port          int
+		backendID     string
+		namespace     string
 		expectedError bool
 	}{
 		{
 			name:          "Successful",
-			port:          8080,
+			port:          8090,
+			backendID:     "123",
+			namespace:     "namespace1",
 			expectedError: false,
 		},
 		{
 			name:          "PortAlreadyInUse",
-			port:          8080,
+			port:          8090,
+			backendID:     "123",
+			namespace:     "namespace1",
 			expectedError: true,
 		},
 	}
@@ -46,7 +52,7 @@ func TestRun(t *testing.T) {
 
 			errCh := make(chan error, 1)
 			go func() {
-				errCh <- Run(ctx, "test", tc.port)
+				errCh <- Run(ctx, "test", tc.backendID, tc.namespace, tc.port)
 			}()
 
 			// Wait for server to start
@@ -54,7 +60,7 @@ func TestRun(t *testing.T) {
 
 			if tc.expectedError {
 				// Test error is returned when port is already in use
-				err = Run(context.Background(), "test", tc.port)
+				err = Run(context.Background(), "test", tc.backendID, tc.namespace, tc.port)
 				if err == nil {
 					t.Errorf("Expected error, but got nil")
 				}
