@@ -44,6 +44,7 @@ func Run(ctx context.Context, name, backendID, namespace string, port int) error
 	// Setup identity server and provisioner server
 	identityServer := identity.New(name)
 
+	/* #nosec */
 	// ObjectScale clientset
 	transport := &http.Transport{
 		TLSClientConfig: &tls.Config{InsecureSkipVerify: true}, //#nosec
