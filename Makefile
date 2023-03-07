@@ -10,7 +10,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-all: clean build format
+all: clean format build
 
 COSI_BUILD_DIR   := build
 COSI_BUILD_PATH  := ./cmd/
@@ -41,6 +41,7 @@ clean:	##clean directory
 	rm -f core/core.gen.go
 	go clean
 
+.PHONY: build
 build: ##build project
 	go generate ./...
 	GOOS=linux CGO_ENABLED=0 go build -ldflags="-s -w" -o ${COSI_BUILD_DIR}/cosi-driver ${COSI_BUILD_PATH}
