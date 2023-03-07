@@ -32,38 +32,38 @@ NOTES=-beta
 TAGMSG="COSI Spec 1.0"
 
 help:	##show help
-	@fgrep -h "##" $(MAKEFILE_LIST) | fgrep -v fgrep | sed -e 's/\\$$//' | sed -e 's/##//'
+	@fgrep --no-filename "##" $(MAKEFILE_LIST) | fgrep --invert-match fgrep | sed --expression='s/\\$$//' | sed --expression='s/##//'
 
 format:	##run gofmt
-	@gofmt -w -s .
+	gofmt -w -s .
 
 clean:	##clean directory
-	rm -f core/core.gen.go
+	rm --force core/core.gen.go
 	go clean
 
 .PHONY: build
-build: ##build project
+build:	##build project
 	go generate ./...
 	GOOS=linux CGO_ENABLED=0 go build -ldflags="-s -w" -o ${COSI_BUILD_DIR}/cosi-driver ${COSI_BUILD_PATH}
 
 # Tags the release with the Tag parameters set above
 tag:	##tag the release
-	-git tag -d v$(MAJOR).$(MINOR).$(PATCH)$(NOTES)
-	git tag -a -m $(TAGMSG) v$(MAJOR).$(MINOR).$(PATCH)$(NOTES)
+	-git tag --delete v$(MAJOR).$(MINOR).$(PATCH)$(NOTES)
+	git tag --annotate --message=$(TAGMSG) v$(MAJOR).$(MINOR).$(PATCH)$(NOTES)
 
 # Generates the docker container (but does not push)
-docker:	tag	##generate the docker container
+docker: tag	##generate the docker container
 	go generate ./...
 	go run core/semver/semver.go -f mk >semver.mk
-	make -f docker.mk docker
+	make --file=docker.mk docker
 
 # Pushes container to the repository
-push:	docker	##generate and push the docker container to repository
-	make -f docker.mk push
+push: docker	##generate and push the docker container to repository
+	make --file=docker.mk push
 
 # Windows or Linux; requires no hardware
 unit-test:	##run unit tests
-	( go clean -cache; CGO_ENABLED=0 go test -v -coverprofile=c.out ./... )
+	( go clean -cache; CGO_ENABLED=0 go test -v -coverprofile=c.out ./...)
 
 # Linux only; populate env.sh with the hardware parameters
 integration-test:	##run integration test (Linux only)

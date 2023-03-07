@@ -1,5 +1,6 @@
 # The driver's binary
 cosi-driver
+
 build/
 
 # Binaries for programs and plugins
