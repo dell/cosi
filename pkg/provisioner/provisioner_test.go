@@ -17,41 +17,129 @@ import (
 	"testing"
 
 	cosi "sigs.k8s.io/container-object-storage-interface-spec"
-)
 
-func TestNew(t *testing.T) {
-	provSrv := New()
-	if provSrv == nil {
-		t.Error("server should not be nil")
-	}
-}
+	"github.com/emcecs/objectscale-management-go-sdk/pkg/client/fake"
+	"github.com/emcecs/objectscale-management-go-sdk/pkg/client/model"
+	"github.com/stretchr/testify/assert"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
+)
 
 // FIXME: those are only smoke tests, no real testing is done here
 func TestServer(t *testing.T) {
-	provSrv := Server{}
-
-	for scenario, fn := range map[string]func(t *testing.T, srv Server){
+	for scenario, fn := range map[string]func(t *testing.T){
+		"smoke/testNew":                      testDriverNew,
+		"smoke/testID":                       testDriverID,
 		"smoke/testDriverCreateBucket":       testDriverCreateBucket,
 		"smoke/testDriverDeleteBucket":       testDriverDeleteBucket,
 		"smoke/testDriverGrantBucketAccess":  testDriverGrantBucketAccess,
 		"smoke/testDriverRevokeBucketAccess": testDriverRevokeBucketAccess,
 	} {
 		t.Run(scenario, func(t *testing.T) {
-			fn(t, provSrv)
+			fn(t)
+		})
+	}
+}
+
+// testDriverNew tests server initialization
+func testDriverNew(t *testing.T) {
+	driver := New(fake.NewClientSet(), "id", "namespace")
+	assert.Equal(t, "id", driver.backendID)
+	assert.Equal(t, "namespace", driver.namespace)
+	assert.NotNil(t, driver.mgmtClient)
+}
+
+// testDriverID tests extending COSI interface by adding driver ID
+func testDriverID(t *testing.T) {
+	driver := New(fake.NewClientSet(), "id", "namespace")
+	assert.Equal(t, "id", driver.ID())
+}
+
+// testDriverCreateBucket tests bucket creation functionality on ObjectScale platform
+func testDriverCreateBucket(t *testing.T) {
+	// Namespace (ObjectstoreID) and testID (driver ID) provided in the config file
+	const (
+		namespace = "namespace"
+		testID    = "test.id"
+	)
+
+	testCases := []struct {
+		description   string
+		inputName     string
+		expectedError error
+		server        Server
+		parameters    map[string]string
+	}{
+		{
+			description:   "valid bucket creation",
+			inputName:     "bucket-valid",
+			expectedError: nil,
+			server: Server{
+				mgmtClient: fake.NewClientSet(),
+				namespace:  namespace,
+				backendID:  testID,
+			},
+			parameters: map[string]string{
+				"clientID": testID,
+			},
+		},
+		{
+			description:   "bucket already exists",
+			inputName:     "bucket-valid",
+			expectedError: status.Error(codes.AlreadyExists, "Bucket already exists"),
+			server: Server{
+				mgmtClient: fake.NewClientSet(&model.Bucket{
+					Name:      "bucket-valid",
+					Namespace: namespace,
+				}),
+				namespace: namespace,
+				backendID: testID,
+			},
+			parameters: map[string]string{
+				"clientID": testID,
+			},
+		},
+		{
+			description:   "invalid bucket name",
+			inputName:     "",
+			expectedError: status.Error(codes.InvalidArgument, "Empty bucket name"),
+			server: Server{
+				mgmtClient: fake.NewClientSet(),
+				namespace:  namespace,
+				backendID:  testID,
+			},
+			parameters: map[string]string{
+				"clientID": testID,
+			},
+		},
+		{
+			description:   "cannot get existing bucket",
+			inputName:     "bucket-valid",
+			expectedError: status.Error(codes.Internal, "An unexpected error occurred"),
+			server: Server{
+				mgmtClient: fake.NewClientSet(),
+				namespace:  namespace,
+				backendID:  testID,
+			},
+			parameters: map[string]string{
+				"clientID":                      testID,
+				"X-TEST/Buckets/Get/force-fail": "abc",
+			},
+		},
+	}
+
+	for _, scenario := range testCases {
+		t.Run(scenario.description, func(t *testing.T) {
+			_, err := scenario.server.DriverCreateBucket(context.TODO(), &cosi.DriverCreateBucketRequest{Name: scenario.inputName, Parameters: scenario.parameters})
+			assert.ErrorIs(t, err, scenario.expectedError, err)
 		})
 	}
 }
 
 // FIXME: write valid test
-func testDriverCreateBucket(t *testing.T, srv Server) {
-	_, err := srv.DriverCreateBucket(context.TODO(), &cosi.DriverCreateBucketRequest{})
-	if err == nil {
-		t.Error("expected error")
-	}
-}
+func testDriverDeleteBucket(t *testing.T) {
+	srv := Server{}
 
-// FIXME: write valid test
-func testDriverDeleteBucket(t *testing.T, srv Server) {
 	_, err := srv.DriverDeleteBucket(context.TODO(), &cosi.DriverDeleteBucketRequest{})
 	if err == nil {
 		t.Error("expected error")
@@ -59,7 +147,9 @@ func testDriverDeleteBucket(t *testing.T, srv Server) {
 }
 
 // FIXME: write valid test
-func testDriverGrantBucketAccess(t *testing.T, srv Server) {
+func testDriverGrantBucketAccess(t *testing.T) {
+	srv := Server{}
+
 	_, err := srv.DriverGrantBucketAccess(context.TODO(), &cosi.DriverGrantBucketAccessRequest{})
 	if err == nil {
 		t.Error("expected error")
@@ -67,7 +157,9 @@ func testDriverGrantBucketAccess(t *testing.T, srv Server) {
 }
 
 // FIXME: write valid test
-func testDriverRevokeBucketAccess(t *testing.T, srv Server) {
+func testDriverRevokeBucketAccess(t *testing.T) {
+	srv := Server{}
+
 	_, err := srv.DriverRevokeBucketAccess(context.TODO(), &cosi.DriverRevokeBucketAccessRequest{})
 	if err == nil {
 		t.Error("expected error")
