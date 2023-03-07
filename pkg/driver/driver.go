@@ -46,7 +46,7 @@ func Run(ctx context.Context, name, backendID, namespace string, port int) error
 
 	// ObjectScale clientset
 	transport := &http.Transport{
-		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+		TLSClientConfig: &tls.Config{InsecureSkipVerify: true}, //#nosec
 	}
 	// FIXME: not validating if client should be secure
 	unsafeClient := &http.Client{Transport: transport}

@@ -18,7 +18,7 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
-	
+
 	log "github.com/sirupsen/logrus"
 
 	"github.com/dell/cosi-driver/pkg/driver"
@@ -35,8 +35,6 @@ var (
 
 // init is run before main and is used to define command line flags.
 func init() {
-	// Set standard logger output.
-	log.SetOutput(os.Stdout)
 	// Parse command line flags.
 	flag.Parse()
 	// Set the log level.
