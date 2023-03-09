@@ -15,9 +15,8 @@
 #
 
 # DEFAULT values
-DEFAULT_BASEIMAGE="registry.access.redhat.com/ubi8/ubi-minimal" # TODO: check cosi registry 
-# digest for 8.6-902.1661794353
-DEFAULT_DIGEST="sha256:c8c1c0f893a7ba679fd65863f2d1389179a92957c31e95521b3290c6b6fc4a76" # TODO: is it require? 
+DEFAULT_BASEIMAGE="gcr.io/distroless/static"
+DEFAULT_DIGEST="sha256:f1e013b5fe376746acf4fe41377681babbcf638f4d805bf0ed2795f65587c7e5"
 DEFAULT_GOVERSION="1.19"
 DEFAULT_REGISTRY="sample_registry"
 DEFAULT_IMAGENAME="cosi-driver"

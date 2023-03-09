@@ -12,17 +12,14 @@
 
 ARG BASEIMAGE
 ARG DIGEST
+ARG GOVERSION
 
-# Stage to build the driver
-#FROM golang:${GOVERSION} as builder
-# ARG GOPROXY
-# RUN mkdir -p /go/src
-# COPY ./ /go/src/
-# WORKDIR /go/src/
-# RUN CGO_ENABLED=0 \
-#     make build
+FROM golang:${GOVERSION} as builder
+WORKDIR /cosi-driver
+COPY . /cosi-driver/
+RUN make build
 
-# Stage to build the driver image
-FROM $BASEIMAGE@${DIGEST} AS final
-RUN microdnf update -y && \
-    microdnf clean all
+FROM ${BASEIMAGE}@${DIGEST} AS final
+WORKDIR /cosi-driver
+COPY --from=builder /cosi-driver/build/cosi-driver .
+ENTRYPOINT ["./cosi-driver"]
