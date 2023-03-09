@@ -42,8 +42,7 @@ clean:	##clean directory
 	go clean
 
 .PHONY: build
-build:	##build project
-	go generate ./...
+build: ##build project
 	GOOS=linux CGO_ENABLED=0 go build -ldflags="-s -w" -o ${COSI_BUILD_DIR}/cosi-driver ${COSI_BUILD_PATH}
 
 # Tags the release with the Tag parameters set above
