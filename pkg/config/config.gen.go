@@ -29,14 +29,8 @@ const ConfigSchemaJsonLogLevelWarning ConfigSchemaJsonLogLevel = "warning"
 
 // Configuration for single sub-driver
 type Configuration struct {
-	// Ecs corresponds to the JSON schema field "ecs".
-	Ecs *Ecs `json:"ecs,omitempty" yaml:"ecs,omitempty"`
-
 	// Objectscale corresponds to the JSON schema field "objectscale".
 	Objectscale *Objectscale `json:"objectscale,omitempty" yaml:"objectscale,omitempty"`
-
-	// Powerscale corresponds to the JSON schema field "powerscale".
-	Powerscale *Powerscale `json:"powerscale,omitempty" yaml:"powerscale,omitempty"`
 }
 
 // Credentials used for authentication to OSP
@@ -46,24 +40,6 @@ type Credentials struct {
 
 	// Base64 encoded username
 	Username string `json:"username" yaml:"username"`
-}
-
-// Configuration specific to the Dell ECS platform
-type Ecs struct {
-	// Credentials corresponds to the JSON schema field "credentials".
-	Credentials Credentials `json:"credentials" yaml:"credentials"`
-
-	// Endpoint of the Dell ECS
-	Endpoint string `json:"endpoint" yaml:"endpoint"`
-
-	// Default, unique identifier for the sub-driver/platform
-	Id string `json:"id" yaml:"id"`
-
-	// Protocols corresponds to the JSON schema field "protocols".
-	Protocols Protocols `json:"protocols" yaml:"protocols"`
-
-	// Tls corresponds to the JSON schema field "tls".
-	Tls Tls `json:"tls" yaml:"tls"`
 }
 
 // Configuration specific to the Dell ObjectScale platform
@@ -86,25 +62,6 @@ type Objectscale struct {
 	// IAM API specific field, points to the region in which ObjectScale system is
 	// installed
 	Region *string `json:"region,omitempty" yaml:"region,omitempty"`
-
-	// Tls corresponds to the JSON schema field "tls".
-	Tls Tls `json:"tls" yaml:"tls"`
-}
-
-// TODO: this is not implemented, and the configuration details are yet to be
-// defined
-type Powerscale struct {
-	// Credentials corresponds to the JSON schema field "credentials".
-	Credentials Credentials `json:"credentials" yaml:"credentials"`
-
-	// Endpoint of the Dell PowerScale
-	Endpoint string `json:"endpoint" yaml:"endpoint"`
-
-	// Default, unique identifier for the sub-driver/platform
-	Id string `json:"id" yaml:"id"`
-
-	// Protocols corresponds to the JSON schema field "protocols".
-	Protocols Protocols `json:"protocols" yaml:"protocols"`
 
 	// Tls corresponds to the JSON schema field "tls".
 	Tls Tls `json:"tls" yaml:"tls"`
@@ -145,60 +102,13 @@ const TlsClientAuthTlsNoClientCert TlsClientAuth = "tls.NoClientCert"
 const TlsClientAuthTlsRequestClientCert TlsClientAuth = "tls.RequestClientCert"
 const TlsClientAuthTlsRequireAndVerifyClientCert TlsClientAuth = "tls.RequireAndVerifyClientCert"
 const TlsClientAuthTlsRequireAnyClientCert TlsClientAuth = "tls.RequireAnyClientCert"
+const TlsClientAuthTlsVerifyClientCertIfGiven TlsClientAuth = "tls.VerifyClientCertIfGiven"
 
-// UnmarshalJSON implements json.Unmarshaler.
-func (j *TlsMinVersion) UnmarshalJSON(b []byte) error {
-	var v string
-	if err := json.Unmarshal(b, &v); err != nil {
-		return err
-	}
-	var ok bool
-	for _, expected := range enumValues_TlsMinVersion {
-		if reflect.DeepEqual(v, expected) {
-			ok = true
-			break
-		}
-	}
-	if !ok {
-		return fmt.Errorf("invalid value (expected one of %#v): %#v", enumValues_TlsMinVersion, v)
-	}
-	*j = TlsMinVersion(v)
-	return nil
-}
+type TlsMinVersion string
 
-const TlsMinVersionVersionTLS13 TlsMinVersion = "VersionTLS13"
-
-// UnmarshalJSON implements json.Unmarshaler.
-func (j *Ecs) UnmarshalJSON(b []byte) error {
-	var raw map[string]interface{}
-	if err := json.Unmarshal(b, &raw); err != nil {
-		return err
-	}
-	if v, ok := raw["credentials"]; !ok || v == nil {
-		return fmt.Errorf("field credentials in Ecs: required")
-	}
-	if v, ok := raw["endpoint"]; !ok || v == nil {
-		return fmt.Errorf("field endpoint in Ecs: required")
-	}
-	if v, ok := raw["id"]; !ok || v == nil {
-		return fmt.Errorf("field id in Ecs: required")
-	}
-	if v, ok := raw["protocols"]; !ok || v == nil {
-		return fmt.Errorf("field protocols in Ecs: required")
-	}
-	if v, ok := raw["tls"]; !ok || v == nil {
-		return fmt.Errorf("field tls in Ecs: required")
-	}
-	type Plain Ecs
-	var plain Plain
-	if err := json.Unmarshal(b, &plain); err != nil {
-		return err
-	}
-	*j = Ecs(plain)
-	return nil
-}
-
-const TlsMinVersionVersionTLS12 TlsMinVersion = "VersionTLS12"
+const TlsMinVersionTLS10 TlsMinVersion = "TLS-1.0"
+const TlsMinVersionTLS11 TlsMinVersion = "TLS-1.1"
+const TlsMinVersionTLS12 TlsMinVersion = "TLS-1.2"
 
 // UnmarshalJSON implements json.Unmarshaler.
 func (j *Objectscale) UnmarshalJSON(b []byte) error {
@@ -232,40 +142,6 @@ func (j *Objectscale) UnmarshalJSON(b []byte) error {
 	*j = Objectscale(plain)
 	return nil
 }
-
-const TlsMinVersionVersionTLS11 TlsMinVersion = "VersionTLS11"
-
-// UnmarshalJSON implements json.Unmarshaler.
-func (j *Powerscale) UnmarshalJSON(b []byte) error {
-	var raw map[string]interface{}
-	if err := json.Unmarshal(b, &raw); err != nil {
-		return err
-	}
-	if v, ok := raw["credentials"]; !ok || v == nil {
-		return fmt.Errorf("field credentials in Powerscale: required")
-	}
-	if v, ok := raw["endpoint"]; !ok || v == nil {
-		return fmt.Errorf("field endpoint in Powerscale: required")
-	}
-	if v, ok := raw["id"]; !ok || v == nil {
-		return fmt.Errorf("field id in Powerscale: required")
-	}
-	if v, ok := raw["protocols"]; !ok || v == nil {
-		return fmt.Errorf("field protocols in Powerscale: required")
-	}
-	if v, ok := raw["tls"]; !ok || v == nil {
-		return fmt.Errorf("field tls in Powerscale: required")
-	}
-	type Plain Powerscale
-	var plain Plain
-	if err := json.Unmarshal(b, &plain); err != nil {
-		return err
-	}
-	*j = Powerscale(plain)
-	return nil
-}
-
-const TlsMinVersionVersionTLS10 TlsMinVersion = "VersionTLS10"
 
 // UnmarshalJSON implements json.Unmarshaler.
 func (j *Tls) UnmarshalJSON(b []byte) error {
@@ -314,16 +190,34 @@ func (j *ConfigSchemaJsonLogLevel) UnmarshalJSON(b []byte) error {
 	return nil
 }
 
-var enumValues_TlsMinVersion = []interface{}{
-	"VersionTLS10",
-	"VersionTLS11",
-	"VersionTLS12",
-	"VersionTLS13",
+const TlsMinVersionTLS13 TlsMinVersion = "TLS-1.3"
+
+// UnmarshalJSON implements json.Unmarshaler.
+func (j *TlsMinVersion) UnmarshalJSON(b []byte) error {
+	var v string
+	if err := json.Unmarshal(b, &v); err != nil {
+		return err
+	}
+	var ok bool
+	for _, expected := range enumValues_TlsMinVersion {
+		if reflect.DeepEqual(v, expected) {
+			ok = true
+			break
+		}
+	}
+	if !ok {
+		return fmt.Errorf("invalid value (expected one of %#v): %#v", enumValues_TlsMinVersion, v)
+	}
+	*j = TlsMinVersion(v)
+	return nil
 }
 
-type TlsMinVersion string
-
-const TlsClientAuthTlsVerifyClientCertIfGiven TlsClientAuth = "tls.VerifyClientCertIfGiven"
+var enumValues_TlsMinVersion = []interface{}{
+	"TLS-1.0",
+	"TLS-1.1",
+	"TLS-1.2",
+	"TLS-1.3",
+}
 
 // UnmarshalJSON implements json.Unmarshaler.
 func (j *TlsClientAuth) UnmarshalJSON(b []byte) error {

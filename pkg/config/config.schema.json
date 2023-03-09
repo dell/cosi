@@ -81,14 +81,8 @@
       "type": "object",
       "$comment": "FIXME: should be oneOf instead of properties, but that is not supported by the generator. Might be worth contributing.",
       "properties": {
-        "ecs": {
-          "$ref": "#/definitions/ecs"
-        },
         "objectscale": {
           "$ref": "#/definitions/objectscale"
-        },
-        "powerscale": {
-          "$ref": "#/definitions/powerscale"
         }
       }
     },
@@ -156,10 +150,10 @@
         "min-version": {
           "type": "string",
           "enum": [
-            "VersionTLS10",
-            "VersionTLS11",
-            "VersionTLS12",
-            "VersionTLS13"
+            "TLS-1.0",
+            "TLS-1.1",
+            "TLS-1.2",
+            "TLS-1.3"
           ]
         },
         "client-auth": {
