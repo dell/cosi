@@ -47,13 +47,13 @@ build: ##build project
 
 # Tags the release with the Tag parameters set above
 tag:	##tag the release
-	go generate ./...
-	go run core/semver/semver.go -f mk >semver.mk
 	-git tag --delete v$(MAJOR).$(MINOR).$(PATCH)$(NOTES)
 	git tag --annotate --message=$(TAGMSG) v$(MAJOR).$(MINOR).$(PATCH)$(NOTES)
 
 # Generates the docker container (but does not push)
-docker: ##generate the docker container
+docker:	tag ##generate the docker container
+	go generate ./...
+	go run core/semver/semver.go -f mk >semver.mk
 	make --file=docker.mk docker
 
 # Pushes container to the repository
