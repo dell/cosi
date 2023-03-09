@@ -10,7 +10,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-all: clean build
+all: clean format build
+
+COSI_BUILD_DIR   := build
+COSI_BUILD_PATH  := ./cmd/
 
 include overrides.mk
 
@@ -28,67 +31,42 @@ PATCH=0
 NOTES=-beta
 TAGMSG="COSI Spec 1.0"
 
+help:	##show help
+	@fgrep --no-filename "##" $(MAKEFILE_LIST) | fgrep --invert-match fgrep | sed --expression='s/\\$$//' | sed --expression='s/##//'
 
-format:
-	@gofmt -w -s .
+format:	##run gofmt
+	gofmt -w -s .
 
-clean:
-	rm -f core/core_generated.go
+clean:	##clean directory
+	rm --force core/core.gen.go
 	go clean
 
-build: golint 
-	go generate
-	CGO_ENABLED=0 GOOS=linux go build
-
-install:
-	go generate
-	GOOS=linux CGO_ENABLED=0 go install
+.PHONY: build
+build: ##build project
+	GOOS=linux CGO_ENABLED=0 go build -ldflags="-s -w" -o ${COSI_BUILD_DIR}/cosi-driver ${COSI_BUILD_PATH}
 
 # Tags the release with the Tag parameters set above
-tag:
-	-git tag -d v$(MAJOR).$(MINOR).$(PATCH)$(NOTES)
-	git tag -a -m $(TAGMSG) v$(MAJOR).$(MINOR).$(PATCH)$(NOTES)
+tag:	##tag the release
+	-git tag --delete v$(MAJOR).$(MINOR).$(PATCH)$(NOTES)
+	git tag --annotate --message=$(TAGMSG) v$(MAJOR).$(MINOR).$(PATCH)$(NOTES)
 
 # Generates the docker container (but does not push)
-docker:
-	go generate
+docker: tag	##generate the docker container
+	go generate ./...
 	go run core/semver/semver.go -f mk >semver.mk
-	make -f docker.mk docker
+	make --file=docker.mk docker
 
 # Pushes container to the repository
-push:	docker
-	make -f docker.mk push
+push: docker	##generate and push the docker container to repository
+	make --file=docker.mk push
 
 # Windows or Linux; requires no hardware
-unit-test: golint check
-	( cd service; go clean -cache; CGO_ENABLED=0 go test -v -coverprofile=c.out ./... )
+unit-test:	##run unit tests
+	( go clean -cache; CGO_ENABLED=0 go test -v -coverprofile=c.out ./...)
 
 # Linux only; populate env.sh with the hardware parameters
-integration-test:
+integration-test:	##run integration test (Linux only)
 	( cd tests/integration; sh run.sh )
 
-release:
+release:	##generate and push release
 	BUILD_TYPE="R" $(MAKE) clean build docker push
-
-version:
-	go generate
-	go run core/semver/semver.go -f mk >semver.mk
-	make -f docker.mk version
-
-gosec:
-	gosec -quiet -log gosec.log -out=gosecresults.csv -fmt=csv ./...
-
-golint:
-ifeq (, $(shell which golint))
-	@{ \
-	set -e ;\
-	GOLINT_GEN_TMP_DIR=$$(mktemp -d) ;\
-	cd $$GOLINT_GEN_TMP_DIR ;\
-	go mod init tmp ;\
-	go get -u golang.org/x/lint/golint ;\
-	rm -rf $$GOLINT_GEN_TMP_DIR ;\
-	}
-GOLINT=$(GOBIN)/golint
-else
-GOLINT=$(shell which golint)
-endif
