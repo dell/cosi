@@ -15,8 +15,6 @@ package provisioner
 import (
 	"context"
 	"errors"
-	"flag"
-	"os"
 	"strings"
 
 	_ "github.com/emcecs/objectscale-management-go-sdk/pkg/client/fake"
@@ -27,20 +25,7 @@ import (
 	"github.com/emcecs/objectscale-management-go-sdk/pkg/client/model"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
-
-	"github.com/dell/cosi-driver/util"
 )
-
-var (
-	logLevel = flag.String("log-level", "debug", "Log level (debug, info, warn, error, fatal, panic)")
-)
-
-func init() {
-	// Set standard logger output.
-	log.SetOutput(os.Stdout)
-	// Set the log level.
-	util.SetLogLevel(*logLevel)
-}
 
 type Server struct {
 	mgmtClient api.ClientSet
