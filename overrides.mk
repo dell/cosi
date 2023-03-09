@@ -20,8 +20,6 @@ DEFAULT_DIGEST="sha256:f1e013b5fe376746acf4fe41377681babbcf638f4d805bf0ed2795f65
 DEFAULT_GOVERSION="1.19"
 DEFAULT_REGISTRY="sample_registry"
 DEFAULT_IMAGENAME="cosi-driver"
-DEFAULT_BUILDSTAGE="final"
-DEFAULT_IMAGETAG=""
 
 # set the BASEIMAGE if needed
 ifeq ($(BASEIMAGE),)
@@ -53,11 +51,6 @@ ifneq ($(DEFAULT_IMAGETAG), "")
 export IMAGETAG="$(DEFAULT_IMAGETAG)"
 endif
 
-# set the BUILDSTAGE if needed
-ifeq ($(BUILDSTAGE),)
-export BUILDSTAGE="$(DEFAULT_BUILDSTAGE)"
-endif
-
 # figure out if podman or docker should be used (use podman if found)
 ifneq (, $(shell which podman 2>/dev/null))
 export BUILDER=podman
@@ -82,10 +75,3 @@ overrides-help:
 	@echo "              Current setting is: $(IMAGENAME)"
 	@echo "IMAGETAG    - The image tag to be built, default is an empty string which will determine the tag by examining annotated tags in the repo."
 	@echo "              Current setting is: $(IMAGETAG)"
-	@echo "BUILDSTAGE  - The Dockerfile build stage to execute, default is: $(DEFAULT_BUILDSTAGE)"
-	@echo "              Stages can be found by looking at the Dockerfile"
-	@echo "              Current setting is: $(BUILDSTAGE)"
-	@echo
-        
-	
-
