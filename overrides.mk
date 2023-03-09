@@ -18,8 +18,9 @@
 DEFAULT_BASEIMAGE="gcr.io/distroless/static"
 DEFAULT_DIGEST="sha256:f1e013b5fe376746acf4fe41377681babbcf638f4d805bf0ed2795f65587c7e5"
 DEFAULT_GOVERSION="1.19"
-DEFAULT_REGISTRY="sample_registry"
+DEFAULT_REGISTRY="localhost"
 DEFAULT_IMAGENAME="cosi-driver"
+DEFAULT_IMAGETAG=""
 
 # set the BASEIMAGE if needed
 ifeq ($(BASEIMAGE),)
@@ -47,7 +48,7 @@ export IMAGENAME="$(DEFAULT_IMAGENAME)"
 endif
 
 #set the IMAGETAG if needed
-ifneq ($(DEFAULT_IMAGETAG), "") 
+ifeq ($(DEFAULT_IMAGETAG),) 
 export IMAGETAG="$(DEFAULT_IMAGETAG)"
 endif
 

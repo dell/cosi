@@ -14,7 +14,7 @@ jobs:
       - name: Run the formatter, linter, and vetter
         uses: dell/common-github-actions/go-code-formatter-linter-vetter@main
         with:
-          directories: ./pnk/... #TODO: change to pkg
+          directories: ./pkg/... #TODO: change to pkg
 
   gosec:
     runs-on: ubuntu-latest
@@ -67,21 +67,24 @@ jobs:
   build-secure-and-push:
     runs-on: ubuntu-latest
     env: 
-        IMAGETAG: "${{ github.sha }}"
+      IMAGETAG: "${{ github.sha }}"
+      IMAGENAME: "cosi-driver"
+      REGISTRY: "localhost"
     steps:
     - uses: actions/setup-go@v2
       with:
         go-version: ^1.19
         id: go
     - uses: actions/checkout@v3.2.0
-      with:
-        ref: ${{ github.event.pull_request.head.sha }}
-    - run: make docker
+    - run: |
+        git config --global user.name "${{ github.actor }}"
+        git config --global user.email "${{ github.actor }}@users.noreply.github.com"
+        make docker
     - uses: Azure/container-scan@v0
       env: 
-        DOCKLE_HOST: "unix:///var/run/docker.sock"
+        DOCKER_HOST: "unix:///var/run/docker.sock"
       with:
-        image-name: "${{ env.REGISTRY }}/${{ env.IMAGENAME }}:{{ env.IMAGETAG }}"
+        image-name: "${{ env.REGISTRY }}/${{ env.IMAGENAME }}:${{ env.IMAGETAG }}"
         severity-threshold: HIGH
     # TODO: There is no registry for now 
     # - run: make push
