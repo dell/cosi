@@ -73,8 +73,9 @@ func TestTlsMinVersionUnmarshalJSON(t *testing.T) {
 
 			err := version.UnmarshalJSON(tc.data)
 			if tc.fail {
-				assert.Error(t, err)
-				assert.Regexp(t, tc.errorMessage, err.Error())
+				if assert.Error(t, err) {
+					assert.Regexp(t, tc.errorMessage, err.Error())
+				}
 			} else {
 				assert.NoError(t, err)
 			}
@@ -186,8 +187,9 @@ func TestObjectscaleUnmarshalJSON(t *testing.T) {
 
 			err := objectscale.UnmarshalJSON(tc.data)
 			if tc.fail {
-				assert.Error(t, err)
-				assert.Regexp(t, tc.errorMessage, err.Error())
+				if assert.Error(t, err) {
+					assert.Regexp(t, tc.errorMessage, err.Error())
+				}
 			} else {
 				assert.NoError(t, err)
 			}
@@ -227,8 +229,9 @@ func TestTlsUnmarshalJSON(t *testing.T) {
 
 			err := tls.UnmarshalJSON(tc.data)
 			if tc.fail {
-				assert.Error(t, err)
-				assert.Regexp(t, tc.errorMessage, err.Error())
+				if assert.Error(t, err) {
+					assert.Regexp(t, tc.errorMessage, err.Error())
+				}
 			} else {
 				assert.NoError(t, err)
 			}
@@ -293,8 +296,9 @@ func TestConfigSchemaJsonLogLevelUnmarshalJSON(t *testing.T) {
 
 			err := logLevel.UnmarshalJSON(tc.data)
 			if tc.fail {
-				assert.Error(t, err)
-				assert.Regexp(t, tc.errorMessage, err.Error())
+				if assert.Error(t, err) {
+					assert.Regexp(t, tc.errorMessage, err.Error())
+				}
 			} else {
 				assert.NoError(t, err)
 			}
@@ -354,8 +358,9 @@ func TestTlsClientAuthUnmarshalJSON(t *testing.T) {
 
 			err := clientAuth.UnmarshalJSON(tc.data)
 			if tc.fail {
-				assert.Error(t, err)
-				assert.Regexp(t, tc.errorMessage, err.Error())
+				if assert.Error(t, err) {
+					assert.Regexp(t, tc.errorMessage, err.Error())
+				}
 			} else {
 				assert.NoError(t, err)
 			}
@@ -401,8 +406,9 @@ func TestS3UnmarshalJSON(t *testing.T) {
 
 			err := s3.UnmarshalJSON(tc.data)
 			if tc.fail {
-				assert.Error(t, err)
-				assert.Regexp(t, tc.errorMessage, err.Error())
+				if assert.Error(t, err) {
+					assert.Regexp(t, tc.errorMessage, err.Error())
+				}
 			} else {
 				assert.NoError(t, err)
 			}
@@ -448,8 +454,9 @@ func TestCredentialsUnmarshalJSON(t *testing.T) {
 
 			err := credentials.UnmarshalJSON(tc.data)
 			if tc.fail {
-				assert.Error(t, err)
-				assert.Regexp(t, tc.errorMessage, err.Error())
+				if assert.Error(t, err) {
+					assert.Regexp(t, tc.errorMessage, err.Error())
+				}
 			} else {
 				assert.NoError(t, err)
 			}
@@ -503,8 +510,9 @@ func TestConfigSchemaJsonUnmarshalJSON(t *testing.T) {
 
 			err := config.UnmarshalJSON(tc.data)
 			if tc.fail {
-				assert.Error(t, err)
-				assert.Regexp(t, tc.errorMessage, err.Error())
+				if assert.Error(t, err) {
+					assert.Regexp(t, tc.errorMessage, err.Error())
+				}
 			} else {
 				assert.NoError(t, err)
 			}
