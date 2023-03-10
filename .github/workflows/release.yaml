@@ -2,7 +2,8 @@ name: release
 on:
   release:
     types: [published]
-build-secure-and-push:
+jobs:
+  build-secure-and-push:
     runs-on: ubuntu-latest
     env:
       IMAGETAG: "${{ github.ref }}"

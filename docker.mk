@@ -13,20 +13,12 @@
 # docker makefile, included from Makefile, will build/push images with docker or podman
 #
 
-# Includes the following generated file to get semantic version information
-include semver.mk
+# To set the base image, use the BASEIMAGE environment variable
+# To set the image name, use the IMAGENAME environment variable
+# To set the image tag, use the IMAGETAG environment variable
+# To set builder, use the BUILDER environment variable
 
-ifdef NOTES
-	RELNOTE="-$(NOTES)"
-else
-	RELNOTE=
-endif
-
-ifeq ($(IMAGETAG),)
-IMAGETAG="v$(MAJOR).$(MINOR).$(PATCH)$(RELNOTE)"
-endif
-
-
+# Build with docker or podman
 docker:
 	@echo "Base Images is set to: $(BASEIMAGE)"
 	@echo "Building: $(IMAGENAME):$(IMAGETAG)"

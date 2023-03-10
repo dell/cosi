@@ -48,9 +48,10 @@ build: ##build project
 
 # Tags the release with the Tag parameters set above
 tag:	##tag the release
+	-git tag --delete v$(MAJOR).$(MINOR).$(PATCH)$(NOTES)
 	git tag --annotate --message=$(TAGMSG) v$(MAJOR).$(MINOR).$(PATCH)$(NOTES)
 
-# Builds dockerfile without tagging
+# Builds dockerfile
 docker:
 	make --file=docker.mk docker
 
