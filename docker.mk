@@ -10,20 +10,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #s
-# docker makefile, included from Makefile, will build/push images with docker or podman
+# docker makefile, included from Makefile, will build/push images with docker
 #
 
 # To set the base image, use the BASEIMAGE environment variable
 # To set the image name, use the IMAGENAME environment variable
 # To set the image tag, use the IMAGETAG environment variable
-# To set builder, use the BUILDER environment variable
 
-# Build with docker or podman
+# Build with docker
 docker:
 	@echo "Base Images is set to: $(BASEIMAGE)"
-	@echo "Building: $(IMAGENAME):$(IMAGETAG)"
-	$(BUILDER) build -t "$(IMAGENAME):$(IMAGETAG)" --build-arg BASEIMAGE=$(BASEIMAGE) --build-arg GOVERSION=$(GOVERSION) --build-arg DIGEST=$(DIGEST) .
+	@echo "Building: $(REGISTRY)/$(IMAGENAME):$(IMAGETAG)"
+	docker build -t "$(REGISTRY)/$(IMAGENAME):$(IMAGETAG)" --build-arg BASEIMAGE=$(BASEIMAGE) --build-arg GOVERSION=$(GOVERSION) --build-arg DIGEST=$(DIGEST) .
 
 push:   
 	@echo "Pushing: $(REGISTRY)/$(IMAGENAME):$(IMAGETAG)"
-	$(BUILDER) push "$(REGISTRY)/$(IMAGENAME):$(IMAGETAG)"
+	docker push "$(REGISTRY)/$(IMAGENAME):$(IMAGETAG)"

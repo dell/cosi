@@ -15,9 +15,10 @@
 #
 
 # DEFAULT values
+# Image from https://catalog.redhat.com/software/containers/ubi8/ubi-minimal/5c359a62bed8bd75a2c3fba8
 DEFAULT_BASEIMAGE=registry.access.redhat.com/ubi8/ubi-minimal
-# digest for 8.6-902.1661794353
-DEFAULT_DIGEST=sha256:c8c1c0f893a7ba679fd65863f2d1389179a92957c31e95521b3290c6b6fc4a76
+# digest for 8.7-1085
+DEFAULT_DIGEST=sha256:ab03679e683010d485ef0399e056b09a38d7843ba4a36ee7dec337dd0037f7a7
 DEFAULT_GOVERSION=1.19
 DEFAULT_REGISTRY=sample_registry
 DEFAULT_IMAGENAME=cosi-driver
@@ -51,13 +52,6 @@ endif
 #set the IMAGETAG if needed
 ifeq ($(IMAGETAG),) 
 export IMAGETAG="$(DEFAULT_IMAGETAG)"
-endif
-
-# figure out if podman or docker should be used (use podman if found)
-ifneq (, $(shell which podman 2>/dev/null))
-export BUILDER=podman
-else
-export BUILDER=docker
 endif
 
 # target to print some help regarding these overrides and how to use them

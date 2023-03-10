@@ -69,6 +69,7 @@ jobs:
     env: 
       IMAGETAG: "${{ github.sha }}"
       IMAGENAME: "cosi-driver"
+      REGISTRY: "sample_registry"
     steps:
     - uses: actions/setup-go@v2
       with:
@@ -80,7 +81,7 @@ jobs:
       env: 
         DOCKLE_HOST: "unix:///var/run/docker.sock"
       with:
-        image-name: ${{ env.IMAGENAME }}:${{ env.IMAGETAG }}
+        image-name: ${{ env.REGISTRY }}/${{ env.IMAGENAME }}:${{ env.IMAGETAG }}
         severity-threshold: HIGH
     # TODO: There is no registry for now 
     # - run: make push
