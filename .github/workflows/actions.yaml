@@ -82,7 +82,7 @@ jobs:
         make docker
     - uses: Azure/container-scan@v0
       env: 
-        DOCKER_HOST: "unix:///var/run/docker.sock"
+        DOCKLE_HOST: "unix:///var/run/docker.sock"
       with:
         image-name: "${{ env.REGISTRY }}/${{ env.IMAGENAME }}:${{ env.IMAGETAG }}"
         severity-threshold: HIGH

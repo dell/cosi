@@ -81,6 +81,7 @@ func Run(ctx context.Context, name, backendID, namespace string, port int) error
 		return err
 	}
 
+	log.Infoln("gRPC server started")
 	// Run gRPC server in a separate goroutine
 	go func() {
 		if err := server.Serve(lis); err != nil {
