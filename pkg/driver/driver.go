@@ -28,7 +28,7 @@ import (
 	spec "sigs.k8s.io/container-object-storage-interface-spec"
 
 	"github.com/dell/cosi-driver/pkg/identity"
-	"github.com/dell/cosi-driver/pkg/provisioner"
+	"github.com/dell/cosi-driver/pkg/provisioner/objectscale"
 )
 
 var (
