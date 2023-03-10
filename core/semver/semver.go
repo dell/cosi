@@ -25,7 +25,6 @@ func main() {
 		output string
 		export bool
 	)
-
 	flag.StringVar(
 		&format,
 		"f",

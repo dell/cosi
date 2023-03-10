@@ -1,0 +1,28 @@
+name: release
+on:
+  release:
+    types: [published]
+build-secure-and-push:
+    runs-on: ubuntu-latest
+    env:
+      IMAGETAG: "${{ github.ref }}"
+      IMAGENAME: "cosi-driver"
+    steps:
+    - uses: actions/setup-go@v2
+      with:
+        go-version: ^1.19
+        id: go
+    - uses: actions/checkout@v3.2.0
+    - run: |
+        git config --global user.name "${{ github.actor }}"
+        git config --global user.email "${{ github.actor }}@users.noreply.github.com"
+        make docker
+    - uses: Azure/container-scan@v0
+      env:
+        DOCKLE_HOST: "unix:///var/run/docker.sock"
+      with:
+        image-name: "${{ env.IMAGENAME }}:${{ env.IMAGETAG }}"
+        severity-threshold: HIGH
+    # TODO: There is no registry for now
+    # - run: make push
+    # if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}

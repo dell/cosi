@@ -39,6 +39,7 @@ format:	##run gofmt
 
 clean:	##clean directory
 	rm --force core/core.gen.go
+	rm --force semver.mk
 	go clean
 
 .PHONY: build
@@ -47,13 +48,11 @@ build: ##build project
 
 # Tags the release with the Tag parameters set above
 tag:	##tag the release
-	-git tag --delete v$(MAJOR).$(MINOR).$(PATCH)$(NOTES)
 	git tag --annotate --message=$(TAGMSG) v$(MAJOR).$(MINOR).$(PATCH)$(NOTES)
 
-# Generates the docker container (but does not push)
-docker:	tag ##generate the docker container
+# Builds dockerfile without tagging
+docker:
 	go generate ./...
-	go run core/semver/semver.go -f mk >semver.mk
 	make --file=docker.mk docker
 
 # Pushes container to the repository
@@ -68,5 +67,3 @@ unit-test:	##run unit tests
 integration-test:	##run integration test (Linux only)
 	( cd tests/integration; sh run.sh )
 
-release:	##generate and push release
-	BUILD_TYPE="R" $(MAKE) clean build docker push
