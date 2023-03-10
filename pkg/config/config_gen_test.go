@@ -13,16 +13,25 @@
 package config
 
 import (
+	"regexp"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 )
 
+var (
+	missingField  = regexp.MustCompile(`field (.+) in (.+): required`)
+	invalidEnum   = regexp.MustCompile(`^invalid value \(expected one of (.+)\): (.+)$`)
+	invalidObject = regexp.MustCompile(`^json: cannot unmarshal (.+) into Go value of type (.+)$`)
+	invalidField  = regexp.MustCompile(`^json: cannot unmarshal (.+) into Go struct field (.+) of type (.+)$`)
+)
+
 func TestTlsMinVersionUnmarshalJSON(t *testing.T) {
 	testCases := []struct {
-		name string
-		data []byte
-		fail bool
+		name         string
+		data         []byte
+		fail         bool
+		errorMessage *regexp.Regexp
 	}{
 		{
 			name: "valid TLS 1.3",
@@ -45,14 +54,16 @@ func TestTlsMinVersionUnmarshalJSON(t *testing.T) {
 			fail: false,
 		},
 		{
-			name: "invalid TLS",
-			data: []byte(`"unknown"`),
-			fail: true,
+			name:         "invalid TLS",
+			data:         []byte(`"unknown"`),
+			fail:         true,
+			errorMessage: invalidEnum,
 		},
 		{
-			name: "empty TLS",
-			data: []byte(`{}`),
-			fail: true,
+			name:         "empty TLS",
+			data:         []byte(`{}`),
+			fail:         true,
+			errorMessage: invalidObject,
 		},
 	}
 
@@ -63,6 +74,7 @@ func TestTlsMinVersionUnmarshalJSON(t *testing.T) {
 			err := version.UnmarshalJSON(tc.data)
 			if tc.fail {
 				assert.Error(t, err)
+				assert.Regexp(t, tc.errorMessage, err.Error())
 			} else {
 				assert.NoError(t, err)
 			}
@@ -72,9 +84,10 @@ func TestTlsMinVersionUnmarshalJSON(t *testing.T) {
 
 func TestObjectscaleUnmarshalJSON(t *testing.T) {
 	testCases := []struct {
-		name string
-		data []byte
-		fail bool
+		name         string
+		data         []byte
+		fail         bool
+		errorMessage *regexp.Regexp
 	}{
 		{
 			name: "valid insecure objectscale",
@@ -88,9 +101,10 @@ func TestObjectscaleUnmarshalJSON(t *testing.T) {
 			fail: false,
 		},
 		{
-			name: "empty objectscale",
-			data: []byte(`{}`),
-			fail: true,
+			name:         "empty objectscale",
+			data:         []byte(`{}`),
+			fail:         true,
+			errorMessage: missingField,
 		},
 		{
 			name: "invalid missing credentials",
@@ -100,7 +114,8 @@ func TestObjectscaleUnmarshalJSON(t *testing.T) {
 				"objectstore-gateway":"gateway.objectstore.test",
 				"protocols":{"s3":{"endpoint":"test.endpoint"}},
 				"tls":{"insecure":true}}`),
-			fail: true,
+			fail:         true,
+			errorMessage: missingField,
 		},
 		{
 			name: "invalid missing id",
@@ -110,7 +125,8 @@ func TestObjectscaleUnmarshalJSON(t *testing.T) {
 				"objectstore-gateway":"gateway.objectstore.test",
 				"protocols":{"s3":{"endpoint":"test.endpoint"}},
 				"tls":{"insecure":true}}`),
-			fail: true,
+			fail:         true,
+			errorMessage: missingField,
 		},
 		{
 			name: "invalid missing objectscale-gateway",
@@ -120,7 +136,8 @@ func TestObjectscaleUnmarshalJSON(t *testing.T) {
 				"objectstore-gateway":"gateway.objectstore.test",
 				"protocols":{"s3":{"endpoint":"test.endpoint"}},
 				"tls":{"insecure":true}}`),
-			fail: true,
+			fail:         true,
+			errorMessage: missingField,
 		},
 		{
 			name: "invalid missing objectstore-gateway",
@@ -130,7 +147,8 @@ func TestObjectscaleUnmarshalJSON(t *testing.T) {
 				"objectscale-gateway":"gateway.objectscale.test",
 				"protocols":{"s3":{"endpoint":"test.endpoint"}},
 				"tls":{"insecure":true}}`),
-			fail: true,
+			fail:         true,
+			errorMessage: missingField,
 		},
 		{
 			name: "invalid missing protocols",
@@ -140,7 +158,8 @@ func TestObjectscaleUnmarshalJSON(t *testing.T) {
 				"objectscale-gateway":"gateway.objectscale.test",
 				"objectstore-gateway":"gateway.objectstore.test",
 				"tls":{"insecure":true}}`),
-			fail: true,
+			fail:         true,
+			errorMessage: missingField,
 		},
 		{
 			name: "invalid missing tls",
@@ -150,12 +169,14 @@ func TestObjectscaleUnmarshalJSON(t *testing.T) {
 				"objectscale-gateway":"gateway.objectscale.test",
 				"objectstore-gateway":"gateway.objectstore.test",
 				"protocols":{"s3":{"endpoint":"test.endpoint"}}}`),
-			fail: true,
+			fail:         true,
+			errorMessage: missingField,
 		},
 		{
-			name: "invalid type",
-			data: []byte(`""`),
-			fail: true,
+			name:         "invalid type",
+			data:         []byte(`""`),
+			fail:         true,
+			errorMessage: invalidObject,
 		},
 	}
 
@@ -166,6 +187,7 @@ func TestObjectscaleUnmarshalJSON(t *testing.T) {
 			err := objectscale.UnmarshalJSON(tc.data)
 			if tc.fail {
 				assert.Error(t, err)
+				assert.Regexp(t, tc.errorMessage, err.Error())
 			} else {
 				assert.NoError(t, err)
 			}
@@ -175,9 +197,10 @@ func TestObjectscaleUnmarshalJSON(t *testing.T) {
 
 func TestTlsUnmarshalJSON(t *testing.T) {
 	testCases := []struct {
-		name string
-		data []byte
-		fail bool
+		name         string
+		data         []byte
+		fail         bool
+		errorMessage *regexp.Regexp
 	}{
 		{
 			name: "valid insecure",
@@ -185,14 +208,16 @@ func TestTlsUnmarshalJSON(t *testing.T) {
 			fail: false,
 		},
 		{
-			name: "empty value",
-			data: []byte(`{}`),
-			fail: true,
+			name:         "empty value",
+			data:         []byte(`{}`),
+			fail:         true,
+			errorMessage: missingField,
 		},
 		{
-			name: "invalid type",
-			data: []byte(`""`),
-			fail: true,
+			name:         "invalid type",
+			data:         []byte(`""`),
+			fail:         true,
+			errorMessage: invalidObject,
 		},
 	}
 
@@ -203,6 +228,7 @@ func TestTlsUnmarshalJSON(t *testing.T) {
 			err := tls.UnmarshalJSON(tc.data)
 			if tc.fail {
 				assert.Error(t, err)
+				assert.Regexp(t, tc.errorMessage, err.Error())
 			} else {
 				assert.NoError(t, err)
 			}
@@ -212,9 +238,10 @@ func TestTlsUnmarshalJSON(t *testing.T) {
 
 func TestConfigSchemaJsonLogLevelUnmarshalJSON(t *testing.T) {
 	testCases := []struct {
-		name string
-		data []byte
-		fail bool
+		name         string
+		data         []byte
+		fail         bool
+		errorMessage *regexp.Regexp
 	}{
 		{
 			name: "valid level(fatal)",
@@ -247,14 +274,16 @@ func TestConfigSchemaJsonLogLevelUnmarshalJSON(t *testing.T) {
 			fail: false,
 		},
 		{
-			name: "invalid value",
-			data: []byte(`"unknown"`),
-			fail: true,
+			name:         "invalid value",
+			data:         []byte(`"unknown"`),
+			fail:         true,
+			errorMessage: invalidEnum,
 		},
 		{
-			name: "invalid type",
-			data: []byte(`{}`),
-			fail: true,
+			name:         "invalid type",
+			data:         []byte(`{}`),
+			fail:         true,
+			errorMessage: invalidObject,
 		},
 	}
 
@@ -265,6 +294,7 @@ func TestConfigSchemaJsonLogLevelUnmarshalJSON(t *testing.T) {
 			err := logLevel.UnmarshalJSON(tc.data)
 			if tc.fail {
 				assert.Error(t, err)
+				assert.Regexp(t, tc.errorMessage, err.Error())
 			} else {
 				assert.NoError(t, err)
 			}
@@ -274,9 +304,10 @@ func TestConfigSchemaJsonLogLevelUnmarshalJSON(t *testing.T) {
 
 func TestTlsClientAuthUnmarshalJSON(t *testing.T) {
 	testCases := []struct {
-		name string
-		data []byte
-		fail bool
+		name         string
+		data         []byte
+		fail         bool
+		errorMessage *regexp.Regexp
 	}{
 		{
 			name: "valid tls.NoClientCert",
@@ -304,14 +335,16 @@ func TestTlsClientAuthUnmarshalJSON(t *testing.T) {
 			fail: false,
 		},
 		{
-			name: "invalid value",
-			data: []byte(`"unknown"`),
-			fail: true,
+			name:         "invalid value",
+			data:         []byte(`"unknown"`),
+			fail:         true,
+			errorMessage: invalidEnum,
 		},
 		{
-			name: "invalid type",
-			data: []byte(`{}`),
-			fail: true,
+			name:         "invalid type",
+			data:         []byte(`{}`),
+			fail:         true,
+			errorMessage: invalidObject,
 		},
 	}
 
@@ -322,6 +355,7 @@ func TestTlsClientAuthUnmarshalJSON(t *testing.T) {
 			err := clientAuth.UnmarshalJSON(tc.data)
 			if tc.fail {
 				assert.Error(t, err)
+				assert.Regexp(t, tc.errorMessage, err.Error())
 			} else {
 				assert.NoError(t, err)
 			}
@@ -331,9 +365,10 @@ func TestTlsClientAuthUnmarshalJSON(t *testing.T) {
 
 func TestS3UnmarshalJSON(t *testing.T) {
 	testCases := []struct {
-		name string
-		data []byte
-		fail bool
+		name         string
+		data         []byte
+		fail         bool
+		errorMessage *regexp.Regexp
 	}{
 		{
 			name: "valid S3",
@@ -341,19 +376,22 @@ func TestS3UnmarshalJSON(t *testing.T) {
 			fail: false,
 		},
 		{
-			name: "empty endpoint",
-			data: []byte(`{"endpoint":{}}`),
-			fail: true,
+			name:         "empty endpoint",
+			data:         []byte(`{"endpoint":{}}`),
+			fail:         true,
+			errorMessage: invalidField,
 		},
 		{
-			name: "missing endpoint",
-			data: []byte(`{}`),
-			fail: true,
+			name:         "missing endpoint",
+			data:         []byte(`{}`),
+			fail:         true,
+			errorMessage: missingField,
 		},
 		{
-			name: "unmarshall error",
-			data: []byte(`""`),
-			fail: true,
+			name:         "unmarshall error",
+			data:         []byte(`""`),
+			fail:         true,
+			errorMessage: invalidObject,
 		},
 	}
 
@@ -364,6 +402,7 @@ func TestS3UnmarshalJSON(t *testing.T) {
 			err := s3.UnmarshalJSON(tc.data)
 			if tc.fail {
 				assert.Error(t, err)
+				assert.Regexp(t, tc.errorMessage, err.Error())
 			} else {
 				assert.NoError(t, err)
 			}
@@ -373,9 +412,10 @@ func TestS3UnmarshalJSON(t *testing.T) {
 
 func TestCredentialsUnmarshalJSON(t *testing.T) {
 	testCases := []struct {
-		name string
-		data []byte
-		fail bool
+		name         string
+		data         []byte
+		fail         bool
+		errorMessage *regexp.Regexp
 	}{
 		{
 			name: "valid credentials",
@@ -383,19 +423,22 @@ func TestCredentialsUnmarshalJSON(t *testing.T) {
 			fail: false,
 		},
 		{
-			name: "missing password",
-			data: []byte(`{"username":"dGVzdHVzZXIK"}`),
-			fail: true,
+			name:         "missing password",
+			data:         []byte(`{"username":"dGVzdHVzZXIK"}`),
+			fail:         true,
+			errorMessage: missingField,
 		},
 		{
-			name: "missing username",
-			data: []byte(`{"password":"dGVzdHBhc3N3b3JkCg=="}`),
-			fail: true,
+			name:         "missing username",
+			data:         []byte(`{"password":"dGVzdHBhc3N3b3JkCg=="}`),
+			fail:         true,
+			errorMessage: missingField,
 		},
 		{
-			name: "invalid type",
-			data: []byte(`""`),
-			fail: true,
+			name:         "invalid type",
+			data:         []byte(`""`),
+			fail:         true,
+			errorMessage: invalidObject,
 		},
 	}
 
@@ -406,6 +449,7 @@ func TestCredentialsUnmarshalJSON(t *testing.T) {
 			err := credentials.UnmarshalJSON(tc.data)
 			if tc.fail {
 				assert.Error(t, err)
+				assert.Regexp(t, tc.errorMessage, err.Error())
 			} else {
 				assert.NoError(t, err)
 			}
@@ -415,9 +459,10 @@ func TestCredentialsUnmarshalJSON(t *testing.T) {
 
 func TestConfigSchemaJsonUnmarshalJSON(t *testing.T) {
 	testCases := []struct {
-		name string
-		data []byte
-		fail bool
+		name         string
+		data         []byte
+		fail         bool
+		errorMessage *regexp.Regexp
 	}{
 		{
 			name: "empty config",
@@ -445,9 +490,10 @@ func TestConfigSchemaJsonUnmarshalJSON(t *testing.T) {
 			fail: false,
 		},
 		{
-			name: "unmarshall error",
-			data: []byte(`""`),
-			fail: true,
+			name:         "invalid type",
+			data:         []byte(`""`),
+			fail:         true,
+			errorMessage: invalidObject,
 		},
 	}
 
@@ -458,6 +504,7 @@ func TestConfigSchemaJsonUnmarshalJSON(t *testing.T) {
 			err := config.UnmarshalJSON(tc.data)
 			if tc.fail {
 				assert.Error(t, err)
+				assert.Regexp(t, tc.errorMessage, err.Error())
 			} else {
 				assert.NoError(t, err)
 			}

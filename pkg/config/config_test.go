@@ -13,37 +13,221 @@
 package config
 
 import (
+	"os"
+	"path"
+	"regexp"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 )
 
+const (
+	testDir = "test"
+)
+
+var (
+	missingFile      = regexp.MustCompile(`^unable to read config file: open (.*): no such file or directory$`)
+	invalidExtension = regexp.MustCompile(`^file extension unknown$`)
+
+	validJSON = `{
+    "connections": [
+        {
+            "objectscale": {
+                "credentials": {
+                    "username": "dGVzdHVzZXIK",
+                    "password": "dGVzdHBhc3N3b3JkCg=="
+                },
+                "id": "testid",
+                "objectscale-gateway": "gateway.objectscale.test",
+                "objectstore-gateway": "gateway.objectstore.test",
+                "protocols": {
+                    "s3": {
+                        "endpoint": "test.endpoint"
+                    }
+                },
+                "tls": {
+                    "insecure": true
+                }
+            }
+        }
+    ],
+    "cosi-endpoint": "unix:///var/lib/cosi/cosi.sock",
+    "log-level": "info"
+}`
+
+	invalidJSON = `{
+    "connections": [
+        {
+            "objectscale": {
+                "credentials": {
+                    "username": "dGVzdHVzZXIK"
+                },
+                "id": "testid",
+                "objectscale-gateway": "gateway.objectscale.test",
+                "objectstore-gateway": "gateway.objectstore.test",
+                "protocols": {
+                    "s3": {
+                        "endpoint": "test.endpoint"
+                    }
+                },
+                "tls": {
+                    "insecure": true
+                }
+            }
+        }
+    ],
+    "cosi-endpoint": "unix:///var/lib/cosi/cosi.sock",
+    "log-level": "info"
+}`
+
+	validYAML = `connections:
+- objectscale:
+    credentials:
+      username: dGVzdHVzZXIK
+      password: dGVzdHBhc3N3b3JkCg==
+    id: testid
+    objectscale-gateway: gateway.objectscale.test
+    objectstore-gateway: gateway.objectstore.test
+    protocols:
+      s3:
+        endpoint: test.endpoint
+    tls:
+      insecure: true
+cosi-endpoint: unix:///var/lib/cosi/cosi.sock
+log-level: info`
+
+	invalidYAML = `connections:
+- objectscale:
+    credentials:
+      username: dGVzdHVzZXIK
+    id: testid
+    objectscale-gateway: gateway.objectscale.test
+    objectstore-gateway: gateway.objectstore.test
+    protocols:
+      s3:
+        endpoint: test.endpoint
+    tls:
+      insecure: true
+cosi-endpoint: unix:///var/lib/cosi/cosi.sock
+log-level: info`
+)
+
 func TestNew(t *testing.T) {
 	testCases := []struct {
-		name     string
-		filename string
-		fail     bool
+		name         string
+		file         testFile
+		fail         bool
+		errorMessage *regexp.Regexp
 	}{
 		{
-			name:     "missing file",
-			filename: "test/not-found.json",
-			fail:     true,
+			name: "valid JSON",
+			file: testFile{
+				name:    "valid.json",
+				content: validJSON,
+			},
+			fail: false,
 		},
 		{
-			name:     "invalid file extension",
-			filename: "test/config.txt",
-			fail:     true,
+			name: "invalid JSON",
+			file: testFile{
+				name:    "invalid.json",
+				content: invalidJSON,
+			},
+			fail:         true,
+			errorMessage: missingField,
+		},
+		{
+			name: "valid YAML",
+			file: testFile{
+				name:    "valid.yaml",
+				content: validYAML,
+			},
+			fail: false,
+		},
+		{
+			name: "valid YML",
+			file: testFile{
+				name:    "valid.yml",
+				content: validYAML,
+			},
+			fail: false,
+		},
+		{
+			name: "invalid YAML",
+			file: testFile{
+				name:    "invalid.yaml",
+				content: invalidYAML,
+			},
+			fail:         true,
+			errorMessage: missingField,
+		},
+		{
+			name: "invalid YML",
+			file: testFile{
+				name:    "invalid.yml",
+				content: invalidYAML,
+			},
+			fail:         true,
+			errorMessage: missingField,
+		},
+		{
+			name: "missing file",
+			file: testFile{
+				skip: true,
+				name: "missing.json",
+			},
+			fail:         true,
+			errorMessage: missingFile,
+		},
+		{
+			name: "invalid file extension",
+			file: testFile{
+				name: "invalid.txt",
+			},
+			fail:         true,
+			errorMessage: invalidExtension,
 		},
 	}
 
+	// create test dir
+	_ = os.Mkdir(testDir, 0777)
+
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			_, err := New(tc.filename)
+			err := tc.file.Write()
+			if err != nil {
+				// unexpected error, should panic
+				panic(err)
+			}
+
+			testfile := path.Join(testDir, tc.file.name)
+
+			x, err := New(testfile)
 			if tc.fail {
-				assert.Error(t, err)
+				if assert.Errorf(t, err, "%+#v", x) {
+					assert.Regexp(t, tc.errorMessage, err.Error())
+				}
 			} else {
 				assert.NoError(t, err)
 			}
 		})
 	}
+
+	// delete test dir
+	_ = os.RemoveAll("test")
+}
+
+type testFile struct {
+	name    string
+	content string
+	skip    bool
+}
+
+func (tf *testFile) Write() error {
+	// if file should not be written, skip
+	if tf.skip == true {
+		return nil
+	}
+
+	return os.WriteFile(path.Join(testDir, tf.name), []byte(tf.content), 0644)
 }

@@ -32,21 +32,34 @@ func New(filename string) (*ConfigSchemaJson, error) {
 		return nil, fmt.Errorf("unable to read config file: %w", err)
 	}
 
-	cfg := &ConfigSchemaJson{}
 	if strings.HasSuffix(filename, ".json") {
-
-		err = json.Unmarshal(b, cfg)
-		if err != nil {
-			return nil, fmt.Errorf("failed to unmarshal config from JSON: %w", err)
-		}
+		return NewJSON(b)
 	} else if strings.HasSuffix(filename, ".yaml") || strings.HasSuffix(filename, ".yml") {
-		err = yaml.Unmarshal(b, cfg)
-		if err != nil {
-			return nil, fmt.Errorf("failed to unmarshal config from YAML: %w", err)
-		}
+		return NewYAML(b)
 	} else {
 		return nil, errors.New("file extension unknown")
 	}
+}
+
+func NewJSON(bytes []byte) (*ConfigSchemaJson, error) {
+	cfg := &ConfigSchemaJson{}
+
+	err := json.Unmarshal(bytes, cfg)
+	if err != nil {
+		return nil, err
+	}
 
 	return cfg, nil
+}
+
+func NewYAML(bytes []byte) (*ConfigSchemaJson, error) {
+	var body map[string]interface{}
+	err := yaml.Unmarshal(bytes, &body)
+	if err != nil {
+		return nil, err
+	}
+
+	b, _ := json.Marshal(body)
+
+	return NewJSON(b)
 }
