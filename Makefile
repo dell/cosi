@@ -52,7 +52,6 @@ tag:	##tag the release
 
 # Builds dockerfile without tagging
 docker:
-	go generate ./...
 	make --file=docker.mk docker
 
 # Pushes container to the repository
