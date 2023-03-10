@@ -16,9 +16,9 @@
 
 # DEFAULT values
 # Image from https://catalog.redhat.com/software/containers/ubi8/ubi-minimal/5c359a62bed8bd75a2c3fba8
-DEFAULT_BASEIMAGE=registry.access.redhat.com/ubi8/ubi-minimal
+DEFAULT_BASEIMAGE=registry.access.redhat.com/ubi8/ubi-micro
 # digest for 8.7-1085
-DEFAULT_DIGEST=sha256:ab03679e683010d485ef0399e056b09a38d7843ba4a36ee7dec337dd0037f7a7
+DEFAULT_DIGEST=sha256:c530ca8805f8cae3e469e12d985531f8d2ac259e150f935abf80339ea055ccbe
 DEFAULT_GOVERSION=1.19
 DEFAULT_REGISTRY=sample_registry
 DEFAULT_IMAGENAME=cosi-driver
