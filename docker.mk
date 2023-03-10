@@ -29,8 +29,8 @@ endif
 
 docker:
 	@echo "Base Images is set to: $(BASEIMAGE)"
-	@echo "Building: $(REGISTRY)/$(IMAGENAME):$(IMAGETAG)"
-	$(BUILDER) build -t "$(REGISTRY)/$(IMAGENAME):$(IMAGETAG)" --build-arg BASEIMAGE=$(BASEIMAGE) --build-arg GOVERSION=$(GOVERSION) --build-arg DIGEST=$(DIGEST) .
+	@echo "Building: $(IMAGENAME):$(IMAGETAG)"
+	$(BUILDER) build -t "$(IMAGENAME):$(IMAGETAG)" --build-arg BASEIMAGE=$(BASEIMAGE) --build-arg GOVERSION=$(GOVERSION) --build-arg DIGEST=$(DIGEST) .
 
 push:   
 	@echo "Pushing: $(REGISTRY)/$(IMAGENAME):$(IMAGETAG)"
