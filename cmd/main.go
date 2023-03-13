@@ -68,7 +68,7 @@ func main() {
 		os.Exit(1)
 	}()
 
-	log.Infoln("COSI driver startwing with backendID: ", *backendID, " and namespace: ", *namespace, " and port: ", *port)
+	log.Info("COSI driver starting with backendID: ", *backendID, " and namespace: ", *namespace, " and port: ", *port)
 	// Run the driver.
 	err := driver.Run(ctx, "cosi-driver", *backendID, *namespace, *port)
 	if err != nil {
