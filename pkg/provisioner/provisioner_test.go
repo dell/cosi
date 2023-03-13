@@ -126,6 +126,19 @@ func testDriverCreateBucket(t *testing.T) {
 				"X-TEST/Buckets/Get/force-fail": "abc",
 			},
 		},
+		{
+			description:   "cannot create bucket",
+			inputName:     "FORCEFAIL-bucket-valid",
+			expectedError: status.Error(codes.Internal, "Bucket was not sucessfully created"),
+			server: Server{
+				mgmtClient: fake.NewClientSet(),
+				namespace:  namespace,
+				backendID:  testID,
+			},
+			parameters: map[string]string{
+				"clientID": testID,
+			},
+		},
 	}
 
 	for _, scenario := range testCases {
