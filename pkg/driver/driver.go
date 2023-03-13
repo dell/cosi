@@ -66,7 +66,7 @@ func Run(ctx context.Context, name, backendID, namespace string, port int) error
 		},
 	)
 
-	provisionerServer := provisioner.New(mngtClient, backendID, namespace)
+	provisionerServer := objectscale.New(mngtClient, backendID, namespace)
 	// Some options for gRPC server may be needed
 	options := []grpc.ServerOption{}
 	// Crate new gRPC server

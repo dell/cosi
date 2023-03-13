@@ -16,12 +16,12 @@ import (
 	"context"
 	"strings"
 
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
+
 	driver "github.com/dell/cosi-driver/pkg/provisioner/virtual-driver"
 	log "github.com/sirupsen/logrus"
 	cosi "sigs.k8s.io/container-object-storage-interface-spec"
-
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 )
 
 // Server is an implementation of a provisioner server.
