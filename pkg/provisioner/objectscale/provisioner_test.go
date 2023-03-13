@@ -10,19 +10,20 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package provisioner
+package objectscale
 
 import (
 	"context"
 	"testing"
 
-	cosi "sigs.k8s.io/container-object-storage-interface-spec"
-
-	"github.com/dell/goobjectscale/pkg/client/fake"
-	"github.com/dell/goobjectscale/pkg/client/model"
 	"github.com/stretchr/testify/assert"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+
+	cosi "sigs.k8s.io/container-object-storage-interface-spec"
+
+	"github.com/emcecs/objectscale-management-go-sdk/pkg/client/fake"
+	"github.com/emcecs/objectscale-management-go-sdk/pkg/client/model"
 )
 
 // FIXME: those are only smoke tests, no real testing is done here

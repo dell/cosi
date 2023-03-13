@@ -10,12 +10,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package provisioner
+package objectscale
 
 import (
 	"context"
 	"errors"
 	"strings"
+
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 
 	_ "github.com/emcecs/objectscale-management-go-sdk/pkg/client/fake"
 	log "github.com/sirupsen/logrus"
@@ -23,8 +26,6 @@ import (
 
 	"github.com/emcecs/objectscale-management-go-sdk/pkg/client/api"
 	"github.com/emcecs/objectscale-management-go-sdk/pkg/client/model"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 )
 
 type Server struct {
