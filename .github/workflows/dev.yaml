@@ -14,7 +14,7 @@ jobs:
   #     - name: Run the formatter, linter, and vetter
   #       uses: dell/common-github-actions/go-code-formatter-linter-vetter@main
   #       with:
-  #         directories: ./pkg/... #TODO: change to pkg
+  #         directories: ./pkg/...
 
   gosec:
     runs-on: ubuntu-latest
@@ -49,7 +49,7 @@ jobs:
       - name: Run the forbidden words scan
         uses: dell/common-github-actions/code-sanitizer@main
         with:
-          args: /github/workspace/pkg #TODO: change to pkg
+          args: /github/workspace/pkg
 
   tests:
     name: Run Go unit tests and check package coverage

@@ -43,7 +43,7 @@ clean:	##clean directory
 	go clean
 
 .PHONY: build
-build: ##build project
+build:	##build project
 	GOOS=linux CGO_ENABLED=0 go build -ldflags="-s -w" -o ${COSI_BUILD_DIR}/cosi-driver ${COSI_BUILD_PATH}
 
 # Tags the release with the Tag parameters set above
@@ -52,7 +52,7 @@ tag:	##tag the release
 	git tag --annotate --message=$(TAGMSG) v$(MAJOR).$(MINOR).$(PATCH)$(NOTES)
 
 # Builds dockerfile
-docker:
+docker:	##build docker container
 	make --file=docker.mk docker
 
 # Pushes container to the repository
