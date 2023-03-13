@@ -9,19 +9,23 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-#
-# overrides file
-# this file, included from the Makefile, will overlay default values with environment variables
-#
+
+# overrides.mk file
+# This file, included from the Makefile, will overlay default values with environment variables:
+# BASEIMAGE, DIGEST, GOVERSION, REGISTRY, IMAGENAME, IMAGETAG.
 
 # DEFAULT values
 # Image from https://catalog.redhat.com/software/containers/ubi8/ubi-minimal/5c359a62bed8bd75a2c3fba8
 DEFAULT_BASEIMAGE=registry.access.redhat.com/ubi8/ubi-micro
-# digest for 8.7-1085
+# DIGEST is the digest for version 8.7-1085 of ubi-micro.
 DEFAULT_DIGEST=sha256:c530ca8805f8cae3e469e12d985531f8d2ac259e150f935abf80339ea055ccbe
+# GOVERSION is a build version for driver.
 DEFAULT_GOVERSION=1.19
+# REGISTRY in which COSI-Driver image resides.
 DEFAULT_REGISTRY=sample_registry
+# IMAGENAME is COSI-Driver image name.
 DEFAULT_IMAGENAME=cosi-driver
+# IMAGETAG by default is latest commit SHA.
 DEFAULT_IMAGETAG:=$(shell git rev-parse HEAD)
 
 # set the BASEIMAGE if needed
