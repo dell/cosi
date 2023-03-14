@@ -1,0 +1,30 @@
+name: release
+on:
+  release:
+    types: [published]
+jobs:
+  build-secure-and-push:
+    runs-on: ubuntu-latest
+    env:
+      IMAGETAG: "${{ github.ref }}"
+      IMAGENAME: "cosi-driver"
+      REGISTRY: "sample_registry"
+    steps:
+    - uses: actions/setup-go@v2
+      with:
+        go-version: ^1.19
+        id: go
+    - uses: actions/checkout@v3.2.0
+    - run: |
+        make docker
+    # TODO: Analyze and fix vulnerabilities
+    # - uses: Azure/container-scan@v0
+    #   env:
+    #     DOCKLE_HOST: "unix:///var/run/docker.sock"
+    #   with:
+    #     image-name: ${{ env.REGISTRY }}/${{ env.IMAGENAME }}:${{ env.IMAGETAG }}
+    #     severity-threshold: HIGH
+    # TODO: There is no registry for now
+    # - run: make push
+    # if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
+  

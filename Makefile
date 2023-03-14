@@ -24,13 +24,6 @@ else
 GOBIN=$(shell go env GOBIN)
 endif
 
-# Tag parameters
-MAJOR=1
-MINOR=0
-PATCH=0
-NOTES=-beta
-TAGMSG="COSI Spec 1.0"
-
 help:	##show help
 	@fgrep --no-filename "##" $(MAKEFILE_LIST) | fgrep --invert-match fgrep | sed --expression='s/\\$$//' | sed --expression='s/##//'
 
@@ -39,26 +32,23 @@ format:	##run gofmt
 
 clean:	##clean directory
 	rm --force core/core.gen.go
+	rm --force semver.mk
 	go clean
 
 .PHONY: build
-build: ##build project
+build:	##build project
 	GOOS=linux CGO_ENABLED=0 go build -ldflags="-s -w" -o ${COSI_BUILD_DIR}/cosi-driver ${COSI_BUILD_PATH}
 
-# Tags the release with the Tag parameters set above
-tag:	##tag the release
-	-git tag --delete v$(MAJOR).$(MINOR).$(PATCH)$(NOTES)
-	git tag --annotate --message=$(TAGMSG) v$(MAJOR).$(MINOR).$(PATCH)$(NOTES)
-
-# Generates the docker container (but does not push)
-docker: tag	##generate the docker container
-	go generate ./...
-	go run core/semver/semver.go -f mk >semver.mk
-	make --file=docker.mk docker
+# Builds dockerfile
+docker:	##generate the docker container
+	@echo "Base Images is set to: $(BASEIMAGE)"
+	@echo "Building: $(REGISTRY)/$(IMAGENAME):$(IMAGETAG)"
+	docker build -t "$(REGISTRY)/$(IMAGENAME):$(IMAGETAG)" --build-arg BASEIMAGE=$(BASEIMAGE) --build-arg GOVERSION=$(GOVERSION) --build-arg DIGEST=$(DIGEST) .
 
 # Pushes container to the repository
 push: docker	##generate and push the docker container to repository
-	make --file=docker.mk push
+	@echo "Pushing: $(REGISTRY)/$(IMAGENAME):$(IMAGETAG)"
+	docker push "$(REGISTRY)/$(IMAGENAME):$(IMAGETAG)"
 
 # Windows or Linux; requires no hardware
 unit-test:	##run unit tests
@@ -68,5 +58,3 @@ unit-test:	##run unit tests
 integration-test:	##run integration test (Linux only)
 	( cd tests/integration; sh run.sh )
 
-release:	##generate and push release
-	BUILD_TYPE="R" $(MAKE) clean build docker push

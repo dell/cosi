@@ -1,11 +1,7 @@
 package util
 
 import (
-	"fmt"
-
 	log "github.com/sirupsen/logrus"
-
-	"github.com/dell/cosi-driver/core"
 )
 
 // SetLogLevel sets the log level based on the logLevel string
@@ -26,9 +22,4 @@ func SetLogLevel(logLevel string) {
 	case "panic":
 		log.SetLevel(log.PanicLevel)
 	}
-}
-
-// PrintVersion
-func PrintVersion() {
-	fmt.Println(core.SemVer)
 }

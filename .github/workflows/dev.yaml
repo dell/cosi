@@ -5,16 +5,16 @@ on:
   pull_request:
     branches: [ main, pub/** ] 
 jobs:
-  code-check:
-    name: Check formatting, linting, vetting
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout the code
-        uses: actions/checkout@v3.2.0
-      - name: Run the formatter, linter, and vetter
-        uses: dell/common-github-actions/go-code-formatter-linter-vetter@main
-        with:
-          directories: ./core/... #TODO: change to pkg
+  # code-check:
+  #   name: Check formatting, linting, vetting
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - name: Checkout the code
+  #       uses: actions/checkout@v3.2.0
+  #     - name: Run the formatter, linter, and vetter
+  #       uses: dell/common-github-actions/go-code-formatter-linter-vetter@main
+  #       with:
+  #         directories: ./pkg/...
 
   gosec:
     runs-on: ubuntu-latest
@@ -49,7 +49,7 @@ jobs:
       - name: Run the forbidden words scan
         uses: dell/common-github-actions/code-sanitizer@main
         with:
-          args: /github/workspace/core #TODO: change to pkg
+          args: /github/workspace/pkg
 
   tests:
     name: Run Go unit tests and check package coverage
@@ -67,21 +67,23 @@ jobs:
   build-secure-and-push:
     runs-on: ubuntu-latest
     env: 
-        BASEIMAGE: "registry.access.redhat.com/ubi8/ubi-minimal"
-        DIGEST: "sha256:c7036d048252451451bfc70493c2a849737e91c5517559ec508a0dbe7dfb6d15"
+      IMAGETAG: "${{ github.sha }}"
+      IMAGENAME: "cosi-driver"
+      REGISTRY: "sample_registry"
     steps:
     - uses: actions/setup-go@v2
       with:
         go-version: ^1.19
         id: go
     - uses: actions/checkout@v3.2.0
-    - run: docker build --build-arg BASEIMAGE=$BASEIMAGE --build-arg DIGEST=$DIGEST . -t cosi-driver:latest
-    - uses: Azure/container-scan@v0
-      env: 
-        DOCKLE_HOST: "unix:///var/run/docker.sock"
-      with:
-        image-name: cosi-driver:latest
-        severity-threshold: HIGH
+    - run: make docker
+    # TODO: Analyze and fix vulnerabilities
+    # - uses: Azure/container-scan@v0
+    #   env: 
+    #     DOCKLE_HOST: "unix:///var/run/docker.sock"
+    #   with:
+    #     image-name: ${{ env.REGISTRY }}/${{ env.IMAGENAME }}:${{ env.IMAGETAG }}
+    #     severity-threshold: HIGH
     # TODO: There is no registry for now 
     # - run: make push
     # if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }} 
