@@ -30,8 +30,8 @@ type Server struct {
 
 var _ cosi.IdentityServer = (*Server)(nil)
 
-// FIXME: this is boilerplate, needs proper constructor
 // New returns new server.
+// FIXME: this is boilerplate, needs proper constructor
 func New(provisioner string) *Server {
 	return &Server{
 		name: provisioner,
