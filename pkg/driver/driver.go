@@ -14,21 +14,17 @@ package driver
 
 import (
 	"context"
-	"crypto/tls"
 	"flag"
-	"fmt"
 	"net"
-	"net/http"
 
 	"google.golang.org/grpc"
 
-	objectscaleRest "github.com/dell/goobjectscale/pkg/client/rest"
-	objectscaleClient "github.com/dell/goobjectscale/pkg/client/rest/client"
 	log "github.com/sirupsen/logrus"
 	spec "sigs.k8s.io/container-object-storage-interface-spec"
 
+	"github.com/dell/cosi-driver/pkg/config"
 	"github.com/dell/cosi-driver/pkg/identity"
-	"github.com/dell/cosi-driver/pkg/provisioner/objectscale"
+	"github.com/dell/cosi-driver/pkg/provisioner"
 )
 
 var (
@@ -40,33 +36,24 @@ var (
 )
 
 // Run starts the gRPC server for the identity and provisioner servers
-func Run(ctx context.Context, name, backendID, namespace string, port int) error {
+func Run(ctx context.Context, config *config.ConfigSchemaJson, name string) error {
 	// Setup identity server and provisioner server
 	identityServer := identity.New(name)
 
-	/* #nosec */
-	// ObjectScale clientset
-	transport := &http.Transport{
-		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
-	}
-	// FIXME: not validating if client should be secure
-	unsafeClient := &http.Client{Transport: transport}
+	driverset := &provisioner.Driverset{}
+	for _, cfg := range config.Connections {
+		driver, err := provisioner.NewVirtualDriver(cfg)
+		if err != nil {
+			return err
+		}
 
-	objectscaleAuthUser := objectscaleClient.AuthUser{
-		Gateway:  *objectscaleGateway,
-		Username: *objectscaleUser,
-		Password: *objectscalePassword,
+		err = driverset.Add(driver)
+		if err != nil {
+			return err
+		}
 	}
-	mngtClient := objectscaleRest.NewClientSet(
-		&objectscaleClient.Simple{
-			Endpoint:       *objectstoreGateway,
-			Authenticator:  &objectscaleAuthUser,
-			HTTPClient:     unsafeClient,
-			OverrideHeader: false,
-		},
-	)
 
-	provisionerServer := objectscale.New(mngtClient, backendID, namespace)
+	provisionerServer := provisioner.New(driverset)
 	// Some options for gRPC server may be needed
 	options := []grpc.ServerOption{}
 	// Crate new gRPC server
@@ -76,7 +63,7 @@ func Run(ctx context.Context, name, backendID, namespace string, port int) error
 	spec.RegisterProvisionerServer(server, provisionerServer)
 
 	// Create shared listener for gRPC server
-	lis, err := net.Listen("tcp", fmt.Sprintf(":%d", port))
+	lis, err := net.Listen("tcp", config.CosiEndpoint)
 	if err != nil {
 		return err
 	}

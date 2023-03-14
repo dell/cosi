@@ -44,7 +44,11 @@ func TestServer(t *testing.T) {
 
 // testDriverNew tests server initialization
 func testDriverNew(t *testing.T) {
-	driver := New(fake.NewClientSet(), "id", "namespace")
+	driver := Server{
+		mgmtClient: fake.NewClientSet(),
+		backendID:  "id",
+		namespace:  "namespace",
+	}
 	assert.Equal(t, "id", driver.backendID)
 	assert.Equal(t, "namespace", driver.namespace)
 	assert.NotNil(t, driver.mgmtClient)
@@ -52,7 +56,11 @@ func testDriverNew(t *testing.T) {
 
 // testDriverID tests extending COSI interface by adding driver ID
 func testDriverID(t *testing.T) {
-	driver := New(fake.NewClientSet(), "id", "namespace")
+	driver := Server{
+		mgmtClient: fake.NewClientSet(),
+		backendID:  "id",
+		namespace:  "namespace",
+	}
 	assert.Equal(t, "id", driver.ID())
 }
 
