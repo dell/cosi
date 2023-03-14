@@ -26,7 +26,7 @@ import (
 
 // Server is an implementation of a provisioner server.
 type Server struct {
-	driverset *driver.Driverset
+	driverset *Driverset
 }
 
 var _ cosi.ProvisionerServer = (*Server)(nil)

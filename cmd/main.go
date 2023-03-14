@@ -21,15 +21,15 @@ import (
 
 	log "github.com/sirupsen/logrus"
 
+	"github.com/dell/cosi-driver/pkg/config"
 	"github.com/dell/cosi-driver/pkg/driver"
 	"github.com/dell/cosi-driver/util"
 )
 
 var (
-	logLevel  = flag.String("log-level", "debug", "Log level (debug, info, warn, error, fatal, panic)")
-	port      = flag.Int("port", 9000, "Port to listen on")
-	backendID = flag.String("backendID", "123", "")
-	namespace = flag.String("namespace", "abc", "")
+	versionFlag = flag.Bool("version", false, "Print the version and exit.")
+	logLevel    = flag.String("log-level", "debug", "Log level (debug, info, warn, error, fatal, panic)")
+	configFile  = flag.String("config", "/cosi/config.yaml", "path to config file")
 )
 
 // init is run before main and is used to define command line flags.
@@ -44,6 +44,11 @@ func main() {
 	// Create a context that is canceled when the SIGINT or SIGTERM signal is received.
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
+
+	cfg, err := config.New(*configFile)
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	// Create a channel to listen for signals.
 	sigs := make(chan os.Signal, 1)
@@ -64,7 +69,7 @@ func main() {
 
 	log.Info("COSI driver starting with backendID: ", *backendID, " and namespace: ", *namespace, " and port: ", *port)
 	// Run the driver.
-	err := driver.Run(ctx, "cosi-driver", *backendID, *namespace, *port)
+	err = driver.Run(ctx, cfg, "cosi-driver")
 	if err != nil {
 		log.Fatal(err)
 	}

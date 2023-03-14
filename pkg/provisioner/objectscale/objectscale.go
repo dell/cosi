@@ -14,18 +14,24 @@ package objectscale
 
 import (
 	"context"
+	"crypto/tls"
 	"errors"
+	"net/http"
 	"strings"
-
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
-
-	_ "github.com/emcecs/objectscale-management-go-sdk/pkg/client/fake"
-	log "github.com/sirupsen/logrus"
-	cosi "sigs.k8s.io/container-object-storage-interface-spec"
 
 	"github.com/emcecs/objectscale-management-go-sdk/pkg/client/api"
 	"github.com/emcecs/objectscale-management-go-sdk/pkg/client/model"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
+
+	driver "github.com/dell/cosi-driver/pkg/provisioner/virtual_driver"
+	_ "github.com/emcecs/objectscale-management-go-sdk/pkg/client/fake"
+	objectscaleRest "github.com/emcecs/objectscale-management-go-sdk/pkg/client/rest"
+	objectscaleClient "github.com/emcecs/objectscale-management-go-sdk/pkg/client/rest/client"
+	log "github.com/sirupsen/logrus"
+	cosi "sigs.k8s.io/container-object-storage-interface-spec"
+
+	"github.com/dell/cosi-driver/pkg/config"
 )
 
 type Server struct {
@@ -34,15 +40,37 @@ type Server struct {
 	namespace  string
 }
 
-var _ cosi.ProvisionerServer = (*Server)(nil)
+var _ driver.Driver = (*Server)(nil)
 
 // Initialize Server based on the config file.
-func New(mgmtClient api.ClientSet, backendID, namespace string) *Server {
+func New(config *config.Objectscale) (*Server, error) {
+	/* #nosec */
+	// ObjectScale clientset
+	transport := &http.Transport{
+		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+	}
+
+	// FIXME: not validating if client should be secure
+	unsafeClient := &http.Client{Transport: transport}
+
+	objectscaleAuthUser := objectscaleClient.AuthUser{
+		Gateway:  config.ObjectscaleGateway,
+		Username: config.Credentials.Username,
+		Password: config.Credentials.Password,
+	}
+	mgmtClient := objectscaleRest.NewClientSet(
+		&objectscaleClient.Simple{
+			Endpoint:       config.ObjectstoreGateway,
+			Authenticator:  &objectscaleAuthUser,
+			HTTPClient:     unsafeClient,
+			OverrideHeader: false,
+		},
+	)
+
 	return &Server{
 		mgmtClient: mgmtClient,
-		backendID:  backendID,
-		namespace:  namespace,
-	}
+		backendID:  config.Id,
+	}, nil
 }
 
 // Extend COSI interface by adding ID method.

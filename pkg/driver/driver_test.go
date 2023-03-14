@@ -16,6 +16,8 @@ import (
 	"context"
 	"testing"
 	"time"
+
+	"github.com/dell/cosi-driver/pkg/config"
 )
 
 func TestRun(t *testing.T) {
@@ -52,7 +54,7 @@ func TestRun(t *testing.T) {
 
 			errCh := make(chan error, 1)
 			go func() {
-				errCh <- Run(ctx, "test", tc.backendID, tc.namespace, tc.port)
+				errCh <- Run(ctx, &config.ConfigSchemaJson{}, "test") // FIXME: config is not provided, this will fail!
 			}()
 
 			// Wait for server to start
@@ -60,7 +62,7 @@ func TestRun(t *testing.T) {
 
 			if tc.expectedError {
 				// Test error is returned when port is already in use
-				err = Run(context.Background(), "test", tc.backendID, tc.namespace, tc.port)
+				err = Run(context.Background(), &config.ConfigSchemaJson{}, "test") // FIXME: config is not provided, this will fail!
 				if err == nil {
 					t.Errorf("Expected error, but got nil")
 				}

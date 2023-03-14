@@ -1,35 +1,16 @@
-package virtual_driver
+package provisioner
 
 import (
-	cosi "sigs.k8s.io/container-object-storage-interface-spec"
+	driver "github.com/dell/cosi-driver/pkg/provisioner/virtual_driver"
 )
-
-type Driver interface {
-	// each driver must implement default ProvisionerServer interface specified by COSI specification
-	cosi.ProvisionerServer
-
-	// additionally, driver should return ID, specific to the platform, that allows to identify which platform,
-	// and which hardware OSP this driver is configured to support.
-	//
-	// E.g. for ObjectScale, this should be ObjectScaleID/ObjectStoreID
-	//
-	// ID value should be stored in:
-	// - CreateBucketRequest.Parameters["id"]
-	// - GrantBucketAccessRequest.Parameters["id"]
-	//
-	// ID value should be extracted from:
-	// - DeleteBucketRequest.BucketID
-	// - DriverRevokeBucketAccessRequest.BucketID
-	ID() string
-}
 
 // Driverset is a structure holding list of Drivers, that can be added or extracted based on the ID
 type Driverset struct {
-	drivers map[string]Driver
+	drivers map[string]driver.Driver
 }
 
 // Add is used to add new driver to the Driverset
-func (d *Driverset) Add(driver Driver) error {
+func (d *Driverset) Add(driver driver.Driver) error {
 	id := driver.ID()
 	if _, ok := d.drivers[id]; ok == true {
 		return ErrDriverDuplicate{id}
@@ -41,7 +22,7 @@ func (d *Driverset) Add(driver Driver) error {
 }
 
 // Get is used to get driver from the Driverset
-func (d Driverset) Get(id string) (Driver, error) {
+func (d Driverset) Get(id string) (driver.Driver, error) {
 	driver, ok := d.drivers[id]
 	if !ok {
 		return nil, ErrNotConfigured{id}
