@@ -5,16 +5,16 @@ on:
   pull_request:
     branches: [ main, pub/** ] 
 jobs:
-  # code-check:
-  #   name: Check formatting, linting, vetting
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - name: Checkout the code
-  #       uses: actions/checkout@v3.2.0
-  #     - name: Run the formatter, linter, and vetter
-  #       uses: dell/common-github-actions/go-code-formatter-linter-vetter@main
-  #       with:
-  #         directories: ./pkg/...
+  code-check:
+    name: Check formatting, linting, vetting
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout the code
+        uses: actions/checkout@v3.2.0
+      - name: Run the formatter, linter, and vetter
+        uses: dell/common-github-actions/go-code-formatter-linter-vetter@main
+        with:
+          directories: ./pkg/...
 
   gosec:
     runs-on: ubuntu-latest

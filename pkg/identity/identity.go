@@ -23,12 +23,14 @@ import (
 	cosi "sigs.k8s.io/container-object-storage-interface-spec"
 )
 
+// Server is an implementation of COSI identity server.
 type Server struct {
 	name string
 }
 
 var _ cosi.IdentityServer = (*Server)(nil)
 
+// New returns new server.
 // FIXME: this is boilerplate, needs proper constructor
 func New(provisioner string) *Server {
 	return &Server{
@@ -36,6 +38,7 @@ func New(provisioner string) *Server {
 	}
 }
 
+// DriverGetInfo returns name of server.
 func (srv *Server) DriverGetInfo(ctx context.Context,
 	req *cosi.DriverGetInfoRequest) (*cosi.DriverGetInfoResponse, error) {
 
