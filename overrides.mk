@@ -20,7 +20,7 @@ DEFAULT_BASEIMAGE=registry.access.redhat.com/ubi8/ubi-micro
 # DIGEST is the digest for version 8.7-1085 of ubi-micro.
 DEFAULT_DIGEST=sha256:c530ca8805f8cae3e469e12d985531f8d2ac259e150f935abf80339ea055ccbe
 # GOVERSION is a build version for driver.
-DEFAULT_GOVERSION=1.19
+DEFAULT_GOVERSION:=$(shell sed -En 's/^go (.*)$$/\1/p' go.mod)
 # REGISTRY in which COSI-Driver image resides.
 DEFAULT_REGISTRY=sample_registry
 # IMAGENAME is COSI-Driver image name.
