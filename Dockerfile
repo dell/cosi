@@ -10,19 +10,21 @@
 # See the License for the specific language governing permissions and
 # limitations under the License
 
+# BASEIMAGE is a base image for final COSI-Driver container.
 ARG BASEIMAGE
+# DIGEST is a hash-version of a used BASEIMAGE.
 ARG DIGEST
+# GOVERSION is a Go version used for bulding driver.
+ARG GOVERSION
 
-# Stage to build the driver
-#FROM golang:${GOVERSION} as builder
-# ARG GOPROXY
-# RUN mkdir -p /go/src
-# COPY ./ /go/src/
-# WORKDIR /go/src/
-# RUN CGO_ENABLED=0 \
-#     make build
+# First stage: building binary of the driver.
+FROM golang:${GOVERSION} as builder
+WORKDIR /cosi-driver
+COPY . /cosi-driver/
+RUN make build
 
-# Stage to build the driver image
-FROM $BASEIMAGE@${DIGEST} AS final
-RUN microdnf update -y && \
-    microdnf clean all
+# Second stage: building final environment for running the driver.
+FROM ${BASEIMAGE}@${DIGEST} AS final
+WORKDIR /cosi-driver
+COPY --from=builder /cosi-driver/build/cosi-driver .
+ENTRYPOINT ["./cosi-driver"]

@@ -26,11 +26,10 @@ import (
 )
 
 var (
-	versionFlag = flag.Bool("version", false, "Print the version and exit.")
-	logLevel    = flag.String("log-level", "debug", "Log level (debug, info, warn, error, fatal, panic)")
-	port        = flag.Int("port", 9000, "Port to listen on")
-	backendID   = flag.String("backendID", "123", "")
-	namespace   = flag.String("namespace", "abc", "")
+	logLevel  = flag.String("log-level", "debug", "Log level (debug, info, warn, error, fatal, panic)")
+	port      = flag.Int("port", 9000, "Port to listen on")
+	backendID = flag.String("backendID", "123", "")
+	namespace = flag.String("namespace", "abc", "")
 )
 
 // init is run before main and is used to define command line flags.
@@ -39,11 +38,6 @@ func init() {
 	flag.Parse()
 	// Set the log level.
 	util.SetLogLevel(*logLevel)
-	// If the version flag is specified, print the version and exit.
-	if *versionFlag {
-		util.PrintVersion()
-		os.Exit(0)
-	}
 }
 
 func main() {
@@ -68,6 +62,7 @@ func main() {
 		os.Exit(1)
 	}()
 
+	log.Info("COSI driver starting with backendID: ", *backendID, " and namespace: ", *namespace, " and port: ", *port)
 	// Run the driver.
 	err := driver.Run(ctx, "cosi-driver", *backendID, *namespace, *port)
 	if err != nil {

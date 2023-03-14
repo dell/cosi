@@ -33,9 +33,9 @@ The dependencies for this project are in the go.mod file.
 
 To build the source, execute `make clean build`.
 
-To run unit tests, execute `make unit-test`.
-
 To build an image, execute `make docker`.
+
+Default parameters for building an image are defined in overrides.mk. Run `make -f overrides.mk overrides-help` to display current values.
 
 <!-- You can run an integration test on a Linux system by populating the file `env.sh` with values for your Dell PowerMax systems and then run "`make integration-test`". -->
 

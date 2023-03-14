@@ -9,20 +9,24 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-#
-# overrides file
-# this file, included from the Makefile, will overlay default values with environment variables
-#
+
+# overrides.mk file
+# This file, included from the Makefile, will overlay default values with environment variables:
+# BASEIMAGE, DIGEST, GOVERSION, REGISTRY, IMAGENAME, IMAGETAG.
 
 # DEFAULT values
-DEFAULT_BASEIMAGE="registry.access.redhat.com/ubi8/ubi-minimal" # TODO: check cosi registry 
-# digest for 8.6-902.1661794353
-DEFAULT_DIGEST="sha256:c8c1c0f893a7ba679fd65863f2d1389179a92957c31e95521b3290c6b6fc4a76" # TODO: is it require? 
-DEFAULT_GOVERSION="1.19"
-DEFAULT_REGISTRY="sample_registry"
-DEFAULT_IMAGENAME="cosi-driver"
-DEFAULT_BUILDSTAGE="final"
-DEFAULT_IMAGETAG=""
+# Image from https://catalog.redhat.com/software/containers/ubi8/ubi-minimal/5c359a62bed8bd75a2c3fba8
+DEFAULT_BASEIMAGE=registry.access.redhat.com/ubi8/ubi-micro
+# DIGEST is the digest for version 8.7-1085 of ubi-micro.
+DEFAULT_DIGEST=sha256:c530ca8805f8cae3e469e12d985531f8d2ac259e150f935abf80339ea055ccbe
+# GOVERSION is a build version for driver.
+DEFAULT_GOVERSION:=$(shell sed -En 's/^go (.*)$$/\1/p' go.mod)
+# REGISTRY in which COSI-Driver image resides.
+DEFAULT_REGISTRY=sample_registry
+# IMAGENAME is COSI-Driver image name.
+DEFAULT_IMAGENAME=cosi-driver
+# IMAGETAG by default is latest commit SHA.
+DEFAULT_IMAGETAG:=$(shell git rev-parse HEAD)
 
 # set the BASEIMAGE if needed
 ifeq ($(BASEIMAGE),)
@@ -50,20 +54,8 @@ export IMAGENAME="$(DEFAULT_IMAGENAME)"
 endif
 
 #set the IMAGETAG if needed
-ifneq ($(DEFAULT_IMAGETAG), "") 
+ifeq ($(IMAGETAG),) 
 export IMAGETAG="$(DEFAULT_IMAGETAG)"
-endif
-
-# set the BUILDSTAGE if needed
-ifeq ($(BUILDSTAGE),)
-export BUILDSTAGE="$(DEFAULT_BUILDSTAGE)"
-endif
-
-# figure out if podman or docker should be used (use podman if found)
-ifneq (, $(shell which podman 2>/dev/null))
-export BUILDER=podman
-else
-export BUILDER=docker
 endif
 
 # target to print some help regarding these overrides and how to use them
@@ -83,10 +75,3 @@ overrides-help:
 	@echo "              Current setting is: $(IMAGENAME)"
 	@echo "IMAGETAG    - The image tag to be built, default is an empty string which will determine the tag by examining annotated tags in the repo."
 	@echo "              Current setting is: $(IMAGETAG)"
-	@echo "BUILDSTAGE  - The Dockerfile build stage to execute, default is: $(DEFAULT_BUILDSTAGE)"
-	@echo "              Stages can be found by looking at the Dockerfile"
-	@echo "              Current setting is: $(BUILDSTAGE)"
-	@echo
-        
-	
-
