@@ -17,7 +17,6 @@ import (
 	"errors"
 	"strings"
 
-	_ "github.com/emcecs/objectscale-management-go-sdk/pkg/client/fake"
 	log "github.com/sirupsen/logrus"
 	cosi "sigs.k8s.io/container-object-storage-interface-spec"
 
@@ -27,6 +26,7 @@ import (
 	"google.golang.org/grpc/status"
 )
 
+// Server is an implementation of a provisioner server.
 type Server struct {
 	mgmtClient api.ClientSet
 	backendID  string
@@ -35,7 +35,7 @@ type Server struct {
 
 var _ cosi.ProvisionerServer = (*Server)(nil)
 
-// Initialize Server based on the config file.
+// New initializs Server based on the config file.
 func New(mgmtClient api.ClientSet, backendID, namespace string) *Server {
 	return &Server{
 		mgmtClient: mgmtClient,
@@ -44,7 +44,7 @@ func New(mgmtClient api.ClientSet, backendID, namespace string) *Server {
 	}
 }
 
-// Extend COSI interface by adding ID method.
+// ID extends COSI interface by adding ID method.
 func (s *Server) ID() string {
 	return s.backendID
 }
@@ -116,18 +116,21 @@ func (s *Server) DriverCreateBucket(ctx context.Context,
 	}, nil
 }
 
+// DriverDeleteBucket deletes Bucket on specific Object Storage Platform.
 func (s *Server) DriverDeleteBucket(ctx context.Context,
 	req *cosi.DriverDeleteBucketRequest) (*cosi.DriverDeleteBucketResponse, error) {
 
 	return nil, status.Error(codes.Unimplemented, "DriverCreateBucket: not implemented")
 }
 
+// DriverGrantBucketAccess provides access to Bucket on specific Object Storage Platform.
 func (s *Server) DriverGrantBucketAccess(ctx context.Context,
 	req *cosi.DriverGrantBucketAccessRequest) (*cosi.DriverGrantBucketAccessResponse, error) {
 
 	return nil, status.Error(codes.Unimplemented, "DriverCreateBucket: not implemented")
 }
 
+// DriverRevokeBucketAccess revokes access from Bucket on specific Object Storage Platform.
 func (s *Server) DriverRevokeBucketAccess(ctx context.Context,
 	req *cosi.DriverRevokeBucketAccessRequest) (*cosi.DriverRevokeBucketAccessResponse, error) {
 
