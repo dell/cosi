@@ -85,7 +85,7 @@ func (s *Server) DriverCreateBucket(ctx context.Context,
 
 	// Check if bucket with specific name and parameters already exists.
 	_, err := s.mgmtClient.Buckets().Get(bucket.Name, parametersCopy)
-	if err != nil && errors.Is(err, model.Error{Code: 1004}) == false {
+	if err != nil && errors.Is(err, model.Error{Code: model.CodeResourceNotFound}) == false {
 		log.WithFields(log.Fields{
 			"existing_bucket": bucket.Name,
 		}).Error("DriverCreateBucket: Failed to check bucket existence")
