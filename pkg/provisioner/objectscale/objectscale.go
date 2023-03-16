@@ -14,8 +14,8 @@ package objectscale
 
 import (
 	"context"
-	"crypto/tls"
 	"errors"
+	"fmt"
 	"net/http"
 	"strings"
 
@@ -32,6 +32,7 @@ import (
 	cosi "sigs.k8s.io/container-object-storage-interface-spec"
 
 	"github.com/dell/cosi-driver/pkg/config"
+	"github.com/dell/cosi-driver/pkg/transport"
 )
 
 type Server struct {
@@ -46,8 +47,9 @@ var _ driver.Driver = (*Server)(nil)
 func New(config *config.Objectscale) (*Server, error) {
 	/* #nosec */
 	// ObjectScale clientset
-	transport := &http.Transport{
-		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+	transport, err := transport.New(config.Tls)
+	if err != nil {
+		return nil, fmt.Errorf("initialization of transport failed: %w", err)
 	}
 
 	// FIXME: not validating if client should be secure
@@ -84,6 +86,7 @@ func (s *Server) DriverCreateBucket(ctx context.Context,
 
 	log.WithFields(log.Fields{
 		"bucket": req.GetName(),
+		"id":     s.ID(),
 	}).Info("Bucket is being created")
 
 	// Create bucket model.
@@ -93,7 +96,9 @@ func (s *Server) DriverCreateBucket(ctx context.Context,
 
 	// Check if bucket name is not empty.
 	if bucket.Name == "" {
-		log.Error("DriverCreateBucket: Empty bucket name")
+		log.WithFields(log.Fields{
+			"id": s.ID(),
+		}).Error("DriverCreateBucket: Empty bucket name")
 		return nil, status.Error(codes.InvalidArgument, "Empty bucket name")
 	}
 
@@ -107,6 +112,7 @@ func (s *Server) DriverCreateBucket(ctx context.Context,
 
 	log.WithFields(log.Fields{
 		"parameters": parameters,
+		"id":         s.ID(),
 	}).Debug("Parameters of the bucket")
 
 	// Remove backendID, as this is not valid parameter for bucket creation in ObjectScale.
@@ -117,11 +123,14 @@ func (s *Server) DriverCreateBucket(ctx context.Context,
 	if err != nil && errors.Is(err, model.Error{Code: 1004}) == false {
 		log.WithFields(log.Fields{
 			"existing_bucket": bucket.Name,
+			"error":           err,
+			"id":              s.ID(),
 		}).Error("DriverCreateBucket: Failed to check bucket existence")
 		return nil, status.Error(codes.Internal, "An unexpected error occurred")
 	} else if err == nil {
 		log.WithFields(log.Fields{
 			"existing_bucket": bucket.Name,
+			"id":              s.ID(),
 		}).Error("DriverCreateBucket: Bucket already exists")
 		return nil, status.Error(codes.AlreadyExists, "Bucket already exists")
 	}
@@ -131,6 +140,8 @@ func (s *Server) DriverCreateBucket(ctx context.Context,
 	if err != nil {
 		log.WithFields(log.Fields{
 			"bucket": bucket.Name,
+			"error":  err,
+			"id":     s.ID(),
 		}).Error("DriverCreateBucket: Bucket was not sucessfully created")
 		return nil, status.Error(codes.Internal, "Bucket was not sucessfully created")
 	}
