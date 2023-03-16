@@ -11,3 +11,40 @@
 // limitations under the License.
 
 package provisioner
+
+import (
+	"testing"
+
+	"github.com/stretchr/testify/assert"
+)
+
+func TestExactlyOne(t *testing.T) {
+	testCases := []struct {
+		name      string
+		nillables []interface{}
+		expected  bool
+	}{
+		// TODO: add test cases
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			actual := exactlyOne(tc.nillables...)
+			assert.Equal(t, tc.expected, actual)
+		})
+	}
+}
+
+func TestNewVirtualDriver(t *testing.T) {
+	testCases := []struct {
+		name string
+	}{
+		// TODO: add test cases
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			// TODO: add test body
+		})
+	}
+}

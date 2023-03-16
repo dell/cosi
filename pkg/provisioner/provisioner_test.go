@@ -11,3 +11,100 @@
 // limitations under the License.
 
 package provisioner
+
+import (
+	"testing"
+
+	"github.com/dell/cosi-driver/pkg/provisioner/virtual_driver/fake"
+)
+
+func TestNew(t *testing.T) {
+	testCases := []struct {
+		name string
+	}{
+		// TODO: add test cases
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			// TODO: add test body
+		})
+	}
+}
+
+func TestServer(t *testing.T) {
+	testCases := map[string]func(*testing.T, Server){
+		"DriverCreateBucket":       testServerDriverCreateBucket,
+		"DriverDeleteBucket":       testServerDriverDeleteBucket,
+		"DriverGrantBucketAccess":  testServerDriverGrantBucketAccess,
+		"DriverRevokeBucketAccess": testServerDriverRevokeBucketAccess,
+	}
+
+	driverset := &Driverset{}
+	driverset.Add(&fake.Driver{})
+	server := Server{
+		driverset: driverset,
+	}
+
+	for name, test := range testCases {
+		t.Run(name, func(t *testing.T) {
+			test(t, server)
+		})
+	}
+}
+
+func testServerDriverCreateBucket(t *testing.T, server Server) {
+	testCases := []struct {
+		name string
+	}{
+		// TODO: add test cases
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			// TODO: add test body
+		})
+	}
+}
+
+func testServerDriverDeleteBucket(t *testing.T, server Server) {
+	testCases := []struct {
+		name string
+	}{
+		// TODO: add test cases
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			// TODO: add test body
+		})
+	}
+}
+
+func testServerDriverGrantBucketAccess(t *testing.T, server Server) {
+	testCases := []struct {
+		name string
+	}{
+		// TODO: add test cases
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			// TODO: add test body
+		})
+	}
+}
+
+func testServerDriverRevokeBucketAccess(t *testing.T, server Server) {
+	testCases := []struct {
+		name string
+	}{
+		// TODO: add test cases
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			// TODO: add test body
+		})
+	}
+}

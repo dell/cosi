@@ -10,39 +10,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package provisioner
+package transport
 
 import "testing"
 
-func TestDriverset(t *testing.T) {
-	testCases := []struct {
-		name string
-	}{
-		// TODO: add test cases
-	}
-
-	for _, tc := range testCases {
-		t.Run(tc.name, func(t *testing.T) {
-			// TODO: add test body
-		})
-	}
-}
-
-func TestErrDriverDuplicate(t *testing.T) {
-	testCases := []struct {
-		name string
-	}{
-		// TODO: add test cases
-	}
-
-	for _, tc := range testCases {
-		t.Run(tc.name, func(t *testing.T) {
-			// TODO: add test body
-		})
-	}
-}
-
-func TestErrNotConfigured(t *testing.T) {
+func TestNew(t *testing.T) {
 	testCases := []struct {
 		name string
 	}{
