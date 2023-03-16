@@ -24,7 +24,7 @@ import (
 	"io"
 	"net/http"
 
-	"github.com/emcecs/objectscale-management-go-sdk/pkg/client/model"
+	"github.com/dell/goobjectscale/pkg/client/model"
 )
 
 var _ RemoteCaller = (*Simple)(nil) // interface guard

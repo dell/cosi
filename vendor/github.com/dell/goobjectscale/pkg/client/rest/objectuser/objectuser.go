@@ -21,8 +21,8 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/emcecs/objectscale-management-go-sdk/pkg/client/model"
-	"github.com/emcecs/objectscale-management-go-sdk/pkg/client/rest/client"
+	"github.com/dell/goobjectscale/pkg/client/model"
+	"github.com/dell/goobjectscale/pkg/client/rest/client"
 )
 
 // ObjectUser is a REST implementation of the object user interface

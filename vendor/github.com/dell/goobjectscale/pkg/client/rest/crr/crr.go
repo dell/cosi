@@ -20,8 +20,8 @@ import (
 	"net/http"
 	"path"
 
-	"github.com/emcecs/objectscale-management-go-sdk/pkg/client/model"
-	"github.com/emcecs/objectscale-management-go-sdk/pkg/client/rest/client"
+	"github.com/dell/goobjectscale/pkg/client/model"
+	"github.com/dell/goobjectscale/pkg/client/rest/client"
 )
 
 // CRR is a REST implementation of the CRR interface

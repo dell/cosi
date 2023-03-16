@@ -14,7 +14,7 @@ package steps
 
 import (
 	"github.com/aws/aws-sdk-go/service/iam"
-	objectscaleRest "github.com/emcecs/objectscale-management-go-sdk/pkg/client/rest"
+	objectscaleRest "github.com/dell/goobjectscale/pkg/client/rest"
 	"sigs.k8s.io/container-object-storage-interface-api/apis/objectstorage/v1alpha1"
 
 	ginkgo "github.com/onsi/ginkgo/v2"

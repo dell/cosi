@@ -22,8 +22,8 @@ import (
 
 	"google.golang.org/grpc"
 
-	objectscaleRest "github.com/emcecs/objectscale-management-go-sdk/pkg/client/rest"
-	objectscaleClient "github.com/emcecs/objectscale-management-go-sdk/pkg/client/rest/client"
+	objectscaleRest "github.com/dell/goobjectscale/pkg/client/rest"
+	objectscaleClient "github.com/dell/goobjectscale/pkg/client/rest/client"
 	log "github.com/sirupsen/logrus"
 	spec "sigs.k8s.io/container-object-storage-interface-spec"
 
