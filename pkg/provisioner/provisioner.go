@@ -51,7 +51,7 @@ func (s *Server) DriverCreateBucket(ctx context.Context,
 			"id":    id,
 			"error": err,
 		}).Error("DriverCreateBucket: Invalid backend ID")
-		return nil, status.Error(codes.InvalidArgument, "DriverCreateBucket: invalid backend ID")
+		return nil, status.Error(codes.InvalidArgument, "DriverCreateBucket: Invalid backend ID")
 	}
 
 	// execute DriverCreateBucket from correct driver
@@ -71,7 +71,7 @@ func (s *Server) DriverDeleteBucket(ctx context.Context,
 			"id":    id,
 			"error": err,
 		}).Error("DriverCreateBucket: Invalid backend ID")
-		return nil, status.Error(codes.InvalidArgument, "DriverCreateBucket: invalid backend ID")
+		return nil, status.Error(codes.InvalidArgument, "DriverCreateBucket: Invalid backend ID")
 	}
 
 	// execute DriverDeleteBucket from correct driver
@@ -91,7 +91,7 @@ func (s *Server) DriverGrantBucketAccess(ctx context.Context,
 			"id":    id,
 			"error": err,
 		}).Error("DriverCreateBucket: Invalid backend ID")
-		return nil, status.Error(codes.InvalidArgument, "DriverCreateBucket: invalid backend ID")
+		return nil, status.Error(codes.InvalidArgument, "DriverCreateBucket: Invalid backend ID")
 	}
 
 	// execute DriverGrantBucketAccess from correct driver
