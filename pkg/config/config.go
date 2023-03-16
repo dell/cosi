@@ -74,6 +74,10 @@ func NewYAML(bytes []byte) (*ConfigSchemaJson, error) {
 }
 
 func readFile(filename string) ([]byte, error) {
+	// ignore G304 error, reasons:
+	// - the filetype is validated to be one of (json, yaml, yml)
+	// - file is read using LimitReader (max 20MB)
+	/* #nosec G304 */
 	f, err := os.Open(filename)
 	if err != nil {
 		return nil, err
