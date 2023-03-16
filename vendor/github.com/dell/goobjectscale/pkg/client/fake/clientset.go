@@ -19,10 +19,11 @@ package fake
 import (
 	"fmt"
 	"strconv"
+	"strings"
 	"time"
 
-	"github.com/emcecs/objectscale-management-go-sdk/pkg/client/api"
-	"github.com/emcecs/objectscale-management-go-sdk/pkg/client/model"
+	"github.com/dell/goobjectscale/pkg/client/api"
+	"github.com/dell/goobjectscale/pkg/client/model"
 )
 
 // ClientSet is a set of clients for each API section
@@ -165,7 +166,7 @@ func (c *ClientSet) Buckets() api.BucketsInterface {
 	return c.buckets
 }
 
-// Tenants implements the client API.
+// FederatedObjectStores implements the client API.
 func (c *ClientSet) FederatedObjectStores() api.FederatedObjectStoresInterface {
 	return c.federatedobjectstores
 }
@@ -180,11 +181,12 @@ func (c *ClientSet) ObjectUser() api.ObjectUserInterface {
 	return c.objectUser
 }
 
-// ObjectMt implements the client API for objMT metrics
+// ObjectMt implements the client API for objMT metrics.
 func (c *ClientSet) ObjectMt() api.ObjmtInterface {
 	return c.objectMt
 }
 
+// BucketPolicy contains information about bucket policy to be used in fake client set.
 type BucketPolicy struct {
 	BucketName string
 	Policy     string
@@ -242,7 +244,7 @@ func (o *ObjectUsers) GetSecret(uid string, _ map[string]string) (*model.ObjectU
 		return nil, model.Error{
 			Description: "secret not found",
 			Details:     fmt.Sprintf("secret for %s is not found", uid),
-			Code:        model.CodeDuplicate,
+			Code:        model.CodeResourceNotFound,
 		}
 	}
 	return o.Secrets[uid], nil
@@ -264,7 +266,7 @@ func (o *ObjectUsers) CreateSecret(uid string, req model.ObjectUserSecretKeyCrea
 		return nil, model.Error{
 			Description: "max keys reached",
 			Details:     fmt.Sprintf("user %s already has 2 valid keys", uid),
-			Code:        model.CodeDuplicate,
+			Code:        model.CodeExceedingLimit,
 		}
 	case o.Secrets[uid].SecretKey1 != "":
 		o.Secrets[uid].SecretKey2 = req.SecretKey
@@ -285,7 +287,7 @@ func (o *ObjectUsers) DeleteSecret(uid string, req model.ObjectUserSecretKeyDele
 		return model.Error{
 			Description: "user not found",
 			Details:     fmt.Sprintf("user %s not found", uid),
-			Code:        model.CodeNotFound,
+			Code:        model.CodeResourceNotFound,
 		}
 	}
 	switch req.SecretKey {
@@ -300,7 +302,7 @@ func (o *ObjectUsers) DeleteSecret(uid string, req model.ObjectUserSecretKeyDele
 		return model.Error{
 			Description: "not found",
 			Details:     fmt.Sprintf("user %s secret key not found", uid),
-			Code:        model.CodeNotFound,
+			Code:        model.CodeResourceNotFound,
 		}
 	}
 }
@@ -317,7 +319,7 @@ func (o *ObjectUsers) GetInfo(uid string, _ map[string]string) (*model.ObjectUse
 		return nil, model.Error{
 			Description: "info not found",
 			Details:     fmt.Sprintf("info for %s is not found", uid),
-			Code:        model.CodeDuplicate,
+			Code:        model.CodeResourceNotFound,
 		}
 	}
 	return o.InfoList[uid], nil
@@ -364,11 +366,11 @@ func (t *Tenants) Delete(tenantID string) error {
 	}
 	return model.Error{
 		Description: "tenant not found",
-		Code:        model.CodeNotFound,
+		Code:        model.CodeResourceNotFound,
 	}
 }
 
-// Update pdates Tenant details default_bucket_size and alias
+// Update updates Tenant details default_bucket_size and alias
 func (t *Tenants) Update(payload model.TenantUpdate, tenantID string) error {
 	for i, tenant := range t.items {
 		if tenant.ID == tenantID {
@@ -379,7 +381,7 @@ func (t *Tenants) Update(payload model.TenantUpdate, tenantID string) error {
 	}
 	return model.Error{
 		Description: "tenant not found",
-		Code:        model.CodeNotFound,
+		Code:        model.CodeResourceNotFound,
 	}
 }
 
@@ -392,7 +394,7 @@ func (t *Tenants) Get(id string, _ map[string]string) (*model.Tenant, error) {
 	}
 	return nil, model.Error{
 		Description: "not found",
-		Code:        model.CodeNotFound,
+		Code:        model.CodeResourceNotFound,
 	}
 }
 
@@ -417,7 +419,7 @@ func (t *Tenants) GetQuota(id string, _ map[string]string) (*model.TenantQuota, 
 	}
 	return nil, model.Error{
 		Description: "not found",
-		Code:        model.CodeNotFound,
+		Code:        model.CodeResourceNotFound,
 	}
 }
 
@@ -435,7 +437,7 @@ func (t *Tenants) SetQuota(id string, tenantQuota model.TenantQuotaSet) error {
 
 	return model.Error{
 		Description: "not found",
-		Code:        model.CodeNotFound,
+		Code:        model.CodeResourceNotFound,
 	}
 }
 
@@ -452,7 +454,7 @@ func (t *Tenants) DeleteQuota(id string) error {
 	}
 	return model.Error{
 		Description: "not found",
-		Code:        model.CodeNotFound,
+		Code:        model.CodeResourceNotFound,
 	}
 }
 
@@ -476,7 +478,7 @@ func (b *Buckets) Get(name string, params map[string]string) (*model.Bucket, err
 	if ok {
 		return nil, model.Error{
 			Description: "An unexpected error occurred",
-			Code:        999,
+			Code:        model.CodeInternalException,
 		}
 	}
 
@@ -487,74 +489,99 @@ func (b *Buckets) Get(name string, params map[string]string) (*model.Bucket, err
 	}
 	return nil, model.Error{
 		Description: "not found",
-		Code:        model.CodeNotFound,
+		Code:        model.CodeResourceNotFound,
 	}
 }
 
 // GetPolicy implements the buckets API
-func (b *Buckets) GetPolicy(bucketName string, param map[string]string) (string, error) {
-	if policy, ok := b.policy[fmt.Sprintf("%s/%s", bucketName, param["namespace"])]; ok {
+func (b *Buckets) GetPolicy(bucketName string, params map[string]string) (string, error) {
+	// this is not path, it is used to quickly distinguish which function must fail
+	_, ok := params["X-TEST/Buckets/GetPolicy/force-fail"]
+	if ok {
+		return "", model.Error{
+			Description: "An unexpected error occurred",
+			Code:        model.CodeInternalException,
+		}
+	}
+	if policy, ok := b.policy[fmt.Sprintf("%s/%s", bucketName, params["namespace"])]; ok {
 		return policy, nil
 	}
 	return "", nil
 }
 
 // DeletePolicy implements the buckets API
-func (b *Buckets) DeletePolicy(bucketName string, param map[string]string) error {
-	found := false
-	for _, bucket := range b.items {
-		if bucket.Name == bucketName {
-			found = true
-			break
+func (b *Buckets) DeletePolicy(bucketName string, params map[string]string) error {
+	// this is not path, it is used to quickly distinguish which function must fail
+	_, ok := params["X-TEST/Buckets/DeletePolicy/force-fail"]
+	if ok {
+		return model.Error{
+			Description: "An unexpected error occurred",
+			Code:        model.CodeInternalException,
 		}
 	}
+	found := false
 	if found {
-		delete(b.policy, fmt.Sprintf("%s/%s", bucketName, param["namespace"]))
+		delete(b.policy, fmt.Sprintf("%s/%s", bucketName, params["namespace"]))
 		return nil
-	} else {
-		return model.Error{
-			Description: "bucket not found",
-			Code:        model.CodeNotFound,
-		}
+	}
+	return model.Error{
+		Description: "bucket not found",
+		Code:        model.CodeResourceNotFound,
 	}
 }
 
 // UpdatePolicy implements the buckets API
-func (b *Buckets) UpdatePolicy(bucketName string, policy string, param map[string]string) error {
-	found := false
-	for _, bucket := range b.items {
-		if bucket.Name == bucketName {
-			found = true
-			break
+func (b *Buckets) UpdatePolicy(bucketName string, policy string, params map[string]string) error {
+	// this is not path, it is used to quickly distinguish which function must fail
+	_, ok := params["X-TEST/Buckets/UpdatePolicy/force-fail"]
+	if ok {
+		return model.Error{
+			Description: "An unexpected error occurred",
+			Code:        model.CodeInternalException,
 		}
 	}
+	found := false
 	if found {
-		b.policy[fmt.Sprintf("%s/%s", bucketName, param["namespace"])] = policy
+		b.policy[fmt.Sprintf("%s/%s", bucketName, params["namespace"])] = policy
 		return nil
-	} else {
-		return model.Error{
-			Description: "bucket not found",
-			Code:        model.CodeNotFound,
-		}
+	}
+	return model.Error{
+		Description: "bucket not found",
+		Code:        model.CodeResourceNotFound,
 	}
 }
 
 // Create implements the buckets API
-func (b *Buckets) Create(createParam model.Bucket) (*model.Bucket, error) {
+func (b *Buckets) Create(createParams model.Bucket) (*model.Bucket, error) {
+	// This piece of code verifies if the incoming request is for forcing an unexpected error.
+	if strings.Contains(createParams.Name, "FORCEFAIL") {
+		return &createParams, model.Error{
+			Description: "Bucket was not sucessfully created",
+			Code:        model.CodeInternalException,
+		}
+	}
+
 	for _, existingBucket := range b.items {
-		if existingBucket.Namespace == createParam.Namespace && existingBucket.Name == createParam.Name {
+		if existingBucket.Namespace == createParams.Namespace && existingBucket.Name == createParams.Name {
 			return nil, model.Error{
 				Description: "duplicate found",
-				Code:        model.CodeNotFound,
+				Code:        model.CodeBucketAlreadyExists,
 			}
 		}
 	}
-	b.items = append(b.items, createParam)
-	return &createParam, nil
+	b.items = append(b.items, createParams)
+	return &createParams, nil
 }
 
 // Delete implements the buckets API
 func (b *Buckets) Delete(name string, namespace string) error {
+	// This piece of code verifies if the incoming request is for forcing an unexpected error.
+	if strings.Contains(name, "FORCEFAIL") {
+		return model.Error{
+			Description: "Bucket was not sucessfully deleted",
+			Code:        model.CodeInternalException,
+		}
+	}
 	for i, existingBucket := range b.items {
 		if existingBucket.Name == name && existingBucket.Namespace == namespace {
 			b.items = append(b.items[:i], b.items[i+1:]...)
@@ -563,7 +590,7 @@ func (b *Buckets) Delete(name string, namespace string) error {
 	}
 	return model.Error{
 		Description: "not found",
-		Code:        model.CodeNotFound,
+		Code:        model.CodeResourceNotFound,
 	}
 }
 
@@ -586,7 +613,7 @@ func (b *Buckets) GetQuota(bucketName string, _ string) (*model.BucketQuotaInfo,
 
 	return nil, model.Error{
 		Description: "not found",
-		Code:        model.CodeNotFound,
+		Code:        model.CodeResourceNotFound,
 	}
 }
 
@@ -603,7 +630,7 @@ func (b *Buckets) UpdateQuota(bucketQuota model.BucketQuotaUpdate) error {
 	}
 	return model.Error{
 		Description: "not found",
-		Code:        model.CodeNotFound,
+		Code:        model.CodeResourceNotFound,
 	}
 }
 
@@ -620,7 +647,7 @@ func (b *Buckets) DeleteQuota(bucketName string, _ string) error {
 	}
 	return model.Error{
 		Description: "not found",
-		Code:        model.CodeNotFound,
+		Code:        model.CodeResourceNotFound,
 	}
 }
 
@@ -766,7 +793,7 @@ func (ap *AlertPolicies) Get(policyName string) (*model.AlertPolicy, error) {
 	}
 	return nil, model.Error{
 		Description: "not found",
-		Code:        model.CodeNotFound,
+		Code:        model.CodeResourceNotFound,
 	}
 }
 
@@ -806,7 +833,7 @@ func (ap *AlertPolicies) Delete(policyName string) error {
 	}
 	return model.Error{
 		Description: "alert policy not found",
-		Code:        model.CodeNotFound,
+		Code:        model.CodeResourceNotFound,
 	}
 }
 
@@ -832,7 +859,7 @@ func (ap *AlertPolicies) Update(payload model.AlertPolicy, policyName string) (*
 	}
 	return nil, model.Error{
 		Description: "alert policy not found",
-		Code:        model.CodeNotFound,
+		Code:        model.CodeResourceNotFound,
 	}
 }
 
@@ -843,6 +870,7 @@ type Status struct {
 
 var _ api.StatusInterfaces = (*Status)(nil) // interface guard
 
+// GetRebuildStatus implements the Status API
 func (s *Status) GetRebuildStatus(objStoreName, ssPodName, ssPodNameSpace, level string, params map[string]string) (*model.RebuildInfo, error) {
 	s.RebuildInfo.TotalBytes = 2048
 	s.RebuildInfo.RemainingBytes = 1024

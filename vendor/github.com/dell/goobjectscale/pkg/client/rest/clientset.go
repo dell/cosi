@@ -17,16 +17,16 @@
 package rest
 
 import (
-	"github.com/emcecs/objectscale-management-go-sdk/pkg/client/api"
-	"github.com/emcecs/objectscale-management-go-sdk/pkg/client/rest/alertpolicies"
-	"github.com/emcecs/objectscale-management-go-sdk/pkg/client/rest/buckets"
-	"github.com/emcecs/objectscale-management-go-sdk/pkg/client/rest/client"
-	"github.com/emcecs/objectscale-management-go-sdk/pkg/client/rest/crr"
-	"github.com/emcecs/objectscale-management-go-sdk/pkg/client/rest/federatedobjectstores"
-	"github.com/emcecs/objectscale-management-go-sdk/pkg/client/rest/objectuser"
-	"github.com/emcecs/objectscale-management-go-sdk/pkg/client/rest/objmt"
-	"github.com/emcecs/objectscale-management-go-sdk/pkg/client/rest/status"
-	"github.com/emcecs/objectscale-management-go-sdk/pkg/client/rest/tenants"
+	"github.com/dell/goobjectscale/pkg/client/api"
+	"github.com/dell/goobjectscale/pkg/client/rest/alertpolicies"
+	"github.com/dell/goobjectscale/pkg/client/rest/buckets"
+	"github.com/dell/goobjectscale/pkg/client/rest/client"
+	"github.com/dell/goobjectscale/pkg/client/rest/crr"
+	"github.com/dell/goobjectscale/pkg/client/rest/federatedobjectstores"
+	"github.com/dell/goobjectscale/pkg/client/rest/objectuser"
+	"github.com/dell/goobjectscale/pkg/client/rest/objmt"
+	"github.com/dell/goobjectscale/pkg/client/rest/status"
+	"github.com/dell/goobjectscale/pkg/client/rest/tenants"
 )
 
 // ClientSet is a set of clients for each API section

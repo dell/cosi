@@ -23,7 +23,7 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/emcecs/objectscale-management-go-sdk/pkg/client/model"
+	"github.com/dell/goobjectscale/pkg/client/model"
 )
 
 // RemoteCaller interface is used to create backend calls.
