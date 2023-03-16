@@ -11,6 +11,8 @@ This configuration file is used to specify the settings for the Dell COSI Driver
 
 ### Format
 
+Configuration file is written using YAML format. It is a human-readable data serialization language that is commonly used for configuration files and data exchange between programming languages.
+
 YAML files can have comments, which are lines in the file that begin with the `#` character. Comments can be used to provide context and explanations for the data in the file, and they are ignored by parsers when reading the YAML data.
 
 ### Properties
