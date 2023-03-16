@@ -41,12 +41,16 @@ func New(driverset *driver.Driverset) *Server {
 // DriverCreateBucket creates Bucket on specific Object Storage Platform.
 func (s *Server) DriverCreateBucket(ctx context.Context,
 	req *cosi.DriverCreateBucketRequest) (*cosi.DriverCreateBucketResponse, error) {
+	id := req.Parameters["id"]
 
 	// get the driver from driverset
 	// if there is no correct driver, log error, and return standard error message
-	d, err := s.driverset.Get(req.Parameters["id"])
+	d, err := s.driverset.Get(id)
 	if err != nil {
-		log.Printf("[ERROR] %s", err.Error())
+		log.WithFields(log.Fields{
+			"id":    id,
+			"error": err,
+		}).Error("DriverCreateBucket: Invalid backend ID")
 		return nil, status.Error(codes.InvalidArgument, "DriverCreateBucket: invalid backend ID")
 	}
 
@@ -57,12 +61,16 @@ func (s *Server) DriverCreateBucket(ctx context.Context,
 // DriverDeleteBucket deletes Bucket on specific Object Storage Platform.
 func (s *Server) DriverDeleteBucket(ctx context.Context,
 	req *cosi.DriverDeleteBucketRequest) (*cosi.DriverDeleteBucketResponse, error) {
+	id := getId(req.BucketId)
 
 	// get the driver from driverset
 	// if there is no correct driver, log error, and return standard error message
-	d, err := s.driverset.Get(getId(req.BucketId))
+	d, err := s.driverset.Get(id)
 	if err != nil {
-		log.Printf("[ERROR] %s", err.Error())
+		log.WithFields(log.Fields{
+			"id":    id,
+			"error": err,
+		}).Error("DriverCreateBucket: Invalid backend ID")
 		return nil, status.Error(codes.InvalidArgument, "DriverCreateBucket: invalid backend ID")
 	}
 
@@ -73,12 +81,16 @@ func (s *Server) DriverDeleteBucket(ctx context.Context,
 // DriverGrantBucketAccess provides access to Bucket on specific Object Storage Platform.
 func (s *Server) DriverGrantBucketAccess(ctx context.Context,
 	req *cosi.DriverGrantBucketAccessRequest) (*cosi.DriverGrantBucketAccessResponse, error) {
+	id := req.Parameters["id"]
 
 	// get the driver from driverset
 	// if there is no correct driver, log error, and return standard error message
-	d, err := s.driverset.Get(req.Parameters["id"])
+	d, err := s.driverset.Get(id)
 	if err != nil {
-		log.Printf("[ERROR] %s", err.Error())
+		log.WithFields(log.Fields{
+			"id":    id,
+			"error": err,
+		}).Error("DriverCreateBucket: Invalid backend ID")
 		return nil, status.Error(codes.InvalidArgument, "DriverCreateBucket: invalid backend ID")
 	}
 
@@ -89,13 +101,17 @@ func (s *Server) DriverGrantBucketAccess(ctx context.Context,
 // DriverRevokeBucketAccess revokes access from Bucket on specific Object Storage Platform.
 func (s *Server) DriverRevokeBucketAccess(ctx context.Context,
 	req *cosi.DriverRevokeBucketAccessRequest) (*cosi.DriverRevokeBucketAccessResponse, error) {
+	id := getId(req.BucketId)
 
 	// get the driver from driverset
 	// if there is no correct driver, log error, and return standard error message
-	d, err := s.driverset.Get(getId(req.BucketId))
+	d, err := s.driverset.Get(id)
 	if err != nil {
-		log.Printf("[ERROR] %s", err.Error())
-		return nil, status.Error(codes.InvalidArgument, "DriverCreateBucket: invalid backend ID")
+		log.WithFields(log.Fields{
+			"id":    id,
+			"error": err,
+		}).Error("DriverCreateBucket: Invalid backend ID")
+		return nil, status.Error(codes.InvalidArgument, "DriverCreateBucket: Invalid backend ID")
 	}
 
 	// execute DriverRevokeBucketAccess from correct driver

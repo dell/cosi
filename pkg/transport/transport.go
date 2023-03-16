@@ -20,9 +20,10 @@ import (
 	"github.com/dell/cosi-driver/pkg/config"
 )
 
-func New(cfg *config.Tls) (*http.Transport, error) {
+func New(cfg config.Tls) (*http.Transport, error) {
 	var tlsConfig *tls.Config
 	if cfg.Insecure {
+		/* #nosec */
 		tlsConfig = &tls.Config{InsecureSkipVerify: true}
 	} else {
 		// TODO: this need reevaluation, and valid implementation
