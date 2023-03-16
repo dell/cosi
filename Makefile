@@ -48,6 +48,7 @@ docker:	##generate the docker container
 # Pushes container to the repository
 push: docker	##generate and push the docker container to repository
 	@echo "Pushing: $(REGISTRY)/$(IMAGENAME):$(IMAGETAG)"
+	docker tag "$(IMAGENAME):$(IMAGETAG)" "$(REGISTRY)/$(IMAGENAME):$(IMAGETAG)"
 	docker push "$(REGISTRY)/$(IMAGENAME):$(IMAGETAG)"
 
 # Windows or Linux; requires no hardware
