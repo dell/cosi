@@ -19,7 +19,6 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	driver "github.com/dell/cosi-driver/pkg/provisioner/virtual-driver"
 	log "github.com/sirupsen/logrus"
 	cosi "sigs.k8s.io/container-object-storage-interface-spec"
 )
@@ -32,7 +31,7 @@ type Server struct {
 var _ cosi.ProvisionerServer = (*Server)(nil)
 
 // New initializs Server based on the config file.
-func New(driverset *driver.Driverset) *Server {
+func New(driverset *Driverset) *Server {
 	return &Server{
 		driverset: driverset,
 	}
