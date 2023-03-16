@@ -1,0 +1,151 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema",
+  "title": "Dell COSI Driver Configuration Schema",
+  "description": "this file contains JSON schema for Dell COSI Driver Configuration file",
+  "type": "object",
+  "properties": {
+    "cosi-endpoint": {
+      "description": "Path to the COSI socket",
+      "type": "string",
+      "default": "unix:///var/lib/cosi/cosi.sock"
+    },
+    "log-level": {
+      "description": "Defines how verbose should logs be",
+      "type": "string",
+      "default": "info",
+      "enum": [
+        "fatal",
+        "error",
+        "warning",
+        "info",
+        "debug",
+        "trace"
+      ]
+    },
+    "connections": {
+      "description": "List of connections based on which the sub-drivers are constructed",
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/configuration"
+      }
+    }
+  },
+  "definitions": {
+    "objectscale": {
+      "description": "Configuration specific to the Dell ObjectScale platform",
+      "type": "object",
+      "properties": {
+        "credentials": {
+          "$ref": "#/definitions/credentials"
+        },
+        "id": {
+          "description": "Default, unique identifier for the sub-driver/platform",
+          "type": "string"
+        },
+        "objectscale-gateway": {
+          "description": "Endpoint of the ObjectScale Gateway Internal service",
+          "type": "string",
+          "format": "url",
+          "$comment": "format field is placed here only for documentation purposes"
+        },
+        "objectstore-gateway": {
+          "description": "Endpoint of the ObjectScale ObjectStore Management Gateway service",
+          "type": "string",
+          "format": "url",
+          "$comment": "format field is placed here only for documentation purposes"
+        },
+        "region": {
+          "description": "IAM API specific field, points to the region in which ObjectScale system is installed",
+          "type": "string"
+        },
+        "protocols": {
+          "$ref": "#/definitions/protocols"
+        },
+        "tls": {
+          "$ref": "#/definitions/tls"
+        }
+      },
+      "required": [
+        "credentials",
+        "id",
+        "objectscale-gateway",
+        "objectstore-gateway",
+        "protocols",
+        "tls"
+      ]
+    },
+    "configuration": {
+      "description": "Configuration for single sub-driver",
+      "type": "object",
+      "properties": {
+        "objectscale": {
+          "$ref": "#/definitions/objectscale"
+        }
+      }
+    },
+    "credentials": {
+      "description": "Credentials used for authentication to OSP",
+      "type": "object",
+      "properties": {
+        "username": {
+          "description": "Base64 encoded username",
+          "type": "string",
+          "format": "byte",
+          "$comment": "format field is placed here only for documentation purposes"
+        },
+        "password": {
+          "description": "Base64 encoded password",
+          "type": "string",
+          "format": "byte",
+          "$comment": "format field is placed here only for documentation purposes"
+        }
+      },
+      "required": [
+        "username",
+        "password"
+      ]
+    },
+    "protocols": {
+      "description": "",
+      "type": "object",
+      "properties": {
+        "s3": {
+          "$ref": "#/definitions/s3"
+        }
+      }
+    },
+    "s3": {
+      "description": "S3 configuration",
+      "type": "object",
+      "properties": {
+        "endpoint": {
+          "description": "Endpoint of the ObjectStore S3 service",
+          "type": "string",
+          "format": "url",
+          "$comment": "format field is placed here only for documentation purposes"
+        }
+      },
+      "required": [
+        "endpoint"
+      ]
+    },
+    "tls": {
+      "description": "TLS configuration details",
+      "type": "object",
+      "properties": {
+        "insecure": {
+          "description": "Controls whether a client verifies the server's certificate chain and host name",
+          "type": "boolean"
+        },
+        "client-cas": {
+          "description": "Base64 encoded certificate file",
+          "type": "string",
+          "format": "byte"
+        }
+      },
+      "required": [
+        "insecure"
+      ]
+    }
+  }
+}
