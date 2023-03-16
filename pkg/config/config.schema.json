@@ -23,7 +23,7 @@
       ]
     },
     "connections": {
-      "description": "List of connections based on which the sub-drivers are constructed",
+      "description": "List of connections to object storage platforms that can be used for object storage provisioning.",
       "type": "array",
       "items": {
         "$ref": "#/definitions/configuration"
@@ -35,12 +35,12 @@
       "description": "Configuration specific to the Dell ObjectScale platform",
       "type": "object",
       "properties": {
+        "id": {
+          "description": "Default, unique identifier for the single connection.",
+          "type": "string"
+        },
         "credentials": {
           "$ref": "#/definitions/credentials"
-        },
-        "id": {
-          "description": "Default, unique identifier for the sub-driver/platform",
-          "type": "string"
         },
         "objectscale-gateway": {
           "description": "Endpoint of the ObjectScale Gateway Internal service",
@@ -55,7 +55,7 @@
           "$comment": "format field is placed here only for documentation purposes"
         },
         "region": {
-          "description": "IAM API specific field, points to the region in which ObjectScale system is installed",
+          "description": "Identity and Access Management (IAM) API specific field, points to the region in which object storage provider is installed",
           "type": "string"
         },
         "protocols": {
@@ -75,7 +75,7 @@
       ]
     },
     "configuration": {
-      "description": "Configuration for single sub-driver",
+      "description": "Configuration for single connection to object storage platform that is used for object storage provisioning",
       "type": "object",
       "properties": {
         "objectscale": {
@@ -84,7 +84,7 @@
       }
     },
     "credentials": {
-      "description": "Credentials used for authentication to OSP",
+      "description": "Credentials used for authentication to object storage provider",
       "type": "object",
       "properties": {
         "username": {
@@ -106,7 +106,7 @@
       ]
     },
     "protocols": {
-      "description": "",
+      "description": "Protocols supported by the connection",
       "type": "object",
       "properties": {
         "s3": {

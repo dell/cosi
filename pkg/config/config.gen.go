@@ -8,7 +8,8 @@ import "reflect"
 
 // this file contains JSON schema for Dell COSI Driver Configuration file
 type ConfigSchemaJson struct {
-	// List of connections based on which the sub-drivers are constructed
+	// List of connections to object storage platforms that can be used for object
+	// storage provisioning.
 	Connections []Configuration `json:"connections,omitempty" yaml:"connections,omitempty"`
 
 	// Path to the COSI socket
@@ -27,13 +28,14 @@ const ConfigSchemaJsonLogLevelInfo ConfigSchemaJsonLogLevel = "info"
 const ConfigSchemaJsonLogLevelTrace ConfigSchemaJsonLogLevel = "trace"
 const ConfigSchemaJsonLogLevelWarning ConfigSchemaJsonLogLevel = "warning"
 
-// Configuration for single sub-driver
+// Configuration for single connection to object storage platform that is used for
+// object storage provisioning
 type Configuration struct {
 	// Objectscale corresponds to the JSON schema field "objectscale".
 	Objectscale *Objectscale `json:"objectscale,omitempty" yaml:"objectscale,omitempty"`
 }
 
-// Credentials used for authentication to OSP
+// Credentials used for authentication to object storage provider
 type Credentials struct {
 	// Base64 encoded password
 	Password string `json:"password" yaml:"password"`
@@ -47,7 +49,7 @@ type Objectscale struct {
 	// Credentials corresponds to the JSON schema field "credentials".
 	Credentials Credentials `json:"credentials" yaml:"credentials"`
 
-	// Default, unique identifier for the sub-driver/platform
+	// Default, unique identifier for the single connection.
 	Id string `json:"id" yaml:"id"`
 
 	// Endpoint of the ObjectScale Gateway Internal service
@@ -59,14 +61,15 @@ type Objectscale struct {
 	// Protocols corresponds to the JSON schema field "protocols".
 	Protocols Protocols `json:"protocols" yaml:"protocols"`
 
-	// IAM API specific field, points to the region in which ObjectScale system is
-	// installed
+	// Identity and Access Management (IAM) API specific field, points to the region
+	// in which object storage provider is installed
 	Region *string `json:"region,omitempty" yaml:"region,omitempty"`
 
 	// Tls corresponds to the JSON schema field "tls".
 	Tls Tls `json:"tls" yaml:"tls"`
 }
 
+// Protocols supported by the connection
 type Protocols struct {
 	// S3 corresponds to the JSON schema field "s3".
 	S3 *S3 `json:"s3,omitempty" yaml:"s3,omitempty"`
