@@ -17,7 +17,7 @@
 package api
 
 import (
-	"github.com/emcecs/objectscale-management-go-sdk/pkg/client/model"
+	"github.com/dell/goobjectscale/pkg/client/model"
 )
 
 // ClientSet represents a client interface of supported resources

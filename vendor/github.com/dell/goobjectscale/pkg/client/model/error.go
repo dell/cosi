@@ -60,6 +60,7 @@ func (err Error) StatusCode() int64 {
 	return err.Code
 }
 
+// Is compare errors status
 func (err Error) Is(target error) bool {
 	// create intermidiate interface
 	type statusCoder interface {
@@ -78,7 +79,18 @@ func (err Error) Is(target error) bool {
 	}
 }
 
+// Error Codes
 const (
-	CodeNotFound  int64 = 1004
-	CodeDuplicate int64 = 1005
+	// Request parameter cannot be found
+	CodeParameterNotFound int64 = 1004
+	// Required parameter is missing or empty
+	CodeMissingParameter int64 = 1005
+	// Resource not found
+	CodeResourceNotFound int64 = 1019
+	// Exceeding limit
+	CodeExceedingLimit int64 = 1031
+	// Internal exception occurred
+	CodeInternalException int64 = 30024
+	// Bucket already exists
+	CodeBucketAlreadyExists int64 = 40008
 )

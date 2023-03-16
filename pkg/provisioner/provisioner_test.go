@@ -18,8 +18,8 @@ import (
 
 	cosi "sigs.k8s.io/container-object-storage-interface-spec"
 
-	"github.com/emcecs/objectscale-management-go-sdk/pkg/client/fake"
-	"github.com/emcecs/objectscale-management-go-sdk/pkg/client/model"
+	"github.com/dell/goobjectscale/pkg/client/fake"
+	"github.com/dell/goobjectscale/pkg/client/model"
 	"github.com/stretchr/testify/assert"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
