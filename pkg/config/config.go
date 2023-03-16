@@ -16,6 +16,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"os"
 	"strings"
 
@@ -26,15 +27,19 @@ import (
 
 // New takes filename and returns populated configuration struct.
 func New(filename string) (*ConfigSchemaJson, error) {
-	/* #nosec G304 */
-	b, err := os.ReadFile(filename)
-	if err != nil {
-		return nil, fmt.Errorf("unable to read config file: %w", err)
-	}
-
 	if strings.HasSuffix(filename, ".json") {
+		b, err := readFile(filename)
+		if err != nil {
+			return nil, fmt.Errorf("unable to read config file: %w", err)
+		}
+
 		return NewJSON(b)
 	} else if strings.HasSuffix(filename, ".yaml") || strings.HasSuffix(filename, ".yml") {
+		b, err := readFile(filename)
+		if err != nil {
+			return nil, fmt.Errorf("unable to read config file: %w", err)
+		}
+
 		return NewYAML(b)
 	} else {
 		return nil, errors.New("file extension unknown")
@@ -66,4 +71,16 @@ func NewYAML(bytes []byte) (*ConfigSchemaJson, error) {
 	b, _ := json.Marshal(body)
 
 	return NewJSON(b)
+}
+
+func readFile(filename string) ([]byte, error) {
+	f, err := os.Open(filename)
+	if err != nil {
+		return nil, err
+	}
+
+	// limit reader is used, so the we will read only 20MB of the file.
+	lr := io.LimitReader(f, 20*1000000)
+
+	return io.ReadAll(lr)
 }

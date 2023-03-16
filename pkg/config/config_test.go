@@ -26,6 +26,10 @@ const (
 )
 
 var (
+	dir string
+)
+
+var (
 	missingFile      = regexp.MustCompile(`^unable to read config file: open (.*): no such file or directory$`)
 	invalidExtension = regexp.MustCompile(`^file extension unknown$`)
 
@@ -171,10 +175,28 @@ func TestNew(t *testing.T) {
 			errorMessage: missingField,
 		},
 		{
-			name: "missing file",
+			name: "missing JSON file",
 			file: testFile{
 				skip: true,
 				name: "missing.json",
+			},
+			fail:         true,
+			errorMessage: missingFile,
+		},
+		{
+			name: "missing YAML file",
+			file: testFile{
+				skip: true,
+				name: "missing.yaml",
+			},
+			fail:         true,
+			errorMessage: missingFile,
+		},
+		{
+			name: "missing YML file",
+			file: testFile{
+				skip: true,
+				name: "missing.yml",
 			},
 			fail:         true,
 			errorMessage: missingFile,
@@ -190,7 +212,12 @@ func TestNew(t *testing.T) {
 	}
 
 	// create test dir
-	_ = os.Mkdir(testDir, 0777)
+	var err error
+	dir, err = os.MkdirTemp("", testDir)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer os.RemoveAll(dir)
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
@@ -200,7 +227,7 @@ func TestNew(t *testing.T) {
 				panic(err)
 			}
 
-			testfile := path.Join(testDir, tc.file.name)
+			testfile := path.Join(dir, tc.file.name)
 
 			x, err := New(testfile)
 			if tc.fail {
@@ -212,9 +239,6 @@ func TestNew(t *testing.T) {
 			}
 		})
 	}
-
-	// delete test dir
-	_ = os.RemoveAll("test")
 }
 
 type testFile struct {
@@ -229,5 +253,5 @@ func (tf *testFile) Write() error {
 		return nil
 	}
 
-	return os.WriteFile(path.Join(testDir, tf.name), []byte(tf.content), 0644)
+	return os.WriteFile(path.Join(dir, tf.name), []byte(tf.content), 0644)
 }
