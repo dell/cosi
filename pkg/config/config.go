@@ -24,9 +24,9 @@ import (
 
 //go:generate go run github.com/atombender/go-jsonschema/cmd/gojsonschema@main --package=config --output=config.gen.go config.schema.json
 
-// Any additional functionality or configuration related utils should be placed in this file
-
+// New takes filename and returns populated configuration struct.
 func New(filename string) (*ConfigSchemaJson, error) {
+	/* #nosec G304 */
 	b, err := os.ReadFile(filename)
 	if err != nil {
 		return nil, fmt.Errorf("unable to read config file: %w", err)
@@ -41,6 +41,8 @@ func New(filename string) (*ConfigSchemaJson, error) {
 	}
 }
 
+// NewJSON takes array of bytes and unmarshals it, to return populated configuration struct.
+// Array of bytes is expected to be in JSON format.
 func NewJSON(bytes []byte) (*ConfigSchemaJson, error) {
 	cfg := &ConfigSchemaJson{}
 
@@ -52,6 +54,8 @@ func NewJSON(bytes []byte) (*ConfigSchemaJson, error) {
 	return cfg, nil
 }
 
+// NewYAML takes array of bytes and unmarshals it, to return populated configuration struct.
+// Array of bytes is expected to be in YAML format.
 func NewYAML(bytes []byte) (*ConfigSchemaJson, error) {
 	var body map[string]interface{}
 	err := yaml.Unmarshal(bytes, &body)
