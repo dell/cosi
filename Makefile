@@ -42,8 +42,8 @@ build:	##build project
 # Builds dockerfile
 docker:	##generate the docker container
 	@echo "Base Images is set to: $(BASEIMAGE)"
-	@echo "Building: $(REGISTRY)/$(IMAGENAME):$(IMAGETAG)"
-	docker build -t "$(REGISTRY)/$(IMAGENAME):$(IMAGETAG)" --build-arg BASEIMAGE=$(BASEIMAGE) --build-arg GOVERSION=$(GOVERSION) --build-arg DIGEST=$(DIGEST) .
+	@echo "Building: $(IMAGENAME):$(IMAGETAG)"
+	docker build -t "$(IMAGENAME):$(IMAGETAG)" --build-arg BASEIMAGE=$(BASEIMAGE) --build-arg GOVERSION=$(GOVERSION) --build-arg DIGEST=$(DIGEST) .
 
 # Pushes container to the repository
 push: docker	##generate and push the docker container to repository
