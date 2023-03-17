@@ -18,7 +18,7 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"strings"
+	"path"
 
 	"gopkg.in/yaml.v3"
 )
@@ -27,21 +27,23 @@ import (
 
 // New takes filename and returns populated configuration struct.
 func New(filename string) (*ConfigSchemaJson, error) {
-	if strings.HasSuffix(filename, ".json") {
+	ext := path.Ext(filename)
+	switch ext {
+	case ".json":
 		b, err := readFile(filename)
 		if err != nil {
 			return nil, fmt.Errorf("unable to read config file: %w", err)
 		}
 
 		return NewJSON(b)
-	} else if strings.HasSuffix(filename, ".yaml") || strings.HasSuffix(filename, ".yml") {
+	case ".yaml", ".yml":
 		b, err := readFile(filename)
 		if err != nil {
 			return nil, fmt.Errorf("unable to read config file: %w", err)
 		}
 
 		return NewYAML(b)
-	} else {
+	default:
 		return nil, errors.New("invalid file extension, should be .json, .yaml or .yml")
 	}
 }

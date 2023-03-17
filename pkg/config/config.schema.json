@@ -10,7 +10,7 @@
       "default": "unix:///var/lib/cosi/cosi.sock"
     },
     "log-level": {
-      "description": "Defines how verbose should logs be",
+      "description": "Defines how verbose logs should be",
       "type": "string",
       "default": "info",
       "enum": [

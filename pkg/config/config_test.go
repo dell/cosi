@@ -31,7 +31,7 @@ var (
 
 var (
 	missingFile      = regexp.MustCompile(`^unable to read config file: open (.*): no such file or directory$`)
-	invalidExtension = regexp.MustCompile(`^file extension unknown$`)
+	invalidExtension = regexp.MustCompile(`^invalid file extension, should be .json, .yaml or .yml$`)
 
 	validJSON = `{
     "connections": [

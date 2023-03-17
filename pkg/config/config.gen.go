@@ -15,7 +15,7 @@ type ConfigSchemaJson struct {
 	// Path to the COSI socket
 	CosiEndpoint string `json:"cosi-endpoint,omitempty" yaml:"cosi-endpoint,omitempty"`
 
-	// Defines how verbose should logs be
+	// Defines how verbose logs should be
 	LogLevel ConfigSchemaJsonLogLevel `json:"log-level,omitempty" yaml:"log-level,omitempty"`
 }
 
