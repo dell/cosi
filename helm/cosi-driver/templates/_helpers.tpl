@@ -55,7 +55,7 @@ Create the name of the service account to use
 */}}
 {{- define "cosi-driver.serviceAccountName" -}}
 {{- if .Values.serviceAccount.create }}
-{{- default (include "cosi-driver.fullname" .) .Values.serviceAccount.name }}
+{{- default (printf "%s-sa" (include "cosi-driver.fullname" .)) .Values.serviceAccount.name }}
 {{- else }}
 {{- default "default" .Values.serviceAccount.name }}
 {{- end }}

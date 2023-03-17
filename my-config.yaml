@@ -1,0 +1,55 @@
+# Path to the COSI socket
+cosi-endpoint: unix:///var/lib/cosi/cosi.sockks
+# Defines how verbose should logs be
+log-level: info
+# List of connections based on which the sub-drivers are constructed
+connections:
+  # Configuration specific to the Dell ObjectScale platform
+- objectscale:
+    # Default, unique identifier for the sub-driver/platform
+    id: objectscale.secure.redpanda
+    # Credentials used for authentication to OSP
+    credentials:
+      # Base64 encoded username
+      password: dGVzdHBhc3N3b3Jk
+      # Base64 encoded password
+      username: dGVzdHVzZXI=
+    # Endpoint of the ObjectScale ObjectStore Management Gateway service
+    objectscale-gateway: http://objectstore.endpoint.test
+    # Endpoint of the ObjectScale Gateway Internal service
+    objectstore-gateway: http://objectscale.endpoint.test
+    # IAM API specific field, points to the region in which ObjectScale system is installed
+    region: us-west-1
+    protocols:
+      # S3 configuration
+      s3:
+        # Endpoint of the ObjectStore S3 service
+        endpoint: http://s3.endpoint.test
+    # TLS configuration details
+    tls:
+      client-auth: tls.NoClientCert
+      # Base64 encoded certificate file
+      client-cas: |-
+        LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCk1JSURJVENDQWdtZ0F3SUJBZ0lJQ3BVOEZFQXNS
+        MDh3RFFZSktvWklodmNOQVFFTEJRQXdGVEVUTUJFR0ExVUUKQXhNS2EzVmlaWEp1WlhSbGN6QWVG
+        dzB5TWpFd01ETXhNek0xTlRaYUZ3MHlNekV3TURNeE16TTFOVGhhTURReApGekFWQmdOVkJBb1RE
+        bk41YzNSbGJUcHRZWE4wWlhKek1Sa3dGd1lEVlFRREV4QnJkV0psY201bGRHVnpMV0ZrCmJXbHVN
+        SUlCSWpBTkJna3Foa2lHOXcwQkFRRUZBQU9DQVE4QU1JSUJDZ0tDQVFFQStkQmVqdWFJczZpRm5n
+        OFQKRUFldkkwMzdEVDBTZ2E3WEdISmUvaGdSYTloWm1HSlA4SHhKY0NvZWJMYi9iTUNBa09zbjJN
+        Q0VFamV4U0NaagpUMjN2Q2toVjVIL2gxdTluWVRidTRjV25sbUl0RG53eU1tMS96QW5hZkd4clVC
+        VDVMaENRS2IvZkNzK280M0gvCkZRZHdta2wySXFBNmRHL2ljcGszZGl2c0M3WlRxL2p5VmhUdHN4
+        Z2l4YjFzZTc4Y2xlQmJoYzVocG9qN2I1MHcKQ1RjZWh1NDhWVjE3VjhkRFAraGc3T3NPOWhXcGdl
+        RmZrb1JnQm1DSjNvRlc0N1dDQzRaWUQzd3hsTlBJOUZ4LwptSG9nbHFlU3J1Sjc4UUM4eWprOUpB
+        eFJ1ZlRWTExKSnIwUWJUc2I5dC96NlVZcU91VGVsTVd2UUVtQ1RaZzg0CmtmUWc5d0lEQVFBQm8x
+        WXdWREFPQmdOVkhROEJBZjhFQkFNQ0JhQXdFd1lEVlIwbEJBd3dDZ1lJS3dZQkJRVUgKQXdJd0RB
+        WURWUjBUQVFIL0JBSXdBREFmQmdOVkhTTUVHREFXZ0JTcjRPQW5jZDJpQU0wVVMwa0NVUDNrNWZV
+        ZgoxakFOQmdrcWhraUc5dzBCQVFzRkFBT0NBUUVBYXVTemRCckVTVkkzWHhIZ3FhT1A3Y1UyT1Vs
+        MytXV21SVk9DCkVETWtJVitoc3d4NmxUZmt1SXF3ZnZDaWVIZURoMXh5T3ZkYmNGdDl4WENIalor
+        bStucDN1cnFXdm9yYjNRL2kKSGRXUEtqTnVzNmcrbTExczI3cy9CdFMrVjdxWkNINENiek5hS0hD
+        dzZobmlhYk9jTnFjSlpXYXgxdFUwbzkvZApMWm8vYmlCelRtajN3dG41UVhxMG04NHdrOHl6Mzh2
+        WW5NamRzZjRpNlIzcGFwVVVEamJMK3N2QS8zdXh3ZG5vCktYbzR0TjU3dGRHaEYwQ1ZnZjJldEIr
+        TGtjTVpOTHlSQzcrTVdXYTJRSnNmV1JoYzJyeTBBd1lKejhjNFdXWkgKblUwb3VTc1lUcHV4NmNL
+        b1U4cHZNREV2Y0pBOVhyc214SnRUeEJTQjQ1NWRpNUwvNEE9PQotLS0tLUVORCBDRVJUSUZJQ0FU
+        RS0tLS0tCg==
+      insecure: false
+      min-version: VersionTLS12
