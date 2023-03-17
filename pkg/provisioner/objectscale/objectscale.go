@@ -53,7 +53,7 @@ func New(config *config.Objectscale) (*Server, error) {
 
 	username, err := base64.StdEncoding.DecodeString(config.Credentials.Username)
 	if err != nil {
-		return nil, fmt.Errorf("unable to decode usenrname: %w", err)
+		return nil, fmt.Errorf("unable to decode username: %w", err)
 	}
 
 	password, err := base64.StdEncoding.DecodeString(config.Credentials.Password)
