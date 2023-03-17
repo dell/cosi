@@ -14,7 +14,7 @@ YAML files can have comments, which are lines in the file that begin with the `#
 ### Properties
 
 - **cosi-endpoint** (_string_): Path to the COSI socket. Default value is `unix:///var/lib/cosi/cosi.sock`.
-- **log-level** (_string_): Defines how verbose should logs be. Valid values are: `"fatal"`, `"error"`, `"warning"`, `"info"`, `"debug"`, and `"trace"`. Default value is `"info"`.
+- **log-level** (_string_): Defines how verbose logs should be. Valid values are: `"fatal"`, `"error"`, `"warning"`, `"info"`, `"debug"`, and `"trace"`. Default value is `"info"`.
 - **connections** (_array_): List of connections to object storage platforms that is used for object storage provisioning. (**required field**)
   - **objectscale** (_object_): Configuration specific to the Dell ObjectScale platform.
     - **id** (_string_): Default, unique identifier for the single connection. All hyphens '`-`' are replaced with underscores '`_`', and may cause issues, thus it is adviced to not use them. (**required field**)
