@@ -42,7 +42,7 @@ func New(filename string) (*ConfigSchemaJson, error) {
 
 		return NewYAML(b)
 	} else {
-		return nil, errors.New("file extension unknown")
+		return nil, errors.New("invalid file extension, should be .json, .yaml or .yml")
 	}
 }
 
