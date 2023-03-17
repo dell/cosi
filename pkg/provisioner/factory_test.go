@@ -13,8 +13,10 @@
 package provisioner
 
 import (
+	"regexp"
 	"testing"
 
+	"github.com/dell/cosi-driver/pkg/config"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -24,7 +26,36 @@ func TestExactlyOne(t *testing.T) {
 		nillables []interface{}
 		expected  bool
 	}{
-		// TODO: add test cases
+		{
+			name:      "exactly one non nil",
+			nillables: []interface{}{nil, "x", nil},
+			expected:  true,
+		},
+		{
+			name:      "nil nillables",
+			nillables: nil,
+			expected:  false,
+		},
+		{
+			name:      "empty nillables",
+			nillables: []interface{}{},
+			expected:  false,
+		},
+		{
+			name:      "nil pointer",
+			nillables: []interface{}{(*config.Objectscale)(nil)},
+			expected:  false,
+		},
+		{
+			name:      "all nil",
+			nillables: []interface{}{nil, nil, nil},
+			expected:  false,
+		},
+		{
+			name:      "more than one not nil",
+			nillables: []interface{}{nil, "x", 1},
+			expected:  false,
+		},
 	}
 
 	for _, tc := range testCases {
@@ -35,16 +66,67 @@ func TestExactlyOne(t *testing.T) {
 	}
 }
 
+var (
+	validConfig = config.Configuration{
+		Objectscale: &config.Objectscale{
+			Id:                 "valid.id",
+			ObjectscaleGateway: "gateway.objectscale.test",
+			ObjectstoreGateway: "gateway.objectstore.test",
+			Credentials: config.Credentials{
+				Username: "dGVzdHVzZXIK",
+				Password: "dGVzdHBhc3N3b3JkCg==",
+			},
+			Protocols: config.Protocols{
+				S3: &config.S3{
+					Endpoint: "s3.objectstore.test",
+				},
+			},
+			Tls: config.Tls{
+				Insecure: true,
+			},
+		},
+	}
+	invalidConfig = config.Configuration{
+		Objectscale: nil,
+	}
+)
+
+var (
+	expectedOne = regexp.MustCompile("^expected exactly one OSP in configuration$")
+)
+
 func TestNewVirtualDriver(t *testing.T) {
 	testCases := []struct {
-		name string
+		name         string
+		config       config.Configuration
+		fail         bool
+		errorMessage *regexp.Regexp
 	}{
-		// TODO: add test cases
+		{
+			name:   "valid config",
+			config: validConfig,
+		},
+		{
+			name:         "invalid config",
+			config:       invalidConfig,
+			fail:         true,
+			errorMessage: expectedOne,
+		},
 	}
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			// TODO: add test body
+			vd, err := NewVirtualDriver(tc.config)
+			if tc.fail {
+				if assert.Error(t, err) {
+					assert.Regexp(t, tc.errorMessage, err.Error())
+				}
+				return
+			}
+			assert.NoError(t, err)
+			if assert.NotNil(t, vd) {
+				assert.Equal(t, tc.config.Objectscale.Id, vd.ID())
+			}
 		})
 	}
 }

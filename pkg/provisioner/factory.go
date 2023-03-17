@@ -43,8 +43,17 @@ func NewVirtualDriver(config config.Configuration) (driver.Driver, error) {
 func exactlyOne(nillables ...interface{}) bool {
 	c := 0
 	for _, v := range nillables {
-		if v != nil {
-			c++
+		// we need type switch, because nil not always equals nil, e.g.: `nil != (*config.Objectscale)(nil)`
+		switch x := v.(type) {
+		case *config.Objectscale:
+			if x != (*config.Objectscale)(nil) {
+				c++
+			}
+
+		default:
+			if x != nil {
+				c++
+			}
 		}
 	}
 

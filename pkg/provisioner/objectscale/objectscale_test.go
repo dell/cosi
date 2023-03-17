@@ -14,6 +14,8 @@ package objectscale
 
 import (
 	"context"
+	"regexp"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -22,6 +24,7 @@ import (
 
 	cosi "sigs.k8s.io/container-object-storage-interface-spec"
 
+	"github.com/dell/cosi-driver/pkg/config"
 	"github.com/dell/goobjectscale/pkg/client/fake"
 	"github.com/dell/goobjectscale/pkg/client/model"
 )
@@ -29,12 +32,12 @@ import (
 // FIXME: those are only smoke tests, no real testing is done here
 func TestServer(t *testing.T) {
 	for scenario, fn := range map[string]func(t *testing.T){
-		"smoke/testNew":                      testDriverNew,
-		"smoke/testID":                       testDriverID,
-		"smoke/testDriverCreateBucket":       testDriverCreateBucket,
-		"smoke/testDriverDeleteBucket":       testDriverDeleteBucket,
-		"smoke/testDriverGrantBucketAccess":  testDriverGrantBucketAccess,
-		"smoke/testDriverRevokeBucketAccess": testDriverRevokeBucketAccess,
+		"testNew":                      testDriverNew,
+		"testID":                       testDriverID,
+		"testDriverCreateBucket":       testDriverCreateBucket,
+		"testDriverDeleteBucket":       testDriverDeleteBucket,
+		"testDriverGrantBucketAccess":  testDriverGrantBucketAccess,
+		"testDriverRevokeBucketAccess": testDriverRevokeBucketAccess,
 	} {
 		t.Run(scenario, func(t *testing.T) {
 			fn(t)
@@ -42,16 +45,200 @@ func TestServer(t *testing.T) {
 	}
 }
 
+type expected int
+
+const (
+	ok      expected = iota
+	warning expected = iota
+	fail    expected = iota
+)
+
+var (
+	invalidBase64 = `😀`
+
+	validConfig = &config.Objectscale{
+		Id:                 "valid.id",
+		ObjectscaleGateway: "gateway.objectscale.test",
+		ObjectstoreGateway: "gateway.objectstore.test",
+		Credentials: config.Credentials{
+			Username: "dGVzdHVzZXIK",
+			Password: "dGVzdHBhc3N3b3JkCg==",
+		},
+		Protocols: config.Protocols{
+			S3: &config.S3{
+				Endpoint: "s3.objectstore.test",
+			},
+		},
+		Tls: config.Tls{
+			Insecure: true,
+		},
+	}
+
+	invalidConfigWithHyphens = &config.Objectscale{
+		Id:                 "id-with-hyphens",
+		ObjectscaleGateway: "gateway.objectscale.test",
+		ObjectstoreGateway: "gateway.objectstore.test",
+		Credentials: config.Credentials{
+			Username: "dGVzdHVzZXIK",
+			Password: "dGVzdHBhc3N3b3JkCg==",
+		},
+		Protocols: config.Protocols{
+			S3: &config.S3{
+				Endpoint: "s3.objectstore.test",
+			},
+		},
+		Tls: config.Tls{
+			Insecure: true,
+		},
+	}
+
+	invalidConfigEmptyID = &config.Objectscale{
+		Id:                 "",
+		ObjectscaleGateway: "gateway.objectscale.test",
+		ObjectstoreGateway: "gateway.objectstore.test",
+		Credentials: config.Credentials{
+			Username: "dGVzdHVzZXIK",
+			Password: "dGVzdHBhc3N3b3JkCg==",
+		},
+		Protocols: config.Protocols{
+			S3: &config.S3{
+				Endpoint: "s3.objectstore.test",
+			},
+		},
+		Tls: config.Tls{
+			Insecure: true,
+		},
+	}
+
+	invalidConfigTLS = &config.Objectscale{
+		Id:                 "valid.id",
+		ObjectscaleGateway: "gateway.objectscale.test",
+		ObjectstoreGateway: "gateway.objectstore.test",
+		Credentials: config.Credentials{
+			Username: "dGVzdHVzZXIK",
+			Password: "dGVzdHBhc3N3b3JkCg==",
+		},
+		Protocols: config.Protocols{
+			S3: &config.S3{
+				Endpoint: "s3.objectstore.test",
+			},
+		},
+		Tls: config.Tls{
+			Insecure: false,
+			RootCas:  &invalidBase64,
+		},
+	}
+
+	invalidConfigUsername = &config.Objectscale{
+		Id:                 "valid.id",
+		ObjectscaleGateway: "gateway.objectscale.test",
+		ObjectstoreGateway: "gateway.objectstore.test",
+		Credentials: config.Credentials{
+			Username: invalidBase64,
+			Password: "dGVzdHBhc3N3b3JkCg==",
+		},
+		Protocols: config.Protocols{
+			S3: &config.S3{
+				Endpoint: "s3.objectstore.test",
+			},
+		},
+		Tls: config.Tls{
+			Insecure: true,
+		},
+	}
+
+	invalidConfigPassword = &config.Objectscale{
+		Id:                 "valid.id",
+		ObjectscaleGateway: "gateway.objectscale.test",
+		ObjectstoreGateway: "gateway.objectstore.test",
+		Credentials: config.Credentials{
+			Username: "dGVzdHVzZXIK",
+			Password: invalidBase64,
+		},
+		Protocols: config.Protocols{
+			S3: &config.S3{
+				Endpoint: "s3.objectstore.test",
+			},
+		},
+		Tls: config.Tls{
+			Insecure: true,
+		},
+	}
+)
+
+var (
+	emptyID             = regexp.MustCompile(`^empty id$`)
+	transportInitFailed = regexp.MustCompile(`^initialization of transport failed:`)
+	decodingFailed      = regexp.MustCompile(`^unable to decode (.*): illegal base64 data at input byte (.*)$`)
+)
+
 // testDriverNew tests server initialization
 func testDriverNew(t *testing.T) {
-	driver := Server{
-		mgmtClient: fake.NewClientSet(),
-		backendID:  "id",
-		namespace:  "namespace",
+	testCases := []struct {
+		name         string
+		config       *config.Objectscale
+		result       expected
+		errorMessage *regexp.Regexp
+	}{
+		{
+			name:   "valid config",
+			config: validConfig,
+			result: ok,
+		},
+		{
+			name:   "invalid config with hyphens",
+			config: invalidConfigWithHyphens,
+			result: warning,
+		},
+		{
+			name:         "invalid config empty id",
+			config:       invalidConfigEmptyID,
+			result:       fail,
+			errorMessage: emptyID,
+		},
+		{
+			name:         "invalid config TLS error",
+			config:       invalidConfigTLS,
+			result:       fail,
+			errorMessage: transportInitFailed,
+		},
+		{
+			name:         "invalid config invalid username",
+			config:       invalidConfigUsername,
+			result:       fail,
+			errorMessage: decodingFailed,
+		},
+		{
+			name:         "invalid config invalid password",
+			config:       invalidConfigPassword,
+			result:       fail,
+			errorMessage: decodingFailed,
+		},
 	}
-	assert.Equal(t, "id", driver.backendID)
-	assert.Equal(t, "namespace", driver.namespace)
-	assert.NotNil(t, driver.mgmtClient)
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			driver, err := New(tc.config)
+			switch tc.result {
+			case ok:
+				assert.NoError(t, err)
+				if assert.NotNil(t, driver) {
+					assert.Equal(t, tc.config.Id, driver.ID())
+				}
+
+			case warning:
+				assert.NoError(t, err)
+				if assert.NotNil(t, driver) {
+					assert.Equal(t, strings.ReplaceAll(tc.config.Id, "-", "_"), driver.ID())
+				}
+
+			case fail:
+				if assert.Error(t, err) {
+					assert.Regexp(t, tc.errorMessage, err.Error())
+				}
+			}
+		})
+	}
 }
 
 // testDriverID tests extending COSI interface by adding driver ID
