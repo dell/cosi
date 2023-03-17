@@ -29,8 +29,8 @@ YAML files can have comments, which are lines in the file that begin with the `#
         - **endpoint** (_string_): Endpoint of the S3 service. (**required field**)
     - **tls** (_object_): TLS configuration details. (**required field**)
       - **insecure** (_boolean_): Controls whether a client verifies the server's certificate chain and host name. (**required field**)
-      - **root-cas** (_string_): Base64 encoded content of the clients's certificate file.
-      - **root-cas** (_string_): Base64 encoded content of the clients's key certificate file.
+      - **client-cert** (_string_): Base64 encoded content of the clients's certificate file.
+      - **client-key** (_string_): Base64 encoded content of the clients's key certificate file.
       - **root-cas** (_string_): Base64 encoded content of the root certificate authority file.
 
 ## Configuration file example
