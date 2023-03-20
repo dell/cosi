@@ -40,22 +40,27 @@ func NewVirtualDriver(config config.Configuration) (driver.Driver, error) {
 	panic("programming error")
 }
 
+// exactlyOne checks if exactly one of it's arguments is not nil.
+//
+// It takes in a variadic argument list of nillable values (interfaces that can either be nil or non-nil).
+// The function then counts the number of non-nil values and returns a boolean indicating whether
+// exactly one non-nil value was passed as an argument.
 func exactlyOne(nillables ...interface{}) bool {
-	c := 0
-	for _, v := range nillables {
+	count := 0
+	for _, nillable := range nillables {
 		// we need type switch, because nil not always equals nil, e.g.: `nil != (*config.Objectscale)(nil)`
-		switch x := v.(type) {
+		switch nillable := nillable.(type) {
 		case *config.Objectscale:
-			if x != (*config.Objectscale)(nil) {
-				c++
+			if nillable != (*config.Objectscale)(nil) {
+				count++
 			}
 
 		default:
-			if x != nil {
-				c++
+			if nillable != nil {
+				count++
 			}
 		}
 	}
 
-	return c == 1
+	return count == 1
 }
