@@ -1,0 +1,73 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "cosi-driver.fullname" . }}
+  labels:
+    {{- include "cosi-driver.labels" . | nindent 4 }}
+spec:
+  {{- if not .Values.autoscaling.enabled }}
+  replicas: {{ .Values.replicaCount }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "cosi-driver.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "cosi-driver.selectorLabels" . | nindent 8 }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "cosi-driver.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      containers:
+        - name: {{ .Chart.Name }}-provisioner
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: "{{ .Values.image.provisioner.repository }}:{{ .Values.image.provisioner.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.provisioner.pullPolicy }}
+          resources:
+            {{- toYaml .Values.resources.provisioner | nindent 12 }}
+          volumeMounts:
+          - name: {{ include "cosi-driver.name" . }}-config-volume
+            mountPath: "/config.yaml"
+            readOnly: true
+          volumeMounts:
+          - name: cosi-socket-dir
+            mountPath: /var/lib/cosi
+        - name: {{ .Values.image.sidecar.name }}
+          image: "{{ .Values.image.sidecar.repository }}:{{ .Values.image.sidecar.tag }}"
+          imagePullPolicy: {{ .Values.image.sidecar.pullPolicy }}
+          resources:
+            {{- toYaml .Values.resources.sidecar | nindent 12 }}
+          volumeMounts:
+          - name: cosi-socket-dir
+            mountPath: /var/lib/cosi
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      volumes:
+      - name: {{ include "cosi-driver.name" . }}-config-volume
+        configMap:
+          name: {{ include "cosi-driver.name" . }}-config
+          items:
+          - key: config.yaml
+            path: config.yaml
+      - name: cosi-socket-dir
+        emptyDir: {}
