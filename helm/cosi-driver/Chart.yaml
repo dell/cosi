@@ -12,7 +12,7 @@
 
 apiVersion: v2
 name: cosi-driver
-description: A Helm chart for Kubernetes
+description: Container Object Storage Interface (COSI) Driver for Dell ObjectScale
 
 # A chart can be either an 'application' or a 'library' chart.
 #

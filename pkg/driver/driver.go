@@ -16,7 +16,6 @@ import (
 	"context"
 	"crypto/tls"
 	"flag"
-	"fmt"
 	"net"
 	"net/http"
 
@@ -76,7 +75,7 @@ func Run(ctx context.Context, name, backendID, namespace string, port int) error
 	spec.RegisterProvisionerServer(server, provisionerServer)
 
 	// Create shared listener for gRPC server
-	lis, err := net.Listen("tcp", fmt.Sprintf(":%d", port))
+	lis, err := net.Listen("unix", "/var/lib/cosi/cosi.sock")
 	if err != nil {
 		return err
 	}

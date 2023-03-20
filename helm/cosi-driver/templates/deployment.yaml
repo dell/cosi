@@ -39,11 +39,17 @@ spec:
           - name: {{ include "cosi-driver.name" . }}-config-volume
             mountPath: "/config.yaml"
             readOnly: true
+          volumeMounts:
+          - name: cosi-socket-dir
+            mountPath: /var/lib/cosi
         - name: {{ .Values.image.sidecar.name }}
           image: "{{ .Values.image.sidecar.repository }}:{{ .Values.image.sidecar.tag }}"
           imagePullPolicy: {{ .Values.image.sidecar.pullPolicy }}
           resources:
             {{- toYaml .Values.resources.sidecar | nindent 12 }}
+          volumeMounts:
+          - name: cosi-socket-dir
+            mountPath: /var/lib/cosi
       {{- with .Values.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}
@@ -63,3 +69,5 @@ spec:
           items:
           - key: config.yaml
             path: config.yaml
+      - name: cosi-socket-dir
+        emptyDir: {}
