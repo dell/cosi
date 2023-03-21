@@ -27,6 +27,7 @@ import (
 	"github.com/dell/cosi-driver/pkg/provisioner/virtual_driver/fake"
 )
 
+// TestNew tests the initialization of provisioner server.
 func TestNew(t *testing.T) {
 	testServer := &Server{}
 	fakeDriverset := &Driverset{drivers: map[string]virtual_driver.Driver{}}
@@ -37,6 +38,7 @@ func TestNew(t *testing.T) {
 	assert.NotNil(t, testServer.driverset)
 }
 
+// TestServer starts a server for running tests of the multi-backend provisioner.
 func TestServer(t *testing.T) {
 	testCases := map[string]func(*testing.T, Server){
 		"DriverCreateBucket":       testServerDriverCreateBucket,
@@ -58,6 +60,7 @@ func TestServer(t *testing.T) {
 	}
 }
 
+// testServerDriverCreateBucket tests passing the DriverCreateBucketRequest to the proper driver from the driverset.
 func testServerDriverCreateBucket(t *testing.T, fakeServer Server) {
 	testCases := []struct {
 		server        Server
@@ -112,6 +115,7 @@ func testServerDriverCreateBucket(t *testing.T, fakeServer Server) {
 	}
 }
 
+// testServerDriverDeleteBucket tests passing the DriverDeleteBucketRequest to the proper driver from the driverset.
 func testServerDriverDeleteBucket(t *testing.T, fakeServer Server) {
 	testCases := []struct {
 		server        Server
@@ -155,6 +159,8 @@ func testServerDriverDeleteBucket(t *testing.T, fakeServer Server) {
 	}
 }
 
+// testServerDriverGrantBucketAccess tests passing the DriverGrantBucketAccessRequest
+// to the proper driver from the driverset.
 func testServerDriverGrantBucketAccess(t *testing.T, fakeServer Server) {
 	testCases := []struct {
 		server        Server
@@ -209,6 +215,8 @@ func testServerDriverGrantBucketAccess(t *testing.T, fakeServer Server) {
 	}
 }
 
+// testServerDriverRevokeBucketAccess tests passing the DriverRevokeBucketAccessRequest
+// to the proper driver from the driverset.
 func testServerDriverRevokeBucketAccess(t *testing.T, fakeServer Server) {
 	testCases := []struct {
 		server        Server
