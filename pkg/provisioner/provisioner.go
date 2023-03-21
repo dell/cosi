@@ -60,7 +60,7 @@ func (s *Server) DriverCreateBucket(ctx context.Context,
 // DriverDeleteBucket deletes Bucket on specific Object Storage Platform.
 func (s *Server) DriverDeleteBucket(ctx context.Context,
 	req *cosi.DriverDeleteBucketRequest) (*cosi.DriverDeleteBucketResponse, error) {
-	id := getId(req.BucketId)
+	id := getID(req.BucketId)
 
 	// get the driver from driverset
 	// if there is no correct driver, log error, and return standard error message
@@ -100,7 +100,7 @@ func (s *Server) DriverGrantBucketAccess(ctx context.Context,
 // DriverRevokeBucketAccess revokes access from Bucket on specific Object Storage Platform.
 func (s *Server) DriverRevokeBucketAccess(ctx context.Context,
 	req *cosi.DriverRevokeBucketAccessRequest) (*cosi.DriverRevokeBucketAccessResponse, error) {
-	id := getId(req.BucketId)
+	id := getID(req.BucketId)
 
 	// get the driver from driverset
 	// if there is no correct driver, log error, and return standard error message
@@ -117,10 +117,10 @@ func (s *Server) DriverRevokeBucketAccess(ctx context.Context,
 	return d.DriverRevokeBucketAccess(ctx, req)
 }
 
-// getId splits the string and returns ID from it
+// getID splits the string and returns ID from it
 // correct format of string is:
 // (ID)-(other identifers)
-func getId(s string) string {
+func getID(s string) string {
 	id := strings.Split(s, "-")
 
 	if len(id) < 2 {

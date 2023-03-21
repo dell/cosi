@@ -15,7 +15,7 @@ package provisioner
 import (
 	"errors"
 
-	driver "github.com/dell/cosi-driver/pkg/provisioner/virtual_driver"
+	driver "github.com/dell/cosi-driver/pkg/provisioner/virtualdriver"
 
 	"github.com/dell/cosi-driver/pkg/config"
 	"github.com/dell/cosi-driver/pkg/provisioner/objectscale"

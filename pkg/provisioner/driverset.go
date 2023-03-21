@@ -3,7 +3,7 @@ package provisioner
 import (
 	"sync"
 
-	driver "github.com/dell/cosi-driver/pkg/provisioner/virtual_driver"
+	driver "github.com/dell/cosi-driver/pkg/provisioner/virtualdriver"
 )
 
 // Driverset is a structure holding list of Drivers, that can be added or extracted based on the ID
