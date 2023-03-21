@@ -71,8 +71,7 @@ func testServerDriverCreateBucket(t *testing.T, fakeServer Server) {
 			req: &cosi.DriverCreateBucketRequest{
 				Name: "fake",
 				Parameters: map[string]string{
-					// TODO: should this field name be const/var?
-					"id": "fake",
+					fake.KeyDriverID: "fake",
 				},
 			},
 			expectedError: nil,
@@ -83,9 +82,8 @@ func testServerDriverCreateBucket(t *testing.T, fakeServer Server) {
 			req: &cosi.DriverCreateBucketRequest{
 				Name: "fake",
 				Parameters: map[string]string{
-					// TODO: should this field name be const/var?
-					"id":           "fake",
-					fake.ForceFail: "true",
+					fake.KeyDriverID: "fake",
+					fake.ForceFail:   "true",
 				},
 			},
 			expectedError: status.Error(codes.Internal, "An unexpected error occurred"),
@@ -96,8 +94,7 @@ func testServerDriverCreateBucket(t *testing.T, fakeServer Server) {
 			req: &cosi.DriverCreateBucketRequest{
 				Name: "invalid",
 				Parameters: map[string]string{
-					// TODO: should this field name be const/var?
-					"id": "invalid",
+					fake.KeyDriverID: "invalid",
 				},
 			},
 			expectedError: status.Error(codes.InvalidArgument, "DriverCreateBucket: Invalid backend ID"),
@@ -171,8 +168,7 @@ func testServerDriverGrantBucketAccess(t *testing.T, fakeServer Server) {
 			req: &cosi.DriverGrantBucketAccessRequest{
 				BucketId: "valid-bucket",
 				Parameters: map[string]string{
-					// TODO: should this field name be const/var?
-					"id": "fake",
+					fake.KeyDriverID: "fake",
 				},
 			},
 			expectedError: nil,
@@ -183,9 +179,8 @@ func testServerDriverGrantBucketAccess(t *testing.T, fakeServer Server) {
 			req: &cosi.DriverGrantBucketAccessRequest{
 				BucketId: "valid-bucket",
 				Parameters: map[string]string{
-					// TODO: should this field name be const/var?
-					"id":           "fake",
-					fake.ForceFail: "true",
+					fake.KeyDriverID: "fake",
+					fake.ForceFail:   "true",
 				},
 			},
 			expectedError: status.Error(codes.Internal, "An unexpected error occurred"),
@@ -196,8 +191,7 @@ func testServerDriverGrantBucketAccess(t *testing.T, fakeServer Server) {
 			req: &cosi.DriverGrantBucketAccessRequest{
 				Name: "invalid",
 				Parameters: map[string]string{
-					// TODO: should this field name be const/var?
-					"id": "invalid",
+					fake.KeyDriverID: "invalid",
 				},
 			},
 			expectedError: status.Error(codes.InvalidArgument, "DriverGrantBucketAccess: Invalid backend ID"),
