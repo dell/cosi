@@ -21,10 +21,6 @@ import (
 	"github.com/dell/cosi-driver/pkg/provisioner/objectscale"
 )
 
-var (
-	ErrUnimplemented = errors.New("unimplemented")
-)
-
 // NewVirtualDriver is factory function, that takes configuration, validates if it is correct, and
 // returns correct driver.
 func NewVirtualDriver(config config.Configuration) (driver.Driver, error) {
