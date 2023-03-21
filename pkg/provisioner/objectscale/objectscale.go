@@ -14,6 +14,7 @@ package objectscale
 
 import (
 	"context"
+	"encoding/base64"
 	"errors"
 	"fmt"
 	"net/http"
@@ -45,37 +46,56 @@ var _ driver.Driver = (*Server)(nil)
 
 // Initialize Server based on the config file.
 func New(config *config.Objectscale) (*Server, error) {
-	/* #nosec */
-	// ObjectScale clientset
 	transport, err := transport.New(config.Tls)
 	if err != nil {
 		return nil, fmt.Errorf("initialization of transport failed: %w", err)
 	}
 
-	// FIXME: not validating if client should be secure
-	unsafeClient := &http.Client{Transport: transport}
+	username, err := base64.StdEncoding.DecodeString(config.Credentials.Username)
+	if err != nil {
+		return nil, fmt.Errorf("unable to decode username: %w", err)
+	}
+
+	password, err := base64.StdEncoding.DecodeString(config.Credentials.Password)
+	if err != nil {
+		return nil, fmt.Errorf("unable to decode password: %w", err)
+	}
 
 	objectscaleAuthUser := objectscaleClient.AuthUser{
 		Gateway:  config.ObjectscaleGateway,
-		Username: config.Credentials.Username,
-		Password: config.Credentials.Password,
+		Username: string(username),
+		Password: string(password),
 	}
 	mgmtClient := objectscaleRest.NewClientSet(
 		&objectscaleClient.Simple{
 			Endpoint:       config.ObjectstoreGateway,
 			Authenticator:  &objectscaleAuthUser,
-			HTTPClient:     unsafeClient,
+			HTTPClient:     &http.Client{Transport: transport},
 			OverrideHeader: false,
 		},
 	)
 
+	id := config.Id
+	if id == "" {
+		return nil, errors.New("empty id")
+	}
+
+	if strings.Contains(id, "-") {
+		id = strings.ReplaceAll(id, "-", "_")
+
+		log.WithFields(log.Fields{
+			"id":        id,
+			"config.id": config.Id,
+		}).Warn("id in config contains hyphens, which will be replaced with underscores")
+	}
+
 	return &Server{
 		mgmtClient: mgmtClient,
-		backendID:  config.Id,
+		backendID:  id,
 	}, nil
 }
 
-// Extend COSI interface by adding ID method.
+// ID extends COSI interface by adding ID method.
 func (s *Server) ID() string {
 	return s.backendID
 }
@@ -86,7 +106,6 @@ func (s *Server) DriverCreateBucket(ctx context.Context,
 
 	log.WithFields(log.Fields{
 		"bucket": req.GetName(),
-		"id":     s.ID(),
 	}).Info("Bucket is being created")
 
 	// Create bucket model.
@@ -96,9 +115,7 @@ func (s *Server) DriverCreateBucket(ctx context.Context,
 
 	// Check if bucket name is not empty.
 	if bucket.Name == "" {
-		log.WithFields(log.Fields{
-			"id": s.ID(),
-		}).Error("DriverCreateBucket: Empty bucket name")
+		log.Error("DriverCreateBucket: Empty bucket name")
 		return nil, status.Error(codes.InvalidArgument, "Empty bucket name")
 	}
 
@@ -112,7 +129,6 @@ func (s *Server) DriverCreateBucket(ctx context.Context,
 
 	log.WithFields(log.Fields{
 		"parameters": parameters,
-		"id":         s.ID(),
 	}).Debug("Parameters of the bucket")
 
 	// Remove backendID, as this is not valid parameter for bucket creation in ObjectScale.
@@ -120,17 +136,14 @@ func (s *Server) DriverCreateBucket(ctx context.Context,
 
 	// Check if bucket with specific name and parameters already exists.
 	_, err := s.mgmtClient.Buckets().Get(bucket.Name, parametersCopy)
-	if err != nil && errors.Is(err, model.Error{Code: 1004}) == false {
+	if err != nil && errors.Is(err, model.Error{Code: model.CodeResourceNotFound}) == false {
 		log.WithFields(log.Fields{
 			"existing_bucket": bucket.Name,
-			"error":           err,
-			"id":              s.ID(),
 		}).Error("DriverCreateBucket: Failed to check bucket existence")
 		return nil, status.Error(codes.Internal, "An unexpected error occurred")
 	} else if err == nil {
 		log.WithFields(log.Fields{
 			"existing_bucket": bucket.Name,
-			"id":              s.ID(),
 		}).Error("DriverCreateBucket: Bucket already exists")
 		return nil, status.Error(codes.AlreadyExists, "Bucket already exists")
 	}
@@ -140,8 +153,6 @@ func (s *Server) DriverCreateBucket(ctx context.Context,
 	if err != nil {
 		log.WithFields(log.Fields{
 			"bucket": bucket.Name,
-			"error":  err,
-			"id":     s.ID(),
 		}).Error("DriverCreateBucket: Bucket was not sucessfully created")
 		return nil, status.Error(codes.Internal, "Bucket was not sucessfully created")
 	}
@@ -156,18 +167,21 @@ func (s *Server) DriverCreateBucket(ctx context.Context,
 	}, nil
 }
 
+// DriverDeleteBucket deletes Bucket on specific Object Storage Platform.
 func (s *Server) DriverDeleteBucket(ctx context.Context,
 	req *cosi.DriverDeleteBucketRequest) (*cosi.DriverDeleteBucketResponse, error) {
 
 	return nil, status.Error(codes.Unimplemented, "DriverCreateBucket: not implemented")
 }
 
+// DriverGrantBucketAccess provides access to Bucket on specific Object Storage Platform.
 func (s *Server) DriverGrantBucketAccess(ctx context.Context,
 	req *cosi.DriverGrantBucketAccessRequest) (*cosi.DriverGrantBucketAccessResponse, error) {
 
 	return nil, status.Error(codes.Unimplemented, "DriverCreateBucket: not implemented")
 }
 
+// DriverRevokeBucketAccess revokes access from Bucket on specific Object Storage Platform.
 func (s *Server) DriverRevokeBucketAccess(ctx context.Context,
 	req *cosi.DriverRevokeBucketAccessRequest) (*cosi.DriverRevokeBucketAccessResponse, error) {
 

@@ -1,29 +1,34 @@
 package provisioner
 
 import (
+	"sync"
+
 	driver "github.com/dell/cosi-driver/pkg/provisioner/virtual_driver"
 )
 
 // Driverset is a structure holding list of Drivers, that can be added or extracted based on the ID
 type Driverset struct {
+	once    sync.Once
 	drivers map[string]driver.Driver
 }
 
 // Add is used to add new driver to the Driverset
-func (d *Driverset) Add(driver driver.Driver) error {
-	id := driver.ID()
-	if _, ok := d.drivers[id]; ok == true {
+func (ds *Driverset) Add(d driver.Driver) error {
+	id := d.ID()
+	if _, ok := ds.drivers[id]; ok == true {
 		return ErrDriverDuplicate{id}
 	}
 
-	d.drivers[id] = driver
+	ds.once.Do(func() { ds.drivers = make(map[string]driver.Driver) })
+	ds.drivers[id] = d
 
 	return nil
 }
 
 // Get is used to get driver from the Driverset
-func (d Driverset) Get(id string) (driver.Driver, error) {
-	driver, ok := d.drivers[id]
+func (ds Driverset) Get(id string) (driver.Driver, error) {
+	ds.once.Do(func() { ds.drivers = make(map[string]driver.Driver) })
+	driver, ok := ds.drivers[id]
 	if !ok {
 		return nil, ErrNotConfigured{id}
 	}
