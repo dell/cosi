@@ -30,7 +30,7 @@ type Server struct {
 
 var _ cosi.ProvisionerServer = (*Server)(nil)
 
-// New initializs Server based on the config file.
+// New initializes Server based on the config file.
 func New(driverset *Driverset) *Server {
 	return &Server{
 		driverset: driverset,
@@ -69,8 +69,8 @@ func (s *Server) DriverDeleteBucket(ctx context.Context,
 		log.WithFields(log.Fields{
 			"id":    id,
 			"error": err,
-		}).Error("DriverCreateBucket: Invalid backend ID")
-		return nil, status.Error(codes.InvalidArgument, "DriverCreateBucket: Invalid backend ID")
+		}).Error("DriverDeleteBucket: Invalid backend ID")
+		return nil, status.Error(codes.InvalidArgument, "DriverDeleteBucket: Invalid backend ID")
 	}
 
 	// execute DriverDeleteBucket from correct driver
@@ -89,8 +89,8 @@ func (s *Server) DriverGrantBucketAccess(ctx context.Context,
 		log.WithFields(log.Fields{
 			"id":    id,
 			"error": err,
-		}).Error("DriverCreateBucket: Invalid backend ID")
-		return nil, status.Error(codes.InvalidArgument, "DriverCreateBucket: Invalid backend ID")
+		}).Error("DriverGrantBucketAccess: Invalid backend ID")
+		return nil, status.Error(codes.InvalidArgument, "DriverGrantBucketAccess: Invalid backend ID")
 	}
 
 	// execute DriverGrantBucketAccess from correct driver
@@ -109,8 +109,8 @@ func (s *Server) DriverRevokeBucketAccess(ctx context.Context,
 		log.WithFields(log.Fields{
 			"id":    id,
 			"error": err,
-		}).Error("DriverCreateBucket: Invalid backend ID")
-		return nil, status.Error(codes.InvalidArgument, "DriverCreateBucket: Invalid backend ID")
+		}).Error("DriverRevokeBucketAccess: Invalid backend ID")
+		return nil, status.Error(codes.InvalidArgument, "DriverRevokeBucketAccess: Invalid backend ID")
 	}
 
 	// execute DriverRevokeBucketAccess from correct driver
