@@ -49,6 +49,11 @@ const (
 	//	}
 	//
 	ForceFail = "X-TEST/force-fail"
+
+	// This key is used for retrieving the ID of the virtual driver a request comes to. It's retrieved from the
+	// request's parameters, then a driver with such ID is being checked for existence. It's also used for controlling
+	// tests flow, e.g. forcibly failing a test.
+	KeyDriverID = "id"
 )
 
 // ID is implementation of method from virtual_driver.Driver interface.
