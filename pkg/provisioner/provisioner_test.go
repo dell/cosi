@@ -30,7 +30,7 @@ import (
 func TestNew(t *testing.T) {
 	testServer := &Server{}
 	fakeDriverset := &Driverset{drivers: map[string]virtual_driver.Driver{}}
-	fakeDriverset.Add(&fake.Driver{})
+	fakeDriverset.Add(&fake.Driver{FakeId: "fake"})
 	testServer = New(fakeDriverset)
 
 	assert.NotNil(t, testServer)
@@ -46,7 +46,7 @@ func TestServer(t *testing.T) {
 	}
 
 	fakeDriverset := &Driverset{drivers: map[string]virtual_driver.Driver{}}
-	fakeDriverset.Add(&fake.Driver{})
+	fakeDriverset.Add(&fake.Driver{FakeId: "fake"})
 	fakeServer := Server{
 		driverset: fakeDriverset,
 	}
