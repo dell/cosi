@@ -23,9 +23,13 @@ import (
 	"github.com/dell/cosi-driver/pkg/config"
 )
 
-// ErrClientCertMissing indicates that one of client-cert or client-key is missing
-var ErrClientCertMissing = errors.New("client-cert or client-key missing")
-var ErrRootCAMissing = errors.New("client-cert or client-key missing")
+var (
+	// ErrClientCertMissing indicates that one of client-cert or client-key is missing
+	ErrClientCertMissing = errors.New("client-cert or client-key missing")
+
+	// ErrRootCAMissing indicates that root CA (certificate authority) is missing
+	ErrRootCAMissing = errors.New("root certificate authority is missing")
+)
 
 // New creates new HTTP or HTTPS transport based on provided config
 func New(cfg config.Tls) (*http.Transport, error) {

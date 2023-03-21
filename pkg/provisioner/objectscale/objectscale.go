@@ -26,7 +26,6 @@ import (
 	"google.golang.org/grpc/status"
 
 	driver "github.com/dell/cosi-driver/pkg/provisioner/virtualdriver"
-	_ "github.com/dell/goobjectscale/pkg/client/fake"
 	objectscaleRest "github.com/dell/goobjectscale/pkg/client/rest"
 	objectscaleClient "github.com/dell/goobjectscale/pkg/client/rest/client"
 	log "github.com/sirupsen/logrus"

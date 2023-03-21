@@ -32,7 +32,7 @@ func (ds *Driverset) Add(newDriver driver.Driver) error {
 }
 
 // Get is used to get driver from the Driverset
-func (ds Driverset) Get(id string) (driver.Driver, error) {
+func (ds *Driverset) Get(id string) (driver.Driver, error) {
 	ds.once.Do(ds.init)
 	driver, ok := ds.drivers[id]
 	if ok == false {
