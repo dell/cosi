@@ -25,7 +25,9 @@ import (
 )
 
 // Driver is a mock implementation of virtual_driver.Driver interface.
-type Driver struct{}
+type Driver struct {
+	FakeId string
+}
 
 var _ driver.Driver = (*Driver)(nil) // interface guard
 
@@ -51,7 +53,7 @@ const (
 
 // ID is implementation of method from virtual_driver.Driver interface.
 func (d *Driver) ID() string {
-	return "fake"
+	return d.FakeId
 }
 
 // DriverCreateBucket is implementation of method from virtual_driver.Driver interface.

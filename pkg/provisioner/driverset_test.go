@@ -12,46 +12,82 @@
 
 package provisioner
 
-import "testing"
+import (
+	driver "github.com/dell/cosi-driver/pkg/provisioner/virtual_driver"
+	"github.com/dell/cosi-driver/pkg/provisioner/virtual_driver/fake"
+	"github.com/stretchr/testify/assert"
+	"testing"
+)
 
-func TestDriverset(t *testing.T) {
+var (
+	driverset = Driverset{
+		drivers: map[string]driver.Driver{
+			"driver0": &fake.Driver{FakeId: "driver0"},
+		}}
+)
+
+func TestDriversetAdd(t *testing.T) {
 	testCases := []struct {
-		name string
+		name      string
+		driverset Driverset
+		driver    fake.Driver
+		want      Driverset
+		wantErr   error
 	}{
-		// TODO: add test cases
+		{
+			name:      "no duplicate",
+			driverset: Driverset{drivers: map[string]driver.Driver{}},
+			driver:    fake.Driver{FakeId: "driver0"},
+			want:      driverset,
+			wantErr:   nil,
+		},
+		{
+			name:      "duplicate",
+			driverset: driverset,
+			driver:    fake.Driver{FakeId: "driver0"},
+			want:      driverset,
+			wantErr:   ErrDriverDuplicate{},
+		},
 	}
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			// TODO: add test body
+			err := tc.driverset.Add(&tc.driver)
+			assert.IsType(t, tc.wantErr, err)
+			assert.Equal(t, tc.want.drivers, tc.driverset.drivers)
 		})
 	}
 }
 
-func TestErrDriverDuplicate(t *testing.T) {
+func TestDriversetGet(t *testing.T) {
 	testCases := []struct {
-		name string
+		name      string
+		driverset Driverset
+		id        string
+		want      driver.Driver
+		wantErr   error
 	}{
-		// TODO: add test cases
+		{
+			name:      "driver configured",
+			driverset: driverset,
+			id:        "driver0",
+			want:      &fake.Driver{FakeId: "driver0"},
+			wantErr:   nil,
+		},
+		{
+			name:      "driver not configured",
+			driverset: driverset,
+			id:        "driver1",
+			want:      nil,
+			wantErr:   ErrNotConfigured{},
+		},
 	}
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			// TODO: add test body
-		})
-	}
-}
-
-func TestErrNotConfigured(t *testing.T) {
-	testCases := []struct {
-		name string
-	}{
-		// TODO: add test cases
-	}
-
-	for _, tc := range testCases {
-		t.Run(tc.name, func(t *testing.T) {
-			// TODO: add test body
+			got, err := tc.driverset.Get(tc.id)
+			assert.IsTypef(t, tc.wantErr, err, "%+#v", tc.driverset)
+			assert.Equal(t, tc.want, got)
 		})
 	}
 }
