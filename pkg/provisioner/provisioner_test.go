@@ -23,15 +23,15 @@ import (
 
 	cosi "sigs.k8s.io/container-object-storage-interface-spec"
 
-	"github.com/dell/cosi-driver/pkg/provisioner/virtual_driver"
-	"github.com/dell/cosi-driver/pkg/provisioner/virtual_driver/fake"
+	"github.com/dell/cosi-driver/pkg/provisioner/virtualdriver"
+	"github.com/dell/cosi-driver/pkg/provisioner/virtualdriver/fake"
 )
 
 // TestNew tests the initialization of provisioner server.
 func TestNew(t *testing.T) {
 	testServer := &Server{}
-	fakeDriverset := &Driverset{drivers: map[string]virtual_driver.Driver{}}
-	fakeDriverset.Add(&fake.Driver{FakeId: "fake"})
+	fakeDriverset := &Driverset{drivers: map[string]virtualdriver.Driver{}}
+	fakeDriverset.Add(&fake.Driver{FakeID: "fake"})
 	testServer = New(fakeDriverset)
 
 	assert.NotNil(t, testServer)
@@ -47,8 +47,8 @@ func TestServer(t *testing.T) {
 		"DriverRevokeBucketAccess": testServerDriverRevokeBucketAccess,
 	}
 
-	fakeDriverset := &Driverset{drivers: map[string]virtual_driver.Driver{}}
-	fakeDriverset.Add(&fake.Driver{FakeId: "fake"})
+	fakeDriverset := &Driverset{drivers: map[string]virtualdriver.Driver{}}
+	fakeDriverset.Add(&fake.Driver{FakeID: "fake"})
 	fakeServer := Server{
 		driverset: fakeDriverset,
 	}

@@ -10,7 +10,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package virtual_driver
+package virtualdriver
 
 import (
 	cosi "sigs.k8s.io/container-object-storage-interface-spec"

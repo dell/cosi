@@ -13,34 +13,35 @@
 package provisioner
 
 import (
-	driver "github.com/dell/cosi-driver/pkg/provisioner/virtual_driver"
-	"github.com/dell/cosi-driver/pkg/provisioner/virtual_driver/fake"
-	"github.com/stretchr/testify/assert"
 	"testing"
+
+	driver "github.com/dell/cosi-driver/pkg/provisioner/virtualdriver"
+	"github.com/dell/cosi-driver/pkg/provisioner/virtualdriver/fake"
+	"github.com/stretchr/testify/assert"
 )
 
 var (
-	driverset = Driverset{
+	driverset = &Driverset{
 		drivers: map[string]driver.Driver{
-			"driver0": &fake.Driver{FakeId: "driver0"},
+			"driver0": &fake.Driver{FakeID: "driver0"},
 		}}
 )
 
 func TestDriversetInit(t *testing.T) {
 	testCases := []struct {
 		name      string
-		driverset Driverset
-		want      Driverset
+		driverset *Driverset
+		want      *Driverset
 	}{
 		{
 			name:      "driverset initialised",
-			driverset: Driverset{drivers: map[string]driver.Driver{}},
-			want:      Driverset{drivers: map[string]driver.Driver{}},
+			driverset: &Driverset{drivers: map[string]driver.Driver{}},
+			want:      &Driverset{drivers: map[string]driver.Driver{}},
 		},
 		{
 			name:      "driverset not initialised",
-			driverset: Driverset{},
-			want:      Driverset{drivers: map[string]driver.Driver{}},
+			driverset: &Driverset{},
+			want:      &Driverset{drivers: map[string]driver.Driver{}},
 		},
 	}
 
@@ -55,22 +56,22 @@ func TestDriversetInit(t *testing.T) {
 func TestDriversetAdd(t *testing.T) {
 	testCases := []struct {
 		name      string
-		driverset Driverset
-		driver    fake.Driver
-		want      Driverset
+		driverset *Driverset
+		driver    driver.Driver
+		want      *Driverset
 		wantErr   error
 	}{
 		{
 			name:      "no duplicate",
-			driverset: Driverset{drivers: map[string]driver.Driver{}},
-			driver:    fake.Driver{FakeId: "driver0"},
+			driverset: &Driverset{drivers: map[string]driver.Driver{}},
+			driver:    &fake.Driver{FakeID: "driver0"},
 			want:      driverset,
 			wantErr:   nil,
 		},
 		{
 			name:      "duplicate",
 			driverset: driverset,
-			driver:    fake.Driver{FakeId: "driver0"},
+			driver:    &fake.Driver{FakeID: "driver0"},
 			want:      driverset,
 			wantErr:   ErrDriverDuplicate{},
 		},
@@ -78,7 +79,7 @@ func TestDriversetAdd(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			err := tc.driverset.Add(&tc.driver)
+			err := tc.driverset.Add(tc.driver)
 			assert.IsType(t, tc.wantErr, err)
 			assert.Equal(t, tc.want.drivers, tc.driverset.drivers)
 		})
@@ -88,7 +89,7 @@ func TestDriversetAdd(t *testing.T) {
 func TestDriversetGet(t *testing.T) {
 	testCases := []struct {
 		name      string
-		driverset Driverset
+		driverset *Driverset
 		id        string
 		want      driver.Driver
 		wantErr   error
@@ -97,7 +98,7 @@ func TestDriversetGet(t *testing.T) {
 			name:      "driver configured",
 			driverset: driverset,
 			id:        "driver0",
-			want:      &fake.Driver{FakeId: "driver0"},
+			want:      &fake.Driver{FakeID: "driver0"},
 			wantErr:   nil,
 		},
 		{

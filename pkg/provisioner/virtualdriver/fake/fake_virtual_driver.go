@@ -17,16 +17,16 @@ import (
 	"fmt"
 	"strings"
 
-	driver "github.com/dell/cosi-driver/pkg/provisioner/virtual_driver"
+	driver "github.com/dell/cosi-driver/pkg/provisioner/virtualdriver"
 	cosi "sigs.k8s.io/container-object-storage-interface-spec"
 
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
 
-// Driver is a mock implementation of virtual_driver.Driver interface.
+// Driver is a mock implementation of virtualdriver.Driver interface.
 type Driver struct {
-	FakeId string
+	FakeID string
 }
 
 var _ driver.Driver = (*Driver)(nil) // interface guard
@@ -50,18 +50,18 @@ const (
 	//
 	ForceFail = "X-TEST/force-fail"
 
-	// This key is used for retrieving the ID of the virtual driver a request comes to. It's retrieved from the
+	// KeyDriverID is used for retrieving the ID of the virtual driver a request comes to. It's retrieved from the
 	// request's parameters, then a driver with such ID is being checked for existence. It's also used for controlling
 	// tests flow, e.g. forcibly failing a test.
 	KeyDriverID = "id"
 )
 
-// ID is implementation of method from virtual_driver.Driver interface.
+// ID is implementation of method from virtualdriver.Driver interface.
 func (d *Driver) ID() string {
-	return d.FakeId
+	return d.FakeID
 }
 
-// DriverCreateBucket is implementation of method from virtual_driver.Driver interface.
+// DriverCreateBucket is implementation of method from virtualdriver.Driver interface.
 //
 // To forcefully fail it, add parameter with Key "X-TEST/force-fail" and any non-zero value.
 func (d *Driver) DriverCreateBucket(ctx context.Context, req *cosi.DriverCreateBucketRequest) (*cosi.DriverCreateBucketResponse, error) {
@@ -74,7 +74,7 @@ func (d *Driver) DriverCreateBucket(ctx context.Context, req *cosi.DriverCreateB
 	}, nil
 }
 
-// DriverDeleteBucket is implementation of method from virtual_driver.Driver interface.
+// DriverDeleteBucket is implementation of method from virtualdriver.Driver interface.
 //
 // To forcefully fail it set BucketId in request to contain string "X-TEST/force-fail".
 func (d *Driver) DriverDeleteBucket(ctx context.Context, req *cosi.DriverDeleteBucketRequest) (*cosi.DriverDeleteBucketResponse, error) {
@@ -85,7 +85,7 @@ func (d *Driver) DriverDeleteBucket(ctx context.Context, req *cosi.DriverDeleteB
 	return &cosi.DriverDeleteBucketResponse{}, nil
 }
 
-// DriverGrantBucketAccess is implementation of method from virtual_driver.Driver interface.
+// DriverGrantBucketAccess is implementation of method from virtualdriver.Driver interface.
 //
 // To forcefully fail it, add parameter with Key "X-TEST/force-fail" and any non-zero value.
 func (d *Driver) DriverGrantBucketAccess(ctx context.Context, req *cosi.DriverGrantBucketAccessRequest) (*cosi.DriverGrantBucketAccessResponse, error) {
@@ -107,7 +107,7 @@ func (d *Driver) DriverGrantBucketAccess(ctx context.Context, req *cosi.DriverGr
 	}, nil
 }
 
-// DriverRevokeBucketAccess is implementation of method from virtual_driver.Driver interface.
+// DriverRevokeBucketAccess is implementation of method from virtualdriver.Driver interface.
 //
 // To forcefully fail it set BucketId in request to contain string "X-TEST/force-fail".
 func (d *Driver) DriverRevokeBucketAccess(ctx context.Context, req *cosi.DriverRevokeBucketAccessRequest) (*cosi.DriverRevokeBucketAccessResponse, error) {

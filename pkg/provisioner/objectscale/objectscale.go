@@ -25,7 +25,7 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	driver "github.com/dell/cosi-driver/pkg/provisioner/virtual_driver"
+	driver "github.com/dell/cosi-driver/pkg/provisioner/virtualdriver"
 	_ "github.com/dell/goobjectscale/pkg/client/fake"
 	objectscaleRest "github.com/dell/goobjectscale/pkg/client/rest"
 	objectscaleClient "github.com/dell/goobjectscale/pkg/client/rest/client"
@@ -36,6 +36,7 @@ import (
 	"github.com/dell/cosi-driver/pkg/transport"
 )
 
+// Server is implementation of driver.Driver interface for ObjectScale platform
 type Server struct {
 	mgmtClient api.ClientSet
 	backendID  string
@@ -44,7 +45,7 @@ type Server struct {
 
 var _ driver.Driver = (*Server)(nil)
 
-// Initialize Server based on the config file.
+// New initializes server based on the config file.
 func New(config *config.Objectscale) (*Server, error) {
 	transport, err := transport.New(config.Tls)
 	if err != nil {
