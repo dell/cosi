@@ -12,24 +12,30 @@ type Driverset struct {
 	drivers map[string]driver.Driver
 }
 
+func (ds *Driverset) init() {
+	if ds.drivers == nil {
+		ds.drivers = make(map[string]driver.Driver)
+	}
+}
+
 // Add is used to add new driver to the Driverset
-func (ds *Driverset) Add(d driver.Driver) error {
-	id := d.ID()
+func (ds *Driverset) Add(newDriver driver.Driver) error {
+	id := newDriver.ID()
 	if _, ok := ds.drivers[id]; ok == true {
 		return ErrDriverDuplicate{id}
 	}
 
-	ds.once.Do(func() { ds.drivers = make(map[string]driver.Driver) })
-	ds.drivers[id] = d
+	ds.once.Do(ds.init)
+	ds.drivers[id] = newDriver
 
 	return nil
 }
 
 // Get is used to get driver from the Driverset
 func (ds Driverset) Get(id string) (driver.Driver, error) {
-	ds.once.Do(func() { ds.drivers = make(map[string]driver.Driver) })
+	ds.once.Do(ds.init)
 	driver, ok := ds.drivers[id]
-	if !ok {
+	if ok == false {
 		return nil, ErrNotConfigured{id}
 	}
 
