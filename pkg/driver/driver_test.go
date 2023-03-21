@@ -14,6 +14,7 @@ package driver
 
 import (
 	"context"
+	"fmt"
 	"testing"
 	"time"
 
@@ -54,7 +55,10 @@ func TestRun(t *testing.T) {
 
 			errCh := make(chan error, 1)
 			go func() {
-				errCh <- Run(ctx, &config.ConfigSchemaJson{}, "test") // FIXME: config is not provided, this will fail!
+				errCh <- Run(ctx, &config.ConfigSchemaJson{
+					CosiEndpoint: fmt.Sprintf("0.0.0.0:%d", tc.port),
+					LogLevel:     config.ConfigSchemaJsonLogLevelTrace,
+				}, "test")
 			}()
 
 			// Wait for server to start
@@ -62,7 +66,10 @@ func TestRun(t *testing.T) {
 
 			if tc.expectedError {
 				// Test error is returned when port is already in use
-				err = Run(context.Background(), &config.ConfigSchemaJson{}, "test") // FIXME: config is not provided, this will fail!
+				err = Run(context.Background(), &config.ConfigSchemaJson{
+					CosiEndpoint: fmt.Sprintf("0.0.0.0:%d", tc.port),
+					LogLevel:     config.ConfigSchemaJsonLogLevelTrace,
+				}, "test")
 				if err == nil {
 					t.Errorf("Expected error, but got nil")
 				}
