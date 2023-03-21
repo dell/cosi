@@ -53,6 +53,7 @@ func New(cfg config.Tls) (*http.Transport, error) {
 
 		tlsConfig = &tls.Config{
 			InsecureSkipVerify: false,
+			MinVersion:         tls.VersionTLS12,
 			Certificates:       cert,
 			RootCAs:            caCertPool,
 		}
