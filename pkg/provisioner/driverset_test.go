@@ -26,6 +26,32 @@ var (
 		}}
 )
 
+func TestDriversetInit(t *testing.T) {
+	testCases := []struct {
+		name      string
+		driverset Driverset
+		want      Driverset
+	}{
+		{
+			name:      "driverset initialised",
+			driverset: Driverset{drivers: map[string]driver.Driver{}},
+			want:      Driverset{drivers: map[string]driver.Driver{}},
+		},
+		{
+			name:      "driverset not initialised",
+			driverset: Driverset{},
+			want:      Driverset{drivers: map[string]driver.Driver{}},
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			tc.driverset.init()
+			assert.Equal(t, tc.want, tc.driverset)
+		})
+	}
+}
+
 func TestDriversetAdd(t *testing.T) {
 	testCases := []struct {
 		name      string
@@ -88,6 +114,48 @@ func TestDriversetGet(t *testing.T) {
 			got, err := tc.driverset.Get(tc.id)
 			assert.IsTypef(t, tc.wantErr, err, "%+#v", tc.driverset)
 			assert.Equal(t, tc.want, got)
+		})
+	}
+}
+
+func TestErrDriverDuplicate(t *testing.T) {
+	testCases := []struct {
+		name string
+		id   string
+		want string
+	}{
+		{
+			name: "error prints correctly",
+			id:   "driverID",
+			want: "driver for 'driverID' already exists",
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			err := ErrDriverDuplicate{tc.id}
+			assert.Equal(t, err.Error(), tc.want)
+		})
+	}
+}
+
+func TestErrNotConfigured(t *testing.T) {
+	testCases := []struct {
+		name string
+		id   string
+		want string
+	}{
+		{
+			name: "error prints correctly",
+			id:   "driverID",
+			want: "platform identified by 'driverID' was not configured",
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			err := ErrNotConfigured{tc.id}
+			assert.Equal(t, err.Error(), tc.want)
 		})
 	}
 }
