@@ -46,7 +46,9 @@ func main() {
 
 	cfg, err := config.New(*configFile)
 	if err != nil {
-		log.Fatal(err)
+		log.WithFields(log.Fields{
+			"error": err,
+		}).Fatal("failed to create configuration")
 	}
 
 	// Create a channel to listen for signals.
@@ -59,7 +61,9 @@ func main() {
 		// Wait for a signal.
 		sig := <-sigs
 		// Log that a signal was received.
-		log.Info("Signal received", "type", sig)
+		log.WithFields(log.Fields{
+			"type": sig,
+		}).Info("Signal received")
 		// Cancel the context.
 		cancel()
 		// Exit the program with an error.

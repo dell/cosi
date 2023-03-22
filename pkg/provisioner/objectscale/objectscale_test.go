@@ -29,7 +29,6 @@ import (
 	"github.com/dell/goobjectscale/pkg/client/model"
 )
 
-// FIXME: those are only smoke tests, no real testing is done here
 func TestServer(t *testing.T) {
 	for scenario, fn := range map[string]func(t *testing.T){
 		"testNew":                      testDriverNew,
@@ -54,15 +53,15 @@ const (
 )
 
 var (
-	invalidBase64 = `😀`
+	invalidBase64 = `💀`
 
 	validConfig = &config.Objectscale{
 		Id:                 "valid.id",
 		ObjectscaleGateway: "gateway.objectscale.test",
 		ObjectstoreGateway: "gateway.objectstore.test",
 		Credentials: config.Credentials{
-			Username: "dGVzdHVzZXIK",
-			Password: "dGVzdHBhc3N3b3JkCg==",
+			Username: "testuser",
+			Password: "testpassword",
 		},
 		Protocols: config.Protocols{
 			S3: &config.S3{
@@ -79,8 +78,8 @@ var (
 		ObjectscaleGateway: "gateway.objectscale.test",
 		ObjectstoreGateway: "gateway.objectstore.test",
 		Credentials: config.Credentials{
-			Username: "dGVzdHVzZXIK",
-			Password: "dGVzdHBhc3N3b3JkCg==",
+			Username: "testuser",
+			Password: "testpassword",
 		},
 		Protocols: config.Protocols{
 			S3: &config.S3{
@@ -97,8 +96,8 @@ var (
 		ObjectscaleGateway: "gateway.objectscale.test",
 		ObjectstoreGateway: "gateway.objectstore.test",
 		Credentials: config.Credentials{
-			Username: "dGVzdHVzZXIK",
-			Password: "dGVzdHBhc3N3b3JkCg==",
+			Username: "testuser",
+			Password: "testpassword",
 		},
 		Protocols: config.Protocols{
 			S3: &config.S3{
@@ -115,8 +114,8 @@ var (
 		ObjectscaleGateway: "gateway.objectscale.test",
 		ObjectstoreGateway: "gateway.objectstore.test",
 		Credentials: config.Credentials{
-			Username: "dGVzdHVzZXIK",
-			Password: "dGVzdHBhc3N3b3JkCg==",
+			Username: "testuser",
+			Password: "testpassword",
 		},
 		Protocols: config.Protocols{
 			S3: &config.S3{
@@ -126,42 +125,6 @@ var (
 		Tls: config.Tls{
 			Insecure: false,
 			RootCas:  &invalidBase64,
-		},
-	}
-
-	invalidConfigUsername = &config.Objectscale{
-		Id:                 "valid.id",
-		ObjectscaleGateway: "gateway.objectscale.test",
-		ObjectstoreGateway: "gateway.objectstore.test",
-		Credentials: config.Credentials{
-			Username: invalidBase64,
-			Password: "dGVzdHBhc3N3b3JkCg==",
-		},
-		Protocols: config.Protocols{
-			S3: &config.S3{
-				Endpoint: "s3.objectstore.test",
-			},
-		},
-		Tls: config.Tls{
-			Insecure: true,
-		},
-	}
-
-	invalidConfigPassword = &config.Objectscale{
-		Id:                 "valid.id",
-		ObjectscaleGateway: "gateway.objectscale.test",
-		ObjectstoreGateway: "gateway.objectstore.test",
-		Credentials: config.Credentials{
-			Username: "dGVzdHVzZXIK",
-			Password: invalidBase64,
-		},
-		Protocols: config.Protocols{
-			S3: &config.S3{
-				Endpoint: "s3.objectstore.test",
-			},
-		},
-		Tls: config.Tls{
-			Insecure: true,
 		},
 	}
 )
@@ -201,18 +164,6 @@ func testDriverNew(t *testing.T) {
 			config:       invalidConfigTLS,
 			result:       fail,
 			errorMessage: transportInitFailed,
-		},
-		{
-			name:         "invalid config invalid username",
-			config:       invalidConfigUsername,
-			result:       fail,
-			errorMessage: decodingFailed,
-		},
-		{
-			name:         "invalid config invalid password",
-			config:       invalidConfigPassword,
-			result:       fail,
-			errorMessage: decodingFailed,
 		},
 	}
 

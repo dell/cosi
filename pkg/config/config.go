@@ -70,6 +70,7 @@ func NewYAML(bytes []byte) (*ConfigSchemaJson, error) {
 		return nil, err
 	}
 
+	// FIXME:
 	b, _ := json.Marshal(body)
 
 	return NewJSON(b)
