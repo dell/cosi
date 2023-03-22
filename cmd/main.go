@@ -27,9 +27,8 @@ import (
 )
 
 var (
-	versionFlag = flag.Bool("version", false, "Print the version and exit.")
-	logLevel    = flag.String("log-level", "debug", "Log level (debug, info, warn, error, fatal, panic)")
-	configFile  = flag.String("config", "/cosi/config.yaml", "path to config file")
+	logLevel   = flag.String("log-level", "debug", "Log level (debug, info, warn, error, fatal, panic)")
+	configFile = flag.String("config", "/cosi/config.yaml", "path to config file")
 )
 
 // init is run before main and is used to define command line flags.
