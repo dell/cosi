@@ -14,8 +14,9 @@ package driver
 
 import (
 	"context"
-	"flag"
+	"errors"
 	"net"
+	"strings"
 
 	"google.golang.org/grpc"
 
@@ -28,11 +29,11 @@ import (
 )
 
 var (
-	objectscaleGateway  = flag.String("objectscale-gateway", "https://localhost:9443", "ObjectScale Gateway")
-	objectscaleUser     = flag.String("objectscale-user", "admin", "ObjectScale User")
-	objectscalePassword = flag.String("objectscale-password", "admin", "ObjectScale Password")
-	objectstoreGateway  = flag.String("objectstore-gateway", "https://localhost:9443", "ObjectStore Gateway")
-	unsafeClient        = flag.Bool("unsafe-client", false, "Use unsafe client")
+	// ErrNoEndpoint indicates that the COSI endpoint was not provided
+	ErrNoEndpoint = errors.New("COSI Endpoint not configured")
+
+	// ErrBadEndpoint indicates that the COSI endpoint had bad format
+	ErrBadEndpoint = errors.New("COSI Endpoint has bad format, should be unix://<path> or <path>")
 )
 
 // Run starts the gRPC server for the identity and provisioner servers
@@ -62,8 +63,30 @@ func Run(ctx context.Context, config *config.ConfigSchemaJson, name string) erro
 	spec.RegisterIdentityServer(server, identityServer)
 	spec.RegisterProvisionerServer(server, provisionerServer)
 
+	if config.CosiEndpoint == "" {
+		return ErrNoEndpoint
+	}
+
+	var (
+		network string
+		address string
+	)
+	connection := strings.Split(config.CosiEndpoint, "://")
+	if len(connection) == 2 {
+		switch connection[0] {
+		case "unix":
+			network = connection[0]
+			address = connection[1]
+		default:
+			return ErrBadEndpoint
+		}
+	} else if len(connection) == 1 {
+		network = "unix"
+		address = connection[0]
+	}
+
 	// Create shared listener for gRPC server
-	lis, err := net.Listen("tcp", config.CosiEndpoint)
+	lis, err := net.Listen(network, address)
 	if err != nil {
 		return err
 	}
