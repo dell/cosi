@@ -14,7 +14,6 @@ package objectscale
 
 import (
 	"context"
-	"encoding/base64"
 	"errors"
 	"fmt"
 	"net/http"
@@ -46,35 +45,6 @@ var _ driver.Driver = (*Server)(nil)
 
 // New initializes server based on the config file.
 func New(config *config.Objectscale) (*Server, error) {
-	transport, err := transport.New(config.Tls)
-	if err != nil {
-		return nil, fmt.Errorf("initialization of transport failed: %w", err)
-	}
-
-	username, err := base64.StdEncoding.DecodeString(config.Credentials.Username)
-	if err != nil {
-		return nil, fmt.Errorf("unable to decode username: %w", err)
-	}
-
-	password, err := base64.StdEncoding.DecodeString(config.Credentials.Password)
-	if err != nil {
-		return nil, fmt.Errorf("unable to decode password: %w", err)
-	}
-
-	objectscaleAuthUser := objectscaleClient.AuthUser{
-		Gateway:  config.ObjectscaleGateway,
-		Username: string(username),
-		Password: string(password),
-	}
-	mgmtClient := objectscaleRest.NewClientSet(
-		&objectscaleClient.Simple{
-			Endpoint:       config.ObjectstoreGateway,
-			Authenticator:  &objectscaleAuthUser,
-			HTTPClient:     &http.Client{Transport: transport},
-			OverrideHeader: false,
-		},
-	)
-
 	id := config.Id
 	if id == "" {
 		return nil, errors.New("empty id")
@@ -88,6 +58,25 @@ func New(config *config.Objectscale) (*Server, error) {
 			"config.id": config.Id,
 		}).Warn("id in config contains hyphens, which will be replaced with underscores")
 	}
+
+	transport, err := transport.New(config.Tls)
+	if err != nil {
+		return nil, fmt.Errorf("initialization of transport failed: %w", err)
+	}
+
+	objectscaleAuthUser := objectscaleClient.AuthUser{
+		Gateway:  config.ObjectscaleGateway,
+		Username: config.Credentials.Username,
+		Password: config.Credentials.Password,
+	}
+	mgmtClient := objectscaleRest.NewClientSet(
+		&objectscaleClient.Simple{
+			Endpoint:       config.ObjectstoreGateway,
+			Authenticator:  &objectscaleAuthUser,
+			HTTPClient:     &http.Client{Transport: transport},
+			OverrideHeader: false,
+		},
+	)
 
 	return &Server{
 		mgmtClient: mgmtClient,
