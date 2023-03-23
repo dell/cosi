@@ -64,14 +64,19 @@ func NewJSON(bytes []byte) (*ConfigSchemaJson, error) {
 // NewYAML takes array of bytes and unmarshals it, to return populated configuration struct.
 // Array of bytes is expected to be in YAML format.
 func NewYAML(bytes []byte) (*ConfigSchemaJson, error) {
+	// we need to unmarshall it into simple map[string]interface{}
+	// config structure does not have custom UnmarshallYAML fields, so the validation is not performed
 	var body map[string]interface{}
 	err := yaml.Unmarshal(bytes, &body)
 	if err != nil {
 		return nil, err
 	}
 
+	// we ignore the error, as the config was previously succesfully Unmarshaled from YAML.
+	// and there is no case, when the Marshaling will fail.
 	b, _ := json.Marshal(body)
 
+	// after we marshalled it to JSON, we need to call NewJSON func
 	return NewJSON(b)
 }
 

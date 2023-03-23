@@ -88,16 +88,12 @@
       "type": "object",
       "properties": {
         "username": {
-          "description": "Base64 encoded username",
-          "type": "string",
-          "format": "byte",
-          "$comment": "format field is placed here only for documentation purposes"
+          "description": "Username for object storage provider",
+          "type": "string"
         },
         "password": {
-          "description": "Base64 encoded password",
-          "type": "string",
-          "format": "byte",
-          "$comment": "format field is placed here only for documentation purposes"
+          "description": "Password for object storage provider",
+          "type": "string"
         }
       },
       "required": [
@@ -137,8 +133,18 @@
           "description": "Controls whether a client verifies the server's certificate chain and host name",
           "type": "boolean"
         },
-        "client-cas": {
-          "description": "Base64 encoded certificate file",
+        "client-cert": {
+          "description": "Base64 encoded content of the clients's certificate file",
+          "type": "string",
+          "format": "byte"
+        },
+        "client-key": {
+          "description": "Base64 encoded content of the clients's key certificate file",
+          "type": "string",
+          "format": "byte"
+        },
+        "root-cas": {
+          "description": "Base64 encoded content of the root certificate authority file",
           "type": "string",
           "format": "byte"
         }

@@ -36,7 +36,7 @@ func TestObjectscaleUnmarshalJSON(t *testing.T) {
 		{
 			name: "valid insecure objectscale",
 			data: []byte(
-				`{"credentials":{"username":"dGVzdHVzZXIK","password":"dGVzdHBhc3N3b3JkCg=="},
+				`{"credentials":{"username":"testuser","password":"testpassword"},
 				"id":"testid",
 				"objectscale-gateway":"gateway.objectscale.test",
 				"objectstore-gateway":"gateway.objectstore.test",
@@ -64,7 +64,7 @@ func TestObjectscaleUnmarshalJSON(t *testing.T) {
 		{
 			name: "invalid missing id",
 			data: []byte(
-				`{"credentials":{"username":"dGVzdHVzZXIK","password":"dGVzdHBhc3N3b3JkCg=="},
+				`{"credentials":{"username":"testuser","password":"testpassword"},
 				"objectscale-gateway":"gateway.objectscale.test",
 				"objectstore-gateway":"gateway.objectstore.test",
 				"protocols":{"s3":{"endpoint":"test.endpoint"}},
@@ -75,7 +75,7 @@ func TestObjectscaleUnmarshalJSON(t *testing.T) {
 		{
 			name: "invalid missing objectscale-gateway",
 			data: []byte(
-				`{"credentials":{"username":"dGVzdHVzZXIK","password":"dGVzdHBhc3N3b3JkCg=="},
+				`{"credentials":{"username":"testuser","password":"testpassword"},
 				"id":"testid",
 				"objectstore-gateway":"gateway.objectstore.test",
 				"protocols":{"s3":{"endpoint":"test.endpoint"}},
@@ -86,7 +86,7 @@ func TestObjectscaleUnmarshalJSON(t *testing.T) {
 		{
 			name: "invalid missing objectstore-gateway",
 			data: []byte(
-				`{"credentials":{"username":"dGVzdHVzZXIK","password":"dGVzdHBhc3N3b3JkCg=="},
+				`{"credentials":{"username":"testuser","password":"testpassword"},
 				"id":"testid",
 				"objectscale-gateway":"gateway.objectscale.test",
 				"protocols":{"s3":{"endpoint":"test.endpoint"}},
@@ -97,7 +97,7 @@ func TestObjectscaleUnmarshalJSON(t *testing.T) {
 		{
 			name: "invalid missing protocols",
 			data: []byte(
-				`{"credentials":{"username":"dGVzdHVzZXIK","password":"dGVzdHBhc3N3b3JkCg=="},
+				`{"credentials":{"username":"testuser","password":"testpassword"},
 				"id":"testid",
 				"objectscale-gateway":"gateway.objectscale.test",
 				"objectstore-gateway":"gateway.objectstore.test",
@@ -108,7 +108,7 @@ func TestObjectscaleUnmarshalJSON(t *testing.T) {
 		{
 			name: "invalid missing tls",
 			data: []byte(
-				`{"credentials":{"username":"dGVzdHVzZXIK","password":"dGVzdHBhc3N3b3JkCg=="},
+				`{"credentials":{"username":"testuser","password":"testpassword"},
 				"id":"testid",
 				"objectscale-gateway":"gateway.objectscale.test",
 				"objectstore-gateway":"gateway.objectstore.test",
@@ -306,18 +306,18 @@ func TestCredentialsUnmarshalJSON(t *testing.T) {
 	}{
 		{
 			name: "valid credentials",
-			data: []byte(`{"username":"dGVzdHVzZXIK","password":"dGVzdHBhc3N3b3JkCg=="}`),
+			data: []byte(`{"username":"testuser","password":"testpassword"}`),
 			fail: false,
 		},
 		{
 			name:         "missing password",
-			data:         []byte(`{"username":"dGVzdHVzZXIK"}`),
+			data:         []byte(`{"username":"testuser"}`),
 			fail:         true,
 			errorMessage: missingField,
 		},
 		{
 			name:         "missing username",
-			data:         []byte(`{"password":"dGVzdHBhc3N3b3JkCg=="}`),
+			data:         []byte(`{"password":"testpassword"}`),
 			fail:         true,
 			errorMessage: missingField,
 		},

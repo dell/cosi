@@ -14,64 +14,191 @@ package driver
 
 import (
 	"context"
+	"log"
 	"testing"
 	"time"
+
+	"github.com/dell/cosi-driver/pkg/config"
+	"github.com/stretchr/testify/assert"
+)
+
+var (
+	testSocketPath string
+	testDir        = "test"
+	testRegion     = "us-east-1"
+
+	testConfig = &config.ConfigSchemaJson{
+		CosiEndpoint: "unix:///tmp/cosi.sock",
+		LogLevel:     config.ConfigSchemaJsonLogLevelTrace,
+	}
+
+	testConfigNoNetwork = &config.ConfigSchemaJson{
+		CosiEndpoint: "/tmp/cosi.sock",
+		LogLevel:     config.ConfigSchemaJsonLogLevelTrace,
+	}
+
+	testConfigInvalidNetwork = &config.ConfigSchemaJson{
+		CosiEndpoint: "tcp:///tmp/cosi.sock",
+		LogLevel:     config.ConfigSchemaJsonLogLevelTrace,
+	}
+
+	testConfigWithConnections = &config.ConfigSchemaJson{
+		CosiEndpoint: "unix:///tmp/cosi.sock",
+		LogLevel:     config.ConfigSchemaJsonLogLevelTrace,
+		Connections: []config.Configuration{
+			{
+				Objectscale: &config.Objectscale{
+					Credentials: config.Credentials{
+						Username: "testuser",
+						Password: "testpassword",
+					},
+					Id:                 "test.id",
+					ObjectscaleGateway: "gateway.objectscale.test",
+					ObjectstoreGateway: "gateway.objectstore.test",
+					Protocols: config.Protocols{
+						S3: &config.S3{
+							Endpoint: "s3.objectstore.test",
+						},
+					},
+					Region: &testRegion,
+					Tls: config.Tls{
+						Insecure: true,
+					},
+				},
+			},
+		},
+	}
+
+	testConfigDuplicateID = &config.ConfigSchemaJson{
+		CosiEndpoint: "unix:///tmp/cosi.sock",
+		LogLevel:     config.ConfigSchemaJsonLogLevelTrace,
+		Connections: []config.Configuration{
+			{
+				Objectscale: &config.Objectscale{
+					Credentials: config.Credentials{
+						Username: "testuser",
+						Password: "testpassword",
+					},
+					Id:                 "test.id",
+					ObjectscaleGateway: "gateway.objectscale.test",
+					ObjectstoreGateway: "gateway.objectstore.test",
+					Protocols: config.Protocols{
+						S3: &config.S3{
+							Endpoint: "s3.objectstore.test",
+						},
+					},
+					Region: &testRegion,
+					Tls: config.Tls{
+						Insecure: true,
+					},
+				},
+			},
+			{
+				Objectscale: &config.Objectscale{
+					Credentials: config.Credentials{
+						Username: "testuser",
+						Password: "testpassword",
+					},
+					Id:                 "test.id",
+					ObjectscaleGateway: "gateway.objectscale.test",
+					ObjectstoreGateway: "gateway.objectstore.test",
+					Protocols: config.Protocols{
+						S3: &config.S3{
+							Endpoint: "s3.objectstore.test",
+						},
+					},
+					Region: &testRegion,
+					Tls: config.Tls{
+						Insecure: true,
+					},
+				},
+			},
+		},
+	}
+
+	testConfigMissingObjectscale = &config.ConfigSchemaJson{
+		CosiEndpoint: "unix:///tmp/cosi.sock",
+		LogLevel:     config.ConfigSchemaJsonLogLevelTrace,
+		Connections: []config.Configuration{
+			{
+				Objectscale: nil,
+			},
+		},
+	}
+
+	testConfigWithoutEndpoint = &config.ConfigSchemaJson{
+		LogLevel: config.ConfigSchemaJsonLogLevelTrace,
+	}
 )
 
 func TestRun(t *testing.T) {
 	testCases := []struct {
-		name          string
-		port          int
-		backendID     string
-		namespace     string
-		expectedError bool
+		name           string
+		config         *config.ConfigSchemaJson
+		auxiliaryFuncs []func(ctx context.Context) error
+		expectedError  bool
 	}{
 		{
-			name:          "Successful",
-			port:          8090,
-			backendID:     "123",
-			namespace:     "namespace1",
+			name:          "success",
+			config:        testConfig,
 			expectedError: false,
 		},
 		{
-			name:          "PortAlreadyInUse",
-			port:          8090,
-			backendID:     "123",
-			namespace:     "namespace1",
+			name:          "success without network in COSI Endpoint",
+			config:        testConfigNoNetwork,
+			expectedError: false,
+		},
+		{
+			name:          "failure invalid network",
+			config:        testConfigInvalidNetwork,
+			expectedError: true,
+		},
+		{
+			name:          "success with connections",
+			config:        testConfigWithConnections,
+			expectedError: false,
+		},
+		{
+			name:          "failure no endpoint",
+			config:        testConfigWithoutEndpoint,
+			expectedError: true,
+		},
+		{
+			name:          "failure duplicate ID",
+			config:        testConfigDuplicateID,
+			expectedError: true,
+		},
+		{
+			name:          "failure missing connection config",
+			config:        testConfigMissingObjectscale,
 			expectedError: true,
 		},
 	}
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			var err error
-
 			// Test server starts successfully and stops gracefully
 			ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 			defer cancel()
 
 			errCh := make(chan error, 1)
 			go func() {
-				errCh <- Run(ctx, "test", tc.backendID, tc.namespace, tc.port)
+				log.Printf("go Run")
+				errCh <- Run(ctx, tc.config, "test")
 			}()
 
 			// Wait for server to start
 			time.Sleep(500 * time.Millisecond)
 
-			if tc.expectedError {
-				// Test error is returned when port is already in use
-				err = Run(context.Background(), "test", tc.backendID, tc.namespace, tc.port)
-				if err == nil {
-					t.Errorf("Expected error, but got nil")
-				}
-			} else {
-				// Cancel context to stop server gracefully
-				cancel()
+			// Cancel context to stop server gracefully
+			cancel()
 
-				err = <-errCh
-				if err != nil {
-					t.Errorf("Unexpected error: %v", err)
-				}
+			if tc.expectedError {
+				err := <-errCh
+				assert.Error(t, err)
+			} else {
+				err := <-errCh
+				assert.NoError(t, err)
 			}
 		})
 	}

@@ -14,125 +14,118 @@ package provisioner
 
 import (
 	"context"
-	"errors"
 	"strings"
+
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 
 	log "github.com/sirupsen/logrus"
 	cosi "sigs.k8s.io/container-object-storage-interface-spec"
-
-	"github.com/dell/goobjectscale/pkg/client/api"
-	"github.com/dell/goobjectscale/pkg/client/model"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 )
 
 // Server is an implementation of a provisioner server.
 type Server struct {
-	mgmtClient api.ClientSet
-	backendID  string
-	namespace  string
+	driverset *Driverset
 }
 
 var _ cosi.ProvisionerServer = (*Server)(nil)
 
-// New initializs Server based on the config file.
-func New(mgmtClient api.ClientSet, backendID, namespace string) *Server {
+// New initializes Server based on the config file.
+func New(driverset *Driverset) *Server {
 	return &Server{
-		mgmtClient: mgmtClient,
-		backendID:  backendID,
-		namespace:  namespace,
+		driverset: driverset,
 	}
-}
-
-// ID extends COSI interface by adding ID method.
-func (s *Server) ID() string {
-	return s.backendID
 }
 
 // DriverCreateBucket creates Bucket on specific Object Storage Platform.
 func (s *Server) DriverCreateBucket(ctx context.Context,
 	req *cosi.DriverCreateBucketRequest) (*cosi.DriverCreateBucketResponse, error) {
+	id := req.Parameters["id"]
 
-	log.WithFields(log.Fields{
-		"bucket": req.GetName(),
-	}).Info("Bucket is being created")
-
-	// Create bucket model.
-	bucket := &model.Bucket{}
-	bucket.Name = req.GetName()
-	bucket.Namespace = s.namespace
-
-	// Check if bucket name is not empty.
-	if bucket.Name == "" {
-		log.Error("DriverCreateBucket: Empty bucket name")
-		return nil, status.Error(codes.InvalidArgument, "Empty bucket name")
-	}
-
-	// Display all request parameters.
-	parameters := ""
-	parametersCopy := make(map[string]string)
-	for key, value := range req.GetParameters() {
-		parameters += key + ":" + value + ";"
-		parametersCopy[key] = value
-	}
-
-	log.WithFields(log.Fields{
-		"parameters": parameters,
-	}).Debug("Parameters of the bucket")
-
-	// Remove backendID, as this is not valid parameter for bucket creation in ObjectScale.
-	delete(parametersCopy, "backendID")
-
-	// Check if bucket with specific name and parameters already exists.
-	_, err := s.mgmtClient.Buckets().Get(bucket.Name, parametersCopy)
-	if err != nil && errors.Is(err, model.Error{Code: model.CodeResourceNotFound}) == false {
-		log.WithFields(log.Fields{
-			"existing_bucket": bucket.Name,
-		}).Error("DriverCreateBucket: Failed to check bucket existence")
-		return nil, status.Error(codes.Internal, "An unexpected error occurred")
-	} else if err == nil {
-		log.WithFields(log.Fields{
-			"existing_bucket": bucket.Name,
-		}).Error("DriverCreateBucket: Bucket already exists")
-		return nil, status.Error(codes.AlreadyExists, "Bucket already exists")
-	}
-
-	// Create bucket.
-	bucket, err = s.mgmtClient.Buckets().Create(*bucket)
+	// get the driver from driverset
+	// if there is no correct driver, log error, and return standard error message
+	d, err := s.driverset.Get(id)
 	if err != nil {
 		log.WithFields(log.Fields{
-			"bucket": bucket.Name,
-		}).Error("DriverCreateBucket: Bucket was not sucessfully created")
-		return nil, status.Error(codes.Internal, "Bucket was not sucessfully created")
+			"id":    id,
+			"error": err,
+		}).Error("DriverCreateBucket: Invalid backend ID")
+		return nil, status.Error(codes.InvalidArgument, "DriverCreateBucket: Invalid backend ID")
 	}
 
-	log.WithFields(log.Fields{
-		"bucket": bucket.Name,
-	}).Info("DriverCreateBucket: Bucket has been successfully created")
-
-	// Return response.
-	return &cosi.DriverCreateBucketResponse{
-		BucketId: strings.Join([]string{s.backendID, bucket.Name}, "-"),
-	}, nil
+	// execute DriverCreateBucket from correct driver
+	return d.DriverCreateBucket(ctx, req)
 }
 
 // DriverDeleteBucket deletes Bucket on specific Object Storage Platform.
 func (s *Server) DriverDeleteBucket(ctx context.Context,
 	req *cosi.DriverDeleteBucketRequest) (*cosi.DriverDeleteBucketResponse, error) {
+	id := getID(req.BucketId)
 
-	return nil, status.Error(codes.Unimplemented, "DriverCreateBucket: not implemented")
+	// get the driver from driverset
+	// if there is no correct driver, log error, and return standard error message
+	d, err := s.driverset.Get(id)
+	if err != nil {
+		log.WithFields(log.Fields{
+			"id":    id,
+			"error": err,
+		}).Error("DriverDeleteBucket: Invalid backend ID")
+		return nil, status.Error(codes.InvalidArgument, "DriverDeleteBucket: Invalid backend ID")
+	}
+
+	// execute DriverDeleteBucket from correct driver
+	return d.DriverDeleteBucket(ctx, req)
 }
 
 // DriverGrantBucketAccess provides access to Bucket on specific Object Storage Platform.
 func (s *Server) DriverGrantBucketAccess(ctx context.Context,
 	req *cosi.DriverGrantBucketAccessRequest) (*cosi.DriverGrantBucketAccessResponse, error) {
+	id := req.Parameters["id"]
 
-	return nil, status.Error(codes.Unimplemented, "DriverCreateBucket: not implemented")
+	// get the driver from driverset
+	// if there is no correct driver, log error, and return standard error message
+	d, err := s.driverset.Get(id)
+	if err != nil {
+		log.WithFields(log.Fields{
+			"id":    id,
+			"error": err,
+		}).Error("DriverGrantBucketAccess: Invalid backend ID")
+		return nil, status.Error(codes.InvalidArgument, "DriverGrantBucketAccess: Invalid backend ID")
+	}
+
+	// execute DriverGrantBucketAccess from correct driver
+	return d.DriverGrantBucketAccess(ctx, req)
 }
 
 // DriverRevokeBucketAccess revokes access from Bucket on specific Object Storage Platform.
 func (s *Server) DriverRevokeBucketAccess(ctx context.Context,
 	req *cosi.DriverRevokeBucketAccessRequest) (*cosi.DriverRevokeBucketAccessResponse, error) {
+	id := getID(req.BucketId)
 
-	return nil, status.Error(codes.Unimplemented, "DriverCreateBucket: not implemented")
+	// get the driver from driverset
+	// if there is no correct driver, log error, and return standard error message
+	d, err := s.driverset.Get(id)
+	if err != nil {
+		log.WithFields(log.Fields{
+			"id":    id,
+			"error": err,
+		}).Error("DriverRevokeBucketAccess: Invalid backend ID")
+		return nil, status.Error(codes.InvalidArgument, "DriverRevokeBucketAccess: Invalid backend ID")
+	}
+
+	// execute DriverRevokeBucketAccess from correct driver
+	return d.DriverRevokeBucketAccess(ctx, req)
+}
+
+// getID splits the string and returns ID from it
+// correct format of string is:
+// (ID)-(other identifers)
+func getID(s string) string {
+	id := strings.Split(s, "-")
+
+	if len(id) < 2 {
+		return ""
+	}
+
+	return id[0]
 }

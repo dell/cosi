@@ -37,10 +37,10 @@ type Configuration struct {
 
 // Credentials used for authentication to object storage provider
 type Credentials struct {
-	// Base64 encoded password
+	// Password for object storage provider
 	Password string `json:"password" yaml:"password"`
 
-	// Base64 encoded username
+	// Username for object storage provider
 	Username string `json:"username" yaml:"username"`
 }
 
@@ -83,11 +83,17 @@ type S3 struct {
 
 // TLS configuration details
 type Tls struct {
-	// Base64 encoded certificate file
-	ClientCas *string `json:"client-cas,omitempty" yaml:"client-cas,omitempty"`
+	// Base64 encoded content of the clients's certificate file
+	ClientCert *string `json:"client-cert,omitempty" yaml:"client-cert,omitempty"`
+
+	// Base64 encoded content of the clients's key certificate file
+	ClientKey *string `json:"client-key,omitempty" yaml:"client-key,omitempty"`
 
 	// Controls whether a client verifies the server's certificate chain and host name
 	Insecure bool `json:"insecure" yaml:"insecure"`
+
+	// Base64 encoded content of the root certificate authority file
+	RootCas *string `json:"root-cas,omitempty" yaml:"root-cas,omitempty"`
 }
 
 var enumValues_ConfigSchemaJsonLogLevel = []interface{}{
