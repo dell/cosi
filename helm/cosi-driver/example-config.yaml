@@ -1,24 +1,3 @@
-# Path to the COSI socket
-#
-# The value needs to be in format "unix://<path>" or "<path>", e.g.:
-# + cosi-endpoint: "unix:///var/lib/cosi/cosi.sock"
-#   OR
-# + cosi-endpoint: "/var/lib/cosi/cosi.sock"
-# 
-# Default value: "unix:///var/lib/cosi/cosi.sock"
-cosi-endpoint: unix:///var/lib/cosi/cosi.sock
-
-# Defines how verbose logs should be.
-#
-# Valid values:
-# - "fatal"
-# - "error"
-# - "warning"
-# - "info" - default
-# - "debug"
-# - "trace"
-log-level: info
-
 # List of connections to object storage platforms that is used for object storage provisioning.
 connections:
 

@@ -31,6 +31,15 @@ Create chart name and version as used by the chart label.
 {{- end }}
 
 {{/*
+# COSI driver log level
+# Possible values: "trace" "debug" "info" "warn" "error" "fatal" "panic"
+# Default value: "debug"
+*/}}
+{{- define "cosi-driver.logLevel" -}}
+{{- default "debug" .Values.logLevel }}
+{{- end }}
+
+{{/*
 Common labels
 */}}
 {{- define "cosi-driver.labels" -}}

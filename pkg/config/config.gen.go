@@ -4,36 +4,6 @@ package config
 
 import "fmt"
 import "encoding/json"
-import "reflect"
-
-// this file contains JSON schema for Dell COSI Driver Configuration file
-type ConfigSchemaJson struct {
-	// List of connections to object storage platforms that can be used for object
-	// storage provisioning.
-	Connections []Configuration `json:"connections,omitempty" yaml:"connections,omitempty"`
-
-	// Path to the COSI socket
-	CosiEndpoint string `json:"cosi-endpoint,omitempty" yaml:"cosi-endpoint,omitempty"`
-
-	// Defines how verbose logs should be
-	LogLevel ConfigSchemaJsonLogLevel `json:"log-level,omitempty" yaml:"log-level,omitempty"`
-}
-
-type ConfigSchemaJsonLogLevel string
-
-const ConfigSchemaJsonLogLevelDebug ConfigSchemaJsonLogLevel = "debug"
-const ConfigSchemaJsonLogLevelError ConfigSchemaJsonLogLevel = "error"
-const ConfigSchemaJsonLogLevelFatal ConfigSchemaJsonLogLevel = "fatal"
-const ConfigSchemaJsonLogLevelInfo ConfigSchemaJsonLogLevel = "info"
-const ConfigSchemaJsonLogLevelTrace ConfigSchemaJsonLogLevel = "trace"
-const ConfigSchemaJsonLogLevelWarning ConfigSchemaJsonLogLevel = "warning"
-
-// Configuration for single connection to object storage platform that is used for
-// object storage provisioning
-type Configuration struct {
-	// Objectscale corresponds to the JSON schema field "objectscale".
-	Objectscale *Objectscale `json:"objectscale,omitempty" yaml:"objectscale,omitempty"`
-}
 
 // Credentials used for authentication to object storage provider
 type Credentials struct {
@@ -42,6 +12,90 @@ type Credentials struct {
 
 	// Username for object storage provider
 	Username string `json:"username" yaml:"username"`
+}
+
+// UnmarshalJSON implements json.Unmarshaler.
+func (j *Credentials) UnmarshalJSON(b []byte) error {
+	var raw map[string]interface{}
+	if err := json.Unmarshal(b, &raw); err != nil {
+		return err
+	}
+	if v, ok := raw["password"]; !ok || v == nil {
+		return fmt.Errorf("field password in Credentials: required")
+	}
+	if v, ok := raw["username"]; !ok || v == nil {
+		return fmt.Errorf("field username in Credentials: required")
+	}
+	type Plain Credentials
+	var plain Plain
+	if err := json.Unmarshal(b, &plain); err != nil {
+		return err
+	}
+	*j = Credentials(plain)
+	return nil
+}
+
+// S3 configuration
+type S3 struct {
+	// Endpoint of the ObjectStore S3 service
+	Endpoint string `json:"endpoint" yaml:"endpoint"`
+}
+
+// UnmarshalJSON implements json.Unmarshaler.
+func (j *S3) UnmarshalJSON(b []byte) error {
+	var raw map[string]interface{}
+	if err := json.Unmarshal(b, &raw); err != nil {
+		return err
+	}
+	if v, ok := raw["endpoint"]; !ok || v == nil {
+		return fmt.Errorf("field endpoint in S3: required")
+	}
+	type Plain S3
+	var plain Plain
+	if err := json.Unmarshal(b, &plain); err != nil {
+		return err
+	}
+	*j = S3(plain)
+	return nil
+}
+
+// Protocols supported by the connection
+type Protocols struct {
+	// S3 corresponds to the JSON schema field "s3".
+	S3 *S3 `json:"s3,omitempty" yaml:"s3,omitempty"`
+}
+
+// TLS configuration details
+type Tls struct {
+	// Base64 encoded content of the clients's certificate file
+	ClientCert *string `json:"client-cert,omitempty" yaml:"client-cert,omitempty"`
+
+	// Base64 encoded content of the clients's key certificate file
+	ClientKey *string `json:"client-key,omitempty" yaml:"client-key,omitempty"`
+
+	// Controls whether a client verifies the server's certificate chain and host name
+	Insecure bool `json:"insecure" yaml:"insecure"`
+
+	// Base64 encoded content of the root certificate authority file
+	RootCas *string `json:"root-cas,omitempty" yaml:"root-cas,omitempty"`
+}
+
+// UnmarshalJSON implements json.Unmarshaler.
+func (j *Tls) UnmarshalJSON(b []byte) error {
+	var raw map[string]interface{}
+	if err := json.Unmarshal(b, &raw); err != nil {
+		return err
+	}
+	if v, ok := raw["insecure"]; !ok || v == nil {
+		return fmt.Errorf("field insecure in Tls: required")
+	}
+	type Plain Tls
+	var plain Plain
+	if err := json.Unmarshal(b, &plain); err != nil {
+		return err
+	}
+	*j = Tls(plain)
+	return nil
 }
 
 // Configuration specific to the Dell ObjectScale platform
@@ -67,98 +121,6 @@ type Objectscale struct {
 
 	// Tls corresponds to the JSON schema field "tls".
 	Tls Tls `json:"tls" yaml:"tls"`
-}
-
-// Protocols supported by the connection
-type Protocols struct {
-	// S3 corresponds to the JSON schema field "s3".
-	S3 *S3 `json:"s3,omitempty" yaml:"s3,omitempty"`
-}
-
-// S3 configuration
-type S3 struct {
-	// Endpoint of the ObjectStore S3 service
-	Endpoint string `json:"endpoint" yaml:"endpoint"`
-}
-
-// TLS configuration details
-type Tls struct {
-	// Base64 encoded content of the clients's certificate file
-	ClientCert *string `json:"client-cert,omitempty" yaml:"client-cert,omitempty"`
-
-	// Base64 encoded content of the clients's key certificate file
-	ClientKey *string `json:"client-key,omitempty" yaml:"client-key,omitempty"`
-
-	// Controls whether a client verifies the server's certificate chain and host name
-	Insecure bool `json:"insecure" yaml:"insecure"`
-
-	// Base64 encoded content of the root certificate authority file
-	RootCas *string `json:"root-cas,omitempty" yaml:"root-cas,omitempty"`
-}
-
-var enumValues_ConfigSchemaJsonLogLevel = []interface{}{
-	"fatal",
-	"error",
-	"warning",
-	"info",
-	"debug",
-	"trace",
-}
-
-// UnmarshalJSON implements json.Unmarshaler.
-func (j *Tls) UnmarshalJSON(b []byte) error {
-	var raw map[string]interface{}
-	if err := json.Unmarshal(b, &raw); err != nil {
-		return err
-	}
-	if v, ok := raw["insecure"]; !ok || v == nil {
-		return fmt.Errorf("field insecure in Tls: required")
-	}
-	type Plain Tls
-	var plain Plain
-	if err := json.Unmarshal(b, &plain); err != nil {
-		return err
-	}
-	*j = Tls(plain)
-	return nil
-}
-
-// UnmarshalJSON implements json.Unmarshaler.
-func (j *ConfigSchemaJsonLogLevel) UnmarshalJSON(b []byte) error {
-	var v string
-	if err := json.Unmarshal(b, &v); err != nil {
-		return err
-	}
-	var ok bool
-	for _, expected := range enumValues_ConfigSchemaJsonLogLevel {
-		if reflect.DeepEqual(v, expected) {
-			ok = true
-			break
-		}
-	}
-	if !ok {
-		return fmt.Errorf("invalid value (expected one of %#v): %#v", enumValues_ConfigSchemaJsonLogLevel, v)
-	}
-	*j = ConfigSchemaJsonLogLevel(v)
-	return nil
-}
-
-// UnmarshalJSON implements json.Unmarshaler.
-func (j *S3) UnmarshalJSON(b []byte) error {
-	var raw map[string]interface{}
-	if err := json.Unmarshal(b, &raw); err != nil {
-		return err
-	}
-	if v, ok := raw["endpoint"]; !ok || v == nil {
-		return fmt.Errorf("field endpoint in S3: required")
-	}
-	type Plain S3
-	var plain Plain
-	if err := json.Unmarshal(b, &plain); err != nil {
-		return err
-	}
-	*j = S3(plain)
-	return nil
 }
 
 // UnmarshalJSON implements json.Unmarshaler.
@@ -194,44 +156,16 @@ func (j *Objectscale) UnmarshalJSON(b []byte) error {
 	return nil
 }
 
-// UnmarshalJSON implements json.Unmarshaler.
-func (j *Credentials) UnmarshalJSON(b []byte) error {
-	var raw map[string]interface{}
-	if err := json.Unmarshal(b, &raw); err != nil {
-		return err
-	}
-	if v, ok := raw["password"]; !ok || v == nil {
-		return fmt.Errorf("field password in Credentials: required")
-	}
-	if v, ok := raw["username"]; !ok || v == nil {
-		return fmt.Errorf("field username in Credentials: required")
-	}
-	type Plain Credentials
-	var plain Plain
-	if err := json.Unmarshal(b, &plain); err != nil {
-		return err
-	}
-	*j = Credentials(plain)
-	return nil
+// this file contains JSON schema for Dell COSI Driver Configuration file
+type ConfigSchemaJson struct {
+	// List of connections to object storage platforms that can be used for object
+	// storage provisioning.
+	Connections []Configuration `json:"connections,omitempty" yaml:"connections,omitempty"`
 }
 
-// UnmarshalJSON implements json.Unmarshaler.
-func (j *ConfigSchemaJson) UnmarshalJSON(b []byte) error {
-	var raw map[string]interface{}
-	if err := json.Unmarshal(b, &raw); err != nil {
-		return err
-	}
-	type Plain ConfigSchemaJson
-	var plain Plain
-	if err := json.Unmarshal(b, &plain); err != nil {
-		return err
-	}
-	if v, ok := raw["cosi-endpoint"]; !ok || v == nil {
-		plain.CosiEndpoint = "unix:///var/lib/cosi/cosi.sock"
-	}
-	if v, ok := raw["log-level"]; !ok || v == nil {
-		plain.LogLevel = "info"
-	}
-	*j = ConfigSchemaJson(plain)
-	return nil
+// Configuration for single connection to object storage platform that is used for
+// object storage provisioning
+type Configuration struct {
+	// Objectscale corresponds to the JSON schema field "objectscale".
+	Objectscale *Objectscale `json:"objectscale,omitempty" yaml:"objectscale,omitempty"`
 }

@@ -33,6 +33,8 @@ spec:
             {{- toYaml .Values.securityContext | nindent 12 }}
           image: "{{ .Values.image.provisioner.repository }}:{{ .Values.image.provisioner.tag | default .Chart.AppVersion }}"
           imagePullPolicy: {{ .Values.image.provisioner.pullPolicy }}
+          args:
+            - "--log-level={{ include "cosi-driver.logLevel" . }}"
           resources:
             {{- toYaml .Values.resources.provisioner | nindent 12 }}
           volumeMounts:
