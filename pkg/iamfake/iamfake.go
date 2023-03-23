@@ -26,7 +26,7 @@ func (fakeIAM *fakeIAMClient) GetUser(input *iam.GetUserInput) (*iam.GetUserOutp
 	}
 }
 
-func (fakeIAM *fakeIAMClient) CreateAccessKey(*iam.CreateAccessKeyInput) (*iam.CreateAccessKeyOutput, error) {
+func (fakeIAM *fakeIAMClient) CreateAccessKey(input *iam.CreateAccessKeyInput) (*iam.CreateAccessKeyOutput, error) {
 	switch *input.UserName {
 	case "success":
 		return fakeIAM.CreateAccessKeyOutputs["success"], nil
@@ -37,7 +37,7 @@ func (fakeIAM *fakeIAMClient) CreateAccessKey(*iam.CreateAccessKeyInput) (*iam.C
 	}
 }
 
-func (fakeIAM *fakeIAMClient) DeleteAccessKey(*iam.DeleteAccessKeyInput) (*iam.DeleteAccessKeyOutput, error) {
+func (fakeIAM *fakeIAMClient) DeleteAccessKey(input *iam.DeleteAccessKeyInput) (*iam.DeleteAccessKeyOutput, error) {
 	switch *input.UserName {
 	case "success":
 		return fakeIAM.DeleteAccesKeyOutputs["success"], nil
@@ -48,7 +48,7 @@ func (fakeIAM *fakeIAMClient) DeleteAccessKey(*iam.DeleteAccessKeyInput) (*iam.D
 	}
 }
 
-func (fakeIAM *fakeIAMClient) ListAccessKeys(*iam.ListAccessKeysInput) (*iam.ListAccessKeysOutput, error) {
+func (fakeIAM *fakeIAMClient) ListAccessKeys(input *iam.ListAccessKeysInput) (*iam.ListAccessKeysOutput, error) {
 	switch *input.UserName {
 	case "success":
 		return fakeIAM.ListAccessKeysOutput["success"], nil
