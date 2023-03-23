@@ -88,16 +88,12 @@
       "type": "object",
       "properties": {
         "username": {
-          "description": "Base64 encoded username",
-          "type": "string",
-          "format": "byte",
-          "$comment": "format field is placed here only for documentation purposes"
+          "description": "Username for object storage provider",
+          "type": "string"
         },
         "password": {
-          "description": "Base64 encoded password",
-          "type": "string",
-          "format": "byte",
-          "$comment": "format field is placed here only for documentation purposes"
+          "description": "Password for object storage provider",
+          "type": "string"
         }
       },
       "required": [

@@ -38,8 +38,8 @@ var (
         {
             "objectscale": {
                 "credentials": {
-                    "username": "dGVzdHVzZXIK",
-                    "password": "dGVzdHBhc3N3b3JkCg=="
+                    "username": "testuser",
+                    "password": "testpassword"
                 },
                 "id": "testid",
                 "objectscale-gateway": "gateway.objectscale.test",
@@ -64,7 +64,7 @@ var (
         {
             "objectscale": {
                 "credentials": {
-                    "username": "dGVzdHVzZXIK"
+                    "username": "testuser"
                 },
                 "id": "testid",
                 "objectscale-gateway": "gateway.objectscale.test",
@@ -87,8 +87,8 @@ var (
 	validYAML = `connections:
 - objectscale:
     credentials:
-      username: dGVzdHVzZXIK
-      password: dGVzdHBhc3N3b3JkCg==
+      username: testuser
+      password: testpassword
     id: testid
     objectscale-gateway: gateway.objectscale.test
     objectstore-gateway: gateway.objectstore.test
@@ -103,7 +103,7 @@ log-level: info`
 	invalidYAML = `connections:
 - objectscale:
     credentials:
-      username: dGVzdHVzZXIK
+      username: testuser
     id: testid
     objectscale-gateway: gateway.objectscale.test
     objectstore-gateway: gateway.objectstore.test

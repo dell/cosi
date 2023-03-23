@@ -49,8 +49,8 @@ var (
 			{
 				Objectscale: &config.Objectscale{
 					Credentials: config.Credentials{
-						Username: "dGVzdHVzZXIK",
-						Password: "dGVzdHBhc3N3b3JkCg==",
+						Username: "testuser",
+						Password: "testpassword",
 					},
 					Id:                 "test.id",
 					ObjectscaleGateway: "gateway.objectscale.test",
@@ -76,8 +76,8 @@ var (
 			{
 				Objectscale: &config.Objectscale{
 					Credentials: config.Credentials{
-						Username: "dGVzdHVzZXIK",
-						Password: "dGVzdHBhc3N3b3JkCg==",
+						Username: "testuser",
+						Password: "testpassword",
 					},
 					Id:                 "test.id",
 					ObjectscaleGateway: "gateway.objectscale.test",
@@ -96,8 +96,8 @@ var (
 			{
 				Objectscale: &config.Objectscale{
 					Credentials: config.Credentials{
-						Username: "dGVzdHVzZXIK",
-						Password: "dGVzdHBhc3N3b3JkCg==",
+						Username: "testuser",
+						Password: "testpassword",
 					},
 					Id:                 "test.id",
 					ObjectscaleGateway: "gateway.objectscale.test",

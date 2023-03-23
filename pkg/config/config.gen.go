@@ -37,10 +37,10 @@ type Configuration struct {
 
 // Credentials used for authentication to object storage provider
 type Credentials struct {
-	// Base64 encoded password
+	// Password for object storage provider
 	Password string `json:"password" yaml:"password"`
 
-	// Base64 encoded username
+	// Username for object storage provider
 	Username string `json:"username" yaml:"username"`
 }
 

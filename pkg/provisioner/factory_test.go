@@ -73,8 +73,8 @@ var (
 			ObjectscaleGateway: "gateway.objectscale.test",
 			ObjectstoreGateway: "gateway.objectstore.test",
 			Credentials: config.Credentials{
-				Username: "dGVzdHVzZXIK",
-				Password: "dGVzdHBhc3N3b3JkCg==",
+				Username: "testuser",
+				Password: "testpassword",
 			},
 			Protocols: config.Protocols{
 				S3: &config.S3{
