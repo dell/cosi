@@ -37,7 +37,7 @@ spec:
             {{- toYaml .Values.resources.provisioner | nindent 12 }}
           volumeMounts:
           - name: {{ include "cosi-driver.name" . }}-config-volume
-            mountPath: "/config.yaml"
+            mountPath: "/cosi/config.yaml"
             readOnly: true
           volumeMounts:
           - name: cosi-socket-dir
