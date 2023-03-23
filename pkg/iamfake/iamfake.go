@@ -7,13 +7,12 @@ import (
 	"github.com/aws/aws-sdk-go/service/iam/iamiface"
 )
 
-
 type fakeIAMClient struct {
 	iamiface.IAMAPI
-	GetUserOutputs map[string]*iam.GetUserOutput
+	GetUserOutputs         map[string]*iam.GetUserOutput
 	CreateAccessKeyOutputs map[string]*iam.CreateAccessKeyOutput
-	DeleteAccesKeyOutputs map[string]*iam.DeleteAccessKeyOutput
-	ListAccessKeysOutput map[string]*iam.ListAccessKeysOutput
+	DeleteAccesKeyOutputs  map[string]*iam.DeleteAccessKeyOutput
+	ListAccessKeysOutput   map[string]*iam.ListAccessKeysOutput
 }
 
 func (fakeIAM *fakeIAMClient) GetUser(input *iam.GetUserInput) (*iam.GetUserOutput, error) {
@@ -27,7 +26,7 @@ func (fakeIAM *fakeIAMClient) GetUser(input *iam.GetUserInput) (*iam.GetUserOutp
 	}
 }
 
-func (fakeIAM *fakeIAMClient) CreateAccessKey(*iam.CreateAccessKeyInput) (*iam.CreateAccessKeyOutput, error)) {
+func (fakeIAM *fakeIAMClient) CreateAccessKey(*iam.CreateAccessKeyInput) (*iam.CreateAccessKeyOutput, error) {
 	switch *input.UserName {
 	case "success":
 		return fakeIAM.CreateAccessKeyOutputs["success"], nil
