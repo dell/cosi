@@ -27,8 +27,8 @@ import (
 )
 
 const (
-	COSISocket  = "/var/lib/cosi/cosi.sock"
-	COSINetwork = "unix"
+	// COSISocket is a default location of COSI API UNIX socket
+	COSISocket = "/var/lib/cosi/cosi.sock"
 )
 
 // Run starts the gRPC server for the identity and provisioner servers
@@ -59,7 +59,7 @@ func Run(ctx context.Context, config *config.ConfigSchemaJson, socket, name stri
 	spec.RegisterProvisionerServer(server, provisionerServer)
 
 	// Create shared listener for gRPC server
-	lis, err := net.Listen(COSINetwork, socket)
+	lis, err := net.Listen("unix", socket)
 	if err != nil {
 		return err
 	}
