@@ -15,7 +15,9 @@ package driver
 import (
 	"context"
 	"errors"
+	"io/fs"
 	"net"
+	"os"
 	"strings"
 
 	"google.golang.org/grpc"
@@ -83,6 +85,14 @@ func Run(ctx context.Context, config *config.ConfigSchemaJson, name string) erro
 	} else if len(connection) == 1 {
 		network = "unix"
 		address = connection[0]
+	}
+
+	// Remove socket file if it already exists
+	// so we can start a new server after crash or pod restart
+	if _, err := os.Stat(address); !errors.Is(err, fs.ErrNotExist) {
+		if err := os.RemoveAll(address); err != nil {
+			log.Fatal(err)
+		}
 	}
 
 	// Create shared listener for gRPC server
