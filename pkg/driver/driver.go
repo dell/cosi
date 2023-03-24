@@ -14,7 +14,10 @@ package driver
 
 import (
 	"context"
+	"errors"
+	"io/fs"
 	"net"
+	"os"
 
 	"google.golang.org/grpc"
 
@@ -57,6 +60,14 @@ func Run(ctx context.Context, config *config.ConfigSchemaJson, socket, name stri
 	// Register identity and provisioner servers, so they will handle gRPC requests to the server
 	spec.RegisterIdentityServer(server, identityServer)
 	spec.RegisterProvisionerServer(server, provisionerServer)
+
+	// Remove socket file if it already exists
+	// so we can start a new server after crash or pod restart
+	if _, err := os.Stat(socket); !errors.Is(err, fs.ErrNotExist) {
+		if err := os.RemoveAll(socket); err != nil {
+			log.Fatal(err)
+		}
+	}
 
 	// Create shared listener for gRPC server
 	lis, err := net.Listen("unix", socket)
