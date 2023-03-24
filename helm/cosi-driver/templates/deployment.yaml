@@ -42,6 +42,12 @@ spec:
             mountPath: /cosi
           - name: cosi-socket-dir
             mountPath: /var/lib/cosi
+          readinessProbe:
+            exec:
+              command: ["sh", "-c", "test -S /var/lib/cosi/cosi.sock"]
+            initialDelaySeconds: 5
+            periodSeconds: 2
+            timeoutSeconds: 2
         - name: {{ .Values.image.sidecar.name }}
           image: "{{ .Values.image.sidecar.repository }}:{{ .Values.image.sidecar.tag }}"
           imagePullPolicy: {{ .Values.image.sidecar.pullPolicy }}
