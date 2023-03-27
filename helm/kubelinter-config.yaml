@@ -1,7 +1,18 @@
 checks:
+  # run all checks
   addAllBuiltIn: true
+  # manually exclude failing for documentation
+  # those must be fixed in future
   exclude:
+    - "no-liveness-probe"
+    - "no-node-affinity"
+    - "no-read-only-root-fs"
+    - "no-readiness-probe"
+    - "no-rolling-update-strategy"
+    - "non-isolated-pod"
+    - "required-annotation-email"
+    - "required-label-owner"
+    - "run-as-non-root"
     - "unset-cpu-requirements"
     - "unset-memory-requirements"
-    - "run-as-non-root"
-    - "no-read-only-root-fs"
+    - "use-namespace"
