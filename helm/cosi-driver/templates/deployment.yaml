@@ -48,6 +48,9 @@ spec:
             initialDelaySeconds: 5
             periodSeconds: 2
             timeoutSeconds: 2
+          preStop:
+            exec:
+              command: ["/bin/sh","-c","rm -rf /var/lib/cosi/cosi.sock"]
         - name: {{ .Values.image.sidecar.name }}
           image: "{{ .Values.image.sidecar.repository }}:{{ .Values.image.sidecar.tag }}"
           imagePullPolicy: {{ .Values.image.sidecar.pullPolicy }}
