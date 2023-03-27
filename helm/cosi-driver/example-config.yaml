@@ -4,7 +4,7 @@
 # + cosi-endpoint: "unix:///var/lib/cosi/cosi.sock"
 #   OR
 # + cosi-endpoint: "/var/lib/cosi/cosi.sock"
-# 
+#
 # Default value: "unix:///var/lib/cosi/cosi.sock"
 cosi-endpoint: unix:///var/lib/cosi/cosi.sock
 
@@ -25,7 +25,7 @@ connections:
 # Configuration specific to the Dell ObjectScale platform.
 - objectscale:
 
-    # Default, unique identifier for the single connection. 
+    # Default, unique identifier for the single connection.
     #
     # All hyphens '-' are replaced with underscores '_', and may cause issues.
     # It is adviced to not use hyphens at all.
@@ -178,7 +178,7 @@ connections:
         WFVtVFBlSkZ2WGxKeWRsdUxtMlQzanVqCldiVENGcEhyMXBrMGk3K1J4ZVRBcFY0RTk2S09DOXEw
         ZGREOG1waTM0cnkyZjFmQ2RZekhQM0s4bW5od3BPWmkKaG1Xd3VWVDV3em5kVWVBRGNWYUY2UlhU
         UENKSElLd24KLS0tLS1FTkQgQ0VSVElGSUNBVEUtLS0tLQo=
-      
+     
       # Base64 encoded content of the clients's key certificate file.
       #
       # How To:

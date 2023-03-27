@@ -3,7 +3,7 @@ on:
   push:
     branches: [ main ]
   pull_request:
-    branches: [ '**' ] 
+    branches: [ '**' ]
 jobs:
   kube-linter:
     name: Kube Linter

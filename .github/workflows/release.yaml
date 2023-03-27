@@ -27,4 +27,3 @@ jobs:
     # TODO: There is no registry for now
     # - run: make push
     # if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
-  

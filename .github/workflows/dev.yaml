@@ -3,7 +3,7 @@ on:
   push:
     branches: [ main ]
   pull_request:
-    branches: [ '**' ] 
+    branches: [ '**' ]
 jobs:
   code-check:
     name: Check formatting, linting, vetting
@@ -26,7 +26,7 @@ jobs:
       - name: Run Gosec Security Scanner
         uses: securego/gosec@master
         with:
-          args: -exclude-dir=core -exclude-dir=tests ./... 
+          args: -exclude-dir=core -exclude-dir=tests ./...
 
   malware_security_scan:
       name: Malware Scanner
@@ -66,7 +66,7 @@ jobs:
 
   build-secure-and-push:
     runs-on: ubuntu-latest
-    env: 
+    env:
       IMAGETAG: "${{ github.sha }}"
       IMAGENAME: "cosi-driver"
       REGISTRY: "sample_registry"
@@ -79,11 +79,11 @@ jobs:
     - run: make docker
     # TODO: Analyze and fix vulnerabilities
     # - uses: Azure/container-scan@v0
-    #   env: 
+    #   env:
     #     DOCKLE_HOST: "unix:///var/run/docker.sock"
     #   with:
     #     image-name: ${{ env.REGISTRY }}/${{ env.IMAGENAME }}:${{ env.IMAGETAG }}
     #     severity-threshold: HIGH
-    # TODO: There is no registry for now 
+    # TODO: There is no registry for now
     # - run: make push
-    # if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }} 
+    # if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
