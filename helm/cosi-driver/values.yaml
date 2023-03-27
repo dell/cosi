@@ -19,6 +19,11 @@ driverConfig: {}
 
 replicaCount: 1
 
+# COSI driver log level
+# Possible values: "trace" "debug" "info" "warn" "error" "fatal" "panic"
+# Default value: "debug"
+logLevel: "debug"
+
 image:
   provisioner:
     repository: ""

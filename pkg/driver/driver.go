@@ -14,9 +14,7 @@ package driver
 
 import (
 	"context"
-	"errors"
 	"net"
-	"strings"
 
 	"google.golang.org/grpc"
 
@@ -28,16 +26,13 @@ import (
 	"github.com/dell/cosi-driver/pkg/provisioner"
 )
 
-var (
-	// ErrNoEndpoint indicates that the COSI endpoint was not provided
-	ErrNoEndpoint = errors.New("COSI Endpoint not configured")
-
-	// ErrBadEndpoint indicates that the COSI endpoint had bad format
-	ErrBadEndpoint = errors.New("COSI Endpoint has bad format, should be unix://<path> or <path>")
+const (
+	// COSISocket is a default location of COSI API UNIX socket
+	COSISocket = "/var/lib/cosi/cosi.sock"
 )
 
 // Run starts the gRPC server for the identity and provisioner servers
-func Run(ctx context.Context, config *config.ConfigSchemaJson, name string) error {
+func Run(ctx context.Context, config *config.ConfigSchemaJson, socket, name string) error {
 	// Setup identity server and provisioner server
 	identityServer := identity.New(name)
 
@@ -63,30 +58,8 @@ func Run(ctx context.Context, config *config.ConfigSchemaJson, name string) erro
 	spec.RegisterIdentityServer(server, identityServer)
 	spec.RegisterProvisionerServer(server, provisionerServer)
 
-	if config.CosiEndpoint == "" {
-		return ErrNoEndpoint
-	}
-
-	var (
-		network string
-		address string
-	)
-	connection := strings.Split(config.CosiEndpoint, "://")
-	if len(connection) == 2 {
-		switch connection[0] {
-		case "unix":
-			network = connection[0]
-			address = connection[1]
-		default:
-			return ErrBadEndpoint
-		}
-	} else if len(connection) == 1 {
-		network = "unix"
-		address = connection[0]
-	}
-
 	// Create shared listener for gRPC server
-	lis, err := net.Listen(network, address)
+	lis, err := net.Listen("unix", socket)
 	if err != nil {
 		return err
 	}

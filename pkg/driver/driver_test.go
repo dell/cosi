@@ -14,7 +14,8 @@ package driver
 
 import (
 	"context"
-	"log"
+	"os"
+	"path"
 	"testing"
 	"time"
 
@@ -23,28 +24,12 @@ import (
 )
 
 var (
-	testSocketPath string
-	testDir        = "test"
-	testRegion     = "us-east-1"
+	testDir    = "test"
+	testRegion = "us-east-1"
 
-	testConfig = &config.ConfigSchemaJson{
-		CosiEndpoint: "unix:///tmp/cosi.sock",
-		LogLevel:     config.ConfigSchemaJsonLogLevelTrace,
-	}
-
-	testConfigNoNetwork = &config.ConfigSchemaJson{
-		CosiEndpoint: "/tmp/cosi.sock",
-		LogLevel:     config.ConfigSchemaJsonLogLevelTrace,
-	}
-
-	testConfigInvalidNetwork = &config.ConfigSchemaJson{
-		CosiEndpoint: "tcp:///tmp/cosi.sock",
-		LogLevel:     config.ConfigSchemaJsonLogLevelTrace,
-	}
+	testConfig = &config.ConfigSchemaJson{}
 
 	testConfigWithConnections = &config.ConfigSchemaJson{
-		CosiEndpoint: "unix:///tmp/cosi.sock",
-		LogLevel:     config.ConfigSchemaJsonLogLevelTrace,
 		Connections: []config.Configuration{
 			{
 				Objectscale: &config.Objectscale{
@@ -70,8 +55,6 @@ var (
 	}
 
 	testConfigDuplicateID = &config.ConfigSchemaJson{
-		CosiEndpoint: "unix:///tmp/cosi.sock",
-		LogLevel:     config.ConfigSchemaJsonLogLevelTrace,
 		Connections: []config.Configuration{
 			{
 				Objectscale: &config.Objectscale{
@@ -117,17 +100,11 @@ var (
 	}
 
 	testConfigMissingObjectscale = &config.ConfigSchemaJson{
-		CosiEndpoint: "unix:///tmp/cosi.sock",
-		LogLevel:     config.ConfigSchemaJsonLogLevelTrace,
 		Connections: []config.Configuration{
 			{
 				Objectscale: nil,
 			},
 		},
-	}
-
-	testConfigWithoutEndpoint = &config.ConfigSchemaJson{
-		LogLevel: config.ConfigSchemaJsonLogLevelTrace,
 	}
 )
 
@@ -144,24 +121,9 @@ func TestRun(t *testing.T) {
 			expectedError: false,
 		},
 		{
-			name:          "success without network in COSI Endpoint",
-			config:        testConfigNoNetwork,
-			expectedError: false,
-		},
-		{
-			name:          "failure invalid network",
-			config:        testConfigInvalidNetwork,
-			expectedError: true,
-		},
-		{
 			name:          "success with connections",
 			config:        testConfigWithConnections,
 			expectedError: false,
-		},
-		{
-			name:          "failure no endpoint",
-			config:        testConfigWithoutEndpoint,
-			expectedError: true,
 		},
 		{
 			name:          "failure duplicate ID",
@@ -181,10 +143,17 @@ func TestRun(t *testing.T) {
 			ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 			defer cancel()
 
+			dir, err := os.MkdirTemp("", testDir)
+			if err != nil {
+				t.Fatal(err)
+			}
+			defer os.RemoveAll(dir)
+
 			errCh := make(chan error, 1)
 			go func() {
-				log.Printf("go Run")
-				errCh <- Run(ctx, tc.config, "test")
+				testSocketPath := path.Join(dir, "cosi.sock")
+
+				errCh <- Run(ctx, tc.config, testSocketPath, "test")
 			}()
 
 			// Wait for server to start

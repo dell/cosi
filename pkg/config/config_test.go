@@ -54,9 +54,7 @@ var (
                 }
             }
         }
-    ],
-    "cosi-endpoint": "unix:///var/lib/cosi/cosi.sock",
-    "log-level": "info"
+    ]
 }`
 
 	invalidJSON = `{
@@ -79,9 +77,7 @@ var (
                 }
             }
         }
-    ],
-    "cosi-endpoint": "unix:///var/lib/cosi/cosi.sock",
-    "log-level": "info"
+    ]
 }`
 
 	validYAML = `connections:
@@ -96,9 +92,7 @@ var (
       s3:
         endpoint: test.endpoint
     tls:
-      insecure: true
-cosi-endpoint: unix:///var/lib/cosi/cosi.sock
-log-level: info`
+      insecure: true`
 
 	invalidYAML = `connections:
 - objectscale:
@@ -111,9 +105,7 @@ log-level: info`
       s3:
         endpoint: test.endpoint
     tls:
-      insecure: true
-cosi-endpoint: unix:///var/lib/cosi/cosi.sock
-log-level: info`
+      insecure: true`
 )
 
 func TestNew(t *testing.T) {
