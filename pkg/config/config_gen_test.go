@@ -13,6 +13,7 @@
 package config
 
 import (
+	"encoding/json"
 	"regexp"
 	"testing"
 
@@ -182,73 +183,6 @@ func TestTlsUnmarshalJSON(t *testing.T) {
 	}
 }
 
-func TestConfigSchemaJsonLogLevelUnmarshalJSON(t *testing.T) {
-	testCases := []struct {
-		name         string
-		data         []byte
-		fail         bool
-		errorMessage *regexp.Regexp
-	}{
-		{
-			name: "valid level(fatal)",
-			data: []byte(`"fatal"`),
-			fail: false,
-		},
-		{
-			name: "valid level(error)",
-			data: []byte(`"error"`),
-			fail: false,
-		},
-		{
-			name: "valid level(warning)",
-			data: []byte(`"warning"`),
-			fail: false,
-		},
-		{
-			name: "valid level(info)",
-			data: []byte(`"info"`),
-			fail: false,
-		},
-		{
-			name: "valid level(debug)",
-			data: []byte(`"debug"`),
-			fail: false,
-		},
-		{
-			name: "valid level(trace)",
-			data: []byte(`"trace"`),
-			fail: false,
-		},
-		{
-			name:         "invalid value",
-			data:         []byte(`"unknown"`),
-			fail:         true,
-			errorMessage: invalidEnum,
-		},
-		{
-			name:         "invalid type",
-			data:         []byte(`{}`),
-			fail:         true,
-			errorMessage: invalidObject,
-		},
-	}
-
-	for _, tc := range testCases {
-		t.Run(tc.name, func(t *testing.T) {
-			var logLevel ConfigSchemaJsonLogLevel
-
-			err := logLevel.UnmarshalJSON(tc.data)
-			if tc.fail {
-				if assert.Error(t, err) {
-					assert.Regexp(t, tc.errorMessage, err.Error())
-				}
-			} else {
-				assert.NoError(t, err)
-			}
-		})
-	}
-}
-
 func TestS3UnmarshalJSON(t *testing.T) {
 	testCases := []struct {
 		name         string
@@ -358,23 +292,8 @@ func TestConfigSchemaJsonUnmarshalJSON(t *testing.T) {
 			fail: false,
 		},
 		{
-			name: "filled log-level",
-			data: []byte(`{"log-level":"info"}`),
-			fail: false,
-		},
-		{
-			name: "filled cosi-endpoint",
-			data: []byte(`{"cosi-endpoint":"unix:///var/lib/cosi/cosi.sock"}`),
-			fail: false,
-		},
-		{
-			name: "filled cosi-endpoint, log-level",
-			data: []byte(`{"cosi-endpoint":"unix:///var/lib/cosi/cosi.sock","log-level":"info"}`),
-			fail: false,
-		},
-		{
-			name: "filled cosi-endpoint, log-level, present empty connections",
-			data: []byte(`{"connections":[],"cosi-endpoint":"unix:///var/lib/cosi/cosi.sock","log-level":"info"}`),
+			name: "empty connections",
+			data: []byte(`{"connections":[]}`),
 			fail: false,
 		},
 		{
@@ -389,7 +308,7 @@ func TestConfigSchemaJsonUnmarshalJSON(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			var config ConfigSchemaJson
 
-			err := config.UnmarshalJSON(tc.data)
+			err := json.Unmarshal(tc.data, &config)
 			if tc.fail {
 				if assert.Error(t, err) {
 					assert.Regexp(t, tc.errorMessage, err.Error())

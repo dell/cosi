@@ -72,7 +72,7 @@ func main() {
 
 	log.Info("COSI driver starting")
 	// Run the driver.
-	err = driver.Run(ctx, cfg, "cosi-driver")
+	err = driver.Run(ctx, cfg, driver.COSISocket, "cosi-driver")
 	if err != nil {
 		log.Fatal(err)
 	}

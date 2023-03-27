@@ -21,5 +21,16 @@ func SetLogLevel(logLevel string) {
 		log.SetLevel(log.FatalLevel)
 	case "panic":
 		log.SetLevel(log.PanicLevel)
+	default:
+		log.WithFields(log.Fields{
+			"log-level":     logLevel,
+			"new-log-level": "debug",
+		}).Error("unknown log level, setting to debug")
+		log.SetLevel(log.DebugLevel)
+		return
 	}
+
+	log.WithFields(log.Fields{
+		"log-level": logLevel,
+	}).Info("log level set")
 }

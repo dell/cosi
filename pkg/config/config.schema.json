@@ -4,24 +4,6 @@
   "description": "this file contains JSON schema for Dell COSI Driver Configuration file",
   "type": "object",
   "properties": {
-    "cosi-endpoint": {
-      "description": "Path to the COSI socket",
-      "type": "string",
-      "default": "unix:///var/lib/cosi/cosi.sock"
-    },
-    "log-level": {
-      "description": "Defines how verbose logs should be",
-      "type": "string",
-      "default": "info",
-      "enum": [
-        "fatal",
-        "error",
-        "warning",
-        "info",
-        "debug",
-        "trace"
-      ]
-    },
     "connections": {
       "description": "List of connections to object storage platforms that can be used for object storage provisioning.",
       "type": "array",
