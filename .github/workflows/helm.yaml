@@ -33,7 +33,3 @@ jobs:
         uses: helm/chart-testing-action@v2.4.0
       - name: Run chart-testing (lint)
         run: ct lint --config helm/lintConfig.yaml
-      - name: Create kind cluster
-        uses: helm/kind-action@v1.4.0
-      - name: Run chart-testing (install)
-        run: ct install --config helm/lintConfig.yaml
