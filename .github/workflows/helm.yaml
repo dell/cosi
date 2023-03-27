@@ -6,7 +6,7 @@ on:
     branches: [ '**' ] 
 jobs:
   kube-linter:
-    name: Check Helm Chart using kube-linter
+    name: Kube Linter
     runs-on: ubuntu-latest
     steps:
       - name: Checkout the code
@@ -17,7 +17,7 @@ jobs:
           directory: helm/cosi-driver
 
   helm-check:
-    name: Check Helm chart (linting, testing)
+    name: Chart Testing
     runs-on: ubuntu-latest
     steps:
       - name: Checkout the code
@@ -43,7 +43,7 @@ jobs:
         # FIXME: commented, because can not access private repo
         # if: steps.list-changed.outputs.changed == 'true'
         # run: ct lint --target-branch ${{ github.event.repository.default_branch }} --chart-dirs helm
-        run: ct lint --chart-dirs helm --charts cosi-driver
+        run: ct lint --chart-dirs helm --charts helm/cosi-driver
       - name: Create kind cluster
         # FIXME: commented, because can not access private repo
         # if: steps.list-changed.outputs.changed == 'true'
@@ -52,4 +52,4 @@ jobs:
         # FIXME: commented, because can not access private repo
         # if: steps.list-changed.outputs.changed == 'true'
         # run: ct install --target-branch ${{ github.event.repository.default_branch }} --chart-dirs helm
-        run: ct install --chart-dirs helm --charts cosi-driver
+        run: ct install --chart-dirs helm --charts helm/cosi-driver
