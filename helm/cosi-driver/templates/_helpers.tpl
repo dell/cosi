@@ -36,7 +36,12 @@ Create chart name and version as used by the chart label.
 # Default value: "debug"
 */}}
 {{- define "cosi-driver.logLevel" -}}
-{{- default "debug" .Values.logLevel }}
+{{- $logLevelValues := list "trace" "debug" "info" "warn" "error" "fatal" "panic" -}}
+{{- if has .Values.logLevel $logLevelValues }}
+{{- .Values.logLevel -}}
+{{- else -}}
+{{- "debug" -}}
+{{- end }}
 {{- end }}
 
 {{/*
