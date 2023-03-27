@@ -1,0 +1,49 @@
+name: Helm Chart Validation
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ '**' ] 
+jobs:
+  kube-linter:
+    name: Check Helm Chart using kube-linter
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout the code
+        uses: actions/checkout@v3.2.0
+      - name: Scan repo with kube-linter
+        uses: stackrox/kube-linter-action@v1.0.4
+        with:
+          directory: helm/cosi-driver
+
+  helm-check:
+    name: Check Helm chart (linting, testing)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout the code
+        uses: actions/checkout@v3.2.0
+      - name: Set up Helm
+        uses: azure/setup-helm@v3
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+          check-latest: true
+      - name: Set up chart-testing
+        uses: helm/chart-testing-action@v2.4.0
+      - name: Run chart-testing (list-changed)
+        id: list-changed
+        run: |
+          changed=$(ct list-changed --target-branch ${{ github.event.repository.default_branch }})
+          if [[ -n "$changed" ]]; then
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Run chart-testing (lint)
+        # if: steps.list-changed.outputs.changed == 'true'
+        run: ct lint --target-branch ${{ github.event.repository.default_branch }}
+      - name: Create kind cluster
+        # if: steps.list-changed.outputs.changed == 'true'
+        uses: helm/kind-action@v1.4.0
+      - name: Run chart-testing (install)
+        # if: steps.list-changed.outputs.changed == 'true'
+        run: ct install --target-branch ${{ github.event.repository.default_branch }}
