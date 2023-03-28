@@ -206,3 +206,43 @@ func TestRunWithPreexistingSocketFile(t *testing.T) {
 	err = <-errCh
 	assert.NoError(t, err)
 }
+
+func TestRunFailWithPathErrorOnRemoveAll(t *testing.T) {
+	// Test server starts successfully and stops gracefully
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	dir, err := os.MkdirTemp("", testDir)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer os.RemoveAll(dir)
+
+	errCh := make(chan error, 1)
+	go func() {
+		testSocketPath := path.Join(dir, "cosi.sock")
+
+		// Create preexisting socket file
+		_, err := os.Create(testSocketPath)
+		if err != nil {
+			errCh <- err
+		}
+
+		// Remove directory to cause error on RemoveAll
+		err = os.RemoveAll(dir)
+		if err != nil {
+			errCh <- err
+		}
+
+		errCh <- Run(ctx, testConfig, testSocketPath, "test")
+	}()
+
+	// Wait for server to start
+	time.Sleep(500 * time.Millisecond)
+
+	// Cancel context to stop server gracefully
+	cancel()
+
+	err = <-errCh
+	assert.Error(t, err)
+}
