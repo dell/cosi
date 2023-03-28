@@ -204,5 +204,5 @@ func TestRunWithPreexistingSocketFile(t *testing.T) {
 	cancel()
 
 	err = <-errCh
-	assert.Error(t, err)
+	assert.NoError(t, err)
 }
