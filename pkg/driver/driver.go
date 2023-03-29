@@ -14,7 +14,7 @@ package driver
 
 import (
 	"context"
-  "errors"
+	"errors"
 	"io/fs"
 	"net"
 	"os"
@@ -61,7 +61,7 @@ func Run(ctx context.Context, config *config.ConfigSchemaJson, socket, name stri
 	spec.RegisterIdentityServer(server, identityServer)
 	spec.RegisterProvisionerServer(server, provisionerServer)
 
-// Remove socket file if it already exists
+	// Remove socket file if it already exists
 	// so we can start a new server after crash or pod restart
 	if _, err := os.Stat(socket); !errors.Is(err, fs.ErrNotExist) {
 		if err := os.RemoveAll(socket); err != nil {
