@@ -21,6 +21,3 @@ jobs:
         with:
           # Optional: version of golangci-lint to use in form of v1.2 or v1.2.3 or `latest` to use the latest version
           version: v1.52
-
-          # Optional: golangci-lint command line arguments.
-          args: --modules-download-mode vendor --timeout 5m --disable-all --enable errcheck --enable gosimple --enable govet --enable ineffassign --enable staticcheck --enable typecheck --enable unused --enable bidichk --enable bodyclose --enable containedctx --enable contextcheck --enable dogsled --enable exhaustruct --enable ginkgolinter --enable gocheckcompilerdirectives --enable goconst --enable wsl --enable exportloopref --enable gocognit --enable gocritic --enable godot --enable gofumpt --enable gomnd --enable misspell --enable paralleltest --enable gocritic --enable gocyclo --enable godox ./...
