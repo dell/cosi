@@ -1,4 +1,4 @@
-//Copyright © 2023 Dell Inc. or its subsidiaries. All Rights Reserved.
+// Copyright © 2023 Dell Inc. or its subsidiaries. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -23,7 +23,7 @@ const (
 	provisioner = "test"
 )
 
-// FIXME: those are only smoke tests, no real testing is done here
+// FIXME: those are only smoke tests, no real testing is done here.
 func TestDriverGetInfo(t *testing.T) {
 	for scenario, fn := range map[string]func(t *testing.T){
 		"smoke/testValidServer":            testValidServer,
@@ -35,7 +35,7 @@ func TestDriverGetInfo(t *testing.T) {
 	}
 }
 
-// FIXME: write valid test
+// FIXME: write valid test.
 func testValidServer(t *testing.T) {
 	srv := New(provisioner)
 
@@ -49,7 +49,7 @@ func testValidServer(t *testing.T) {
 	}
 }
 
-// FIXME: write valid test
+// FIXME: write valid test.
 func testMissingProvisionerName(t *testing.T) {
 	srv := &Server{}
 

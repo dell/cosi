@@ -1,4 +1,4 @@
-//Copyright © 2023 Dell Inc. or its subsidiaries. All Rights Reserved.
+// Copyright © 2023 Dell Inc. or its subsidiaries. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -43,6 +43,7 @@ func NewVirtualDriver(config config.Configuration) (driver.Driver, error) {
 // exactly one non-nil value was passed as an argument.
 func exactlyOne(nillables ...interface{}) bool {
 	count := 0
+
 	for _, nillable := range nillables {
 		// we need type switch, because nil not always equals nil, e.g.: `nil != (*config.Objectscale)(nil)`
 		switch nillable := nillable.(type) {

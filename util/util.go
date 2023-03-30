@@ -4,7 +4,7 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-// SetLogLevel sets the log level based on the logLevel string
+// SetLogLevel sets the log level based on the logLevel string.
 func SetLogLevel(logLevel string) {
 	switch logLevel {
 	case "trace":
@@ -27,6 +27,7 @@ func SetLogLevel(logLevel string) {
 			"new-log-level": "debug",
 		}).Error("unknown log level, setting to debug")
 		log.SetLevel(log.DebugLevel)
+
 		return
 	}
 

@@ -1,4 +1,4 @@
-//Copyright © 2023 Dell Inc. or its subsidiaries. All Rights Reserved.
+// Copyright © 2023 Dell Inc. or its subsidiaries. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -31,7 +31,7 @@ type Server struct {
 var _ cosi.IdentityServer = (*Server)(nil)
 
 // New returns new server.
-// FIXME: this is boilerplate, needs proper constructor
+// FIXME: this is boilerplate, needs proper constructor.
 func New(provisioner string) *Server {
 	return &Server{
 		name: provisioner,
@@ -40,8 +40,8 @@ func New(provisioner string) *Server {
 
 // DriverGetInfo returns name of server.
 func (srv *Server) DriverGetInfo(ctx context.Context,
-	req *cosi.DriverGetInfoRequest) (*cosi.DriverGetInfoResponse, error) {
-
+	req *cosi.DriverGetInfoRequest,
+) (*cosi.DriverGetInfoResponse, error) {
 	if srv.name == "" {
 		log.Printf("Invalid argument: %v", errors.New("driver name cannot be empty"))
 		return nil, status.Error(codes.InvalidArgument, "DriverName is empty")

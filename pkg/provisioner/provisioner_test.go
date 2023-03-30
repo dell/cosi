@@ -15,6 +15,7 @@ package provisioner
 import (
 	"context"
 	"fmt"
+	"log"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -29,10 +30,13 @@ import (
 
 // TestNew tests the initialization of provisioner server.
 func TestNew(t *testing.T) {
-	testServer := &Server{}
 	fakeDriverset := &Driverset{drivers: map[string]virtualdriver.Driver{}}
-	fakeDriverset.Add(&fake.Driver{FakeID: "fake"})
-	testServer = New(fakeDriverset)
+	err := fakeDriverset.Add(&fake.Driver{FakeID: "fake"})
+	if err != nil {
+		log.Fatalf("Failed to create fakedriverset: %v", err)
+	}
+
+	testServer := New(fakeDriverset)
 
 	assert.NotNil(t, testServer)
 	assert.NotNil(t, testServer.driverset)
@@ -48,7 +52,10 @@ func TestServer(t *testing.T) {
 	}
 
 	fakeDriverset := &Driverset{drivers: map[string]virtualdriver.Driver{}}
-	fakeDriverset.Add(&fake.Driver{FakeID: "fake"})
+	err := fakeDriverset.Add(&fake.Driver{FakeID: "fake"})
+	if err != nil {
+		log.Fatalf("Failed to create fakedriverset: %v", err)
+	}
 	fakeServer := Server{
 		driverset: fakeDriverset,
 	}

@@ -1,4 +1,4 @@
-//Copyright © 2023 Dell Inc. or its subsidiaries. All Rights Reserved.
+// Copyright © 2023 Dell Inc. or its subsidiaries. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -30,16 +30,17 @@ import (
 )
 
 const (
-	// COSISocket is a default location of COSI API UNIX socket
+	// COSISocket is a default location of COSI API UNIX socket.
 	COSISocket = "/var/lib/cosi/cosi.sock"
 )
 
-// Run starts the gRPC server for the identity and provisioner servers
+// Run starts the gRPC server for the identity and provisioner servers.
 func Run(ctx context.Context, config *config.ConfigSchemaJson, socket, name string) error {
-	// Setup identity server and provisioner server
+	// Setup identity server and provisioner server.
 	identityServer := identity.New(name)
 
 	driverset := &provisioner.Driverset{}
+
 	for _, cfg := range config.Connections {
 		driver, err := provisioner.NewVirtualDriver(cfg)
 		if err != nil {
@@ -53,37 +54,37 @@ func Run(ctx context.Context, config *config.ConfigSchemaJson, socket, name stri
 	}
 
 	provisionerServer := provisioner.New(driverset)
-	// Some options for gRPC server may be needed
+	// Some options for gRPC server may be needed.
 	options := []grpc.ServerOption{}
 	// Crate new gRPC server
 	server := grpc.NewServer(options...)
-	// Register identity and provisioner servers, so they will handle gRPC requests to the server
+	// Register identity and provisioner servers, so they will handle gRPC requests to the server.
 	spec.RegisterIdentityServer(server, identityServer)
 	spec.RegisterProvisionerServer(server, provisionerServer)
 
 	// Remove socket file if it already exists
-	// so we can start a new server after crash or pod restart
+	// so we can start a new server after crash or pod restart.
 	if _, err := os.Stat(socket); !errors.Is(err, fs.ErrNotExist) {
 		if err := os.RemoveAll(socket); err != nil {
 			log.Fatal(err)
 		}
 	}
 
-	// Create shared listener for gRPC server
+	// Create shared listener for gRPC server.
 	lis, err := net.Listen("unix", socket)
 	if err != nil {
 		return err
 	}
 
 	log.Infoln("gRPC server started")
-	// Run gRPC server in a separate goroutine
+	// Run gRPC server in a separate goroutine.
 	go func() {
 		if err := server.Serve(lis); err != nil {
 			log.Fatalf("Failed to serve gRPC server: %v", err)
 		}
 	}()
 
-	// Wait for context cancellation or server error
+	// Wait for context cancellation or server error.
 	<-ctx.Done()
 	server.GracefulStop()
 

@@ -1,4 +1,4 @@
-//Copyright © 2023 Dell Inc. or its subsidiaries. All Rights Reserved.
+// Copyright © 2023 Dell Inc. or its subsidiaries. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -48,7 +48,7 @@ func CheckBucketDeletionInObjectStore(objectscale *objectscaleRest.ClientSet, bu
 	param := make(map[string]string)
 	param["namespace"] = "TODO:Separate-ObjectStoreID-from-bucket"
 	objectScaleBucket, err := objectscale.Buckets().Get(bucket.Status.BucketID, param)
-	gomega.Expect(err).NotTo(gomega.BeNil())
+	gomega.Expect(err).To(gomega.HaveOccurred())
 	gomega.Expect(objectScaleBucket).To(gomega.BeNil())
 }
 
@@ -114,7 +114,7 @@ func DeleteUser(ctx ginkgo.SpecContext, iamClient *iam.IAM, user string) {
 // CheckBucketNotInObjectStore Function for checking if bucket is not in objectstore
 func CheckBucketNotInObjectStore(objectscale *objectscaleRest.ClientSet, bucketClaim *v1alpha1.BucketClaim) {
 	bucket, err := objectscale.Buckets().Get(bucketClaim.Status.BucketName, map[string]string{})
-	gomega.Expect(err).NotTo(gomega.BeNil())
+	gomega.Expect(err).To(gomega.HaveOccurred())
 	gomega.Expect(bucket).To(gomega.BeNil())
 }
 

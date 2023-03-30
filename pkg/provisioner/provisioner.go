@@ -1,4 +1,4 @@
-//Copyright © 2023 Dell Inc. or its subsidiaries. All Rights Reserved.
+// Copyright © 2023 Dell Inc. or its subsidiaries. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -50,6 +50,7 @@ func (s *Server) DriverCreateBucket(ctx context.Context,
 			"id":    id,
 			"error": err,
 		}).Error("DriverCreateBucket: Invalid backend ID")
+
 		return nil, status.Error(codes.InvalidArgument, "DriverCreateBucket: Invalid backend ID")
 	}
 
@@ -70,6 +71,7 @@ func (s *Server) DriverDeleteBucket(ctx context.Context,
 			"id":    id,
 			"error": err,
 		}).Error("DriverDeleteBucket: Invalid backend ID")
+
 		return nil, status.Error(codes.InvalidArgument, "DriverDeleteBucket: Invalid backend ID")
 	}
 
@@ -122,8 +124,8 @@ func (s *Server) DriverRevokeBucketAccess(ctx context.Context,
 // (ID)-(other identifers)
 func getID(s string) string {
 	id := strings.Split(s, "-")
-
-	if len(id) < 2 {
+	correctFormatLength := 2
+	if len(id) < correctFormatLength {
 		return ""
 	}
 
