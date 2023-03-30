@@ -36,7 +36,7 @@ const (
 
 // Representation of Driver for COSI API
 type Driver struct {
-	// gRPC Driver
+	// gRPC server
 	server *grpc.Server
 	// socket listener
 	lis net.Listener
@@ -44,7 +44,7 @@ type Driver struct {
 
 // NewDriver creates a new driver for COSI API with identity and provisioner servers
 func New(config *config.ConfigSchemaJson, socket, name string) (*Driver, error) {
-	// Setup identity Driver and provisioner Driver
+	// Setup identity server and provisioner server
 	identityServer := identity.New(name)
 
 	driverset := &provisioner.Driverset{}
@@ -61,11 +61,11 @@ func New(config *config.ConfigSchemaJson, socket, name string) (*Driver, error) 
 	}
 
 	provisionerServer := provisioner.New(driverset)
-	// Some options for gRPC Driver may be needed
+	// Some options for gRPC server may be needed
 	options := []grpc.ServerOption{}
-	// Crate new gRPC Driver
+	// Crate new gRPC server
 	server := grpc.NewServer(options...)
-	// Register identity and provisioner Drivers, so they will handle gRPC requests to the Driver
+	// Register identity and provisioner servers, so they will handle gRPC requests to the Driver
 	spec.RegisterIdentityServer(server, identityServer)
 	spec.RegisterProvisionerServer(server, provisionerServer)
 
@@ -77,7 +77,7 @@ func New(config *config.ConfigSchemaJson, socket, name string) (*Driver, error) 
 		}
 	}
 
-	// Create shared listener for gRPC Driver
+	// Create shared listener for gRPC server
 	listener, err := net.Listen("unix", socket)
 	if err != nil {
 		return nil, err
