@@ -20,12 +20,11 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-var (
-	driverset = &Driverset{
-		drivers: map[string]driver.Driver{
-			"driver0": &fake.Driver{FakeID: "driver0"},
-		}}
-)
+var driverset = &Driverset{
+	drivers: map[string]driver.Driver{
+		"driver0": &fake.Driver{FakeID: "driver0"},
+	},
+}
 
 func TestDriversetInit(t *testing.T) {
 	testCases := []struct {

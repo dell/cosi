@@ -91,9 +91,7 @@ var (
 	}
 )
 
-var (
-	expectedOne = regexp.MustCompile("^expected exactly one OSP in configuration$")
-)
+var expectedOne = regexp.MustCompile("^expected exactly one OSP in configuration$")
 
 func TestNewVirtualDriver(t *testing.T) {
 	testCases := []struct {
