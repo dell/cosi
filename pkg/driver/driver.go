@@ -1,4 +1,4 @@
-//Copyright © 2023 Dell Inc. or its subsidiaries. All Rights Reserved.
+// Copyright © 2023 Dell Inc. or its subsidiaries. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -30,11 +30,11 @@ import (
 )
 
 const (
-	// COSISocket is a default location of COSI API UNIX socket
+	// COSISocket is a default location of COSI API UNIX socket.
 	COSISocket = "/var/lib/cosi/cosi.sock"
 )
 
-// Driver structure for storing server and listener instances
+// Driver structure for storing server and listener instances.
 type Driver struct {
 	// gRPC server
 	server *grpc.Server
@@ -42,12 +42,13 @@ type Driver struct {
 	lis net.Listener
 }
 
-// New creates a new driver for COSI API with identity and provisioner servers
+// New creates a new driver for COSI API with identity and provisioner servers.
 func New(config *config.ConfigSchemaJson, socket, name string) (*Driver, error) {
 	// Setup identity server and provisioner server
 	identityServer := identity.New(name)
 
 	driverset := &provisioner.Driverset{}
+
 	for _, cfg := range config.Connections {
 		driver, err := provisioner.NewVirtualDriver(cfg)
 		if err != nil {
@@ -86,15 +87,17 @@ func New(config *config.ConfigSchemaJson, socket, name string) (*Driver, error) 
 	return &Driver{server, listener}, nil
 }
 
-// starts the gRPC server and returns a channel that will be closed when it is ready
+// starts the gRPC server and returns a channel that will be closed when it is ready.
 func (s *Driver) start(ctx context.Context) <-chan struct{} {
 	ready := make(chan struct{})
 	go func() {
 		close(ready)
+
 		if err := s.server.Serve(s.lis); err != nil {
 			log.Fatalf("Failed to serve gRPC server: %v", err)
 		}
 	}()
+
 	return ready
 }
 
@@ -113,7 +116,7 @@ func Run(ctx context.Context, config *config.ConfigSchemaJson, socket, name stri
 	return driver.start(ctx), nil
 }
 
-// RunBlocking is a blocking version of Run
+// RunBlocking is a blocking version of Run.
 func RunBlocking(ctx context.Context, config *config.ConfigSchemaJson, socket, name string) error {
 	// Create new driver
 	driver, err := New(config, socket, name)

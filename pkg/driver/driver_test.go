@@ -1,4 +1,4 @@
-//Copyright © 2023 Dell Inc. or its subsidiaries. All Rights Reserved.
+// Copyright © 2023 Dell Inc. or its subsidiaries. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -154,7 +154,7 @@ func TestDriverConfigurationWithMissingObjectscale(t *testing.T) {
 func TestDriverWithPreexistingSocketFile(t *testing.T) {
 	t.Parallel()
 	dir := t.TempDir()
-	//create a socket file
+	// create a socket file
 	socketPath := path.Join(dir, "cosi.sock")
 	_, err := os.Create(socketPath)
 	assert.NoError(t, err)
@@ -172,17 +172,25 @@ func TestDriverFailOnNonExistingDirectory(t *testing.T) {
 
 func TestDriverRunBlockingServer(t *testing.T) {
 	t.Parallel()
+
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+
 	defer cancel()
+
 	err := RunBlocking(ctx, testConfigWithConnections, t.TempDir(), "test")
+
 	assert.NoError(t, err)
 }
 
 func TestDriverBlockingServerConfigurationWithDuplicateID(t *testing.T) {
 	t.Parallel()
+
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+
 	defer cancel()
+
 	err := RunBlocking(ctx, testConfigDuplicateID, t.TempDir(), "test")
+
 	assert.Error(t, err)
 }
 
