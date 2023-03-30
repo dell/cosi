@@ -91,8 +91,8 @@ func (s *Server) ID() string {
 
 // DriverCreateBucket creates Bucket on specific Object Storage Platform.
 func (s *Server) DriverCreateBucket(ctx context.Context,
-	req *cosi.DriverCreateBucketRequest) (*cosi.DriverCreateBucketResponse, error) {
-
+	req *cosi.DriverCreateBucketRequest,
+) (*cosi.DriverCreateBucketResponse, error) {
 	log.WithFields(log.Fields{
 		"bucket": req.GetName(),
 	}).Info("Bucket is being created")
@@ -159,21 +159,21 @@ func (s *Server) DriverCreateBucket(ctx context.Context,
 
 // DriverDeleteBucket deletes Bucket on specific Object Storage Platform.
 func (s *Server) DriverDeleteBucket(ctx context.Context,
-	req *cosi.DriverDeleteBucketRequest) (*cosi.DriverDeleteBucketResponse, error) {
-
+	req *cosi.DriverDeleteBucketRequest,
+) (*cosi.DriverDeleteBucketResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "DriverCreateBucket: not implemented")
 }
 
 // DriverGrantBucketAccess provides access to Bucket on specific Object Storage Platform.
 func (s *Server) DriverGrantBucketAccess(ctx context.Context,
-	req *cosi.DriverGrantBucketAccessRequest) (*cosi.DriverGrantBucketAccessResponse, error) {
-
+	req *cosi.DriverGrantBucketAccessRequest,
+) (*cosi.DriverGrantBucketAccessResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "DriverCreateBucket: not implemented")
 }
 
 // DriverRevokeBucketAccess revokes access from Bucket on specific Object Storage Platform.
 func (s *Server) DriverRevokeBucketAccess(ctx context.Context,
-	req *cosi.DriverRevokeBucketAccessRequest) (*cosi.DriverRevokeBucketAccessResponse, error) {
-
+	req *cosi.DriverRevokeBucketAccessRequest,
+) (*cosi.DriverRevokeBucketAccessResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "DriverCreateBucket: not implemented")
 }

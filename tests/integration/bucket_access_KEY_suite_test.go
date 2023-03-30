@@ -186,7 +186,7 @@ var _ = Describe("Bucket Access KEY", Ordered, Label("key-flow", "objectscale"),
 		By("Checking if Secret 'bucket-credentials-1' in namespace 'namespace-1' is not empty")
 		steps.CheckSecret(ctx, clientset, validSecret)
 
-		//STEP: Bucket resource referencing BucketClaim resource "bucket-claim-delete" is accessible from Secret "bucket-credentials-1"
+		// STEP: Bucket resource referencing BucketClaim resource "bucket-claim-delete" is accessible from Secret "bucket-credentials-1"
 		By("Checking if Bucket resource referencing BucketClaim resource 'my-bucket-claim' is accessible from Secret 'bucket-credentials-1'")
 		steps.CheckBucketAccessFromSecret(objectscale, myBucket, "bucket-credentials-1")
 

@@ -25,9 +25,7 @@ const (
 	testDir = "test"
 )
 
-var (
-	dir string
-)
+var dir string
 
 var (
 	missingFile      = regexp.MustCompile(`^unable to read config file: open (.*): no such file or directory$`)
@@ -247,5 +245,5 @@ func (tf *testFile) Write() error {
 		return nil
 	}
 
-	return os.WriteFile(path.Join(dir, tf.name), []byte(tf.content), 0644)
+	return os.WriteFile(path.Join(dir, tf.name), []byte(tf.content), 0o644)
 }
