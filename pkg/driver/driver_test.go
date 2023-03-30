@@ -109,50 +109,50 @@ var (
 
 func TestDriver(t *testing.T) {
 	t.Parallel()
+
 	for name, test := range map[string]func(t *testing.T){
-		"empty configuration":                             TestDriverEmptyConfiguration,
-		"configuration with connections":                  TestDriverConfigurationWithConnections,
-		"configuration with duplicate ID":                 TestDriverConfigurationWithDuplicateID,
-		"configuration with missing objectscale":          TestDriverConfigurationWithMissingObjectscale,
-		"with preexisting socket file":                    TestDriverWithPreexistingSocketFile,
-		"fail on non-existing socket directory":           TestDriverFailOnNonExistingDirectory,
-		"run blocking server":                             TestDriverRunBlockingServer,
-		"blocking server configuration with duplicate ID": TestDriverBlockingServerConfigurationWithDuplicateID,
+		"empty configuration":                             testDriverEmptyConfiguration,
+		"configuration with connections":                  testDriverConfigurationWithConnections,
+		"configuration with duplicate ID":                 testDriverConfigurationWithDuplicateID,
+		"configuration with missing objectscale":          testDriverConfigurationWithMissingObjectscale,
+		"with preexisting socket file":                    testDriverWithPreexistingSocketFile,
+		"fail on non-existing socket directory":           testDriverFailOnNonExistingDirectory,
+		"run blocking server":                             testDriverRunBlockingServer,
+		"blocking server configuration with duplicate ID": testDriverBlockingServerConfigurationWithDuplicateID,
 	} {
-		t.Run(name, test)
+		name, test := name, test
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+			test(t)
+		})
 	}
 }
 
-func TestDriverEmptyConfiguration(t *testing.T) {
-	t.Parallel()
+func testDriverEmptyConfiguration(t *testing.T) {
 	// TODO: server should start successfully with an empty configuration?
 	err := runWithParameters(t, testConfigEmpty, t.TempDir())
 	assert.NoError(t, err)
 }
 
-func TestDriverConfigurationWithConnections(t *testing.T) {
-	t.Parallel()
+func testDriverConfigurationWithConnections(t *testing.T) {
 	// server should start successfully with the provided configuration
 	err := runWithParameters(t, testConfigWithConnections, t.TempDir())
 	assert.NoError(t, err)
 }
 
-func TestDriverConfigurationWithDuplicateID(t *testing.T) {
-	t.Parallel()
+func testDriverConfigurationWithDuplicateID(t *testing.T) {
 	// server should fail if the configuration contains duplicate IDs
 	err := runWithParameters(t, testConfigDuplicateID, t.TempDir())
 	assert.Error(t, err)
 }
 
-func TestDriverConfigurationWithMissingObjectscale(t *testing.T) {
-	t.Parallel()
+func testDriverConfigurationWithMissingObjectscale(t *testing.T) {
 	// server should fail if the configuration is missing the objectscale connection
 	err := runWithParameters(t, testConfigMissingObjectscale, t.TempDir())
 	assert.Error(t, err)
 }
 
-func TestDriverWithPreexistingSocketFile(t *testing.T) {
-	t.Parallel()
+func testDriverWithPreexistingSocketFile(t *testing.T) {
 	dir := t.TempDir()
 	// create a socket file
 	socketPath := path.Join(dir, "cosi.sock")
@@ -163,34 +163,25 @@ func TestDriverWithPreexistingSocketFile(t *testing.T) {
 	assert.NoError(t, err)
 }
 
-func TestDriverFailOnNonExistingDirectory(t *testing.T) {
-	t.Parallel()
+func testDriverFailOnNonExistingDirectory(t *testing.T) {
 	// server should fail if the directory does not exist
 	err := runWithParameters(t, testConfigWithConnections, "/nonexistent")
 	assert.Error(t, err)
 }
 
-func TestDriverRunBlockingServer(t *testing.T) {
-	t.Parallel()
-
+func testDriverRunBlockingServer(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
-
 	defer cancel()
 
 	err := RunBlocking(ctx, testConfigWithConnections, t.TempDir(), "test")
-
 	assert.NoError(t, err)
 }
 
-func TestDriverBlockingServerConfigurationWithDuplicateID(t *testing.T) {
-	t.Parallel()
-
+func testDriverBlockingServerConfigurationWithDuplicateID(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
-
 	defer cancel()
 
 	err := RunBlocking(ctx, testConfigDuplicateID, t.TempDir(), "test")
-
 	assert.Error(t, err)
 }
 
@@ -201,6 +192,7 @@ func runWithParameters(t *testing.T, configuration *config.ConfigSchemaJson, soc
 	defer cancel()
 
 	testSocketPath := path.Join(socketDirectoryPath, "cosi.sock")
+
 	ready, err := Run(ctx, configuration, testSocketPath, "test")
 	if err != nil {
 		return err
