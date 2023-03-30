@@ -63,7 +63,7 @@ func InstallChartInNamespace(releaseName, namespace, repo, chartName, version st
 	settings := cli.New()
 	actionConfig := new(action.Configuration)
 	err := actionConfig.Init(settings.RESTClientGetter(), namespace, os.Getenv("HELM_DRIVER"), log.Debugf)
-	gomega.Expect(err).To(gomega.BeNil())
+	gomega.Expect(err).ToNot(gomega.HaveOccurred())
 
 	helmClient := action.NewInstall(actionConfig)
 	helmClient.ReleaseName = releaseName
@@ -71,12 +71,12 @@ func InstallChartInNamespace(releaseName, namespace, repo, chartName, version st
 
 	chartPath, err := helmClient.LocateChart(fmt.Sprintf("https://github.com/%s/%s-%s", repo, chartName, version), settings)
 
-	gomega.Expect(err).To(gomega.BeNil())
+	gomega.Expect(err).ToNot(gomega.HaveOccurred())
 	chart, err := loader.Load(chartPath)
-	gomega.Expect(err).To(gomega.BeNil())
+	gomega.Expect(err).ToNot(gomega.HaveOccurred())
 
 	release, err := helmClient.Run(chart, nil)
-	gomega.Expect(err).To(gomega.BeNil())
+	gomega.Expect(err).ToNot(gomega.HaveOccurred())
 
 	log.Println("Successfully installed release: ", release.Name)
 }
@@ -86,11 +86,11 @@ func UninstallChartReleaseinNamespace(releaseName, namespace string) {
 	settings := cli.New()
 	actionConfig := new(action.Configuration)
 	err := actionConfig.Init(settings.RESTClientGetter(), namespace, os.Getenv("HELM_DRIVER"), log.Debugf)
-	gomega.Expect(err).To(gomega.BeNil())
+	gomega.Expect(err).ToNot(gomega.HaveOccurred())
 
 	helmClient := action.NewUninstall(actionConfig)
 	release, err := helmClient.Run(releaseName)
-	gomega.Expect(err).To(gomega.BeNil())
+	gomega.Expect(err).ToNot(gomega.HaveOccurred())
 
 	log.Println("Successfully uninstalled release: ", release.Release.Name)
 }

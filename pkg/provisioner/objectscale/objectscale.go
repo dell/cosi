@@ -111,6 +111,7 @@ func (s *Server) DriverCreateBucket(ctx context.Context,
 	// Display all request parameters.
 	parameters := ""
 	parametersCopy := make(map[string]string)
+
 	for key, value := range req.GetParameters() {
 		parameters += key + ":" + value + ";"
 		parametersCopy[key] = value

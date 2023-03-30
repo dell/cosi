@@ -95,6 +95,7 @@ func (s *Server) DriverGrantBucketAccess(ctx context.Context,
 			"id":    id,
 			"error": err,
 		}).Error("DriverGrantBucketAccess: Invalid backend ID")
+
 		return nil, status.Error(codes.InvalidArgument, "DriverGrantBucketAccess: Invalid backend ID")
 	}
 
@@ -116,6 +117,7 @@ func (s *Server) DriverRevokeBucketAccess(ctx context.Context,
 			"id":    id,
 			"error": err,
 		}).Error("DriverRevokeBucketAccess: Invalid backend ID")
+
 		return nil, status.Error(codes.InvalidArgument, "DriverRevokeBucketAccess: Invalid backend ID")
 	}
 

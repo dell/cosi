@@ -25,14 +25,14 @@ import (
 	"sigs.k8s.io/container-object-storage-interface-api/apis/objectstorage/v1alpha1"
 )
 
-// CheckClusterAvailability Ensure that Kubernetes cluster is available
+// CheckClusterAvailability Ensure that Kubernetes cluster is available.
 func CheckClusterAvailability(ctx ginkgo.SpecContext, clientset *kubernetes.Clientset) {
 	value, err := clientset.ServerVersion()
-	gomega.Expect(err).To(gomega.BeNil())
+	gomega.Expect(err).ToNot(gomega.HaveOccurred())
 	gomega.Expect(value).ToNot(gomega.BeNil())
 }
 
-// CreateNamespace Ensure that Kubernetes namespace is created
+// CreateNamespace Ensure that Kubernetes namespace is created.
 func CreateNamespace(ctx ginkgo.SpecContext, clientset *kubernetes.Clientset, namespace string) {
 	_, err := clientset.CoreV1().Namespaces().Get(ctx, namespace, metav1.GetOptions{})
 	if errors.IsNotFound(err) {
