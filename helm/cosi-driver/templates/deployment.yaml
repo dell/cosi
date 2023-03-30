@@ -38,7 +38,7 @@ spec:
           resources:
             {{- toYaml .Values.resources.provisioner | nindent 12 }}
           volumeMounts:
-          - name: {{ include "cosi-driver.name" . }}-config-volume
+          - name: {{ include "cosi-driver.name" . }}-secret-volume
             mountPath: /cosi
           - name: cosi-socket-dir
             mountPath: /var/lib/cosi
@@ -63,8 +63,8 @@ spec:
         {{- toYaml . | nindent 8 }}
       {{- end }}
       volumes:
-      - name: {{ include "cosi-driver.name" . }}-config-volume
-        configMap:
-          name: {{ include "cosi-driver.name" . }}-config
+      - name: {{ include "cosi-driver.name" . }}-secret-volume
+        secret:
+          secretName: {{ include "cosi-driver.name" . }}-secret
       - name: cosi-socket-dir
         emptyDir: {}
