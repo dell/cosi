@@ -3,7 +3,7 @@ module github.com/dell/cosi-driver
 go 1.19
 
 require (
-	github.com/aws/aws-sdk-go v1.44.231
+	github.com/aws/aws-sdk-go v1.44.232
 	github.com/dell/goobjectscale v0.0.0-20230322100159-7364c5218872
 	github.com/onsi/ginkgo/v2 v2.9.2
 	github.com/onsi/gomega v1.27.5

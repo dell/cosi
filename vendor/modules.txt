@@ -24,7 +24,7 @@ github.com/Masterminds/squirrel
 # github.com/asaskevich/govalidator v0.0.0-20200428143746-21a406dcc535
 ## explicit; go 1.12
 github.com/asaskevich/govalidator
-# github.com/aws/aws-sdk-go v1.44.231
+# github.com/aws/aws-sdk-go v1.44.232
 ## explicit; go 1.11
 github.com/aws/aws-sdk-go/aws
 github.com/aws/aws-sdk-go/aws/awserr
