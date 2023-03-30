@@ -10,7 +10,6 @@ GOPRIVATE="github.com/dell/objectscale"
 
 # Define flags
 in_require=0
-skip_line=0
 
 # Read the file line by line
 while read line
@@ -19,7 +18,6 @@ do
     if echo "$line" | grep -q "require ("
     then
         in_require=1
-        skip_line=0
         continue
     fi
 
@@ -27,19 +25,17 @@ do
     if echo "$line" | grep -q ")"
     then
         in_require=0
-        skip_line=0
         continue
     fi
 
     # Check if the line contains "// indirect"
     if echo "$line" | grep -q "// indirect"
     then
-        skip_line=1
         continue
     fi
 
     # Update the dependency
-    if [ "$in_require" -eq 1 ] && [ "$skip_line" -eq 0 ]
+    if [ "$in_require" -eq 1 ]
     then
         dependency=$(echo "$line" | cut -d ' ' -f 1)
 
