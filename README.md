@@ -52,3 +52,6 @@ Please refer to the section `Testing Drivers` in the [Documentation](https://del
 
 ## Documentation
 For more detailed information on the driver, please refer to [Container Storage Modules documentation](https://dell.github.io/csm-docs/).
+
+*NOTICE*: the COSI driver code is linted with the phenomenal `golangci-lint`. For a detailed list 
+of the linters used and their configuration, please refer to the `.golangci.yml` in the root of the project.
