@@ -51,7 +51,6 @@ linters:
     - gocognit
     - goconst
     - gocritic
-    - gocritic
     - gocyclo
     - godot
     - gofumpt
