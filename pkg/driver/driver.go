@@ -87,7 +87,7 @@ func New(config *config.ConfigSchemaJson, socket, name string) (*Driver, error) 
 }
 
 // Start starts the gRPC server and returns a channel that will be closed when it is ready
-func (s *Driver) Start(ctx context.Context) <-chan struct{} {
+func (s *Driver) start(ctx context.Context) <-chan struct{} {
 	ready := make(chan struct{})
 	go func() {
 		close(ready)
@@ -110,7 +110,7 @@ func Run(ctx context.Context, config *config.ConfigSchemaJson, socket, name stri
 
 	log.Infoln("gRPC server started")
 
-	return driver.Start(ctx), nil
+	return driver.start(ctx), nil
 }
 
 // Blocking version of Run
@@ -123,7 +123,7 @@ func RunBlocking(ctx context.Context, config *config.ConfigSchemaJson, socket, n
 
 	log.Infoln("gRPC server started")
 	// Block until driver is ready
-	<-driver.Start(ctx)
+	<-driver.start(ctx)
 
 	// Block until context is done
 	<-ctx.Done()
