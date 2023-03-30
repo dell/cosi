@@ -125,9 +125,10 @@ func (s *Server) DriverRevokeBucketAccess(ctx context.Context,
 
 // getID splits the string and returns ID from it
 // correct format of string is:
-// (ID)-(other identifers)
+// (ID)-(other identifers).
 func getID(s string) string {
 	id := strings.Split(s, "-")
+
 	correctFormatLength := 2
 	if len(id) < correctFormatLength {
 		return ""

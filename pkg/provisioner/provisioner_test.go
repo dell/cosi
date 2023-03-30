@@ -1,4 +1,4 @@
-//Copyright © 2023 Dell Inc. or its subsidiaries. All Rights Reserved.
+// Copyright © 2023 Dell Inc. or its subsidiaries. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -31,6 +31,7 @@ import (
 // TestNew tests the initialization of provisioner server.
 func TestNew(t *testing.T) {
 	fakeDriverset := &Driverset{drivers: map[string]virtualdriver.Driver{}}
+
 	err := fakeDriverset.Add(&fake.Driver{FakeID: "fake"})
 	if err != nil {
 		log.Fatalf("Failed to create fakedriverset: %v", err)
@@ -52,10 +53,12 @@ func TestServer(t *testing.T) {
 	}
 
 	fakeDriverset := &Driverset{drivers: map[string]virtualdriver.Driver{}}
+
 	err := fakeDriverset.Add(&fake.Driver{FakeID: "fake"})
 	if err != nil {
 		log.Fatalf("Failed to create fakedriverset: %v", err)
 	}
+
 	fakeServer := Server{
 		driverset: fakeDriverset,
 	}

@@ -1,4 +1,4 @@
-//Copyright © 2023 Dell Inc. or its subsidiaries. All Rights Reserved.
+// Copyright © 2023 Dell Inc. or its subsidiaries. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -134,7 +134,7 @@ var (
 	transportInitFailed = regexp.MustCompile(`^initialization of transport failed:`)
 )
 
-// testDriverNew tests server initialization
+// testDriverNew tests server initialization.
 func testDriverNew(t *testing.T) {
 	testCases := []struct {
 		name         string
@@ -191,7 +191,7 @@ func testDriverNew(t *testing.T) {
 	}
 }
 
-// testDriverID tests extending COSI interface by adding driver ID
+// testDriverID tests extending COSI interface by adding driver ID.
 func testDriverID(t *testing.T) {
 	driver := Server{
 		mgmtClient: fake.NewClientSet(),
@@ -201,7 +201,7 @@ func testDriverID(t *testing.T) {
 	assert.Equal(t, "id", driver.ID())
 }
 
-// testDriverCreateBucket tests bucket creation functionality on ObjectScale platform
+// testDriverCreateBucket tests bucket creation functionality on ObjectScale platform.
 func testDriverCreateBucket(t *testing.T) {
 	// Namespace (ObjectstoreID) and testID (driver ID) provided in the config file
 	const (
@@ -295,7 +295,7 @@ func testDriverCreateBucket(t *testing.T) {
 	}
 }
 
-// FIXME: write valid test
+// FIXME: write valid test.
 func testDriverDeleteBucket(t *testing.T) {
 	srv := Server{}
 
@@ -305,7 +305,7 @@ func testDriverDeleteBucket(t *testing.T) {
 	}
 }
 
-// FIXME: write valid test
+// FIXME: write valid test.
 func testDriverGrantBucketAccess(t *testing.T) {
 	srv := Server{}
 
@@ -315,7 +315,7 @@ func testDriverGrantBucketAccess(t *testing.T) {
 	}
 }
 
-// FIXME: write valid test
+// FIXME: write valid test.
 func testDriverRevokeBucketAccess(t *testing.T) {
 	srv := Server{}
 

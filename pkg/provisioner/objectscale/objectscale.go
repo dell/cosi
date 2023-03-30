@@ -144,6 +144,7 @@ func (s *Server) DriverCreateBucket(ctx context.Context,
 		log.WithFields(log.Fields{
 			"bucket": bucket.Name,
 		}).Error("DriverCreateBucket: Bucket was not successfully created")
+
 		return nil, status.Error(codes.Internal, "Bucket was not successfully created")
 	}
 
