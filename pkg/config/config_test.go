@@ -1,4 +1,4 @@
-//Copyright © 2023 Dell Inc. or its subsidiaries. All Rights Reserved.
+// Copyright © 2023 Dell Inc. or its subsidiaries. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -205,10 +205,12 @@ func TestNew(t *testing.T) {
 
 	// create test dir
 	var err error
+
 	dir, err = os.MkdirTemp("", testDir)
 	if err != nil {
 		t.Fatal(err)
 	}
+
 	defer os.RemoveAll(dir)
 
 	for _, tc := range testCases {

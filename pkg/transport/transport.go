@@ -1,4 +1,4 @@
-//Copyright © 2023 Dell Inc. or its subsidiaries. All Rights Reserved.
+// Copyright © 2023 Dell Inc. or its subsidiaries. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -24,14 +24,14 @@ import (
 )
 
 var (
-	// ErrClientCertMissing indicates that one of client-cert or client-key is missing
+	// ErrClientCertMissing indicates that one of client-cert or client-key is missing.
 	ErrClientCertMissing = errors.New("client-cert or client-key missing")
 
-	// ErrRootCAMissing indicates that root CA (certificate authority) is missing
+	// ErrRootCAMissing indicates that root CA (certificate authority) is missing.
 	ErrRootCAMissing = errors.New("root certificate authority is missing")
 )
 
-// New creates new HTTP or HTTPS transport based on provided config
+// New creates new HTTP or HTTPS transport based on provided config.
 func New(cfg config.Tls) (*http.Transport, error) {
 	var tlsConfig *tls.Config
 	if cfg.Insecure {

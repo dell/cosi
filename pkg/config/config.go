@@ -1,4 +1,4 @@
-//Copyright © 2023 Dell Inc. or its subsidiaries. All Rights Reserved.
+// Copyright © 2023 Dell Inc. or its subsidiaries. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -67,12 +67,13 @@ func NewYAML(bytes []byte) (*ConfigSchemaJson, error) {
 	// we need to unmarshall it into simple map[string]interface{}
 	// config structure does not have custom UnmarshallYAML fields, so the validation is not performed
 	var body map[string]interface{}
+
 	err := yaml.Unmarshal(bytes, &body)
 	if err != nil {
 		return nil, err
 	}
 
-	// we ignore the error, as the config was previously succesfully Unmarshaled from YAML.
+	// we ignore the error, as the config was previously successfully Unmarshaled from YAML.
 	// and there is no case, when the Marshaling will fail.
 	b, _ := json.Marshal(body)
 
@@ -91,7 +92,8 @@ func readFile(filename string) ([]byte, error) {
 	}
 
 	// limit reader is used, so the we will read only 20MB of the file.
-	lr := io.LimitReader(f, 20*1000000)
+	maxFileSize := 20000000
+	lr := io.LimitReader(f, int64(maxFileSize))
 
 	return io.ReadAll(lr)
 }

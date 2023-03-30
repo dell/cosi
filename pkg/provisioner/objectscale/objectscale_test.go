@@ -132,7 +132,6 @@ var (
 var (
 	emptyID             = regexp.MustCompile(`^empty id$`)
 	transportInitFailed = regexp.MustCompile(`^initialization of transport failed:`)
-	decodingFailed      = regexp.MustCompile(`^unable to decode (.*): illegal base64 data at input byte (.*)$`)
 )
 
 // testDriverNew tests server initialization
@@ -276,7 +275,7 @@ func testDriverCreateBucket(t *testing.T) {
 		{
 			description:   "cannot create bucket",
 			inputName:     "FORCEFAIL-bucket-valid",
-			expectedError: status.Error(codes.Internal, "Bucket was not sucessfully created"),
+			expectedError: status.Error(codes.Internal, "Bucket was not successfully created"),
 			server: Server{
 				mgmtClient: fake.NewClientSet(),
 				namespace:  namespace,

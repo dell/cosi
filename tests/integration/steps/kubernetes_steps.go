@@ -1,4 +1,4 @@
-//Copyright © 2023 Dell Inc. or its subsidiaries. All Rights Reserved.
+// Copyright © 2023 Dell Inc. or its subsidiaries. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -93,11 +93,13 @@ func CheckBucketClaimEvents(ctx ginkgo.SpecContext, clientset *kubernetes.Client
 		if len(nextContinueToken) == 0 {
 			break
 		}
+
 		listOptions.Continue = nextContinueToken
 	}
 
 	// check if there is event having required reason
 	gomega.Expect(eventList.Items).NotTo(gomega.BeEmpty())
+
 	found := false
 	for _, event := range eventList.Items {
 		if event.Reason == expected.Reason {
@@ -105,5 +107,6 @@ func CheckBucketClaimEvents(ctx ginkgo.SpecContext, clientset *kubernetes.Client
 			break
 		}
 	}
+
 	gomega.Expect(found).To(gomega.Equal(true))
 }

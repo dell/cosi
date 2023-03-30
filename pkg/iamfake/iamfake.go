@@ -1,4 +1,4 @@
-//Copyright © 2023 Dell Inc. or its subsidiaries. All Rights Reserved.
+// Copyright © 2023 Dell Inc. or its subsidiaries. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -22,6 +22,11 @@ import (
 	"github.com/aws/aws-sdk-go/service/iam/iamiface"
 )
 
+const (
+	successUsername = "success"
+	failUsername    = "fail"
+)
+
 // FakeIAMClient is a set of expected outputs for fake client methods.
 type FakeIAMClient struct {
 	iamiface.IAMAPI
@@ -43,6 +48,7 @@ func NewFakeIAMClient(objs ...interface{}) *FakeIAMClient {
 		createUserOutput      *iam.CreateUserOutput
 		deleteUserOutput      *iam.DeleteUserOutput
 	)
+
 	for _, o := range objs {
 		switch object := o.(type) {
 		case *iam.GetUserOutput:
@@ -70,15 +76,14 @@ func NewFakeIAMClient(objs ...interface{}) *FakeIAMClient {
 		createUserOutput:      createUserOutput,
 		deleteUserOutput:      deleteUserOutput,
 	}
-
 }
 
 // GetUser returns GetUserOutput or error depending on provided GetUserInput.UserName.
 func (fakeIAM *FakeIAMClient) GetUser(input *iam.GetUserInput) (*iam.GetUserOutput, error) {
 	switch *input.UserName {
-	case "success":
+	case successUsername:
 		return fakeIAM.getUserOutput, nil
-	case "fail":
+	case failUsername:
 		return nil, errors.New(iam.ErrCodeNoSuchEntityException)
 	default:
 		return nil, errors.New(iam.ErrCodeServiceFailureException)
@@ -88,9 +93,9 @@ func (fakeIAM *FakeIAMClient) GetUser(input *iam.GetUserInput) (*iam.GetUserOutp
 // CreateAccessKey returns CreateAccessKeyOutput or error depending on provided CreateAccessKeyInput.UserName.
 func (fakeIAM *FakeIAMClient) CreateAccessKey(input *iam.CreateAccessKeyInput) (*iam.CreateAccessKeyOutput, error) {
 	switch *input.UserName {
-	case "success":
+	case successUsername:
 		return fakeIAM.createAccessKeyOutput, nil
-	case "fail":
+	case failUsername:
 		return nil, errors.New(iam.ErrCodeNoSuchEntityException)
 	default:
 		return nil, errors.New(iam.ErrCodeServiceFailureException)
@@ -100,9 +105,9 @@ func (fakeIAM *FakeIAMClient) CreateAccessKey(input *iam.CreateAccessKeyInput) (
 // DeleteAccessKey returns DeleteAccessKeyOutput or error depending on provided DeleteAccessKeyInput.UserName.
 func (fakeIAM *FakeIAMClient) DeleteAccessKey(input *iam.DeleteAccessKeyInput) (*iam.DeleteAccessKeyOutput, error) {
 	switch *input.UserName {
-	case "success":
+	case successUsername:
 		return fakeIAM.deleteAccessKeyOutput, nil
-	case "fail":
+	case failUsername:
 		return nil, errors.New(iam.ErrCodeNoSuchEntityException)
 	default:
 		return nil, errors.New(iam.ErrCodeServiceFailureException)
@@ -112,9 +117,9 @@ func (fakeIAM *FakeIAMClient) DeleteAccessKey(input *iam.DeleteAccessKeyInput) (
 // ListAccessKeys returns ListAccessKeysOutput or error depending on provided ListAccessKeysInput.UserName.
 func (fakeIAM *FakeIAMClient) ListAccessKeys(input *iam.ListAccessKeysInput) (*iam.ListAccessKeysOutput, error) {
 	switch *input.UserName {
-	case "success":
+	case successUsername:
 		return fakeIAM.listAccessKeysOutput, nil
-	case "fail":
+	case failUsername:
 		return nil, errors.New(iam.ErrCodeNoSuchEntityException)
 	default:
 		return nil, errors.New(iam.ErrCodeServiceFailureException)
@@ -124,9 +129,9 @@ func (fakeIAM *FakeIAMClient) ListAccessKeys(input *iam.ListAccessKeysInput) (*i
 // CreateUserWithContext returns CreateUserOutput or error depending on provided CreateUserInput.UserName.
 func (fakeIAM *FakeIAMClient) CreateUserWithContext(_ aws.Context, input *iam.CreateUserInput, _ ...request.Option) (*iam.CreateUserOutput, error) {
 	switch *input.UserName {
-	case "success":
+	case successUsername:
 		return fakeIAM.createUserOutput, nil
-	case "fail":
+	case failUsername:
 		return nil, errors.New(iam.ErrCodeEntityAlreadyExistsException)
 	default:
 		return nil, errors.New(iam.ErrCodeServiceFailureException)
@@ -136,9 +141,9 @@ func (fakeIAM *FakeIAMClient) CreateUserWithContext(_ aws.Context, input *iam.Cr
 // DeleteUser returns DeleteUserOutput or error depending on provided DeleteUserInput.UserName.
 func (fakeIAM *FakeIAMClient) DeleteUser(input *iam.DeleteUserInput) (*iam.DeleteUserOutput, error) {
 	switch *input.UserName {
-	case "success":
+	case successUsername:
 		return fakeIAM.deleteUserOutput, nil
-	case "fail":
+	case failUsername:
 		return nil, errors.New(iam.ErrCodeNoSuchEntityException)
 	default:
 		return nil, errors.New(iam.ErrCodeServiceFailureException)

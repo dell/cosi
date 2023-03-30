@@ -1,4 +1,4 @@
-//Copyright © 2023 Dell Inc. or its subsidiaries. All Rights Reserved.
+// Copyright © 2023 Dell Inc. or its subsidiaries. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -22,7 +22,6 @@ import (
 
 var (
 	missingField  = regexp.MustCompile(`field (.+) in (.+): required`)
-	invalidEnum   = regexp.MustCompile(`^invalid value \(expected one of (.+)\): (.+)$`)
 	invalidObject = regexp.MustCompile(`^json: cannot unmarshal (.+) into Go value of type (.+)$`)
 	invalidField  = regexp.MustCompile(`^json: cannot unmarshal (.+) into Go struct field (.+) of type (.+)$`)
 )
