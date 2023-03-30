@@ -65,12 +65,12 @@ func New(config *config.ConfigSchemaJson, socket, name string) (*Driver, error) 
 	options := []grpc.ServerOption{}
 	// Crate new gRPC server
 	server := grpc.NewServer(options...)
-	// Register identity and provisioner servers, so they will handle gRPC requests to the Driver
+	// Register identity and provisioner servers, so they will handle gRPC requests to the driver
 	spec.RegisterIdentityServer(server, identityServer)
 	spec.RegisterProvisionerServer(server, provisionerServer)
 
 	// Remove socket file if it already exists
-	// so we can start a new Driver after crash or pod restart
+	// so we can start a new driver after crash or pod restart
 	if _, err := os.Stat(socket); !errors.Is(err, fs.ErrNotExist) {
 		if err := os.RemoveAll(socket); err != nil {
 			log.Fatal(err)
