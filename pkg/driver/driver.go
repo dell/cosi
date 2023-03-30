@@ -34,7 +34,7 @@ const (
 	COSISocket = "/var/lib/cosi/cosi.sock"
 )
 
-// Representation of Driver for COSI API
+// Driver structure for storing server and listener instances
 type Driver struct {
 	// gRPC server
 	server *grpc.Server
@@ -42,7 +42,7 @@ type Driver struct {
 	lis net.Listener
 }
 
-// NewDriver creates a new driver for COSI API with identity and provisioner servers
+// New creates a new driver for COSI API with identity and provisioner servers
 func New(config *config.ConfigSchemaJson, socket, name string) (*Driver, error) {
 	// Setup identity server and provisioner server
 	identityServer := identity.New(name)
@@ -86,7 +86,7 @@ func New(config *config.ConfigSchemaJson, socket, name string) (*Driver, error) 
 	return &Driver{server, listener}, nil
 }
 
-// Start starts the gRPC server and returns a channel that will be closed when it is ready
+// starts the gRPC server and returns a channel that will be closed when it is ready
 func (s *Driver) start(ctx context.Context) <-chan struct{} {
 	ready := make(chan struct{})
 	go func() {
@@ -113,7 +113,7 @@ func Run(ctx context.Context, config *config.ConfigSchemaJson, socket, name stri
 	return driver.start(ctx), nil
 }
 
-// Blocking version of Run
+// RunBlocking is a blocking version of Run
 func RunBlocking(ctx context.Context, config *config.ConfigSchemaJson, socket, name string) error {
 	// Create new driver
 	driver, err := New(config, socket, name)
