@@ -25,9 +25,9 @@ const (
 	testDir = "test"
 )
 
-var dir string
-
 var (
+	dir string
+
 	missingFile      = regexp.MustCompile(`^unable to read config file: open (.*): no such file or directory$`)
 	invalidExtension = regexp.MustCompile(`^invalid file extension, should be .json, .yaml or .yml$`)
 
