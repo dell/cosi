@@ -1,4 +1,4 @@
-//Copyright © 2023 Dell Inc. or its subsidiaries. All Rights Reserved.
+// Copyright © 2023 Dell Inc. or its subsidiaries. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -20,12 +20,11 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-var (
-	driverset = &Driverset{
-		drivers: map[string]driver.Driver{
-			"driver0": &fake.Driver{FakeID: "driver0"},
-		}}
-)
+var driverset = &Driverset{
+	drivers: map[string]driver.Driver{
+		"driver0": &fake.Driver{FakeID: "driver0"},
+	},
+}
 
 func TestDriversetInit(t *testing.T) {
 	testCases := []struct {

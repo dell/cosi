@@ -1,4 +1,4 @@
-//Copyright © 2023 Dell Inc. or its subsidiaries. All Rights Reserved.
+// Copyright © 2023 Dell Inc. or its subsidiaries. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -25,48 +25,48 @@ import (
 	"sigs.k8s.io/container-object-storage-interface-api/apis/objectstorage/v1alpha1"
 )
 
-// CheckClusterAvailability Ensure that Kubernetes cluster is available
+// CheckClusterAvailability Ensure that Kubernetes cluster is available.
 func CheckClusterAvailability(ctx ginkgo.SpecContext, clientset *kubernetes.Clientset) {
 	value, err := clientset.ServerVersion()
-	gomega.Expect(err).To(gomega.BeNil())
+	gomega.Expect(err).ToNot(gomega.HaveOccurred())
 	gomega.Expect(value).ToNot(gomega.BeNil())
 }
 
-// CreateNamespace Ensure that Kubernetes namespace is created
+// CreateNamespace Ensure that Kubernetes namespace is created.
 func CreateNamespace(ctx ginkgo.SpecContext, clientset *kubernetes.Clientset, namespace string) {
 	_, err := clientset.CoreV1().Namespaces().Get(ctx, namespace, metav1.GetOptions{})
 	if errors.IsNotFound(err) {
 		namespaceObj := &v1.Namespace{ObjectMeta: metav1.ObjectMeta{Name: namespace}}
 		_, err := clientset.CoreV1().Namespaces().Create(ctx, namespaceObj, metav1.CreateOptions{})
-		gomega.Expect(err).To(gomega.BeNil())
+		gomega.Expect(err).ToNot(gomega.HaveOccurred())
 	} else {
-		gomega.Expect(err).To(gomega.BeNil())
+		gomega.Expect(err).ToNot(gomega.HaveOccurred())
 	}
 }
 
-// DeleteNamespace Ensure that Kubernetes namespace is deleted
+// DeleteNamespace Ensure that Kubernetes namespace is deleted.
 func DeleteNamespace(ctx ginkgo.SpecContext, clientset *kubernetes.Clientset, namespace string) {
 	err := clientset.CoreV1().Namespaces().Delete(ctx, namespace, metav1.DeleteOptions{})
-	gomega.Expect(err).To(gomega.BeNil())
+	gomega.Expect(err).ToNot(gomega.HaveOccurred())
 }
 
-// CheckBucketClassSpec Ensure that specification of custom resource "my-bucket-class" is correct
+// CheckBucketClassSpec Ensure that specification of custom resource "my-bucket-class" is correct.
 func CheckBucketClassSpec(clientset *kubernetes.Clientset, bucketClassSpec v1alpha1.BucketClaimSpec) {
 	// TODO: Implementation goes here
 	ginkgo.Fail("UNIMPLEMENTED")
 }
 
-// Check if secret exists
+// Check if secret exists.
 func CheckSecret(ctx ginkgo.SpecContext, clientset *kubernetes.Clientset, secret *v1.Secret) {
 	sec, err := clientset.CoreV1().Secrets(secret.Namespace).Get(ctx, secret.Name, metav1.GetOptions{})
-	gomega.Expect(err).To(gomega.BeNil())
+	gomega.Expect(err).ToNot(gomega.HaveOccurred())
 	gomega.Expect(sec).NotTo(gomega.BeNil())
 	gomega.Expect(sec.Name).To(gomega.Equal(secret.Namespace))
 	gomega.Expect(sec.Namespace).To(gomega.Equal(secret.Namespace))
 	gomega.Expect(sec.Data).NotTo(gomega.Or(gomega.BeNil(), gomega.BeEmpty()))
 }
 
-// CheckBucketClaimEvents Check BucketClaim events
+// CheckBucketClaimEvents Check BucketClaim events.
 func CheckBucketClaimEvents(ctx ginkgo.SpecContext, clientset *kubernetes.Clientset, bucketClaim *v1alpha1.BucketClaim, expected *v1.Event) {
 	listOptions := metav1.ListOptions{}
 
@@ -85,7 +85,7 @@ func CheckBucketClaimEvents(ctx ginkgo.SpecContext, clientset *kubernetes.Client
 
 	for {
 		list, err := clientset.CoreV1().Events(bucketClaim.Namespace).List(ctx, listOptions)
-		gomega.Expect(err).To(gomega.BeNil())
+		gomega.Expect(err).ToNot(gomega.HaveOccurred())
 
 		eventList.Items = append(eventList.Items, list.Items...)
 
@@ -93,17 +93,21 @@ func CheckBucketClaimEvents(ctx ginkgo.SpecContext, clientset *kubernetes.Client
 		if len(nextContinueToken) == 0 {
 			break
 		}
+
 		listOptions.Continue = nextContinueToken
 	}
 
 	// check if there is event having required reason
 	gomega.Expect(eventList.Items).NotTo(gomega.BeEmpty())
+
 	found := false
+
 	for _, event := range eventList.Items {
 		if event.Reason == expected.Reason {
 			found = true
 			break
 		}
 	}
-	gomega.Expect(found).To(gomega.Equal(true))
+
+	gomega.Expect(found).To(gomega.BeTrue())
 }

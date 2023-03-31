@@ -1,4 +1,4 @@
-//Copyright © 2023 Dell Inc. or its subsidiaries. All Rights Reserved.
+// Copyright © 2023 Dell Inc. or its subsidiaries. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -27,9 +27,7 @@ const (
 
 var (
 	dir string
-)
 
-var (
 	missingFile      = regexp.MustCompile(`^unable to read config file: open (.*): no such file or directory$`)
 	invalidExtension = regexp.MustCompile(`^invalid file extension, should be .json, .yaml or .yml$`)
 
@@ -205,10 +203,12 @@ func TestNew(t *testing.T) {
 
 	// create test dir
 	var err error
+
 	dir, err = os.MkdirTemp("", testDir)
 	if err != nil {
 		t.Fatal(err)
 	}
+
 	defer os.RemoveAll(dir)
 
 	for _, tc := range testCases {
@@ -245,5 +245,5 @@ func (tf *testFile) Write() error {
 		return nil
 	}
 
-	return os.WriteFile(path.Join(dir, tf.name), []byte(tf.content), 0644)
+	return os.WriteFile(path.Join(dir, tf.name), []byte(tf.content), 0o644)
 }

@@ -6,7 +6,7 @@ import (
 	driver "github.com/dell/cosi-driver/pkg/provisioner/virtualdriver"
 )
 
-// Driverset is a structure holding list of Drivers, that can be added or extracted based on the ID
+// Driverset is a structure holding list of Drivers, that can be added or extracted based on the ID.
 type Driverset struct {
 	once    sync.Once
 	drivers map[string]driver.Driver
@@ -18,10 +18,10 @@ func (ds *Driverset) init() {
 	}
 }
 
-// Add is used to add new driver to the Driverset
+// Add is used to add new driver to the Driverset.
 func (ds *Driverset) Add(newDriver driver.Driver) error {
 	id := newDriver.ID()
-	if _, ok := ds.drivers[id]; ok == true {
+	if _, ok := ds.drivers[id]; ok {
 		return ErrDriverDuplicate{id}
 	}
 
@@ -31,18 +31,19 @@ func (ds *Driverset) Add(newDriver driver.Driver) error {
 	return nil
 }
 
-// Get is used to get driver from the Driverset
+// Get is used to get driver from the Driverset.
 func (ds *Driverset) Get(id string) (driver.Driver, error) {
 	ds.once.Do(ds.init)
+
 	driver, ok := ds.drivers[id]
-	if ok == false {
+	if !ok {
 		return nil, ErrNotConfigured{id}
 	}
 
 	return driver, nil
 }
 
-// ErrDriverDuplicate indicates that the Driver is already present in driverset
+// ErrDriverDuplicate indicates that the Driver is already present in driverset.
 type ErrDriverDuplicate struct {
 	ID string
 }
@@ -51,7 +52,7 @@ func (err ErrDriverDuplicate) Error() string {
 	return "driver for '" + err.ID + "' already exists"
 }
 
-// ErrNotConfigured indicates that the Driver is not present in the driverset
+// ErrNotConfigured indicates that the Driver is not present in the driverset.
 type ErrNotConfigured struct {
 	ID string
 }

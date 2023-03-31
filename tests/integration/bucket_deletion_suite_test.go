@@ -215,7 +215,6 @@ var _ = Describe("Bucket Deletion", Ordered, Label("delete", "objectscale"), fun
 		// STEP: Bucket referencing BucketClaim resource "my-bucket-claim-retain" is available in ObjectStore "objectstore-dev"
 		By("checking if Bucket referencing BucketClaim resource 'my-bucket-claim-retain' is available in ObjectStore 'objectstore-dev'")
 		steps.CheckBucketResourceInObjectStore(objectscale, retainBucket)
-
 	})
 	AfterAll(func() {
 		DeferCleanup(func(ctx SpecContext) {

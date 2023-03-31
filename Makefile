@@ -59,3 +59,10 @@ unit-test:	##run unit tests
 integration-test:	##run integration test (Linux only)
 	( cd tests/integration; sh run.sh )
 
+.PHONY: lint
+lint: 
+	golangci-lint run
+
+.PHONY: gofumpt
+gofumpt:
+	gofumpt -w cmd pkg tests util  

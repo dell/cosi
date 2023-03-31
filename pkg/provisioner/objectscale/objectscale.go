@@ -1,4 +1,4 @@
-//Copyright © 2023 Dell Inc. or its subsidiaries. All Rights Reserved.
+// Copyright © 2023 Dell Inc. or its subsidiaries. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -34,7 +34,7 @@ import (
 	"github.com/dell/cosi-driver/pkg/transport"
 )
 
-// Server is implementation of driver.Driver interface for ObjectScale platform
+// Server is implementation of driver.Driver interface for ObjectScale platform.
 type Server struct {
 	mgmtClient api.ClientSet
 	backendID  string
@@ -91,8 +91,8 @@ func (s *Server) ID() string {
 
 // DriverCreateBucket creates Bucket on specific Object Storage Platform.
 func (s *Server) DriverCreateBucket(ctx context.Context,
-	req *cosi.DriverCreateBucketRequest) (*cosi.DriverCreateBucketResponse, error) {
-
+	req *cosi.DriverCreateBucketRequest,
+) (*cosi.DriverCreateBucketResponse, error) {
 	log.WithFields(log.Fields{
 		"bucket": req.GetName(),
 	}).Info("Bucket is being created")
@@ -111,6 +111,7 @@ func (s *Server) DriverCreateBucket(ctx context.Context,
 	// Display all request parameters.
 	parameters := ""
 	parametersCopy := make(map[string]string)
+
 	for key, value := range req.GetParameters() {
 		parameters += key + ":" + value + ";"
 		parametersCopy[key] = value
@@ -125,10 +126,11 @@ func (s *Server) DriverCreateBucket(ctx context.Context,
 
 	// Check if bucket with specific name and parameters already exists.
 	_, err := s.mgmtClient.Buckets().Get(bucket.Name, parametersCopy)
-	if err != nil && errors.Is(err, model.Error{Code: model.CodeResourceNotFound}) == false {
+	if err != nil && !errors.Is(err, model.Error{Code: model.CodeResourceNotFound}) {
 		log.WithFields(log.Fields{
 			"existing_bucket": bucket.Name,
 		}).Error("DriverCreateBucket: Failed to check bucket existence")
+
 		return nil, status.Error(codes.Internal, "An unexpected error occurred")
 	} else if err == nil {
 		log.WithFields(log.Fields{
@@ -142,8 +144,9 @@ func (s *Server) DriverCreateBucket(ctx context.Context,
 	if err != nil {
 		log.WithFields(log.Fields{
 			"bucket": bucket.Name,
-		}).Error("DriverCreateBucket: Bucket was not sucessfully created")
-		return nil, status.Error(codes.Internal, "Bucket was not sucessfully created")
+		}).Error("DriverCreateBucket: Bucket was not successfully created")
+
+		return nil, status.Error(codes.Internal, "Bucket was not successfully created")
 	}
 
 	log.WithFields(log.Fields{
@@ -158,21 +161,21 @@ func (s *Server) DriverCreateBucket(ctx context.Context,
 
 // DriverDeleteBucket deletes Bucket on specific Object Storage Platform.
 func (s *Server) DriverDeleteBucket(ctx context.Context,
-	req *cosi.DriverDeleteBucketRequest) (*cosi.DriverDeleteBucketResponse, error) {
-
+	req *cosi.DriverDeleteBucketRequest,
+) (*cosi.DriverDeleteBucketResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "DriverCreateBucket: not implemented")
 }
 
 // DriverGrantBucketAccess provides access to Bucket on specific Object Storage Platform.
 func (s *Server) DriverGrantBucketAccess(ctx context.Context,
-	req *cosi.DriverGrantBucketAccessRequest) (*cosi.DriverGrantBucketAccessResponse, error) {
-
+	req *cosi.DriverGrantBucketAccessRequest,
+) (*cosi.DriverGrantBucketAccessResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "DriverCreateBucket: not implemented")
 }
 
 // DriverRevokeBucketAccess revokes access from Bucket on specific Object Storage Platform.
 func (s *Server) DriverRevokeBucketAccess(ctx context.Context,
-	req *cosi.DriverRevokeBucketAccessRequest) (*cosi.DriverRevokeBucketAccessResponse, error) {
-
+	req *cosi.DriverRevokeBucketAccessRequest,
+) (*cosi.DriverRevokeBucketAccessResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "DriverCreateBucket: not implemented")
 }

@@ -1,4 +1,4 @@
-//Copyright © 2023 Dell Inc. or its subsidiaries. All Rights Reserved.
+// Copyright © 2023 Dell Inc. or its subsidiaries. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -40,6 +40,13 @@ func init() {
 }
 
 func main() {
+	err := runMain()
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+
+func runMain() error {
 	// Create a context that is canceled when the SIGINT or SIGTERM signal is received.
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -72,8 +79,5 @@ func main() {
 
 	log.Info("COSI driver starting")
 	// Run the driver.
-	err = driver.RunBlocking(ctx, cfg, driver.COSISocket, "cosi-driver")
-	if err != nil {
-		log.Fatal(err)
-	}
+	return driver.RunBlocking(ctx, cfg, driver.COSISocket, "cosi-driver")
 }

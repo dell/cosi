@@ -1,4 +1,4 @@
-//Copyright © 2023 Dell Inc. or its subsidiaries. All Rights Reserved.
+// Copyright © 2023 Dell Inc. or its subsidiaries. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -39,7 +39,8 @@ func New(driverset *Driverset) *Server {
 
 // DriverCreateBucket creates Bucket on specific Object Storage Platform.
 func (s *Server) DriverCreateBucket(ctx context.Context,
-	req *cosi.DriverCreateBucketRequest) (*cosi.DriverCreateBucketResponse, error) {
+	req *cosi.DriverCreateBucketRequest,
+) (*cosi.DriverCreateBucketResponse, error) {
 	id := req.Parameters["id"]
 
 	// get the driver from driverset
@@ -50,6 +51,7 @@ func (s *Server) DriverCreateBucket(ctx context.Context,
 			"id":    id,
 			"error": err,
 		}).Error("DriverCreateBucket: Invalid backend ID")
+
 		return nil, status.Error(codes.InvalidArgument, "DriverCreateBucket: Invalid backend ID")
 	}
 
@@ -59,7 +61,8 @@ func (s *Server) DriverCreateBucket(ctx context.Context,
 
 // DriverDeleteBucket deletes Bucket on specific Object Storage Platform.
 func (s *Server) DriverDeleteBucket(ctx context.Context,
-	req *cosi.DriverDeleteBucketRequest) (*cosi.DriverDeleteBucketResponse, error) {
+	req *cosi.DriverDeleteBucketRequest,
+) (*cosi.DriverDeleteBucketResponse, error) {
 	id := getID(req.BucketId)
 
 	// get the driver from driverset
@@ -70,6 +73,7 @@ func (s *Server) DriverDeleteBucket(ctx context.Context,
 			"id":    id,
 			"error": err,
 		}).Error("DriverDeleteBucket: Invalid backend ID")
+
 		return nil, status.Error(codes.InvalidArgument, "DriverDeleteBucket: Invalid backend ID")
 	}
 
@@ -79,7 +83,8 @@ func (s *Server) DriverDeleteBucket(ctx context.Context,
 
 // DriverGrantBucketAccess provides access to Bucket on specific Object Storage Platform.
 func (s *Server) DriverGrantBucketAccess(ctx context.Context,
-	req *cosi.DriverGrantBucketAccessRequest) (*cosi.DriverGrantBucketAccessResponse, error) {
+	req *cosi.DriverGrantBucketAccessRequest,
+) (*cosi.DriverGrantBucketAccessResponse, error) {
 	id := req.Parameters["id"]
 
 	// get the driver from driverset
@@ -90,6 +95,7 @@ func (s *Server) DriverGrantBucketAccess(ctx context.Context,
 			"id":    id,
 			"error": err,
 		}).Error("DriverGrantBucketAccess: Invalid backend ID")
+
 		return nil, status.Error(codes.InvalidArgument, "DriverGrantBucketAccess: Invalid backend ID")
 	}
 
@@ -99,7 +105,8 @@ func (s *Server) DriverGrantBucketAccess(ctx context.Context,
 
 // DriverRevokeBucketAccess revokes access from Bucket on specific Object Storage Platform.
 func (s *Server) DriverRevokeBucketAccess(ctx context.Context,
-	req *cosi.DriverRevokeBucketAccessRequest) (*cosi.DriverRevokeBucketAccessResponse, error) {
+	req *cosi.DriverRevokeBucketAccessRequest,
+) (*cosi.DriverRevokeBucketAccessResponse, error) {
 	id := getID(req.BucketId)
 
 	// get the driver from driverset
@@ -110,6 +117,7 @@ func (s *Server) DriverRevokeBucketAccess(ctx context.Context,
 			"id":    id,
 			"error": err,
 		}).Error("DriverRevokeBucketAccess: Invalid backend ID")
+
 		return nil, status.Error(codes.InvalidArgument, "DriverRevokeBucketAccess: Invalid backend ID")
 	}
 
@@ -119,11 +127,12 @@ func (s *Server) DriverRevokeBucketAccess(ctx context.Context,
 
 // getID splits the string and returns ID from it
 // correct format of string is:
-// (ID)-(other identifers)
+// (ID)-(other identifers).
 func getID(s string) string {
 	id := strings.Split(s, "-")
 
-	if len(id) < 2 {
+	correctFormatLength := 2
+	if len(id) < correctFormatLength {
 		return ""
 	}
 

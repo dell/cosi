@@ -62,11 +62,11 @@ func New(config *config.ConfigSchemaJson, socket, name string) (*Driver, error) 
 	}
 
 	provisionerServer := provisioner.New(driverset)
-	// Some options for gRPC server may be needed
+	// Some options for gRPC server may be needed.
 	options := []grpc.ServerOption{}
-	// Crate new gRPC server
+	// Create new gRPC server.
 	server := grpc.NewServer(options...)
-	// Register identity and provisioner servers, so they will handle gRPC requests to the driver
+	// Register identity and provisioner servers, so they will handle gRPC requests to the driver.
 	spec.RegisterIdentityServer(server, identityServer)
 	spec.RegisterProvisionerServer(server, provisionerServer)
 

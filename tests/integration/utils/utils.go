@@ -1,4 +1,4 @@
-//Copyright © 2023 Dell Inc. or its subsidiaries. All Rights Reserved.
+// Copyright © 2023 Dell Inc. or its subsidiaries. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -19,7 +19,7 @@ import (
 	"k8s.io/client-go/kubernetes"
 )
 
-// DeleteReleasesAndNamespaces Delete releases and namespaces from k8s cluster
+// DeleteReleasesAndNamespaces Delete releases and namespaces from k8s cluster.
 func DeleteReleasesAndNamespaces(ctx ginkgo.SpecContext, clientset *kubernetes.Clientset, releases map[string]string, namespaces []string) {
 	// uninstall releases
 	for namespace, release := range releases {

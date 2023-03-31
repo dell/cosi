@@ -27,6 +27,54 @@ run:
   # Intentionally left empty to use go.mod's Go version
   go: ""
 
+
+
+issues:
+  # Set to 0 to not skip any issues.
+  max-issues-per-linter: 0
+
+  # Set to 0 to not skip any issues.
+  max-same-issues: 0
+
+  # Show only new issues: if there are unstaged changes or untracked files,
+  # only those changes are analyzed, else only changes in HEAD~ are analyzed.
+  # It's a super-useful option for integration of golangci-lint into existing large codebase.
+  # It's not practical to fix all existing issues at the moment of integration:
+  # much better don't allow issues in new code.
+  #
+  # Default: false.
+  new: false
+
+
+
+output:
+  # Format: colored-line-number|line-number|json|tab|checkstyle|code-climate|junit-xml|github-actions|teamcity
+  #
+  # Multiple can be specified by separating them by comma, output can be provided
+  # for each of them by separating format name and path by colon symbol.
+  # Output path can be either `stdout`, `stderr` or path to the file to write to.
+  # Example: "checkstyle:report.xml,json:stdout,colored-line-number"
+  #
+  # Default: colored-line-number
+  format: colored-line-number:stdout
+
+  # Print linter name in the end of issue text.
+  # Default: true
+  print-linter-name: true
+
+  # Sort results by: filepath, then line, then column.
+  sort-results: true
+
+  # Make issues output unique by line.
+  # Default: true
+  uniq-by-line: false
+
+  # Print lines of code with issue.
+  # Default: true
+  print-issued-lines: true
+
+
+
 linters:
   # Disable all linters.
   # Default: false
@@ -39,28 +87,60 @@ linters:
   # Enable specific linter
   # https://golangci-lint.run/usage/linters/#enabled-by-default
   enable:
+    # Check for dangerous unicode character sequences.
     - bidichk
+    # Check whether the HTTP response body is closed properly.
     - bodyclose
+    # Detect context.Context contained in structs. 
     - containedctx
+    # Check whether a function uses a non-inherited context. 
     - contextcheck
+    # Find declarations and assignments with too many blank identifiers
     - dogsled
+    # Check for unchecked errors.
     - errcheck
+    # Find exporting pointers for loop variables.
     - exportloopref
+    # Enforce standards for ginkgo and gomega.
     - ginkgolinter
+    # Check that compiler directives are valid.
     - gocheckcompilerdirectives
+    # Calculate cognitive complexities of functions.
     - gocognit
+    # Find repeated strings that could be replaced by a constant.
     - goconst
+    # Provides functionalities missing from other linters.
     - gocritic
+    # Calculates cyclomatic complexity of a function.
     - gocyclo
+    # Check if comments end with a dot (NOTICE: this is not the Godot game engine).
     - godot
+    # A stricter replacement for gofmt.
     - gofumpt
+    # GO Magic Number Detector.
     - gomnd
+    # Simplify the code.
     - gosimple
+    # Check for correctness of programs.
     - govet
+    # Detect ineffectual assignments.
     - ineffassign
+    # Correct commonly misspelled English words in source files/
     - misspell
+    # Find incorrect usages of t.Parallel().
     - paralleltest
+    # Find bugs and performance issues statically.
     - staticcheck
+    # Parse and type-check Go code.
     - typecheck
+    # Checks Go code for unused constants, variables, functions and types.
     - unused
+    # Empty lines linter.
     - wsl
+
+# Setting of specific linters.
+linters-settings:
+  paralleltest:
+    # Ignore missing calls to `t.Parallel()` and only report incorrect uses of it.
+    # Default: false
+    ignore-missing: true
