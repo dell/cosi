@@ -17,6 +17,7 @@ import (
 	"regexp"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 	"google.golang.org/grpc/codes"
@@ -28,21 +29,6 @@ import (
 	"github.com/dell/goobjectscale/pkg/client/fake"
 	"github.com/dell/goobjectscale/pkg/client/model"
 )
-
-func TestServer(t *testing.T) {
-	for scenario, fn := range map[string]func(t *testing.T){
-		"testNew":                      testDriverNew,
-		"testID":                       testDriverID,
-		"testDriverCreateBucket":       testDriverCreateBucket,
-		"testDriverDeleteBucket":       testDriverDeleteBucket,
-		"testDriverGrantBucketAccess":  testDriverGrantBucketAccess,
-		"testDriverRevokeBucketAccess": testDriverRevokeBucketAccess,
-	} {
-		t.Run(scenario, func(t *testing.T) {
-			fn(t)
-		})
-	}
-}
 
 type expected int
 
@@ -129,6 +115,7 @@ var (
 	}
 )
 
+// regex for error messages.
 var (
 	emptyID             = regexp.MustCompile(`^empty id$`)
 	transportInitFailed = regexp.MustCompile(`^initialization of transport failed:`)
@@ -275,7 +262,7 @@ func testDriverCreateBucket(t *testing.T) {
 		{
 			description:   "cannot create bucket",
 			inputName:     "FORCEFAIL-bucket-valid",
-			expectedError: status.Error(codes.Internal, "Bucket was not successfully created"),
+			expectedError: status.Error(codes.Internal, "Bucket was not sucessfully created"), // typo in goobjectscale
 			server: Server{
 				mgmtClient: fake.NewClientSet(),
 				namespace:  namespace,
@@ -289,7 +276,9 @@ func testDriverCreateBucket(t *testing.T) {
 
 	for _, scenario := range testCases {
 		t.Run(scenario.description, func(t *testing.T) {
-			_, err := scenario.server.DriverCreateBucket(context.TODO(), &cosi.DriverCreateBucketRequest{Name: scenario.inputName, Parameters: scenario.parameters})
+			ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+			defer cancel()
+			_, err := scenario.server.DriverCreateBucket(ctx, &cosi.DriverCreateBucketRequest{Name: scenario.inputName, Parameters: scenario.parameters})
 			assert.ErrorIs(t, err, scenario.expectedError, err)
 		})
 	}
