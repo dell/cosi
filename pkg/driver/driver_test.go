@@ -1,4 +1,4 @@
-//Copyright © 2023 Dell Inc. or its subsidiaries. All Rights Reserved.
+// Copyright © 2023 Dell Inc. or its subsidiaries. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -24,10 +24,9 @@ import (
 )
 
 var (
-	testDir    = "test"
 	testRegion = "us-east-1"
 
-	testConfig = &config.ConfigSchemaJson{}
+	testConfigEmpty = &config.ConfigSchemaJson{}
 
 	testConfigWithConnections = &config.ConfigSchemaJson{
 		Connections: []config.Configuration{
@@ -108,123 +107,101 @@ var (
 	}
 )
 
-func TestRun(t *testing.T) {
-	testCases := []struct {
-		name           string
-		config         *config.ConfigSchemaJson
-		auxiliaryFuncs []func(ctx context.Context) error
-		expectedError  bool
-	}{
-		{
-			name:          "success",
-			config:        testConfig,
-			expectedError: false,
-		},
-		{
-			name:          "success with connections",
-			config:        testConfigWithConnections,
-			expectedError: false,
-		},
-		{
-			name:          "failure duplicate ID",
-			config:        testConfigDuplicateID,
-			expectedError: true,
-		},
-		{
-			name:          "failure missing connection config",
-			config:        testConfigMissingObjectscale,
-			expectedError: true,
-		},
-	}
+func TestDriver(t *testing.T) {
+	t.Parallel()
 
-	for _, tc := range testCases {
-		t.Run(tc.name, func(t *testing.T) {
-			// Test server starts successfully and stops gracefully
-			ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-			defer cancel()
-
-			dir, err := os.MkdirTemp("", testDir)
-			if err != nil {
-				t.Fatal(err)
-			}
-			defer os.RemoveAll(dir)
-
-			errCh := make(chan error, 1)
-			go func() {
-				testSocketPath := path.Join(dir, "cosi.sock")
-
-				errCh <- Run(ctx, tc.config, testSocketPath, "test")
-			}()
-
-			// Wait for server to start
-			time.Sleep(500 * time.Millisecond)
-
-			// Cancel context to stop server gracefully
-			cancel()
-
-			if tc.expectedError {
-				err := <-errCh
-				assert.Error(t, err)
-			} else {
-				err := <-errCh
-				assert.NoError(t, err)
-			}
+	for name, test := range map[string]func(t *testing.T){
+		"empty configuration":                             testDriverEmptyConfiguration,
+		"configuration with connections":                  testDriverConfigurationWithConnections,
+		"configuration with duplicate ID":                 testDriverConfigurationWithDuplicateID,
+		"configuration with missing objectscale":          testDriverConfigurationWithMissingObjectscale,
+		"with preexisting socket file":                    testDriverWithPreexistingSocketFile,
+		"fail on non-existing socket directory":           testDriverFailOnNonExistingDirectory,
+		"run blocking server":                             testDriverRunBlockingServer,
+		"blocking server configuration with duplicate ID": testDriverBlockingServerConfigurationWithDuplicateID,
+	} {
+		name, test := name, test
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+			test(t)
 		})
 	}
 }
 
-func TestRunWithPreexistingSocketFile(t *testing.T) {
-	// Test server starts successfully and stops gracefully
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-
-	dir, err := os.MkdirTemp("", testDir)
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer os.RemoveAll(dir)
-
-	errCh := make(chan error, 1)
-	go func() {
-		testSocketPath := path.Join(dir, "cosi.sock")
-
-		// Create preexisting socket file
-		_, err := os.Create(testSocketPath)
-		if err != nil {
-			errCh <- err
-		}
-
-		errCh <- Run(ctx, testConfig, testSocketPath, "test")
-	}()
-
-	// Wait for server to start
-	time.Sleep(500 * time.Millisecond)
-
-	// Cancel context to stop server gracefully
-	cancel()
-
-	err = <-errCh
+func testDriverEmptyConfiguration(t *testing.T) {
+	// TODO: server should start successfully with an empty configuration?
+	err := runWithParameters(t, testConfigEmpty, t.TempDir())
 	assert.NoError(t, err)
 }
 
-func TestRunFailOnNonExistingDirectory(t *testing.T) {
-	// Test server starts successfully and stops gracefully
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+func testDriverConfigurationWithConnections(t *testing.T) {
+	// server should start successfully with the provided configuration
+	err := runWithParameters(t, testConfigWithConnections, t.TempDir())
+	assert.NoError(t, err)
+}
+
+func testDriverConfigurationWithDuplicateID(t *testing.T) {
+	// server should fail if the configuration contains duplicate IDs
+	err := runWithParameters(t, testConfigDuplicateID, t.TempDir())
+	assert.Error(t, err)
+}
+
+func testDriverConfigurationWithMissingObjectscale(t *testing.T) {
+	// server should fail if the configuration is missing the objectscale connection
+	err := runWithParameters(t, testConfigMissingObjectscale, t.TempDir())
+	assert.Error(t, err)
+}
+
+func testDriverWithPreexistingSocketFile(t *testing.T) {
+	dir := t.TempDir()
+	// create a socket file
+	socketPath := path.Join(dir, "cosi.sock")
+	_, err := os.Create(socketPath)
+	assert.NoError(t, err)
+	// server should delete the socket file and start with a new one
+	err = runWithParameters(t, testConfigWithConnections, dir)
+	assert.NoError(t, err)
+}
+
+func testDriverFailOnNonExistingDirectory(t *testing.T) {
+	// server should fail if the directory does not exist
+	err := runWithParameters(t, testConfigWithConnections, "/nonexistent")
+	assert.Error(t, err)
+}
+
+func testDriverRunBlockingServer(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
 
-	errCh := make(chan error, 1)
-	go func() {
-		testSocketPath := path.Join("/fake", "cosi.sock")
+	err := RunBlocking(ctx, testConfigWithConnections, t.TempDir(), "test")
+	assert.NoError(t, err)
+}
 
-		errCh <- Run(ctx, testConfig, testSocketPath, "test")
-	}()
+func testDriverBlockingServerConfigurationWithDuplicateID(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+	defer cancel()
 
-	// Wait for server to start
-	time.Sleep(500 * time.Millisecond)
+	err := RunBlocking(ctx, testConfigDuplicateID, t.TempDir(), "test")
+	assert.Error(t, err)
+}
 
+func runWithParameters(t *testing.T, configuration *config.ConfigSchemaJson, socketDirectoryPath string) error {
+	t.Helper()
+
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+	defer cancel()
+
+	testSocketPath := path.Join(socketDirectoryPath, "cosi.sock")
+
+	ready, err := Run(ctx, configuration, testSocketPath, "test")
+	if err != nil {
+		return err
+	}
+
+	// Block until server is ready
+	<-ready
 	// Cancel context to stop server gracefully
 	cancel()
 
-	err := <-errCh
-	assert.Error(t, err)
+	return nil
 }
