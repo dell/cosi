@@ -277,7 +277,7 @@ func testDriverCreateBucket(t *testing.T) {
 		{
 			description:   "cannot create bucket",
 			inputName:     "FORCEFAIL-bucket-valid",
-			expectedError: status.Error(codes.Internal, "Bucket was not successfully created"), // typo in goobjectscale
+			expectedError: status.Error(codes.Internal, "Bucket was not successfully created"),
 			server: Server{
 				mgmtClient: fake.NewClientSet(),
 				namespace:  namespace,
