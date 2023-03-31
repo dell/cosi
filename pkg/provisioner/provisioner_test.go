@@ -175,7 +175,7 @@ func testServerDriverDeleteBucket(t *testing.T, fakeServer Server) {
 	}
 }
 
-// TestServerDriverGrantBucketAccess tests passing the DriverGrantBucketAccessRequest
+// testServerDriverGrantBucketAccess tests passing the DriverGrantBucketAccessRequest
 // to the proper driver from the driverset.
 func testServerDriverGrantBucketAccess(t *testing.T, fakeServer Server) {
 	testCases := []struct {
@@ -233,7 +233,7 @@ func testServerDriverGrantBucketAccess(t *testing.T, fakeServer Server) {
 	}
 }
 
-// TestServerDriverRevokeBucketAccess tests passing the DriverRevokeBucketAccessRequest
+// testServerDriverRevokeBucketAccess tests passing the DriverRevokeBucketAccessRequest
 // to the proper driver from the driverset.
 func testServerDriverRevokeBucketAccess(t *testing.T, fakeServer Server) {
 	testCases := []struct {
