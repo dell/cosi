@@ -62,3 +62,7 @@ integration-test:	##run integration test (Linux only)
 .PHONY: lint
 lint: 
 	golangci-lint run
+
+.PHONY: gofumpt
+gofumpt:
+	gofumpt -w cmd pkg tests util  
