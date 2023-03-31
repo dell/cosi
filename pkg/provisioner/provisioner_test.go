@@ -40,8 +40,6 @@ func TestNew(t *testing.T) {
 	}
 
 	testServer := New(fakeDriverset)
-
-	testServer := New(fakeDriverset)
 	assert.NotNil(t, testServer)
 	assert.NotNil(t, testServer.driverset)
 }

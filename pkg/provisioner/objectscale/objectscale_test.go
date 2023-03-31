@@ -121,6 +121,21 @@ var (
 	transportInitFailed = regexp.MustCompile(`^initialization of transport failed:`)
 )
 
+func TestServer(t *testing.T) {
+	for scenario, fn := range map[string]func(t *testing.T){
+		"testNew":                      testDriverNew,
+		"testID":                       testDriverID,
+		"testDriverCreateBucket":       testDriverCreateBucket,
+		"testDriverDeleteBucket":       testDriverDeleteBucket,
+		"testDriverGrantBucketAccess":  testDriverGrantBucketAccess,
+		"testDriverRevokeBucketAccess": testDriverRevokeBucketAccess,
+	} {
+		t.Run(scenario, func(t *testing.T) {
+			fn(t)
+		})
+	}
+}
+
 // testDriverNew tests server initialization.
 func testDriverNew(t *testing.T) {
 	testCases := []struct {
@@ -262,7 +277,7 @@ func testDriverCreateBucket(t *testing.T) {
 		{
 			description:   "cannot create bucket",
 			inputName:     "FORCEFAIL-bucket-valid",
-			expectedError: status.Error(codes.Internal, "Bucket was not sucessfully created"), // typo in goobjectscale
+			expectedError: status.Error(codes.Internal, "Bucket was not successfully created"), // typo in goobjectscale
 			server: Server{
 				mgmtClient: fake.NewClientSet(),
 				namespace:  namespace,
