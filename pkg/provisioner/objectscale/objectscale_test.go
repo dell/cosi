@@ -33,9 +33,9 @@ import (
 type expected int
 
 const (
-	ok      expected = iota
-	warning expected = iota
-	fail    expected = iota
+	ok expected = iota
+	warning
+	fail
 )
 
 var (
