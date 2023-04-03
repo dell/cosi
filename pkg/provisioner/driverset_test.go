@@ -27,6 +27,8 @@ var driverset = &Driverset{
 }
 
 func TestDriversetInit(t *testing.T) {
+	t.Parallel()
+
 	testCases := []struct {
 		name      string
 		driverset *Driverset
@@ -45,7 +47,9 @@ func TestDriversetInit(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
+		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
 			tc.driverset.init()
 			assert.Equal(t, tc.want, tc.driverset)
 		})
@@ -53,6 +57,8 @@ func TestDriversetInit(t *testing.T) {
 }
 
 func TestDriversetAdd(t *testing.T) {
+	t.Parallel()
+
 	testCases := []struct {
 		name      string
 		driverset *Driverset
@@ -77,7 +83,9 @@ func TestDriversetAdd(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
+		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
 			err := tc.driverset.Add(tc.driver)
 			assert.IsType(t, tc.wantErr, err)
 			assert.Equal(t, tc.want.drivers, tc.driverset.drivers)
@@ -86,6 +94,8 @@ func TestDriversetAdd(t *testing.T) {
 }
 
 func TestDriversetGet(t *testing.T) {
+	t.Parallel()
+
 	testCases := []struct {
 		name      string
 		driverset *Driverset
@@ -110,7 +120,9 @@ func TestDriversetGet(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
+		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
 			got, err := tc.driverset.Get(tc.id)
 			assert.IsTypef(t, tc.wantErr, err, "%+#v", tc.driverset)
 			assert.Equal(t, tc.want, got)
@@ -119,6 +131,8 @@ func TestDriversetGet(t *testing.T) {
 }
 
 func TestErrDriverDuplicate(t *testing.T) {
+	t.Parallel()
+
 	testCases := []struct {
 		name string
 		id   string
@@ -132,7 +146,9 @@ func TestErrDriverDuplicate(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
+		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
 			err := ErrDriverDuplicate{tc.id}
 			assert.Equal(t, err.Error(), tc.want)
 		})
@@ -140,6 +156,8 @@ func TestErrDriverDuplicate(t *testing.T) {
 }
 
 func TestErrNotConfigured(t *testing.T) {
+	t.Parallel()
+
 	testCases := []struct {
 		name string
 		id   string
@@ -153,7 +171,9 @@ func TestErrNotConfigured(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
+		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
 			err := ErrNotConfigured{tc.id}
 			assert.Equal(t, err.Error(), tc.want)
 		})

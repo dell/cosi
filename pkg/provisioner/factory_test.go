@@ -20,15 +20,20 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+// TestExactlyOne tests the exactlyOne function
+// which is used to validate that only one OSP
+// is defined in the configuration.
 func TestExactlyOne(t *testing.T) {
+	t.Parallel()
+
 	testCases := []struct {
 		name      string
-		nillables []interface{}
+		nillables []any
 		expected  bool
 	}{
 		{
 			name:      "exactly one non nil",
-			nillables: []interface{}{nil, "x", nil},
+			nillables: []any{nil, "x", nil},
 			expected:  true,
 		},
 		{
@@ -38,28 +43,30 @@ func TestExactlyOne(t *testing.T) {
 		},
 		{
 			name:      "empty nillables",
-			nillables: []interface{}{},
+			nillables: []any{},
 			expected:  false,
 		},
 		{
 			name:      "nil pointer",
-			nillables: []interface{}{(*config.Objectscale)(nil)},
+			nillables: []any{(*config.Objectscale)(nil)},
 			expected:  false,
 		},
 		{
 			name:      "all nil",
-			nillables: []interface{}{nil, nil, nil},
+			nillables: []any{nil, nil, nil},
 			expected:  false,
 		},
 		{
 			name:      "more than one not nil",
-			nillables: []interface{}{nil, "x", 1},
+			nillables: []any{nil, "x", 1},
 			expected:  false,
 		},
 	}
 
 	for _, tc := range testCases {
+		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
 			actual := exactlyOne(tc.nillables...)
 			assert.Equal(t, tc.expected, actual)
 		})
@@ -94,37 +101,30 @@ var (
 var expectedOne = regexp.MustCompile("^expected exactly one OSP in configuration$")
 
 func TestNewVirtualDriver(t *testing.T) {
-	testCases := []struct {
-		name         string
-		config       config.Configuration
-		fail         bool
-		errorMessage *regexp.Regexp
-	}{
-		{
-			name:   "valid config",
-			config: validConfig,
-		},
-		{
-			name:         "invalid config",
-			config:       invalidConfig,
-			fail:         true,
-			errorMessage: expectedOne,
-		},
-	}
+	t.Parallel()
 
-	for _, tc := range testCases {
-		t.Run(tc.name, func(t *testing.T) {
-			vd, err := NewVirtualDriver(tc.config)
-			if tc.fail {
-				if assert.Error(t, err) {
-					assert.Regexp(t, tc.errorMessage, err.Error())
-				}
-				return
-			}
-			assert.NoError(t, err)
-			if assert.NotNil(t, vd) {
-				assert.Equal(t, tc.config.Objectscale.Id, vd.ID())
-			}
+	for name, test := range map[string]func(*testing.T){
+		"valid config":   testValidConfig,
+		"invalid config": testInvalidConfig,
+	} {
+		name, test := name, test
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+			test(t)
 		})
 	}
+}
+
+func testValidConfig(t *testing.T) {
+	vd, err := NewVirtualDriver(validConfig)
+	assert.NotNil(t, vd)
+	assert.NoError(t, err)
+	assert.Equal(t, validConfig.Objectscale.Id, vd.ID())
+}
+
+func testInvalidConfig(t *testing.T) {
+	vd, err := NewVirtualDriver(invalidConfig)
+	assert.Nil(t, vd)
+	assert.Error(t, err)
+	assert.Regexp(t, expectedOne, err.Error())
 }

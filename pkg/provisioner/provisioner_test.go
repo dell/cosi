@@ -30,6 +30,8 @@ import (
 
 // TestNew tests the initialization of provisioner server.
 func TestNew(t *testing.T) {
+	t.Parallel()
+
 	fakeDriverset := &Driverset{drivers: map[string]virtualdriver.Driver{}}
 
 	err := fakeDriverset.Add(&fake.Driver{FakeID: "fake"})
@@ -38,33 +40,31 @@ func TestNew(t *testing.T) {
 	}
 
 	testServer := New(fakeDriverset)
-
 	assert.NotNil(t, testServer)
 	assert.NotNil(t, testServer.driverset)
 }
 
 // TestServer starts a server for running tests of the multi-backend provisioner.
 func TestServer(t *testing.T) {
-	testCases := map[string]func(*testing.T, Server){
-		"DriverCreateBucket":       testServerDriverCreateBucket,
-		"DriverDeleteBucket":       testServerDriverDeleteBucket,
-		"DriverGrantBucketAccess":  testServerDriverGrantBucketAccess,
-		"DriverRevokeBucketAccess": testServerDriverRevokeBucketAccess,
-	}
+	t.Parallel()
 
 	fakeDriverset := &Driverset{drivers: map[string]virtualdriver.Driver{}}
-
 	err := fakeDriverset.Add(&fake.Driver{FakeID: "fake"})
-	if err != nil {
-		log.Fatalf("Failed to create fakedriverset: %v", err)
-	}
+	assert.Nil(t, err)
 
 	fakeServer := Server{
 		driverset: fakeDriverset,
 	}
 
-	for name, test := range testCases {
+	for name, test := range map[string]func(*testing.T, Server){
+		"DriverCreateBucket":       testServerDriverCreateBucket,
+		"DriverDeleteBucket":       testServerDriverDeleteBucket,
+		"DriverGrantBucketAccess":  testServerDriverGrantBucketAccess,
+		"DriverRevokeBucketAccess": testServerDriverRevokeBucketAccess,
+	} {
+		name, test := name, test
 		t.Run(name, func(t *testing.T) {
+			t.Parallel()
 			test(t, fakeServer)
 		})
 	}
@@ -115,7 +115,9 @@ func testServerDriverCreateBucket(t *testing.T, fakeServer Server) {
 	}
 
 	for _, tc := range testCases {
+		tc := tc
 		t.Run(tc.description, func(t *testing.T) {
+			t.Parallel()
 			_, err := tc.server.DriverCreateBucket(context.TODO(), &cosi.DriverCreateBucketRequest{
 				Name:       tc.req.Name,
 				Parameters: tc.req.Parameters,
@@ -160,7 +162,9 @@ func testServerDriverDeleteBucket(t *testing.T, fakeServer Server) {
 	}
 
 	for _, tc := range testCases {
+		tc := tc
 		t.Run(tc.description, func(t *testing.T) {
+			t.Parallel()
 			_, err := tc.server.DriverDeleteBucket(context.TODO(), &cosi.DriverDeleteBucketRequest{
 				BucketId: tc.req.BucketId,
 			})
@@ -215,7 +219,9 @@ func testServerDriverGrantBucketAccess(t *testing.T, fakeServer Server) {
 	}
 
 	for _, tc := range testCases {
+		tc := tc
 		t.Run(tc.description, func(t *testing.T) {
+			t.Parallel()
 			_, err := tc.server.DriverGrantBucketAccess(context.TODO(), &cosi.DriverGrantBucketAccessRequest{
 				BucketId:   tc.req.BucketId,
 				Parameters: tc.req.Parameters,
@@ -261,7 +267,9 @@ func testServerDriverRevokeBucketAccess(t *testing.T, fakeServer Server) {
 	}
 
 	for _, tc := range testCases {
+		tc := tc
 		t.Run(tc.description, func(t *testing.T) {
+			t.Parallel()
 			_, err := tc.server.DriverRevokeBucketAccess(context.TODO(), &cosi.DriverRevokeBucketAccessRequest{
 				BucketId: tc.req.BucketId,
 			})

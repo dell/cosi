@@ -90,7 +90,8 @@ func (s *Server) ID() string {
 }
 
 // DriverCreateBucket creates Bucket on specific Object Storage Platform.
-func (s *Server) DriverCreateBucket(ctx context.Context,
+func (s *Server) DriverCreateBucket(
+	ctx context.Context,
 	req *cosi.DriverCreateBucketRequest,
 ) (*cosi.DriverCreateBucketResponse, error) {
 	log.WithFields(log.Fields{

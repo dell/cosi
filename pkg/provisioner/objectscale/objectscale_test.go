@@ -17,6 +17,7 @@ import (
 	"regexp"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 	"google.golang.org/grpc/codes"
@@ -29,27 +30,12 @@ import (
 	"github.com/dell/goobjectscale/pkg/client/model"
 )
 
-func TestServer(t *testing.T) {
-	for scenario, fn := range map[string]func(t *testing.T){
-		"testNew":                      testDriverNew,
-		"testID":                       testDriverID,
-		"testDriverCreateBucket":       testDriverCreateBucket,
-		"testDriverDeleteBucket":       testDriverDeleteBucket,
-		"testDriverGrantBucketAccess":  testDriverGrantBucketAccess,
-		"testDriverRevokeBucketAccess": testDriverRevokeBucketAccess,
-	} {
-		t.Run(scenario, func(t *testing.T) {
-			fn(t)
-		})
-	}
-}
-
 type expected int
 
 const (
-	ok      expected = iota
-	warning expected = iota
-	fail    expected = iota
+	ok expected = iota
+	warning
+	fail
 )
 
 var (
@@ -129,10 +115,26 @@ var (
 	}
 )
 
+// regex for error messages.
 var (
 	emptyID             = regexp.MustCompile(`^empty id$`)
 	transportInitFailed = regexp.MustCompile(`^initialization of transport failed:`)
 )
+
+func TestServer(t *testing.T) {
+	for scenario, fn := range map[string]func(t *testing.T){
+		"testNew":                      testDriverNew,
+		"testID":                       testDriverID,
+		"testDriverCreateBucket":       testDriverCreateBucket,
+		"testDriverDeleteBucket":       testDriverDeleteBucket,
+		"testDriverGrantBucketAccess":  testDriverGrantBucketAccess,
+		"testDriverRevokeBucketAccess": testDriverRevokeBucketAccess,
+	} {
+		t.Run(scenario, func(t *testing.T) {
+			fn(t)
+		})
+	}
+}
 
 // testDriverNew tests server initialization.
 func testDriverNew(t *testing.T) {
@@ -289,7 +291,9 @@ func testDriverCreateBucket(t *testing.T) {
 
 	for _, scenario := range testCases {
 		t.Run(scenario.description, func(t *testing.T) {
-			_, err := scenario.server.DriverCreateBucket(context.TODO(), &cosi.DriverCreateBucketRequest{Name: scenario.inputName, Parameters: scenario.parameters})
+			ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+			defer cancel()
+			_, err := scenario.server.DriverCreateBucket(ctx, &cosi.DriverCreateBucketRequest{Name: scenario.inputName, Parameters: scenario.parameters})
 			assert.ErrorIs(t, err, scenario.expectedError, err)
 		})
 	}
