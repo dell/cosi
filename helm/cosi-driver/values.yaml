@@ -24,30 +24,51 @@ replicaCount: 1
 # Default value: "debug"
 logLevel: "debug"
 
-image:
+container:
   provisioner:
-    repository: ""
-    pullPolicy: IfNotPresent
-    # Overrides the image tag whose default is the chart appVersion.
-    tag: ""
+    name: objectstorage-provisioner
+    image:
+      repository: ""
+      tag: ""
+      pullPolicy: IfNotPresent
   sidecar:
     name: objectstorage-provisioner-sidecar
-    repository: gcr.io/k8s-staging-sig-storage/objectstorage-sidecar/objectstorage-sidecar
-    pullPolicy: IfNotPresent
-    tag: "v20230130-v0.1.0-24-gc0cf995"
+    image:
+      repository: gcr.io/k8s-staging-sig-storage/objectstorage-sidecar/objectstorage-sidecar
+      tag: "v20230130-v0.1.0-24-gc0cf995"
+      pullPolicy: IfNotPresent
+
+rbac:
+  # Specifies whether RBAC resources should be created
+  create: true
+  role:
+    # Specifies whether a Role should be created
+    create: true
+    # Annotations to add to the Role
+    annotations: {}
+    # The name of the Role to use.
+    # If not set and create is true, a name is generated using the fullname template
+    name: ""
+  roleBinding:
+    # Specifies whether a RoleBinding should be created
+    create: true
+    # Annotations to add to the RoleBinding
+    annotations: {}
+    # The name of the RoleBinding to use.
+    # If not set and create is true, a name is generated using the fullname template
+    name: ""
+  serviceAccount:
+    # Specifies whether a ServiceAccount should be created
+    create: true
+    # Annotations to add to the ServiceAccount
+    annotations: {}
+    # The name of the ServiceAccount to use.
+    # If not set and create is true, a name is generated using the fullname template
+    name: ""
 
 imagePullSecrets: []
 nameOverride: ""
 fullnameOverride: ""
-
-serviceAccount:
-  # Specifies whether a service account should be created
-  create: true
-  # Annotations to add to the service account
-  annotations: {}
-  # The name of the service account to use.
-  # If not set and create is true, a name is generated using the fullname template
-  name: ""
 
 podAnnotations: {}
 

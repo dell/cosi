@@ -1,14 +1,14 @@
+{{- if .Values.rbac.create -}}
+  {{- if .Values.rbac.role.create -}}
 ---
 kind: ClusterRole
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
-  name: {{ include "cosi-driver.name" . }}-role
+  name: {{ include "cosi-driver.roleName" . }}
   labels:
-    {{- include "cosi-driver.labels" . | nindent 4 }}
-  {{- with .Values.serviceAccount.annotations }}
+    {{ include "cosi-driver.labels" . }}
   annotations:
-    {{- toYaml . | nindent 4 }}
-  {{- end }}
+    {{ .Values.rbac.role.annotations }}
 rules:
   - apiGroups:
       - objectstorage.k8s.io # COSI resources are grouped here
@@ -49,22 +49,24 @@ rules:
       - get
       - update
       - delete
+  {{- end }}
+  {{- if .Values.rbac.roleBinding.create -}}
 ---
 kind: ClusterRoleBinding
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
-  name: {{ include "cosi-driver.name" . }}-rolebinding
+  name: {{ include "cosi-driver.roleBindingName" . }}
   labels:
-    {{- include "cosi-driver.labels" . | nindent 4 }}
-  {{- with .Values.serviceAccount.annotations }}
+    {{ include "cosi-driver.labels" . }}
   annotations:
-    {{- toYaml . | nindent 4 }}
-  {{- end }}
+    {{ .Values.rbac.roleBinding.annotations }}
 subjects:
   - kind: ServiceAccount
     name: {{ include "cosi-driver.serviceAccountName" . }}
     namespace: {{ .Release.Namespace }}
 roleRef:
   kind: ClusterRole
-  name: {{ include "cosi-driver.name" . }}-role
+  name: {{ include "cosi-driver.roleName" . }}
   apiGroup: rbac.authorization.k8s.io
+  {{- end }}
+{{- end }}

@@ -3,50 +3,48 @@ kind: Deployment
 metadata:
   name: {{ include "cosi-driver.fullname" . }}
   labels:
-    {{- include "cosi-driver.labels" . | nindent 4 }}
+    {{ include "cosi-driver.labels" . }}
 spec:
   {{- if not .Values.autoscaling.enabled }}
   replicas: {{ .Values.replicaCount }}
   {{- end }}
   selector:
     matchLabels:
-      {{- include "cosi-driver.selectorLabels" . | nindent 6 }}
+      {{ include "cosi-driver.selectorLabels" . }}
   template:
     metadata:
-      {{- with .Values.podAnnotations }}
       annotations:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
+        {{ toYaml .Values.podAnnotations }}
       labels:
-        {{- include "cosi-driver.selectorLabels" . | nindent 8 }}
+        {{ include "cosi-driver.selectorLabels" . }}
     spec:
-      {{- with .Values.imagePullSecrets }}
       imagePullSecrets:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
+        {{ toYaml .Values.imagePullSecrets }}
       serviceAccountName: {{ include "cosi-driver.serviceAccountName" . }}
       securityContext:
-        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+        {{ toYaml .Values.podSecurityContext }}
       containers:
-        - name: {{ .Chart.Name }}-provisioner
+        - name: {{ include "cosi-cosi-driver.provisionerContainerName" . }}
           securityContext:
-            {{- toYaml .Values.securityContext | nindent 12 }}
-          image: "{{ .Values.image.provisioner.repository }}:{{ .Values.image.provisioner.tag | default .Chart.AppVersion }}"
+            {{ toYaml .Values.securityContext }}
+          image: {{ include "cosi-driver.cosi-driver.provisionerImageName" . }}
           imagePullPolicy: {{ .Values.image.provisioner.pullPolicy }}
           args:
             - "--log-level={{ include "cosi-driver.logLevel" . }}"
           resources:
-            {{- toYaml .Values.resources.provisioner | nindent 12 }}
+            {{ toYaml .Values.resources.provisioner }}
           volumeMounts:
           - name: {{ include "cosi-driver.name" . }}-secret-volume
             mountPath: /cosi
           - name: cosi-socket-dir
             mountPath: /var/lib/cosi
-        - name: {{ .Values.image.sidecar.name }}
-          securityContext:
-            {{- toYaml .Values.securityContext | nindent 12 }}
-          image: "{{ .Values.image.sidecar.repository }}:{{ .Values.image.sidecar.tag }}"
+        - name: {{ include "cosi-driver.provisionerSidecarContainerName" . }}
+          image: {{ include "cosi-driver.provisionerSidecarImageName" . }}
           imagePullPolicy: {{ .Values.image.sidecar.pullPolicy }}
+          {{- with .Values.securityContext }}
+          securityContext:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
           resources:
             {{- toYaml .Values.resources.sidecar | nindent 12 }}
           volumeMounts:
