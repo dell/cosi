@@ -164,7 +164,41 @@ func (s *Server) DriverCreateBucket(
 func (s *Server) DriverDeleteBucket(ctx context.Context,
 	req *cosi.DriverDeleteBucketRequest,
 ) (*cosi.DriverDeleteBucketResponse, error) {
-	return nil, status.Error(codes.Unimplemented, "DriverCreateBucket: not implemented")
+	log.WithFields(log.Fields{
+		"bucketID": req.BucketId,
+	}).Info("Bucket is being deleted")
+
+	// Check if bucketID is not empty.
+	if req.GetBucketId() == "" {
+		log.Error("DriverDeleteBucket: Empty bucketID")
+		return nil, status.Error(codes.InvalidArgument, "Empty bucketID")
+	}
+
+	// Extract bucket name from bucketID.
+	bucketName := strings.SplitN(req.BucketId, "-", 2)[1]
+
+	// Delete bucket.
+	err := s.mgmtClient.Buckets().Delete(bucketName, s.namespace)
+
+	if err != nil && errors.Is(err, model.Error{Code: model.CodeResourceNotFound}) {
+		log.WithFields(log.Fields{
+			"bucket_to_delete": bucketName,
+		}).Error("DriverDeleteBucket: Bucket to delete not found")
+
+		return nil, status.Error(codes.NotFound, "Bucket not found")
+
+	} else if err != nil {
+		log.WithFields(log.Fields{
+			"bucket_to_delete": bucketName,
+		}).Error("DriverDeleteBucket: Bucket was not successfully deleted")
+
+		return nil, status.Error(codes.Internal, "Bucket was not successfully deleted")
+	}
+	log.WithFields(log.Fields{
+		"bucket_to_delete": bucketName,
+	}).Error("DriverDeleteBucket: Bucket was not successfully deleted")
+
+	return &cosi.DriverDeleteBucketResponse{}, nil
 }
 
 // DriverGrantBucketAccess provides access to Bucket on specific Object Storage Platform.
