@@ -335,8 +335,9 @@ func testDriverDeleteBucket(t *testing.T) {
 					Name:      "bucket-valid",
 					Namespace: namespace,
 				}),
-				namespace: namespace,
-				backendID: testID,
+				namespace:   namespace,
+				backendID:   testID,
+				emptyBucket: true,
 			},
 		},
 		{
@@ -348,8 +349,9 @@ func testDriverDeleteBucket(t *testing.T) {
 					Name:      "bucket-valid",
 					Namespace: namespace,
 				}),
-				namespace: namespace,
-				backendID: testID,
+				namespace:   namespace,
+				backendID:   testID,
+				emptyBucket: true,
 			},
 		},
 	}

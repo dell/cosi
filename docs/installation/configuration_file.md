@@ -58,6 +58,14 @@ connections:
     # It points to the region in which object storage provider is installed.
     region: us-east-1
 
+    # Indicates if the contents of the bucket should be emptied as part of the deletion process
+    #
+    # if false the delete bucket operation will fail if the bucket is not empty
+    # if true and the bucket is not empty and cleanup will run in the background before delete bucket operation
+    #
+    # REQUIRED
+    emptyBucket: false
+
     # Protocols supported by the connection
     #
     # Valid values:
