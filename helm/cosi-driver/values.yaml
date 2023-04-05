@@ -15,28 +15,40 @@
 # Declare variables to be passed into your templates.
 
 # Driver config contains the yaml configuration with list of object storage connections
-driverConfig: {}
 
 replicaCount: 1
 
-# COSI driver log level
-# Possible values: "trace" "debug" "info" "warn" "error" "fatal" "panic"
-# Default value: "debug"
-logLevel: "debug"
+provisioner:
+  name: objectstorage-provisioner
+  config: {}
+  # COSI driver log level
+  # Possible values: "trace" "debug" "info" "warn" "error" "fatal" "panic"
+  # Default value: "debug"
+  logLevel: "debug"
+  image:
+    repository: ""
+    tag: ""
+    pullPolicy: IfNotPresent
 
-container:
-  provisioner:
-    name: objectstorage-provisioner
-    image:
-      repository: ""
-      tag: ""
-      pullPolicy: IfNotPresent
-  sidecar:
-    name: objectstorage-provisioner-sidecar
-    image:
-      repository: gcr.io/k8s-staging-sig-storage/objectstorage-sidecar/objectstorage-sidecar
-      tag: "v20230130-v0.1.0-24-gc0cf995"
-      pullPolicy: IfNotPresent
+sidecar:
+  name: objectstorage-provisioner-sidecar
+  image:
+    repository: gcr.io/k8s-staging-sig-storage/objectstorage-sidecar/objectstorage-sidecar
+    tag: "v20230130-v0.1.0-24-gc0cf995"
+    pullPolicy: IfNotPresent
+
+# Provisioner configuration can be created with --set-file configuration.data=path/to/config.yaml
+# or created manually and provided with --set configuration.name=existing-secret-name
+configuration:
+  # Specifies whether a Secret should be created
+  # If set to false, you must provide an existing Secret
+  # with the name set in the `name` field.
+  create: true
+  annotations: {}
+  # Override name of the secret or specify an existing secret name
+  name: ""
+  # If data is provided when installing chart, it will be used to create the Secret with the driver configuration
+  data: {}
 
 rbac:
   # Specifies whether RBAC resources should be created
@@ -84,8 +96,6 @@ securityContext:
   #   - ALL
 
 resources:
-  provisioner: {}
-  sidecar: {}
   # We usually recommend not to specify default resources and to leave this as a conscious
   # choice for the user. This also increases chances charts run on environments with little
   # resources, such as Minikube. If you do want to specify resources, uncomment the following
