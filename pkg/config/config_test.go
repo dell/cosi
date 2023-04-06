@@ -42,6 +42,7 @@ var (
                 "id": "testid",
                 "objectscale-gateway": "gateway.objectscale.test",
                 "objectstore-gateway": "gateway.objectstore.test",
+				"emptyBucket": false,
                 "protocols": {
                     "s3": {
                         "endpoint": "test.endpoint"
@@ -86,6 +87,7 @@ var (
     id: testid
     objectscale-gateway: gateway.objectscale.test
     objectstore-gateway: gateway.objectstore.test
+    emptyBucket: false
     protocols:
       s3:
         endpoint: test.endpoint
@@ -99,6 +101,7 @@ var (
     id: testid
     objectscale-gateway: gateway.objectscale.test
     objectstore-gateway: gateway.objectstore.test
+    emptyBucket: false
     protocols:
       s3:
         endpoint: test.endpoint
