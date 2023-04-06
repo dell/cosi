@@ -89,13 +89,13 @@ Create the name of the role binding to use
 {{/*
 Create the name of the service account to use
 */}}
-{{- define "cosi-driver.serviceAccountName" }}
-  {{- if and .Values.rbac.create }}
-    {{- default (printf "%s" (include "cosi-driver.fullname" .)) .Values.rbac.serviceAccount.name }}
-  {{- else }}
-    {{- .Values.rbac.serviceAccount.name }}
-  {{- end }}
-{{- end }}
+{{- define "cosi-driver.serviceAccountName" -}}
+  {{- if .Values.serviceAccount.create -}}
+      {{ default (include "cosi-driver.fullname" .) .Values.serviceAccount.name }}
+  {{- else -}}
+      {{ default "default" .Values.serviceAccount.name }}
+  {{- end -}}
+{{- end -}}
 
 {{/*
 Create the name of provisioner container
