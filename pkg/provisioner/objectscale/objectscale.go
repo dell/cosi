@@ -197,8 +197,6 @@ func (s *Server) DriverDeleteBucket(ctx context.Context,
 		return nil, status.Error(codes.Internal, "Bucket was not successfully deleted")
 	}
 
-	//	bucket, err := s.mgmtClient.Buckets().Get(bucketName, map[string]string{})
-
 	log.WithFields(log.Fields{
 		"bucket_to_delete": bucketName,
 	}).Error("DriverDeleteBucket: Bucket was not successfully deleted")

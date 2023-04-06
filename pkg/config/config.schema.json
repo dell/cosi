@@ -41,7 +41,7 @@
           "type": "string"
         },
         "emptyBucket": {
-          "description": "Indicates the contents of the bucket should be emptied as part of the deletion process.",
+          "description": "Indicates the contents of the bucket should be emptied as part of the deletion process",
           "type": "boolean"
         },
         "protocols": {
