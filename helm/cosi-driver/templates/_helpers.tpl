@@ -130,9 +130,9 @@ Create the secret name
 */}}
 {{- define "cosi-driver.secretName" }}
   {{- if .Values.configuration.create }}
-    {{- default (printf "%s-secret" (include "cosi-driver.name" . )) .Values.configuration.name }}
+    {{- default (printf "%s" (include "cosi-driver.name" . )) .Values.configuration.secretName }}
   {{- else }}
-    {{- .Values.configuration.name }}
+    {{- .Values.configuration.secretName }}
   {{- end }}
 {{- end }}
 

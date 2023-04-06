@@ -14,87 +14,98 @@
 # This is a YAML-formatted file.
 # Declare variables to be passed into your templates.
 
-# Driver config contains the yaml configuration with list of object storage connections
-
+# replicaCount specifies the number of replicas of the COSI driver.
 replicaCount: 1
 
+# provisioner specifies parameters for the COSI driver provoisioner container.
 provisioner:
+  # name of the COSI driver provisioner container.
   name: "objectstorage-provisioner"
+  # config is the yaml configuration with list of object storage connections.
   config: {}
-  # COSI driver log level
-  # Possible values: "trace" "debug" "info" "warn" "error" "fatal" "panic"
-  # Default value: "debug"
+  # logLevel is the logging level for the COSI driver provisioner,
+  # Possible values: "trace" "debug" "info" "warn" "error" "fatal" "panic".
   logLevel: "debug"
+  # image specifies the COSI driver provisioner container image.
   image:
+    # repository is the COSI driver provisioner container image repository.
     repository: ""
+    # tag is the COSI driver provisioner container image tag.
     tag: ""
+    # pullPolicy is the COSI driver provisioner container image pull policy.
     pullPolicy: "IfNotPresent"
 
+# sidecar specifies parameters for the COSI driver sidecar container.
 sidecar:
+  # name of the COSI driver sidecar container.
   name: "objectstorage-provisioner-sidecar"
+  # image specifies the COSI driver sidecar container image.
   image:
+    # repository is the COSI driver sidecar container image repository.
     repository: "gcr.io/k8s-staging-sig-storage/objectstorage-sidecar/objectstorage-sidecar"
+    # tag is the COSI driver sidecar container image tag.
     tag: "v20230130-v0.1.0-24-gc0cf995"
+    # pullPolicy is the COSI driver sidecar container image pull policy.
     pullPolicy: "IfNotPresent"
 
-# Provisioner configuration can be created with --set-file configuration.data=path/to/config.yaml
+# configuration of the driver can be set with with --set-file configuration.data=path/to/config.yaml
 # or created manually and provided with --set configuration.name=existing-secret-name
 configuration:
   # Specifies whether a secret with driver configuration should be created
   # If set to false, you must set `configuration.name` field to an existing configuration secret name.
   create: true
   annotations: {}
-  # Override name of the secret or specify an existing secret name
-  name: ""
-  # If data is provided when installing chart, it will be used to create the Secret with the driver configuration
+  # name can be used to specify an existing secret name to use for the driver configuration or override the generated name (default `cosi-driver`).
+  secretName: ""
+  # data should provided when installing chart, it will be used to create the Secret with the driver configuration.
+  # `configuration.create` must be set to `true` for this to work.
   data: {}
 
+# rbac specifies parameters for the COSI driver RBAC resources.
 rbac:
-  # Specifies whether RBAC resources should be created.
+  # create specifies whether RBAC resources should be created.
   # If set to false, you must set `rbac.serviceAccount.name` field to an existing ServiceAccount name.
   create: true
+  # role specifies parameters for the COSI driver Role.
   role:
-    # Specifies whether a Role should be created
-    create: true
-    # Annotations to add to the Role
+    # annotations to add to the Role resource
     annotations: {}
-    # The name of the Role to use.
-    # If not set and create is true, a name is generated using the fullname template
+    # name of the Role to create (efault `cosi-driver-role`).
     name: ""
   roleBinding:
-    # Specifies whether a RoleBinding should be created
-    create: true
     # Annotations to add to the RoleBinding
     annotations: {}
-    # The name of the RoleBinding to use.
-    # If not set and create is true, a name is generated using the fullname template
+    # name of the RoleBinding to create (default `cosi-driver-rolebinding`).
     name: ""
   serviceAccount:
-    # Specifies whether a ServiceAccount should be created
-    create: true
     # Annotations to add to the ServiceAccount
     annotations: {}
-    # The name of the ServiceAccount to use.
-    # If not set and create is true, a name is generated using the fullname template
+    # The name of the ServiceAccount to create (or just use if `rbac.create=false`, default `cosi-driver-sa`).
     name: ""
 
+# imagePullSecrets specifies the list of image pull secrets.
 imagePullSecrets: []
+# nameOverride specifies the name override for the COSI driver installation (default is `name` form `Chart.yaml`).
 nameOverride: ""
+# fullnameOverride specifies the full name override for the COSI driver installation (generated based on release name).
 fullnameOverride: ""
-
+# podAnnotations specifies the list of annotations to add to the COSI driver pod.
 podAnnotations: {}
 
+# podSecurityContext specifies the security context for the COSI driver pod.
 podSecurityContext:
   runAsNonRoot: true
   runAsUser: 1000
   # fsGroup: 2000
 
+# securityContext specifies the security context for the COSI driver containers.
 securityContext:
   readOnlyRootFilesystem: true
   # capabilities:
   #   drop:
   #   - ALL
 
+# resources specifies the resource limits and requests for the COSI driver containers.
 resources:
   # We usually recommend not to specify default resources and to leave this as a conscious
   # choice for the user. This also increases chances charts run on environments with little
@@ -107,15 +118,22 @@ resources:
   #   cpu: 100m
   #   memory: 128Mi
 
+# autoscaling rules for COSI driver deployment.
 autoscaling:
+  # enabled specifies whether autoscaling is enabled.
   enabled: false
+  # minReplicas specifies the minimum number of replicas.
   minReplicas: 1
+  # maxReplicas specifies the maximum number of replicas.
   maxReplicas: 100
+  # targetCPUUtilizationPercentage specifies the target CPU utilization percentage.
   targetCPUUtilizationPercentage: 80
+  # targetMemoryUtilizationPercentage specifies the target memory utilization percentage.
   # targetMemoryUtilizationPercentage: 80
 
+# nodeSelector specifies the node selector for the COSI driver pod.
 nodeSelector: {}
-
+# tolerations specifies the list of tolerations for the COSI driver pod.
 tolerations: []
-
+# affinity specifies the affinity for the COSI driver pod.
 affinity: {}
