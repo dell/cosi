@@ -245,5 +245,5 @@ func (tf *testFile) Write() error {
 		return nil
 	}
 
-	return os.WriteFile(path.Join(dir, tf.name), []byte(tf.content), 0o644)
+	return os.WriteFile(path.Join(dir, tf.name), []byte(tf.content), 0o600)
 }
