@@ -66,7 +66,7 @@ type BucketsInterface interface {
 	Create(createParam model.Bucket) (*model.Bucket, error)
 
 	// Delete deletes bucket from the ObjectScale object store
-	Delete(name string, namespace string) error
+	Delete(name string, namespace string, emptyBucket bool) error
 
 	// GetQuota Gets the quota for the given bucket and namespace.
 	GetQuota(bucketName string, namespace string) (*model.BucketQuotaInfo, error)

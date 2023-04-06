@@ -120,11 +120,11 @@ func (b *Buckets) Create(createParam model.Bucket) (*model.Bucket, error) {
 }
 
 // Delete implements the buckets interface
-func (b *Buckets) Delete(name string, namespace string) error {
+func (b *Buckets) Delete(name string, namespace string, emptyBucket bool) error {
 	req := client.Request{
 		Method:      http.MethodPost,
 		Path:        path.Join("object", "bucket", name, "deactivate"),
-		Params:      map[string]string{"namespace": namespace},
+		Params:      map[string]string{"namespace": namespace, "emptyBucket": fmt.Sprint(emptyBucket)},
 		ContentType: client.ContentTypeJSON,
 	}
 	err := b.Client.MakeRemoteCall(req, nil)
