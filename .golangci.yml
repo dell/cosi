@@ -1,7 +1,7 @@
 run:
   # The default concurrency value is the number of available CPU.
   concurrency: 4
-  
+ 
   # Timeout for analysis, e.g. 30s, 5m.
   timeout: 5m
 
@@ -18,7 +18,7 @@ run:
   # Default: true
   skip-dirs-use-default: true
 
-  # Default empty, allowed options are readonly, vendor and mod. 
+  # Default empty, allowed options are readonly, vendor and mod.
   modules-download-mode: vendor
 
   # Define the Go version limit.
@@ -83,7 +83,7 @@ linters:
   # Run only fast linters from enabled linters set (first run won't be fast)
   # Default: false
   fast: false
-  
+ 
   # Enable specific linter
   # https://golangci-lint.run/usage/linters/#enabled-by-default
   enable:
@@ -91,16 +91,20 @@ linters:
     - bidichk
     # Check whether the HTTP response body is closed properly.
     - bodyclose
-    # Detect context.Context contained in structs. 
+    # Detect context.Context contained in structs.
     - containedctx
-    # Check whether a function uses a non-inherited context. 
+    # Check whether a function uses a non-inherited context.
     - contextcheck
-    # Find declarations and assignments with too many blank identifiers
+    # Find declarations and assignments with too many blank identifiers.
     - dogsled
     # Check for unchecked errors.
     - errcheck
+    # Find code that will cause problems with the error wrapping scheme.
+    - errorlint
     # Find exporting pointers for loop variables.
     - exportloopref
+    # Inspects source code for security problems.
+    - gosec
     # Enforce standards for ginkgo and gomega.
     - ginkgolinter
     # Check that compiler directives are valid.
