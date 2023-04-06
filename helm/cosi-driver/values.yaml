@@ -18,8 +18,6 @@
 provisioner:
   # name of the COSI driver provisioner container.
   name: "objectstorage-provisioner"
-  # config is the yaml configuration with list of object storage connections.
-  config: {}
   # logLevel is the logging level for the COSI driver provisioner,
   # Possible values: "trace" "debug" "info" "warn" "error" "fatal" "panic".
   logLevel: "debug"
@@ -56,7 +54,7 @@ configuration:
   secretName: ""
   # data should provided when installing chart, it will be used to create the Secret with the driver configuration.
   # `configuration.create` must be set to `true` for this to work.
-  data: {}
+  data: ""
 
 # rbac specifies parameters for the COSI driver RBAC resources.
 rbac:
