@@ -43,8 +43,10 @@ connections:
 
     # Indicates if the contents of the bucket should be emptied as part of the deletion process
     #
-    # if false the delete bucket operation will fail if the bucket is not empty
-    # if true and the bucket is not empty and cleanup will run in the background before delete bucket operation
+    # Possible values:
+    # - true            - bucket will be emptied during the deletion.
+    # - false - default - deletion of bucket will fail, if the bucket is not empty. 
+    #                     All contents of the bucket must be cleared manually.
     #
     # REQUIRED
     emptyBucket: false
