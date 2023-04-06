@@ -19,7 +19,7 @@
 replicaCount: 1
 
 provisioner:
-  name: objectstorage-provisioner
+  name: "objectstorage-provisioner"
   config: {}
   # COSI driver log level
   # Possible values: "trace" "debug" "info" "warn" "error" "fatal" "panic"
@@ -28,21 +28,20 @@ provisioner:
   image:
     repository: ""
     tag: ""
-    pullPolicy: IfNotPresent
+    pullPolicy: "IfNotPresent"
 
 sidecar:
-  name: objectstorage-provisioner-sidecar
+  name: "objectstorage-provisioner-sidecar"
   image:
-    repository: gcr.io/k8s-staging-sig-storage/objectstorage-sidecar/objectstorage-sidecar
+    repository: "gcr.io/k8s-staging-sig-storage/objectstorage-sidecar/objectstorage-sidecar"
     tag: "v20230130-v0.1.0-24-gc0cf995"
-    pullPolicy: IfNotPresent
+    pullPolicy: "IfNotPresent"
 
 # Provisioner configuration can be created with --set-file configuration.data=path/to/config.yaml
 # or created manually and provided with --set configuration.name=existing-secret-name
 configuration:
-  # Specifies whether a Secret should be created
-  # If set to false, you must provide an existing Secret
-  # with the name set in the `name` field.
+  # Specifies whether a secret with driver configuration should be created
+  # If set to false, you must set `configuration.name` field to an existing configuration secret name.
   create: true
   annotations: {}
   # Override name of the secret or specify an existing secret name
@@ -51,7 +50,8 @@ configuration:
   data: {}
 
 rbac:
-  # Specifies whether RBAC resources should be created
+  # Specifies whether RBAC resources should be created.
+  # If set to false, you must set `rbac.serviceAccount.name` field to an existing ServiceAccount name.
   create: true
   role:
     # Specifies whether a Role should be created
