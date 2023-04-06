@@ -34,6 +34,8 @@ import (
 	"github.com/dell/cosi-driver/pkg/transport"
 )
 
+const splitNumber = 2
+
 // Server is implementation of driver.Driver interface for ObjectScale platform.
 type Server struct {
 	mgmtClient  api.ClientSet
@@ -177,7 +179,7 @@ func (s *Server) DriverDeleteBucket(ctx context.Context,
 	}
 
 	// Extract bucket name from bucketID.
-	bucketName := strings.SplitN(req.BucketId, "-", 2)[1]
+	bucketName := strings.SplitN(req.BucketId, "-", splitNumber)[1]
 
 	// Delete bucket.
 	err := s.mgmtClient.Buckets().Delete(bucketName, s.namespace, s.emptyBucket)
@@ -188,7 +190,6 @@ func (s *Server) DriverDeleteBucket(ctx context.Context,
 		}).Error("DriverDeleteBucket: Bucket to delete not found")
 
 		return nil, status.Error(codes.NotFound, "Bucket not found")
-
 	} else if err != nil {
 		log.WithFields(log.Fields{
 			"bucket_to_delete": bucketName,
