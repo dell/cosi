@@ -1,7 +1,7 @@
 checks:
   # NOTE: Include all checks, comment failing
   include:
-    # - "access-to-create-pods"
+    - "access-to-create-pods"
     # - "access-to-secrets"
     - "cluster-admin-role-binding"
     - "dangling-horizontalpodautoscaler"
@@ -48,13 +48,13 @@ checks:
     # - "unset-cpu-requirements"
     # - "unset-memory-requirements"
     # - "use-namespace"
-    # - "wildcard-in-rules"
+    - "wildcard-in-rules"
     - "writable-host-mount"
 
-  # NOTE: manually exclude failing for documentation, must be fixed in future
+  # NOTE: manually exclude failing for documentation, fix them in future or
+  # comment why are they disabled.
   exclude:
-    - "access-to-create-pods"
-    - "access-to-secrets"
+    - "access-to-secrets" # NOTE: COSI Provisioner Sidecar requires access to secrets
     - "dnsconfig-options"
     - "minimum-three-replicas"
     - "no-liveness-probe"
@@ -69,4 +69,3 @@ checks:
     - "unset-cpu-requirements"
     - "unset-memory-requirements"
     - "use-namespace"
-    - "wildcard-in-rules"
