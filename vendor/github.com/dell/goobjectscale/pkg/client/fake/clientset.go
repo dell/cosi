@@ -574,7 +574,7 @@ func (b *Buckets) Create(createParams model.Bucket) (*model.Bucket, error) {
 }
 
 // Delete implements the buckets API
-func (b *Buckets) Delete(name string, namespace string) error {
+func (b *Buckets) Delete(name string, namespace string, emptyBucket bool) error {
 	// This piece of code verifies if the incoming request is for forcing an unexpected error.
 	if strings.Contains(name, "FORCEFAIL") {
 		return model.Error{
