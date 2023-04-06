@@ -14,9 +14,6 @@
 # This is a YAML-formatted file.
 # Declare variables to be passed into your templates.
 
-# replicaCount specifies the number of replicas of the COSI driver.
-replicaCount: 1
-
 # provisioner specifies parameters for the COSI driver provoisioner container.
 provisioner:
   # name of the COSI driver provisioner container.
@@ -83,14 +80,16 @@ rbac:
     # The name of the ServiceAccount to create (or just use if `rbac.create=false`, default `cosi-driver-sa`).
     name: ""
 
-# imagePullSecrets specifies the list of image pull secrets.
-imagePullSecrets: []
+# replicaCount specifies the number of replicas of the COSI driver.
+replicaCount: 1
 # nameOverride specifies the name override for the COSI driver installation (default is `name` form `Chart.yaml`).
 nameOverride: ""
 # fullnameOverride specifies the full name override for the COSI driver installation (generated based on release name).
 fullnameOverride: ""
 # podAnnotations specifies the list of annotations to add to the COSI driver pod.
 podAnnotations: {}
+# imagePullSecrets specifies the list of image pull secrets.
+imagePullSecrets: []
 
 # podSecurityContext specifies the security context for the COSI driver pod.
 podSecurityContext:

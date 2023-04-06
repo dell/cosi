@@ -68,8 +68,8 @@ app.kubernetes.io/instance: {{ .Release.Name }}
 Create the name of the role to use
 */}}
 {{- define "cosi-driver.roleName" }}
-  {{- if and .Values.rbac.create .Values.rbac.role.create }}
-      {{- default (printf "%s-role" (include "cosi-driver.fullname" .)) .Values.rbac.role.name }}
+  {{- if and .Values.rbac.create }}
+      {{- default (printf "%s" (include "cosi-driver.fullname" .)) .Values.rbac.role.name }}
   {{- else }}
     {{- .Values.rbac.role.name }}
   {{- end }}
@@ -79,8 +79,8 @@ Create the name of the role to use
 Create the name of the role binding to use
 */}}
 {{- define "cosi-driver.roleBindingName" }}
-  {{- if and .Values.rbac.create .Values.rbac.roleBinding.create }}
-    {{- default (printf "%s-rolebinding" (include "cosi-driver.fullname" .)) .Values.rbac.roleBinding.name }}
+  {{- if and .Values.rbac.create }}
+    {{- default (printf "%s" (include "cosi-driver.fullname" .)) .Values.rbac.roleBinding.name }}
   {{- else }}
     {{- .Values.rbac.roleBinding.name }}
   {{- end }}
@@ -90,8 +90,8 @@ Create the name of the role binding to use
 Create the name of the service account to use
 */}}
 {{- define "cosi-driver.serviceAccountName" }}
-  {{- if and .Values.rbac.create .Values.rbac.serviceAccount.create }}
-    {{- default (printf "%s-sa" (include "cosi-driver.fullname" .)) .Values.rbac.serviceAccount.name }}
+  {{- if and .Values.rbac.create }}
+    {{- default (printf "%s" (include "cosi-driver.fullname" .)) .Values.rbac.serviceAccount.name }}
   {{- else }}
     {{- .Values.rbac.serviceAccount.name }}
   {{- end }}
@@ -130,7 +130,7 @@ Create the secret name
 */}}
 {{- define "cosi-driver.secretName" }}
   {{- if .Values.configuration.create }}
-    {{- default (printf "%s" (include "cosi-driver.name" . )) .Values.configuration.secretName }}
+    {{- default (printf "%s-config" (include "cosi-driver.name" . )) .Values.configuration.secretName }}
   {{- else }}
     {{- .Values.configuration.secretName }}
   {{- end }}
@@ -140,5 +140,5 @@ Create the secret name
 Create the name for secret volume
 */}}
 {{- define "cosi-driver.secretVolumeName" }}
-  {{- printf "%s-secret-volume" (include "cosi-driver.name" . ) }}
+  {{- printf "%s-config" (include "cosi-driver.name" . ) }}
 {{- end }}
