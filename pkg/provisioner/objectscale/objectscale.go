@@ -190,16 +190,18 @@ func (s *Server) DriverDeleteBucket(ctx context.Context,
 		}).Error("DriverDeleteBucket: Bucket to delete not found")
 
 		return nil, status.Error(codes.NotFound, "Bucket not found")
-	} else if err != nil {
+	}
+
+	if err != nil {
 		log.WithFields(log.Fields{
-			"bucket_to_delete": bucketName,
+			"bucket": bucketName,
 		}).Error("DriverDeleteBucket: Bucket was not successfully deleted")
 
 		return nil, status.Error(codes.Internal, "Bucket was not successfully deleted")
 	}
 
 	log.WithFields(log.Fields{
-		"bucket_to_delete": bucketName,
+		"bucket": bucketName,
 	}).Error("DriverDeleteBucket: Bucket was not successfully deleted")
 
 	return &cosi.DriverDeleteBucketResponse{}, nil

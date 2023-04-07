@@ -65,7 +65,6 @@ connections:
     # - false - default - deletion of bucket will fail, if the bucket is not empty. 
     #                     All contents of the bucket must be cleared manually.
     #
-    # REQUIRED
     emptyBucket: false
 
     # Protocols supported by the connection
