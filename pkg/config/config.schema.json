@@ -40,6 +40,11 @@
           "description": "Identity and Access Management (IAM) API specific field, points to the region in which object storage provider is installed",
           "type": "string"
         },
+        "emptyBucket": {
+          "description": "Indicates if the contents of the bucket should be emptied as part of the deletion process",
+          "type": "boolean",
+          "default": false
+        },
         "protocols": {
           "$ref": "#/definitions/protocols"
         },

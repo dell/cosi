@@ -299,13 +299,70 @@ func testDriverCreateBucket(t *testing.T) {
 	}
 }
 
-// FIXME: write valid test.
 func testDriverDeleteBucket(t *testing.T) {
-	srv := Server{}
+	const (
+		namespace = "namespace"
+		testID    = "test.id"
+	)
 
-	_, err := srv.DriverDeleteBucket(context.TODO(), &cosi.DriverDeleteBucketRequest{})
-	if err == nil {
-		t.Error("expected error")
+	testCases := []struct {
+		description   string
+		inputBucketID string
+		expectedError error
+		server        Server
+	}{
+		{
+			description:   "invalid bucketID",
+			inputBucketID: "",
+			expectedError: status.Error(codes.InvalidArgument, "Empty bucketID"),
+		},
+		{
+			description:   "bucket does not exist",
+			inputBucketID: strings.Join([]string{testID, "bucket-invalid"}, "-"),
+			expectedError: status.Error(codes.NotFound, "Bucket not found"),
+			server: Server{
+				mgmtClient: fake.NewClientSet(),
+				namespace:  namespace,
+				backendID:  testID,
+			},
+		},
+		{
+			description:   "failed to delete bucket",
+			inputBucketID: strings.Join([]string{testID, "bucket-invalid-FORCEFAIL"}, "-"),
+			expectedError: status.Error(codes.Internal, "Bucket was not successfully deleted"),
+			server: Server{
+				mgmtClient: fake.NewClientSet(&model.Bucket{
+					Name:      "bucket-valid",
+					Namespace: namespace,
+				}),
+				namespace:   namespace,
+				backendID:   testID,
+				emptyBucket: true,
+			},
+		},
+		{
+			description:   "bucket successfully deleted",
+			inputBucketID: strings.Join([]string{testID, "bucket-valid"}, "-"),
+			expectedError: nil,
+			server: Server{
+				mgmtClient: fake.NewClientSet(&model.Bucket{
+					Name:      "bucket-valid",
+					Namespace: namespace,
+				}),
+				namespace:   namespace,
+				backendID:   testID,
+				emptyBucket: true,
+			},
+		},
+	}
+
+	for _, scenario := range testCases {
+		t.Run(scenario.description, func(t *testing.T) {
+			ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+			defer cancel()
+			_, err := scenario.server.DriverDeleteBucket(ctx, &cosi.DriverDeleteBucketRequest{BucketId: scenario.inputBucketID})
+			assert.ErrorIs(t, err, scenario.expectedError, err)
+		})
 	}
 }
 

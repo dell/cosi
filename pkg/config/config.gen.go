@@ -103,6 +103,10 @@ type Objectscale struct {
 	// Credentials corresponds to the JSON schema field "credentials".
 	Credentials Credentials `json:"credentials" yaml:"credentials"`
 
+	// Indicates if the contents of the bucket should be emptied as part of the
+	// deletion process
+	EmptyBucket bool `json:"emptyBucket,omitempty" yaml:"emptyBucket,omitempty"`
+
 	// Default, unique identifier for the single connection.
 	Id string `json:"id" yaml:"id"`
 
@@ -151,6 +155,9 @@ func (j *Objectscale) UnmarshalJSON(b []byte) error {
 	var plain Plain
 	if err := json.Unmarshal(b, &plain); err != nil {
 		return err
+	}
+	if v, ok := raw["emptyBucket"]; !ok || v == nil {
+		plain.EmptyBucket = false
 	}
 	*j = Objectscale(plain)
 	return nil

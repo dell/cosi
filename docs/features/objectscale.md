@@ -61,7 +61,21 @@ spec:
     - S3
 ```
 
-## Bucket Deletion Fetaure
+## Bucket Deletion Feature
+
+There are a few crucial details regarding bucket deletion. The first one is Deletion Policy which is used to specify how COSI should handle deletion of a bucket. It is found in K8s CRD and can be set to Delete and Retain. The second crucial detail is `emptyBucket` field in the Helm Chart configuration.
+
+### Deletion Policy
+
+DeletionPolicy in `BucketClass` resource is used to specify how COSI should handle deletion of the bucket. There are two possible values: 
+- **Retain**: Indicates that the bucket should not be deleted from the Object Storage Platform (OSP), it means that the underlying bucket is not cleaned up when the `Bucket` object is deleted. It makes the bucket unreachable from k8s level. 
+- **Delete**: Indicates that the bucket should be permanently deleted from the Object Storage Platform (OSP) once all the workloads accessing this bucket are done, it means that the underlying bucket is cleaned up when the Bucket object is deleted.
+
+### emptyBucket 
+
+`emptyBucket` field is set in config `.yaml` file passed to the chart during COSi driver installation. If it is set to `true`, then the bucket will be emptied before deletion. If it is set to `false`, then Objectscale will not be able to delete not empty bucket and return error.
+
+`emptyBucket` has no effect when Deletion Policy is set to `Retain`.
 
 ## Bucket Access Granting Feature
 
