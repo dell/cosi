@@ -43,6 +43,8 @@ spec:
           - name: cosi-socket-dir
             mountPath: /var/lib/cosi
         - name: {{ .Values.image.sidecar.name }}
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
           image: "{{ .Values.image.sidecar.repository }}:{{ .Values.image.sidecar.tag }}"
           imagePullPolicy: {{ .Values.image.sidecar.pullPolicy }}
           resources:

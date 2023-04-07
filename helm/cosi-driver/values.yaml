@@ -52,12 +52,12 @@ serviceAccount:
 podAnnotations: {}
 
 podSecurityContext:
-  readOnlyRootFilesystem: true
   runAsNonRoot: true
   runAsUser: 1000 
   # fsGroup: 2000
 
-securityContext: {}
+securityContext:
+  readOnlyRootFilesystem: true
   # capabilities:
   #   drop:
   #   - ALL
