@@ -186,7 +186,7 @@ func (s *Server) DriverDeleteBucket(ctx context.Context,
 
 	if errors.Is(err, model.Error{Code: model.CodeResourceNotFound}) {
 		log.WithFields(log.Fields{
-			"bucket_to_delete": bucketName,
+			"bucket": bucketName,
 		}).Error("DriverDeleteBucket: Bucket to delete not found")
 
 		return nil, status.Error(codes.NotFound, "Bucket not found")
