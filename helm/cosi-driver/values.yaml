@@ -26,10 +26,10 @@ logLevel: "debug"
 
 image:
   provisioner:
-    repository: ""
+    repository: "cosi-driver"
     pullPolicy: IfNotPresent
     # Overrides the image tag whose default is the chart appVersion.
-    tag: ""
+    tag: "68c8e5e94e152e435974230771abcf81718e2fef"
   sidecar:
     name: objectstorage-provisioner-sidecar
     repository: gcr.io/k8s-staging-sig-storage/objectstorage-sidecar/objectstorage-sidecar
@@ -51,16 +51,16 @@ serviceAccount:
 
 podAnnotations: {}
 
-podSecurityContext: {}
+podSecurityContext:
+  readOnlyRootFilesystem: true
+  runAsNonRoot: true
+  runAsUser: 1000 
   # fsGroup: 2000
 
 securityContext: {}
   # capabilities:
   #   drop:
   #   - ALL
-  # readOnlyRootFilesystem: true
-  # runAsNonRoot: true
-  # runAsUser: 1000
 
 resources:
   provisioner: {}
