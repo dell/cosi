@@ -26,10 +26,10 @@ logLevel: "debug"
 
 image:
   provisioner:
-    repository: "cosi-driver"
+    repository: ""
     pullPolicy: IfNotPresent
     # Overrides the image tag whose default is the chart appVersion.
-    tag: "68c8e5e94e152e435974230771abcf81718e2fef"
+    tag: ""
   sidecar:
     name: objectstorage-provisioner-sidecar
     repository: gcr.io/k8s-staging-sig-storage/objectstorage-sidecar/objectstorage-sidecar

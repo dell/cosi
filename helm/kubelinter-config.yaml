@@ -59,7 +59,6 @@ checks:
     - "minimum-three-replicas"
     - "no-liveness-probe"
     - "no-node-affinity"
-    - "no-read-only-root-fs"
     - "no-readiness-probe"
     - "no-rolling-update-strategy"
     - "non-isolated-pod"
