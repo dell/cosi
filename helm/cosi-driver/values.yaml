@@ -53,7 +53,7 @@ podAnnotations: {}
 
 podSecurityContext:
   runAsNonRoot: true
-  runAsUser: 1000 
+  runAsUser: 1000
   # fsGroup: 2000
 
 securityContext:
