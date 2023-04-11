@@ -23,9 +23,7 @@ Feature: BucketAccess deletion on ObjectScale platform
         deletionPolicy: delete
         driverName: cosi-driver
         parameters:
-            objectScaleID: ${objectScaleID}
-            objectStoreID: ${objectStoreID}
-            accountSecret: ${secretName}
+            ID: ${driverID}
         """
         And specification of custom resource "my-bucket-claim" is:
         """
@@ -54,9 +52,7 @@ Feature: BucketAccess deletion on ObjectScale platform
         driverName: cosi-driver
         authenticationType: KEY
         parameters:
-            objectScaleID: ${objectScaleID}
-            objectStoreID: ${objectStoreID}
-            accountSecret: ${secretName}
+            ID: ${driverID}
         """
         And specification of custom resource "my-bucket-access" is:
         """

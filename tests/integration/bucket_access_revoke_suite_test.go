@@ -49,9 +49,7 @@ var _ = Describe("Bucket Access Revoke", Ordered, Label("revoke", "objectscale")
 			DeletionPolicy: "delete",
 			DriverName:     "cosi-driver",
 			Parameters: map[string]string{
-				"objectScaleID": "${objectScaleID}",
-				"objectStoreID": "${objectStoreID}",
-				"accountSecret": "${secretName}",
+				"ID": "${driverID}",
 			},
 		}
 		myBucketClaim = &v1alpha1.BucketClaim{
@@ -77,9 +75,7 @@ var _ = Describe("Bucket Access Revoke", Ordered, Label("revoke", "objectscale")
 			DriverName:         "cosi-driver",
 			AuthenticationType: v1alpha1.AuthenticationTypeKey,
 			Parameters: map[string]string{
-				"objectScaleID": "${objectScaleID}",
-				"objectStoreID": "${objectStoreID}",
-				"accountSecret": "${secretName}",
+				"ID": "${driverID}",
 			},
 		}
 		myBucketAccess = &v1alpha1.BucketAccess{

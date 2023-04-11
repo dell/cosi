@@ -45,9 +45,7 @@ var _ = Describe("Bucket Access KEY", Ordered, Label("key-flow", "objectscale"),
 			DriverName:     "cosi-driver",
 			DeletionPolicy: v1alpha1.DeletionPolicyDelete,
 			Parameters: map[string]string{
-				"objectScaleID": "${objectScaleID}",
-				"objectStoreID": "${objectStoreID}",
-				"accountSecret": "${secretName}",
+				"ID": "${driverID}",
 			},
 		}
 		myBucketClaim = &v1alpha1.BucketClaim{
@@ -69,9 +67,7 @@ var _ = Describe("Bucket Access KEY", Ordered, Label("key-flow", "objectscale"),
 			DriverName:         "cosi-driver",
 			AuthenticationType: v1alpha1.AuthenticationTypeKey,
 			Parameters: map[string]string{
-				"objectScaleID": "${objectScaleID}",
-				"objectStoreID": "${objectStoreID}",
-				"accountSecret": "${secretName}",
+				"ID": "${driverID}",
 			},
 		}
 		myBucketAccess = &v1alpha1.BucketAccess{

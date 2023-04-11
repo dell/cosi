@@ -48,9 +48,7 @@ var _ = Describe("Bucket Creation", Ordered, Label("create", "objectscale"), fun
 			DeletionPolicy: "delete",
 			DriverName:     "cosi-driver",
 			Parameters: map[string]string{
-				"objectScaleID": "${objectScaleID}",
-				"objectStoreID": "${objectStoreID}",
-				"accountSecret": "${secretName}",
+				"ID": "${driverID}",
 			},
 		}
 		validBucketClaim = &v1alpha1.BucketClaim{
