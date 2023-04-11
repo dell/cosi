@@ -24,9 +24,9 @@ provisioner:
   # image specifies the COSI driver provisioner container image.
   image:
     # repository is the COSI driver provisioner container image repository.
-    repository: ""
+    repository: "amaas-eos-mw1.cec.lab.emc.com:5046/cosi-driver"
     # tag is the COSI driver provisioner container image tag.
-    tag: ""
+    tag: "ff11b04c3d5716d44b99642550cfbfe0bf63dbff"
     # pullPolicy is the COSI driver provisioner container image pull policy.
     pullPolicy: "IfNotPresent"
 

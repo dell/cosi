@@ -54,7 +54,7 @@ spec:
             mountPath: /var/lib/cosi
         - name: {{ include "cosi-driver.provisionerSidecarContainerName" . }}
           image: {{ include "cosi-driver.provisionerSidecarImageName" . }}
-          imagePullPolicy: {{ .Values.image.sidecar.pullPolicy }}
+          imagePullPolicy: {{ .Values.sidecar.image.pullPolicy }}
           {{- with .Values.securityContext }}
           securityContext:
             {{- toYaml . | nindent 12 }}
