@@ -13,11 +13,13 @@
 package config
 
 import (
+	"io"
 	"os"
 	"path"
 	"regexp"
 	"testing"
 
+	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -102,6 +104,11 @@ var (
     tls:
       insecure: true`
 )
+
+func TestMain(m *testing.M) {
+	logrus.SetOutput(io.Discard)
+	os.Exit(m.Run())
+}
 
 func TestNew(t *testing.T) {
 	t.Parallel()

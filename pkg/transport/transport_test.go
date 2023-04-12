@@ -13,10 +13,13 @@
 package transport
 
 import (
+	"io"
+	"os"
 	"regexp"
 	"testing"
 
 	"github.com/dell/cosi-driver/pkg/config"
+	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -126,6 +129,11 @@ var (
 	illegalBase64Data = regexp.MustCompile(`illegal base64 data at input byte (.*)$`)
 	noPEMData         = regexp.MustCompile(`failed to find any PEM data in (certificate|key) input$`)
 )
+
+func TestMain(m *testing.M) {
+	logrus.SetOutput(io.Discard)
+	os.Exit(m.Run())
+}
 
 func TestNew(t *testing.T) {
 	t.Parallel()

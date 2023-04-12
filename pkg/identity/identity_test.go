@@ -14,14 +14,23 @@ package identity
 
 import (
 	"context"
+	"io"
+	"os"
 	"testing"
 
 	cosi "sigs.k8s.io/container-object-storage-interface-spec"
+
+	"github.com/sirupsen/logrus"
 )
 
 const (
 	provisioner = "test"
 )
+
+func TestMain(m *testing.M) {
+	logrus.SetOutput(io.Discard)
+	os.Exit(m.Run())
+}
 
 func TestDriverGetInfo(t *testing.T) {
 	t.Parallel()
@@ -31,6 +40,7 @@ func TestDriverGetInfo(t *testing.T) {
 		"testMissingProvisionerName": testMissingProvisionerName,
 	} {
 		fn := fn
+
 		t.Run(scenario, func(t *testing.T) {
 			t.Parallel()
 
@@ -40,8 +50,6 @@ func TestDriverGetInfo(t *testing.T) {
 }
 
 func testValidServer(t *testing.T) {
-	t.Parallel()
-
 	srv := New(provisioner)
 
 	res, err := srv.DriverGetInfo(context.TODO(), &cosi.DriverGetInfoRequest{})
@@ -55,8 +63,6 @@ func testValidServer(t *testing.T) {
 }
 
 func testMissingProvisionerName(t *testing.T) {
-	t.Parallel()
-
 	srv := &Server{}
 
 	_, err := srv.DriverGetInfo(context.TODO(), &cosi.DriverGetInfoRequest{})

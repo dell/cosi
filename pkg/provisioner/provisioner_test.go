@@ -15,9 +15,12 @@ package provisioner
 import (
 	"context"
 	"fmt"
+	"io"
 	"log"
+	"os"
 	"testing"
 
+	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -26,6 +29,11 @@ import (
 
 	"github.com/dell/cosi-driver/pkg/provisioner/virtualdriver/fake"
 )
+
+func TestMain(m *testing.M) {
+	logrus.SetOutput(io.Discard)
+	os.Exit(m.Run())
+}
 
 // TestNew tests the initialization of provisioner server.
 func TestNew(t *testing.T) {
