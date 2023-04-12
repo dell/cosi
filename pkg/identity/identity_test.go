@@ -30,7 +30,10 @@ func TestDriverGetInfo(t *testing.T) {
 		"testValidServer":            testValidServer,
 		"testMissingProvisionerName": testMissingProvisionerName,
 	} {
+		fn := fn
 		t.Run(scenario, func(t *testing.T) {
+			t.Parallel()
+
 			fn(t)
 		})
 	}
