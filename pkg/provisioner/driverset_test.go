@@ -61,6 +61,16 @@ func TestDriversetAdd(t *testing.T) {
 	}
 }
 
+func TestInvalidType(t *testing.T) {
+	t.Parallel()
+
+	driverset := &Driverset{}
+	driverset.drivers.Store("invalid", "value")
+
+	_, err := driverset.Get("invalid")
+	assert.Error(t, err)
+}
+
 func TestDriversetGet(t *testing.T) {
 	t.Parallel()
 
