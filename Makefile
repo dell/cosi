@@ -53,7 +53,11 @@ push: docker	##generate and push the docker container to repository
 
 # Windows or Linux; requires no hardware
 unit-test:	##run unit tests
-	( go clean -cache; CGO_ENABLED=0 go test -race -v -coverprofile=c.out ./...)
+	( go clean -cache; CGO_ENABLED=0 go test -v -coverprofile=c.out ./...)
+
+# Windows or Linux; requires no hardware, requires CGO
+unit-test-race:	##run unit tests with race condition reporting
+	( go clean -cache; CGO_ENABLED=1 go test -race -v -coverprofile=c.out ./...)
 
 # Linux only; populate env.sh with the hardware parameters
 integration-test:	##run integration test (Linux only)
