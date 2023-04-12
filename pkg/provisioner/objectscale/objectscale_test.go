@@ -122,6 +122,8 @@ var (
 )
 
 func TestServer(t *testing.T) {
+	t.Parallel()
+
 	for scenario, fn := range map[string]func(t *testing.T){
 		"testNew":                      testDriverNew,
 		"testID":                       testDriverID,
@@ -130,7 +132,11 @@ func TestServer(t *testing.T) {
 		"testDriverGrantBucketAccess":  testDriverGrantBucketAccess,
 		"testDriverRevokeBucketAccess": testDriverRevokeBucketAccess,
 	} {
+		fn := fn
+
 		t.Run(scenario, func(t *testing.T) {
+			t.Parallel()
+
 			fn(t)
 		})
 	}

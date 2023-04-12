@@ -128,6 +128,8 @@ var (
 )
 
 func TestNew(t *testing.T) {
+	t.Parallel()
+
 	testCases := []struct {
 		name         string
 		config       config.Tls
@@ -293,7 +295,10 @@ func TestNew(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
+		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+
 			transport, err := New(tc.config)
 			if tc.fail {
 				if assert.Error(t, err) {

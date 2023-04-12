@@ -21,13 +21,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-const (
-	testDir = "test"
-)
-
 var (
-	dir string
-
 	missingFile      = regexp.MustCompile(`^unable to read config file: open (.*): no such file or directory$`)
 	invalidExtension = regexp.MustCompile(`^invalid file extension, should be .json, .yaml or .yml$`)
 
@@ -42,7 +36,7 @@ var (
                 "id": "testid",
                 "objectscale-gateway": "gateway.objectscale.test",
                 "objectstore-gateway": "gateway.objectstore.test",
-				"emptyBucket": false,
+                "emptyBucket": false,
                 "protocols": {
                     "s3": {
                         "endpoint": "test.endpoint"
@@ -110,6 +104,8 @@ var (
 )
 
 func TestNew(t *testing.T) {
+	t.Parallel()
+
 	testCases := []struct {
 		name         string
 		file         testFile
@@ -204,33 +200,25 @@ func TestNew(t *testing.T) {
 		},
 	}
 
-	// create test dir
-	var err error
-
-	dir, err = os.MkdirTemp("", testDir)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	defer os.RemoveAll(dir)
-
 	for _, tc := range testCases {
+		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
-			err := tc.file.Write()
+			t.Parallel()
+
+			testFile, err := tc.file.Write()
+			defer os.RemoveAll(path.Dir(testFile))
 			if err != nil {
 				// unexpected error, should panic
 				panic(err)
 			}
 
-			testfile := path.Join(dir, tc.file.name)
-
-			x, err := New(testfile)
+			config, err := New(testFile)
 			if tc.fail {
-				if assert.Errorf(t, err, "%+#v", x) {
+				if assert.Errorf(t, err, "%+#v", config) {
 					assert.Regexp(t, tc.errorMessage, err.Error())
 				}
 			} else {
-				assert.NoError(t, err)
+				assert.NoError(t, err, testFile)
 			}
 		})
 	}
@@ -242,11 +230,18 @@ type testFile struct {
 	skip    bool
 }
 
-func (tf *testFile) Write() error {
-	// if file should not be written, skip
-	if tf.skip == true {
-		return nil
+func (tf *testFile) Write() (string, error) {
+	s, err := os.MkdirTemp("", "test-*")
+	if err != nil {
+		return "", err
 	}
 
-	return os.WriteFile(path.Join(dir, tf.name), []byte(tf.content), 0o600)
+	file := path.Join(s, tf.name)
+
+	// if file should not be written, skip
+	if tf.skip == true {
+		return file, nil
+	}
+
+	return file, os.WriteFile(file, []byte(tf.content), 0o600)
 }

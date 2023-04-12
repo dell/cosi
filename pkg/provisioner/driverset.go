@@ -1,6 +1,7 @@
 package provisioner
 
 import (
+	"errors"
 	"sync"
 
 	driver "github.com/dell/cosi-driver/pkg/provisioner/virtualdriver"
@@ -8,39 +9,35 @@ import (
 
 // Driverset is a structure holding list of Drivers, that can be added or extracted based on the ID.
 type Driverset struct {
-	once    sync.Once
-	drivers map[string]driver.Driver
-}
-
-func (ds *Driverset) init() {
-	if ds.drivers == nil {
-		ds.drivers = make(map[string]driver.Driver)
-	}
+	drivers sync.Map
 }
 
 // Add is used to add new driver to the Driverset.
 func (ds *Driverset) Add(newDriver driver.Driver) error {
 	id := newDriver.ID()
-	if _, ok := ds.drivers[id]; ok {
+
+	if _, ok := ds.drivers.Load(id); ok {
 		return ErrDriverDuplicate{id}
 	}
 
-	ds.once.Do(ds.init)
-	ds.drivers[id] = newDriver
+	ds.drivers.Store(id, newDriver)
 
 	return nil
 }
 
 // Get is used to get driver from the Driverset.
 func (ds *Driverset) Get(id string) (driver.Driver, error) {
-	ds.once.Do(ds.init)
-
-	driver, ok := ds.drivers[id]
+	d, ok := ds.drivers.Load(id)
 	if !ok {
 		return nil, ErrNotConfigured{id}
 	}
 
-	return driver, nil
+	switch d := d.(type) {
+	case driver.Driver:
+		return d, nil
+	default:
+		return nil, errors.New("invalid type")
+	}
 }
 
 // ErrDriverDuplicate indicates that the Driver is already present in driverset.

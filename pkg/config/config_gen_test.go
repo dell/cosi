@@ -27,6 +27,8 @@ var (
 )
 
 func TestObjectscaleUnmarshalJSON(t *testing.T) {
+	t.Parallel()
+
 	testCases := []struct {
 		name         string
 		data         []byte
@@ -126,7 +128,10 @@ func TestObjectscaleUnmarshalJSON(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
+		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+
 			var objectscale Objectscale
 
 			err := objectscale.UnmarshalJSON(tc.data)
@@ -142,6 +147,8 @@ func TestObjectscaleUnmarshalJSON(t *testing.T) {
 }
 
 func TestTlsUnmarshalJSON(t *testing.T) {
+	t.Parallel()
+
 	testCases := []struct {
 		name         string
 		data         []byte
@@ -168,7 +175,10 @@ func TestTlsUnmarshalJSON(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
+		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+
 			var tls Tls
 
 			err := tls.UnmarshalJSON(tc.data)
@@ -184,6 +194,8 @@ func TestTlsUnmarshalJSON(t *testing.T) {
 }
 
 func TestS3UnmarshalJSON(t *testing.T) {
+	t.Parallel()
+
 	testCases := []struct {
 		name         string
 		data         []byte
@@ -216,7 +228,10 @@ func TestS3UnmarshalJSON(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
+		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+
 			var s3 S3
 
 			err := s3.UnmarshalJSON(tc.data)
@@ -232,6 +247,8 @@ func TestS3UnmarshalJSON(t *testing.T) {
 }
 
 func TestCredentialsUnmarshalJSON(t *testing.T) {
+	t.Parallel()
+
 	testCases := []struct {
 		name         string
 		data         []byte
@@ -264,7 +281,10 @@ func TestCredentialsUnmarshalJSON(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
+		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+
 			var credentials Credentials
 
 			err := credentials.UnmarshalJSON(tc.data)
@@ -280,6 +300,8 @@ func TestCredentialsUnmarshalJSON(t *testing.T) {
 }
 
 func TestConfigSchemaJsonUnmarshalJSON(t *testing.T) {
+	t.Parallel()
+
 	testCases := []struct {
 		name         string
 		data         []byte
@@ -305,7 +327,10 @@ func TestConfigSchemaJsonUnmarshalJSON(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
+		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+
 			var config ConfigSchemaJson
 
 			err := json.Unmarshal(tc.data, &config)
