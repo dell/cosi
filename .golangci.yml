@@ -1,7 +1,7 @@
 run:
   # The default concurrency value is the number of available CPU.
   concurrency: 4
- 
+
   # Timeout for analysis, e.g. 30s, 5m.
   timeout: 5m
 
@@ -27,8 +27,6 @@ run:
   # Intentionally left empty to use go.mod's Go version
   go: ""
 
-
-
 issues:
   # Set to 0 to not skip any issues.
   max-issues-per-linter: 0
@@ -44,8 +42,6 @@ issues:
   #
   # Default: false.
   new: false
-
-
 
 output:
   # Format: colored-line-number|line-number|json|tab|checkstyle|code-climate|junit-xml|github-actions|teamcity
@@ -73,8 +69,6 @@ output:
   # Default: true
   print-issued-lines: true
 
-
-
 linters:
   # Disable all linters.
   # Default: false
@@ -83,7 +77,7 @@ linters:
   # Run only fast linters from enabled linters set (first run won't be fast)
   # Default: false
   fast: false
- 
+
   # Enable specific linter
   # https://golangci-lint.run/usage/linters/#enabled-by-default
   enable:
