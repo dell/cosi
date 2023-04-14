@@ -13,6 +13,7 @@
 package provisioner
 
 import (
+	"sync"
 	"testing"
 
 	driver "github.com/dell/cosi-driver/pkg/provisioner/virtualdriver"
@@ -55,10 +56,29 @@ func TestDriversetAdd(t *testing.T) {
 			t.Parallel()
 			err := tc.driverset.Add(tc.driver)
 			assert.IsType(t, tc.wantErr, err)
-			// FIXME: any clever idea how to compare contents of sync map?
-			// assert.Equal(t, tc.want.drivers, tc.driverset.drivers)
+			compareSyncMaps(t, &tc.want.drivers, &tc.driverset.drivers)
 		})
 	}
+}
+
+func compareSyncMaps(t *testing.T, want, got *sync.Map) {
+	t.Helper()
+
+	wantNormal := make(map[string]driver.Driver)
+
+	want.Range(func(key, value interface{}) bool {
+		wantNormal[key.(string)] = value.(driver.Driver)
+		return true
+	})
+
+	gotNormal := make(map[string]driver.Driver)
+
+	got.Range(func(key, value interface{}) bool {
+		gotNormal[key.(string)] = value.(driver.Driver)
+		return true
+	})
+
+	assert.Equal(t, wantNormal, gotNormal)
 }
 
 func TestInvalidType(t *testing.T) {
