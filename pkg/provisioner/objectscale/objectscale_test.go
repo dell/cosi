@@ -14,11 +14,16 @@ package objectscale
 
 import (
 	"context"
+	"io"
+	"os"
 	"regexp"
 	"strings"
 	"testing"
 	"time"
 
+	"github.com/dell/goobjectscale/pkg/client/fake"
+	"github.com/dell/goobjectscale/pkg/client/model"
+	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -26,8 +31,6 @@ import (
 	cosi "sigs.k8s.io/container-object-storage-interface-spec"
 
 	"github.com/dell/cosi-driver/pkg/config"
-	"github.com/dell/goobjectscale/pkg/client/fake"
-	"github.com/dell/goobjectscale/pkg/client/model"
 )
 
 type expected int
@@ -121,7 +124,14 @@ var (
 	transportInitFailed = regexp.MustCompile(`^initialization of transport failed:`)
 )
 
+func TestMain(m *testing.M) {
+	logrus.SetOutput(io.Discard)
+	os.Exit(m.Run())
+}
+
 func TestServer(t *testing.T) {
+	t.Parallel()
+
 	for scenario, fn := range map[string]func(t *testing.T){
 		"testNew":                      testDriverNew,
 		"testID":                       testDriverID,
@@ -130,7 +140,11 @@ func TestServer(t *testing.T) {
 		"testDriverGrantBucketAccess":  testDriverGrantBucketAccess,
 		"testDriverRevokeBucketAccess": testDriverRevokeBucketAccess,
 	} {
+		fn := fn
+
 		t.Run(scenario, func(t *testing.T) {
+			t.Parallel()
+
 			fn(t)
 		})
 	}

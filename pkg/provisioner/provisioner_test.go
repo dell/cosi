@@ -15,24 +15,31 @@ package provisioner
 import (
 	"context"
 	"fmt"
+	"io"
 	"log"
+	"os"
 	"testing"
 
+	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
 	cosi "sigs.k8s.io/container-object-storage-interface-spec"
 
-	"github.com/dell/cosi-driver/pkg/provisioner/virtualdriver"
 	"github.com/dell/cosi-driver/pkg/provisioner/virtualdriver/fake"
 )
+
+func TestMain(m *testing.M) {
+	logrus.SetOutput(io.Discard)
+	os.Exit(m.Run())
+}
 
 // TestNew tests the initialization of provisioner server.
 func TestNew(t *testing.T) {
 	t.Parallel()
 
-	fakeDriverset := &Driverset{drivers: map[string]virtualdriver.Driver{}}
+	fakeDriverset := &Driverset{}
 
 	err := fakeDriverset.Add(&fake.Driver{FakeID: "fake"})
 	if err != nil {
@@ -48,7 +55,7 @@ func TestNew(t *testing.T) {
 func TestServer(t *testing.T) {
 	t.Parallel()
 
-	fakeDriverset := &Driverset{drivers: map[string]virtualdriver.Driver{}}
+	fakeDriverset := &Driverset{}
 	err := fakeDriverset.Add(&fake.Driver{FakeID: "fake"})
 	assert.Nil(t, err)
 

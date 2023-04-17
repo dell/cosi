@@ -13,10 +13,13 @@
 package transport
 
 import (
+	"io"
+	"os"
 	"regexp"
 	"testing"
 
 	"github.com/dell/cosi-driver/pkg/config"
+	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -127,7 +130,14 @@ var (
 	noPEMData         = regexp.MustCompile(`failed to find any PEM data in (certificate|key) input$`)
 )
 
+func TestMain(m *testing.M) {
+	logrus.SetOutput(io.Discard)
+	os.Exit(m.Run())
+}
+
 func TestNew(t *testing.T) {
+	t.Parallel()
+
 	testCases := []struct {
 		name         string
 		config       config.Tls
@@ -293,7 +303,10 @@ func TestNew(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
+		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+
 			transport, err := New(tc.config)
 			if tc.fail {
 				if assert.Error(t, err) {

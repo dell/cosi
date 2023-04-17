@@ -141,4 +141,4 @@ linters-settings:
   paralleltest:
     # Ignore missing calls to `t.Parallel()` and only report incorrect uses of it.
     # Default: false
-    ignore-missing: true
+    ignore-missing: false

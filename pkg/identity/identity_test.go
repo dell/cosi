@@ -14,28 +14,41 @@ package identity
 
 import (
 	"context"
+	"io"
+	"os"
 	"testing"
 
 	cosi "sigs.k8s.io/container-object-storage-interface-spec"
+
+	"github.com/sirupsen/logrus"
 )
 
 const (
 	provisioner = "test"
 )
 
-// FIXME: those are only smoke tests, no real testing is done here.
+func TestMain(m *testing.M) {
+	logrus.SetOutput(io.Discard)
+	os.Exit(m.Run())
+}
+
 func TestDriverGetInfo(t *testing.T) {
+	t.Parallel()
+
 	for scenario, fn := range map[string]func(t *testing.T){
-		"smoke/testValidServer":            testValidServer,
-		"smoke/testMissingProvisionerName": testMissingProvisionerName,
+		"testValidServer":            testValidServer,
+		"testMissingProvisionerName": testMissingProvisionerName,
 	} {
+		fn := fn
+
 		t.Run(scenario, func(t *testing.T) {
+			t.Parallel()
+
 			fn(t)
 		})
 	}
 }
 
-// FIXME: write valid test.
 func testValidServer(t *testing.T) {
 	srv := New(provisioner)
 
@@ -49,12 +62,11 @@ func testValidServer(t *testing.T) {
 	}
 }
 
-// FIXME: write valid test.
 func testMissingProvisionerName(t *testing.T) {
 	srv := &Server{}
 
 	_, err := srv.DriverGetInfo(context.TODO(), &cosi.DriverGetInfoRequest{})
 	if err == nil {
-		t.Errorf("got unexpected error: %s", err.Error())
+		t.Errorf("expected error, got nil")
 	}
 }
