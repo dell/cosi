@@ -23,7 +23,7 @@ import (
 
 	"github.com/dell/goobjectscale/pkg/client/fake"
 	"github.com/dell/goobjectscale/pkg/client/model"
-	"github.com/sirupsen/logrus"
+	log "github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -125,7 +125,7 @@ var (
 )
 
 func TestMain(m *testing.M) {
-	logrus.SetOutput(io.Discard)
+	log.SetOutput(io.Discard)
 	os.Exit(m.Run())
 }
 

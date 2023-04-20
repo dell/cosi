@@ -15,11 +15,11 @@ package identity
 import (
 	"context"
 	"errors"
-	"log"
 
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
+	log "github.com/sirupsen/logrus"
 	cosi "sigs.k8s.io/container-object-storage-interface-spec"
 )
 
@@ -42,7 +42,9 @@ func (srv *Server) DriverGetInfo(ctx context.Context,
 	req *cosi.DriverGetInfoRequest,
 ) (*cosi.DriverGetInfoResponse, error) {
 	if srv.name == "" {
-		log.Printf("Invalid argument: %v", errors.New("driver name cannot be empty"))
+		log.WithFields(log.Fields{
+			"error_msg": errors.New("driver name cannot be empty"),
+		}).Error("Invalid argument")
 		return nil, status.Error(codes.InvalidArgument, "DriverName is empty")
 	}
 

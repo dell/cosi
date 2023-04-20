@@ -20,6 +20,7 @@ import (
 	"os"
 	"path"
 
+	"github.com/dell/cosi-driver/util"
 	"gopkg.in/yaml.v3"
 )
 
@@ -55,7 +56,7 @@ func NewJSON(bytes []byte) (*ConfigSchemaJson, error) {
 
 	err := json.Unmarshal(bytes, cfg)
 	if err != nil {
-		return nil, err
+		return nil, util.TraceLogging(err, "failed to unmarshall the JSON document")
 	}
 
 	return cfg, nil
@@ -70,7 +71,7 @@ func NewYAML(bytes []byte) (*ConfigSchemaJson, error) {
 
 	err := yaml.Unmarshal(bytes, &body)
 	if err != nil {
-		return nil, err
+		return nil, util.TraceLogging(err, "failed to unmarshall the YAML document")
 	}
 
 	// we ignore the error, as the config was previously successfully Unmarshaled from YAML.
@@ -88,7 +89,7 @@ func readFile(filename string) ([]byte, error) {
 	/* #nosec G304 */
 	f, err := os.Open(filename)
 	if err != nil {
-		return nil, err
+		return nil, util.TraceLogging(err, "failed to open the file")
 	}
 
 	// limit reader is used, so the we will read only 20MB of the file.

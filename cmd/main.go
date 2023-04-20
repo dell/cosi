@@ -42,7 +42,9 @@ func init() {
 func main() {
 	err := runMain()
 	if err != nil {
-		log.Fatal(err)
+		log.WithFields(log.Fields{
+			"error_msg": err,
+		}).Fatal("failed to run main function")
 	}
 }
 
@@ -54,7 +56,7 @@ func runMain() error {
 	cfg, err := config.New(*configFile)
 	if err != nil {
 		log.WithFields(log.Fields{
-			"error": err,
+			"error_msg": err,
 		}).Fatal("failed to create configuration")
 	}
 
@@ -77,7 +79,7 @@ func runMain() error {
 		os.Exit(1)
 	}()
 
-	log.Info("COSI driver starting")
+	log.Info("COSI driver is starting")
 	// Run the driver.
 	return driver.RunBlocking(ctx, cfg, driver.COSISocket, "cosi-driver")
 }

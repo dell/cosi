@@ -5,6 +5,8 @@ import (
 	"sync"
 
 	driver "github.com/dell/cosi-driver/pkg/provisioner/virtualdriver"
+
+	"github.com/dell/cosi-driver/util"
 )
 
 // Driverset is a structure holding list of Drivers, that can be added or extracted based on the ID.
@@ -17,7 +19,7 @@ func (ds *Driverset) Add(newDriver driver.Driver) error {
 	id := newDriver.ID()
 
 	if _, ok := ds.drivers.Load(id); ok {
-		return ErrDriverDuplicate{id}
+		return util.TraceLogging(ErrDriverDuplicate{id}, "failed to add new driver to driverset")
 	}
 
 	ds.drivers.Store(id, newDriver)
@@ -29,14 +31,14 @@ func (ds *Driverset) Add(newDriver driver.Driver) error {
 func (ds *Driverset) Get(id string) (driver.Driver, error) {
 	d, ok := ds.drivers.Load(id)
 	if !ok {
-		return nil, ErrNotConfigured{id}
+		return nil, util.TraceLogging(ErrNotConfigured{id}, "failed to get driver from driverset")
 	}
 
 	switch d := d.(type) {
 	case driver.Driver:
 		return d, nil
 	default:
-		return nil, errors.New("invalid type")
+		return nil, util.TraceLogging(errors.New("invalid type"), "failed to get driver from driverset")
 	}
 }
 
