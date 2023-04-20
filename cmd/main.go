@@ -59,6 +59,9 @@ func runMain() error {
 			"error_msg": err,
 		}).Fatal("failed to create configuration")
 	}
+	log.WithFields(log.Fields{
+		"config_file_path": configFile,
+	}).Info("config successfully loaded")
 
 	// Create a channel to listen for signals.
 	sigs := make(chan os.Signal, 1)
@@ -72,7 +75,7 @@ func runMain() error {
 		// Log that a signal was received.
 		log.WithFields(log.Fields{
 			"type": sig,
-		}).Info("Signal received")
+		}).Info("signal received")
 		// Cancel the context.
 		cancel()
 		// Exit the program with an error.

@@ -4,8 +4,9 @@ import (
 	"errors"
 	"sync"
 
-	driver "github.com/dell/cosi-driver/pkg/provisioner/virtualdriver"
+	log "github.com/sirupsen/logrus"
 
+	driver "github.com/dell/cosi-driver/pkg/provisioner/virtualdriver"
 	"github.com/dell/cosi-driver/util"
 )
 
@@ -24,6 +25,10 @@ func (ds *Driverset) Add(newDriver driver.Driver) error {
 
 	ds.drivers.Store(id, newDriver)
 
+	log.WithFields(log.Fields{
+		"id": id,
+	}).Debug("driver added to driverset")
+
 	return nil
 }
 
@@ -36,6 +41,9 @@ func (ds *Driverset) Get(id string) (driver.Driver, error) {
 
 	switch d := d.(type) {
 	case driver.Driver:
+		log.WithFields(log.Fields{
+			"id": id,
+		}).Debug("driver exists")
 		return d, nil
 	default:
 		return nil, util.ErrorLogging(errors.New("invalid type"), "failed to get driver from driverset")

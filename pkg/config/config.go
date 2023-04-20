@@ -19,8 +19,10 @@ import (
 	"os"
 	"path"
 
-	"github.com/dell/cosi-driver/util"
+	log "github.com/sirupsen/logrus"
 	"gopkg.in/yaml.v3"
+
+	"github.com/dell/cosi-driver/util"
 )
 
 //go:generate go run github.com/atombender/go-jsonschema/cmd/gojsonschema@main --package=config --output=config.gen.go config.schema.json
@@ -57,6 +59,7 @@ func NewJSON(bytes []byte) (*ConfigSchemaJson, error) {
 	if err != nil {
 		return nil, util.ErrorLogging(err, "failed to unmarshall the JSON document")
 	}
+	log.Debug("JSON document unmarshalled")
 
 	return cfg, nil
 }
@@ -72,7 +75,7 @@ func NewYAML(bytes []byte) (*ConfigSchemaJson, error) {
 	if err != nil {
 		return nil, util.ErrorLogging(err, "failed to unmarshall the YAML document")
 	}
-
+	log.Debug("YAML document unmarshalled")
 	// we ignore the error, as the config was previously successfully Unmarshaled from YAML.
 	// and there is no case, when the Marshaling will fail.
 	b, _ := json.Marshal(body)
@@ -90,6 +93,9 @@ func readFile(filename string) ([]byte, error) {
 	if err != nil {
 		return nil, util.ErrorLogging(err, "failed to open the file")
 	}
+	log.WithFields(log.Fields{
+		"config_file_path": filename,
+	}).Debug("config file opened")
 
 	// limit reader is used, so the we will read only 20MB of the file.
 	maxFileSize := 20000000

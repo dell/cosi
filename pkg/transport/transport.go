@@ -39,6 +39,11 @@ func New(cfg config.Tls) (*http.Transport, error) {
 	if cfg.Insecure {
 		/* #nosec */
 		tlsConfig = &tls.Config{InsecureSkipVerify: true}
+
+		log.WithFields(log.Fields{
+			"insecure": cfg.Insecure,
+		}).Info("insecure connection apply")
+
 	} else {
 		cert, err := clientCert(cfg.ClientCert, cfg.ClientKey)
 		if err != nil {
@@ -63,6 +68,10 @@ func New(cfg config.Tls) (*http.Transport, error) {
 			Certificates:       cert,
 			RootCAs:            caCertPool,
 		}
+
+		log.WithFields(log.Fields{
+			"secure": cfg.Insecure,
+		}).Info("secure connection apply")
 	}
 
 	return &http.Transport{
@@ -80,11 +89,17 @@ func clientCert(certData, keyData *string) ([]tls.Certificate, error) {
 			"cert_data": certData,
 			"key_data":  keyData,
 		}).Error("client-cert or client-key missing")
+
 		return nil, ErrClientCertMissing
 	}
 
 	if *certData == "" && *keyData == "" {
 		// both certificate and key are empty, this is also a valid option
+		log.WithFields(log.Fields{
+			"cert_data": certData,
+			"key_data":  keyData,
+		}).Debug("default certificate created")
+
 		return []tls.Certificate{}, nil
 	} else if *certData == "" || *keyData == "" {
 		// only one of those two is empty, it is not a valid option
@@ -92,6 +107,7 @@ func clientCert(certData, keyData *string) ([]tls.Certificate, error) {
 			"cert_data": certData,
 			"key_data":  keyData,
 		}).Error("client-cert or client-key missing")
+
 		return nil, ErrClientCertMissing
 	}
 
@@ -111,6 +127,7 @@ func clientCert(certData, keyData *string) ([]tls.Certificate, error) {
 	if err != nil {
 		return nil, util.ErrorLogging(err, "unable to parse a public/private key pair")
 	}
+	log.Debug("X509 key pair created")
 
 	return []tls.Certificate{x509}, nil
 }

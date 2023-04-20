@@ -15,6 +15,8 @@ package provisioner
 import (
 	"errors"
 
+	log "github.com/sirupsen/logrus"
+
 	driver "github.com/dell/cosi-driver/pkg/provisioner/virtualdriver"
 
 	"github.com/dell/cosi-driver/pkg/config"
@@ -31,6 +33,7 @@ func NewVirtualDriver(config config.Configuration) (driver.Driver, error) {
 	}
 
 	if config.Objectscale != nil {
+		log.Debug("ObjectScale config created")
 		return objectscale.New(config.Objectscale)
 	}
 
