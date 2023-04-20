@@ -48,25 +48,16 @@ func New(cfg config.Tls) (*http.Transport, error) {
 	} else {
 		cert, err := clientCert(cfg.ClientCert, cfg.ClientKey)
 		if err != nil {
-			log.WithFields(log.Fields{
-				"error_msg": err,
-			}).Error("unable to create TLS Certificate")
-			return nil, ErrCertCreating
+			return nil, util.ErrorLogging(ErrCertCreating, "unable to create TLS Certificate")
 		}
 
 		if cfg.RootCas == nil || *cfg.RootCas == "" {
-			log.WithFields(log.Fields{
-				"error_msg": err,
-			}).Error("root certificate authority is missing")
-			return nil, ErrRootCAMissing
+			return nil, util.ErrorLogging(ErrRootCAMissing, "root certificate authority is missing")
 		}
 
 		b, err := base64.StdEncoding.DecodeString(*cfg.RootCas)
 		if err != nil {
-			log.WithFields(log.Fields{
-				"error_msg": err,
-			}).Error("unable to decode RootCas")
-			return nil, ErrRootCasDecoding
+			return nil, util.ErrorLogging(ErrRootCasDecoding, "unable to decode RootCas")
 		}
 
 		caCertPool := x509.NewCertPool()

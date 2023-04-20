@@ -27,7 +27,6 @@ import (
 func NewVirtualDriver(config config.Configuration) (driver.Driver, error) {
 	// in the future, here can be more than one
 	if !exactlyOne(config.Objectscale) {
-
 		return nil, util.TraceLogging(errors.New("expected exactly one OSP in configuration"), "failed to get exactly one OSP")
 	}
 

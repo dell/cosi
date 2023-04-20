@@ -45,5 +45,14 @@ func TraceLogging(err error, msg string) error {
 	log.WithFields(log.Fields{
 		"error_msg": err,
 	}).Trace(msg)
+
+	return err
+}
+
+func ErrorLogging(err error, msg string) error {
+	log.WithFields(log.Fields{
+		"error_msg": err,
+	}).Error(msg)
+
 	return err
 }
