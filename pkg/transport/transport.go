@@ -43,7 +43,6 @@ func New(cfg config.Tls) (*http.Transport, error) {
 		log.WithFields(log.Fields{
 			"insecure": cfg.Insecure,
 		}).Info("insecure connection apply")
-
 	} else {
 		cert, err := clientCert(cfg.ClientCert, cfg.ClientKey)
 		if err != nil {
@@ -127,6 +126,7 @@ func clientCert(certData, keyData *string) ([]tls.Certificate, error) {
 	if err != nil {
 		return nil, util.ErrorLogging(err, "unable to parse a public/private key pair")
 	}
+
 	log.Debug("X509 key pair created")
 
 	return []tls.Certificate{x509}, nil

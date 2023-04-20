@@ -59,6 +59,7 @@ func runMain() error {
 			"error_msg": err,
 		}).Fatal("failed to create configuration")
 	}
+
 	log.WithFields(log.Fields{
 		"config_file_path": configFile,
 	}).Info("config successfully loaded")

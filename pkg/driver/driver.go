@@ -55,6 +55,7 @@ func New(config *config.ConfigSchemaJson, socket, name string) (*Driver, error) 
 		if err != nil {
 			return nil, util.ErrorLogging(err, "failed to validate configuration and return correct driver")
 		}
+
 		log.WithFields(log.Fields{
 			"driver": driver,
 		}).Debug("driver configuration validated")
@@ -63,6 +64,7 @@ func New(config *config.ConfigSchemaJson, socket, name string) (*Driver, error) 
 		if err != nil {
 			return nil, util.ErrorLogging(err, "failed to add new driver to driverset")
 		}
+
 		log.WithFields(log.Fields{
 			"driver": driver,
 		}).Debug("new driver added to driverset")
@@ -90,6 +92,7 @@ func New(config *config.ConfigSchemaJson, socket, name string) (*Driver, error) 
 	if err != nil {
 		return nil, util.ErrorLogging(err, "failed to announce on the local network address")
 	}
+
 	log.WithFields(log.Fields{
 		"socket": socket,
 	}).Debug("shared listener created")

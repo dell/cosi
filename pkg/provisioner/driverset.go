@@ -41,9 +41,11 @@ func (ds *Driverset) Get(id string) (driver.Driver, error) {
 
 	switch d := d.(type) {
 	case driver.Driver:
+
 		log.WithFields(log.Fields{
 			"id": id,
 		}).Debug("driver exists")
+
 		return d, nil
 	default:
 		return nil, util.ErrorLogging(errors.New("invalid type"), "failed to get driver from driverset")
