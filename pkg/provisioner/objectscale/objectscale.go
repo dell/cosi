@@ -15,7 +15,6 @@ package objectscale
 import (
 	"context"
 	"errors"
-	"fmt"
 	"net/http"
 	"strings"
 
@@ -32,6 +31,7 @@ import (
 
 	"github.com/dell/cosi-driver/pkg/config"
 	"github.com/dell/cosi-driver/pkg/transport"
+	"github.com/dell/cosi-driver/util"
 )
 
 const splitNumber = 2
@@ -50,7 +50,7 @@ var _ driver.Driver = (*Server)(nil)
 func New(config *config.Objectscale) (*Server, error) {
 	id := config.Id
 	if id == "" {
-		return nil, errors.New("empty id")
+		return nil, util.TraceLogging(errors.New("empty id"), "empty driver id")
 	}
 
 	if strings.Contains(id, "-") {
@@ -64,7 +64,7 @@ func New(config *config.Objectscale) (*Server, error) {
 
 	transport, err := transport.New(config.Tls)
 	if err != nil {
-		return nil, fmt.Errorf("initialization of transport failed: %w", err)
+		return nil, util.TraceLogging(err, "initialization of transport failed")
 	}
 
 	objectscaleAuthUser := objectscaleClient.AuthUser{

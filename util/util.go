@@ -41,8 +41,9 @@ func SetLogLevel(logLevel string) {
 	}).Info("log level set")
 }
 
-func TraceLogging(msg error) {
+func TraceLogging(err error, msg string) error {
 	log.WithFields(log.Fields{
-		"error_msg": msg,
+		"error_msg": err,
 	}).Trace(msg)
+	return err
 }

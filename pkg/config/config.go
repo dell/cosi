@@ -15,10 +15,11 @@ package config
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
 	"io"
 	"os"
 	"path"
+
+	log "github.com/sirupsen/logrus"
 
 	"github.com/dell/cosi-driver/util"
 	"gopkg.in/yaml.v3"
@@ -33,18 +34,25 @@ func New(filename string) (*ConfigSchemaJson, error) {
 	case ".json":
 		b, err := readFile(filename)
 		if err != nil {
-			return nil, fmt.Errorf("unable to read config file: %w", err)
+			log.WithFields(log.Fields{
+				"error_msg": err,
+			}).Error("unable to read config file")
+			return nil, errors.New("unable to read config file")
 		}
 
 		return NewJSON(b)
 	case ".yaml", ".yml":
 		b, err := readFile(filename)
 		if err != nil {
-			return nil, fmt.Errorf("unable to read config file: %w", err)
+			log.WithFields(log.Fields{
+				"error_msg": err,
+			}).Error("unable to read config file")
+			return nil, errors.New("unable to read config file")
 		}
 
 		return NewYAML(b)
 	default:
+		log.Error("invalid file extension, should be .json, .yaml or .yml")
 		return nil, errors.New("invalid file extension, should be .json, .yaml or .yml")
 	}
 }
