@@ -15,6 +15,7 @@ package objectscale
 import (
 	"context"
 	"errors"
+	"fmt"
 	"net/http"
 	"strings"
 
@@ -64,6 +65,7 @@ func New(config *config.Objectscale) (*Server, error) {
 
 	transport, err := transport.New(config.Tls)
 	if err != nil {
+		err = fmt.Errorf("initialization of transport failed: %w", err)
 		return nil, util.TraceLogging(err, "initialization of transport failed")
 	}
 

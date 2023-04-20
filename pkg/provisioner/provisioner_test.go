@@ -117,7 +117,7 @@ func testServerDriverCreateBucket(t *testing.T, fakeServer Server) {
 					fake.KeyDriverID: "invalid",
 				},
 			},
-			expectedError: status.Error(codes.InvalidArgument, "DriverCreateBucket: Invalid backend ID"),
+			expectedError: status.Error(codes.InvalidArgument, "Invalid backend ID"),
 		},
 	}
 
@@ -164,7 +164,7 @@ func testServerDriverDeleteBucket(t *testing.T, fakeServer Server) {
 			req: &cosi.DriverDeleteBucketRequest{
 				BucketId: "invalid",
 			},
-			expectedError: status.Error(codes.InvalidArgument, "DriverDeleteBucket: Invalid backend ID"),
+			expectedError: status.Error(codes.InvalidArgument, "Invalid backend ID"),
 		},
 	}
 
@@ -221,7 +221,7 @@ func testServerDriverGrantBucketAccess(t *testing.T, fakeServer Server) {
 					fake.KeyDriverID: "invalid",
 				},
 			},
-			expectedError: status.Error(codes.InvalidArgument, "DriverGrantBucketAccess: Invalid backend ID"),
+			expectedError: status.Error(codes.InvalidArgument, "Invalid backend ID"),
 		},
 	}
 
@@ -269,7 +269,7 @@ func testServerDriverRevokeBucketAccess(t *testing.T, fakeServer Server) {
 			req: &cosi.DriverRevokeBucketAccessRequest{
 				BucketId: "invalid",
 			},
-			expectedError: status.Error(codes.InvalidArgument, "DriverRevokeBucketAccess: Invalid backend ID"),
+			expectedError: status.Error(codes.InvalidArgument, "Invalid backend ID"),
 		},
 	}
 

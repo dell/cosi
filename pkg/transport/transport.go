@@ -31,12 +31,6 @@ var (
 
 	// ErrRootCAMissing indicates that root CA (certificate authority) is missing.
 	ErrRootCAMissing = errors.New("root certificate authority is missing")
-
-	// ErrRootCAMissing indicates that root CA (certificate authority) is missing.
-	ErrCertCreating = errors.New("unable to create TLS Certificate")
-
-	// ErrRootCAMissing indicates that root CA (certificate authority) is missing.
-	ErrRootCasDecoding = errors.New("unable to decode RootCas")
 )
 
 // New creates new HTTP or HTTPS transport based on provided config.
@@ -48,7 +42,7 @@ func New(cfg config.Tls) (*http.Transport, error) {
 	} else {
 		cert, err := clientCert(cfg.ClientCert, cfg.ClientKey)
 		if err != nil {
-			return nil, util.ErrorLogging(ErrCertCreating, "unable to create TLS Certificate")
+			return nil, util.ErrorLogging(err, "unable to create TLS Certificate")
 		}
 
 		if cfg.RootCas == nil || *cfg.RootCas == "" {
@@ -57,7 +51,7 @@ func New(cfg config.Tls) (*http.Transport, error) {
 
 		b, err := base64.StdEncoding.DecodeString(*cfg.RootCas)
 		if err != nil {
-			return nil, util.ErrorLogging(ErrRootCasDecoding, "unable to decode RootCas")
+			return nil, util.ErrorLogging(err, "unable to decode RootCas")
 		}
 
 		caCertPool := x509.NewCertPool()
