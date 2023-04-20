@@ -98,18 +98,18 @@ func clientCert(certData, keyData *string) ([]tls.Certificate, error) {
 	// decode both certificate and key
 	cert, err := base64.StdEncoding.DecodeString(*certData)
 	if err != nil {
-		return nil, util.TraceLogging(err, "unable to decode client-cert")
+		return nil, util.ErrorLogging(err, "unable to decode client-cert")
 	}
 
 	key, err := base64.StdEncoding.DecodeString(*keyData)
 	if err != nil {
-		return nil, util.TraceLogging(err, "unable to decode client-key")
+		return nil, util.ErrorLogging(err, "unable to decode client-key")
 	}
 
 	// parse a public/private key pair from a pair of PEM encoded data
 	x509, err := tls.X509KeyPair(cert, key)
 	if err != nil {
-		return nil, util.TraceLogging(err, "unable to parse a public/private key pair")
+		return nil, util.ErrorLogging(err, "unable to parse a public/private key pair")
 	}
 
 	return []tls.Certificate{x509}, nil

@@ -121,7 +121,7 @@ var (
 // regex for error messages.
 var (
 	emptyID             = regexp.MustCompile(`^empty id$`)
-	transportInitFailed = regexp.MustCompile(`^initialization of transport failed:`)
+	transportInitFailed = regexp.MustCompile(`^initialization of transport failed`)
 )
 
 func TestMain(m *testing.M) {

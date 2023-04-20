@@ -19,7 +19,7 @@ func (ds *Driverset) Add(newDriver driver.Driver) error {
 	id := newDriver.ID()
 
 	if _, ok := ds.drivers.Load(id); ok {
-		return util.TraceLogging(ErrDriverDuplicate{id}, "failed to add new driver to driverset")
+		return util.ErrorLogging(ErrDriverDuplicate{id}, "failed to add new driver to driverset")
 	}
 
 	ds.drivers.Store(id, newDriver)
@@ -31,14 +31,14 @@ func (ds *Driverset) Add(newDriver driver.Driver) error {
 func (ds *Driverset) Get(id string) (driver.Driver, error) {
 	d, ok := ds.drivers.Load(id)
 	if !ok {
-		return nil, util.TraceLogging(ErrNotConfigured{id}, "failed to get driver from driverset")
+		return nil, util.ErrorLogging(ErrNotConfigured{id}, "failed to get driver from driverset")
 	}
 
 	switch d := d.(type) {
 	case driver.Driver:
 		return d, nil
 	default:
-		return nil, util.TraceLogging(errors.New("invalid type"), "failed to get driver from driverset")
+		return nil, util.ErrorLogging(errors.New("invalid type"), "failed to get driver from driverset")
 	}
 }
 

@@ -7,6 +7,7 @@ import (
 // SetLogLevel sets the log level based on the logLevel string.
 func SetLogLevel(logLevel string) {
 	log.SetReportCaller(false)
+
 	switch logLevel {
 	case "trace":
 		log.SetLevel(log.TraceLevel)
@@ -41,17 +42,9 @@ func SetLogLevel(logLevel string) {
 	}).Info("log level set")
 }
 
-func TraceLogging(err error, msg string) error {
-	log.WithFields(log.Fields{
-		"error_msg": err,
-	}).Trace(msg)
-
-	return err
-}
-
 func ErrorLogging(err error, msg string) error {
 	log.WithFields(log.Fields{
-		"error_msg": err,
+		"error": err,
 	}).Error(msg)
 
 	return err

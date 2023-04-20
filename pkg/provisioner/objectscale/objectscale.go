@@ -51,7 +51,7 @@ var _ driver.Driver = (*Server)(nil)
 func New(config *config.Objectscale) (*Server, error) {
 	id := config.Id
 	if id == "" {
-		return nil, util.TraceLogging(errors.New("empty id"), "empty driver id")
+		return nil, util.ErrorLogging(errors.New("empty id"), "empty driver id")
 	}
 
 	if strings.Contains(id, "-") {
@@ -66,7 +66,7 @@ func New(config *config.Objectscale) (*Server, error) {
 	transport, err := transport.New(config.Tls)
 	if err != nil {
 		err = fmt.Errorf("initialization of transport failed: %w", err)
-		return nil, util.TraceLogging(err, "initialization of transport failed")
+		return nil, util.ErrorLogging(err, "initialization of transport failed")
 	}
 
 	objectscaleAuthUser := objectscaleClient.AuthUser{
