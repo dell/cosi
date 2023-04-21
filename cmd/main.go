@@ -37,6 +37,8 @@ func init() {
 	flag.Parse()
 	// Set the log level.
 	util.SetLogLevel(*logLevel)
+	// Set the log format.
+	util.SetLoggingFormatter()
 }
 
 func main() {

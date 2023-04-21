@@ -19,7 +19,7 @@ import (
 	"regexp"
 	"testing"
 
-	"github.com/sirupsen/logrus"
+	log "github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -106,7 +106,7 @@ var (
 )
 
 func TestMain(m *testing.M) {
-	logrus.SetOutput(io.Discard)
+	log.SetOutput(io.Discard)
 	os.Exit(m.Run())
 }
 

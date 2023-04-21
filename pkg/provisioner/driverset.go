@@ -20,14 +20,10 @@ func (ds *Driverset) Add(newDriver driver.Driver) error {
 	id := newDriver.ID()
 
 	if _, ok := ds.drivers.Load(id); ok {
-		return util.ErrorLogging(ErrDriverDuplicate{id}, "failed to add new driver to driverset")
+		return util.ErrorLogging(ErrDriverDuplicate{id}, "failed to load new driver to driverset sync.Map")
 	}
 
 	ds.drivers.Store(id, newDriver)
-
-	log.WithFields(log.Fields{
-		"id": id,
-	}).Debug("driver added to driverset")
 
 	return nil
 }

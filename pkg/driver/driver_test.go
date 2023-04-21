@@ -20,7 +20,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/sirupsen/logrus"
+	log "github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 
 	"github.com/dell/cosi-driver/pkg/config"
@@ -111,7 +111,7 @@ var (
 )
 
 func TestMain(m *testing.M) {
-	logrus.SetOutput(io.Discard)
+	log.SetOutput(io.Discard)
 	os.Exit(m.Run())
 }
 

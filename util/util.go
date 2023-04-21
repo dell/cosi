@@ -15,8 +15,6 @@ func SetLogLevel(logLevel string) {
 		log.SetReportCaller(true)
 	case "debug":
 		log.SetLevel(log.DebugLevel)
-		// SetReportCaller adds the calling method as a field.
-		log.SetReportCaller(true)
 	case "info":
 		log.SetLevel(log.InfoLevel)
 	case "warn":
@@ -42,6 +40,16 @@ func SetLogLevel(logLevel string) {
 	}).Info("log level set")
 }
 
+// SetLoggingFormatter set timestamp in logs.
+func SetLoggingFormatter() {
+	formatter := &log.TextFormatter{
+		TimestampFormat: "2006-01-02 15:04:05",
+		FullTimestamp:   true,
+	}
+	log.SetFormatter(formatter)
+}
+
+// ErrorLogging log error and message where it failed.
 func ErrorLogging(err error, msg string) error {
 	log.WithFields(log.Fields{
 		"error": err,

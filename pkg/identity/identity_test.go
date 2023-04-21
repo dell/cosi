@@ -18,9 +18,8 @@ import (
 	"os"
 	"testing"
 
+	log "github.com/sirupsen/logrus"
 	cosi "sigs.k8s.io/container-object-storage-interface-spec"
-
-	"github.com/sirupsen/logrus"
 )
 
 const (
@@ -28,7 +27,7 @@ const (
 )
 
 func TestMain(m *testing.M) {
-	logrus.SetOutput(io.Discard)
+	log.SetOutput(io.Discard)
 	os.Exit(m.Run())
 }
 

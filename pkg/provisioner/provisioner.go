@@ -52,7 +52,7 @@ func (s *Server) DriverCreateBucket(ctx context.Context,
 			"error": err,
 		}).Error("invalid backend ID")
 
-		return nil, status.Error(codes.InvalidArgument, "invalid backend ID")
+		return nil, status.Error(codes.InvalidArgument, "Invalid backend ID")
 	}
 
 	log.WithFields(log.Fields{
@@ -78,7 +78,7 @@ func (s *Server) DriverDeleteBucket(ctx context.Context,
 			"error": err,
 		}).Error("invalid backend ID")
 
-		return nil, status.Error(codes.InvalidArgument, "invalid backend ID")
+		return nil, status.Error(codes.InvalidArgument, "Invalid backend ID")
 	}
 
 	log.WithFields(log.Fields{
@@ -104,7 +104,7 @@ func (s *Server) DriverGrantBucketAccess(ctx context.Context,
 			"error": err,
 		}).Error("invalid backend ID")
 
-		return nil, status.Error(codes.InvalidArgument, "invalid backend ID")
+		return nil, status.Error(codes.InvalidArgument, "Invalid backend ID")
 	}
 
 	log.WithFields(log.Fields{
@@ -130,7 +130,7 @@ func (s *Server) DriverRevokeBucketAccess(ctx context.Context,
 			"error": err,
 		}).Error("invalid backend ID")
 
-		return nil, status.Error(codes.InvalidArgument, "invalid backend ID")
+		return nil, status.Error(codes.InvalidArgument, "Invalid backend ID")
 	}
 
 	log.WithFields(log.Fields{

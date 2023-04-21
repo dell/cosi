@@ -57,7 +57,7 @@ func New(config *config.ConfigSchemaJson, socket, name string) (*Driver, error) 
 		}
 
 		log.WithFields(log.Fields{
-			"driver": driver,
+			"driver": driver.ID(),
 		}).Debug("driver configuration validated")
 
 		err = driverset.Add(driver)
@@ -66,7 +66,7 @@ func New(config *config.ConfigSchemaJson, socket, name string) (*Driver, error) 
 		}
 
 		log.WithFields(log.Fields{
-			"driver": driver,
+			"driver": driver.ID(),
 		}).Debug("new driver added to driverset")
 	}
 
