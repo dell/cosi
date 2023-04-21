@@ -45,7 +45,7 @@ func main() {
 	err := runMain()
 	if err != nil {
 		log.WithFields(log.Fields{
-			"error_msg": err,
+			"error": err,
 		}).Fatal("failed to run main function")
 	}
 }
@@ -58,7 +58,7 @@ func runMain() error {
 	cfg, err := config.New(*configFile)
 	if err != nil {
 		log.WithFields(log.Fields{
-			"error_msg": err,
+			"error": err,
 		}).Fatal("failed to create configuration")
 	}
 

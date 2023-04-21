@@ -24,7 +24,7 @@ import (
 )
 
 var (
-	missingFile      = regexp.MustCompile(`^unable to read config file$`)
+	missingFile      = regexp.MustCompile(`^unable to read config file`)
 	invalidExtension = regexp.MustCompile(`^invalid file extension, should be .json, .yaml or .yml$`)
 
 	validJSON = `{

@@ -43,17 +43,8 @@ func SetLogLevel(logLevel string) {
 // SetLoggingFormatter set timestamp in logs.
 func SetLoggingFormatter() {
 	formatter := &log.TextFormatter{
-		TimestampFormat: "2006-01-02 15:04:05",
+		TimestampFormat: "2006-01-02 15:04:05.000",
 		FullTimestamp:   true,
 	}
 	log.SetFormatter(formatter)
-}
-
-// ErrorLogging log error and message where it failed.
-func ErrorLogging(err error, msg string) error {
-	log.WithFields(log.Fields{
-		"error": err,
-	}).Error(msg)
-
-	return err
 }

@@ -46,7 +46,7 @@ func TestDriversetAdd(t *testing.T) {
 			driverset: driverset,
 			driver:    &fake.Driver{FakeID: "driver0"},
 			want:      driverset,
-			wantErr:   ErrDriverDuplicate{},
+			wantErr:   *fmt.wrapError,
 		},
 	}
 

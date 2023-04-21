@@ -83,7 +83,7 @@ func New(config *config.ConfigSchemaJson, socket, name string) (*Driver, error) 
 	// so we can start a new driver after crash or pod restart
 	if _, err := os.Stat(socket); !errors.Is(err, fs.ErrNotExist) {
 		if err := os.RemoveAll(socket); err != nil {
-			log.Fatal(err)
+			log.Fatalf("failed to remove socket: %v", err)
 		}
 	}
 

@@ -120,7 +120,7 @@ var (
 
 // regex for error messages.
 var (
-	emptyID             = regexp.MustCompile(`^empty id$`)
+	emptyID             = regexp.MustCompile(`^empty driver id$`)
 	transportInitFailed = regexp.MustCompile(`^initialization of transport failed`)
 )
 
