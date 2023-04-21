@@ -2,12 +2,12 @@ package provisioner
 
 import (
 	"errors"
+	"fmt"
 	"sync"
 
 	log "github.com/sirupsen/logrus"
 
 	driver "github.com/dell/cosi-driver/pkg/provisioner/virtualdriver"
-	"github.com/dell/cosi-driver/util"
 )
 
 // Driverset is a structure holding list of Drivers, that can be added or extracted based on the ID.
@@ -20,7 +20,7 @@ func (ds *Driverset) Add(newDriver driver.Driver) error {
 	id := newDriver.ID()
 
 	if _, ok := ds.drivers.Load(id); ok {
-		return util.ErrorLogging(ErrDriverDuplicate{id}, "failed to load new driver to driverset sync.Map")
+		return fmt.Errorf("failed to load new driver to driverset sync.Map: %w", ErrDriverDuplicate{id})
 	}
 
 	ds.drivers.Store(id, newDriver)
@@ -32,7 +32,7 @@ func (ds *Driverset) Add(newDriver driver.Driver) error {
 func (ds *Driverset) Get(id string) (driver.Driver, error) {
 	d, ok := ds.drivers.Load(id)
 	if !ok {
-		return nil, util.ErrorLogging(ErrNotConfigured{id}, "failed to get driver from driverset")
+		return nil, fmt.Errorf("failed to get driver from driverset: %w", ErrNotConfigured{id})
 	}
 
 	switch d := d.(type) {
@@ -43,7 +43,7 @@ func (ds *Driverset) Get(id string) (driver.Driver, error) {
 
 		return d, nil
 	default:
-		return nil, util.ErrorLogging(errors.New("invalid type"), "failed to get driver from driverset")
+		return nil, fmt.Errorf("failed to get driver from driverset: %w", errors.New("invalid type"))
 	}
 }
 

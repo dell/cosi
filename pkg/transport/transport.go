@@ -17,12 +17,12 @@ import (
 	"crypto/x509"
 	"encoding/base64"
 	"errors"
+	"fmt"
 	"net/http"
 
 	log "github.com/sirupsen/logrus"
 
 	"github.com/dell/cosi-driver/pkg/config"
-	"github.com/dell/cosi-driver/util"
 )
 
 var (
@@ -46,16 +46,16 @@ func New(cfg config.Tls) (*http.Transport, error) {
 	} else {
 		cert, err := clientCert(cfg.ClientCert, cfg.ClientKey)
 		if err != nil {
-			return nil, util.ErrorLogging(err, "unable to create TLS Certificate")
+			return nil, fmt.Errorf("unable to create TLS Certificate: %w", err)
 		}
 
 		if cfg.RootCas == nil || *cfg.RootCas == "" {
-			return nil, util.ErrorLogging(ErrRootCAMissing, "root certificate authority is missing")
+			return nil, ErrRootCAMissing
 		}
 
 		b, err := base64.StdEncoding.DecodeString(*cfg.RootCas)
 		if err != nil {
-			return nil, util.ErrorLogging(err, "unable to decode RootCas")
+			return nil, fmt.Errorf("unable to decode RootCas: %w", err)
 		}
 
 		caCertPool := x509.NewCertPool()
@@ -92,7 +92,7 @@ func clientCert(certData, keyData *string) ([]tls.Certificate, error) {
 		log.WithFields(log.Fields{
 			"cert_data": certData == nil,
 			"key_data":  keyData == nil,
-		}).Error("client-cert or client-key missing")
+		}).Debug("client-cert or client-key missing")
 
 		return nil, ErrClientCertMissing
 	}
@@ -110,7 +110,7 @@ func clientCert(certData, keyData *string) ([]tls.Certificate, error) {
 		log.WithFields(log.Fields{
 			"cert_data": *certData == "",
 			"key_data":  *keyData == "",
-		}).Error("client-cert or client-key missing")
+		}).Debug("client-cert or client-key missing")
 
 		return nil, ErrClientCertMissing
 	}
@@ -118,18 +118,18 @@ func clientCert(certData, keyData *string) ([]tls.Certificate, error) {
 	// decode both certificate and key
 	cert, err := base64.StdEncoding.DecodeString(*certData)
 	if err != nil {
-		return nil, util.ErrorLogging(err, "unable to decode client-cert")
+		return nil, fmt.Errorf("unable to decode client-cert: %w", err)
 	}
 
 	key, err := base64.StdEncoding.DecodeString(*keyData)
 	if err != nil {
-		return nil, util.ErrorLogging(err, "unable to decode client-key")
+		return nil, fmt.Errorf("unable to decode client-key: %w", err)
 	}
 
 	// parse a public/private key pair from a pair of PEM encoded data
 	x509, err := tls.X509KeyPair(cert, key)
 	if err != nil {
-		return nil, util.ErrorLogging(err, "unable to parse a public/private key pair")
+		return nil, fmt.Errorf("unable to parse a public/private key pair: %w", err)
 	}
 
 	log.Debug("X509 key pair created")

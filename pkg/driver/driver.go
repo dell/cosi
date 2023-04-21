@@ -15,6 +15,7 @@ package driver
 import (
 	"context"
 	"errors"
+	"fmt"
 	"io/fs"
 	"net"
 	"os"
@@ -27,7 +28,6 @@ import (
 	"github.com/dell/cosi-driver/pkg/config"
 	"github.com/dell/cosi-driver/pkg/identity"
 	"github.com/dell/cosi-driver/pkg/provisioner"
-	"github.com/dell/cosi-driver/util"
 )
 
 const (
@@ -53,7 +53,7 @@ func New(config *config.ConfigSchemaJson, socket, name string) (*Driver, error) 
 	for _, cfg := range config.Connections {
 		driver, err := provisioner.NewVirtualDriver(cfg)
 		if err != nil {
-			return nil, util.ErrorLogging(err, "failed to validate configuration and return correct driver")
+			return nil, fmt.Errorf("failed to validate configuration and return correct driver: %w", err)
 		}
 
 		log.WithFields(log.Fields{
@@ -62,7 +62,7 @@ func New(config *config.ConfigSchemaJson, socket, name string) (*Driver, error) 
 
 		err = driverset.Add(driver)
 		if err != nil {
-			return nil, util.ErrorLogging(err, "failed to add new driver to driverset")
+			return nil, fmt.Errorf("failed to add new driver to driverset: %w", err)
 		}
 
 		log.WithFields(log.Fields{
@@ -90,7 +90,7 @@ func New(config *config.ConfigSchemaJson, socket, name string) (*Driver, error) 
 	// Create shared listener for gRPC server
 	listener, err := net.Listen("unix", socket)
 	if err != nil {
-		return nil, util.ErrorLogging(err, "failed to announce on the local network address")
+		return nil, fmt.Errorf("failed to announce on the local network address: %w", err)
 	}
 
 	log.WithFields(log.Fields{
@@ -121,7 +121,11 @@ func Run(ctx context.Context, config *config.ConfigSchemaJson, socket, name stri
 	// Create new driver
 	driver, err := New(config, socket, name)
 	if err != nil {
-		return nil, util.ErrorLogging(err, "failed to create a new driver for COSI API with identity and provisioner servers")
+		log.WithFields(log.Fields{
+			"error": err,
+		}).Error("failed to create a new driver for COSI API with identity and provisioner servers")
+
+		return nil, err
 	}
 
 	log.Info("gRPC server started")
@@ -134,7 +138,11 @@ func RunBlocking(ctx context.Context, config *config.ConfigSchemaJson, socket, n
 	// Create new driver
 	driver, err := New(config, socket, name)
 	if err != nil {
-		return util.ErrorLogging(err, "failed to create a new driver for COSI API with identity and provisioner servers")
+		log.WithFields(log.Fields{
+			"error": err,
+		}).Error("failed to create a new driver for COSI API with identity and provisioner servers")
+
+		return err
 	}
 
 	log.Info("gRPC server started")

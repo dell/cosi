@@ -21,7 +21,6 @@ import (
 
 	"github.com/dell/cosi-driver/pkg/config"
 	"github.com/dell/cosi-driver/pkg/provisioner/objectscale"
-	"github.com/dell/cosi-driver/util"
 )
 
 // NewVirtualDriver is factory function, that takes configuration, validates if it is correct, and
@@ -29,7 +28,7 @@ import (
 func NewVirtualDriver(config config.Configuration) (driver.Driver, error) {
 	// in the future, here can be more than one
 	if !exactlyOne(config.Objectscale) {
-		return nil, util.ErrorLogging(errors.New("expected exactly one OSP in configuration"), "failed to get exactly one OSP")
+		return nil, errors.New("expected exactly one OSP in configuration")
 	}
 
 	if config.Objectscale != nil {

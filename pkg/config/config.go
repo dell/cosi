@@ -15,14 +15,13 @@ package config
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"os"
 	"path"
 
 	log "github.com/sirupsen/logrus"
 	"gopkg.in/yaml.v3"
-
-	"github.com/dell/cosi-driver/util"
 )
 
 //go:generate go run github.com/atombender/go-jsonschema/cmd/gojsonschema@main --package=config --output=config.gen.go config.schema.json
@@ -34,19 +33,19 @@ func New(filename string) (*ConfigSchemaJson, error) {
 	case ".json":
 		b, err := readFile(filename)
 		if err != nil {
-			return nil, util.ErrorLogging(errors.New("unable to read config file"), "unable to read config file from .json file")
+			return nil, fmt.Errorf("unable to read config file: %w", err)
 		}
 
 		return NewJSON(b)
 	case ".yaml", ".yml":
 		b, err := readFile(filename)
 		if err != nil {
-			return nil, util.ErrorLogging(errors.New("unable to read config file"), "unable to read config file from .yml, .yaml file")
+			return nil, fmt.Errorf("unable to read config file: %w", err)
 		}
 
 		return NewYAML(b)
 	default:
-		return nil, util.ErrorLogging(errors.New("invalid file extension, should be .json, .yaml or .yml"), "invalid file extension, should be .json, .yaml or .yml")
+		return nil, errors.New("invalid file extension, should be .json, .yaml or .yml")
 	}
 }
 
@@ -57,7 +56,7 @@ func NewJSON(bytes []byte) (*ConfigSchemaJson, error) {
 
 	err := json.Unmarshal(bytes, cfg)
 	if err != nil {
-		return nil, util.ErrorLogging(err, "failed to unmarshall the JSON document")
+		return nil, err
 	}
 
 	log.Debug("JSON document unmarshalled")
@@ -74,7 +73,7 @@ func NewYAML(bytes []byte) (*ConfigSchemaJson, error) {
 
 	err := yaml.Unmarshal(bytes, &body)
 	if err != nil {
-		return nil, util.ErrorLogging(err, "failed to unmarshall the YAML document")
+		return nil, err
 	}
 
 	log.Debug("YAML document unmarshalled")
@@ -93,7 +92,7 @@ func readFile(filename string) ([]byte, error) {
 	/* #nosec G304 */
 	f, err := os.Open(filename)
 	if err != nil {
-		return nil, util.ErrorLogging(err, "failed to open the file")
+		return nil, err
 	}
 
 	log.WithFields(log.Fields{

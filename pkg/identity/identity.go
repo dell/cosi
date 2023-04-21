@@ -18,7 +18,8 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	"github.com/dell/cosi-driver/util"
+	log "github.com/sirupsen/logrus"
+
 	cosi "sigs.k8s.io/container-object-storage-interface-spec"
 )
 
@@ -41,7 +42,9 @@ func (srv *Server) DriverGetInfo(ctx context.Context,
 	req *cosi.DriverGetInfoRequest,
 ) (*cosi.DriverGetInfoResponse, error) {
 	if srv.name == "" {
-		return nil, util.ErrorLogging(status.Error(codes.InvalidArgument, "DriverName is empty"), "driver name cannot be empty")
+		log.Error("driver name is empty")
+
+		return nil, status.Error(codes.InvalidArgument, "DriverName is empty")
 	}
 
 	return &cosi.DriverGetInfoResponse{
