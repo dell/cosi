@@ -37,7 +37,6 @@ func (ds *Driverset) Get(id string) (driver.Driver, error) {
 
 	switch d := d.(type) {
 	case driver.Driver:
-
 		log.WithFields(log.Fields{
 			"id": id,
 		}).Debug("driver exists")
