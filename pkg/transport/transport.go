@@ -80,7 +80,6 @@ func New(cfg config.Tls) (*http.Transport, error) {
 
 func clientCert(certData, keyData *string) ([]tls.Certificate, error) {
 	if certData == nil && keyData == nil {
-
 		log.WithFields(log.Fields{
 			"cert_data": certData == nil,
 			"key_data":  keyData == nil,
