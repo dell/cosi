@@ -42,7 +42,7 @@ func New(cfg config.Tls) (*http.Transport, error) {
 
 		log.WithFields(log.Fields{
 			"insecure": cfg.Insecure,
-		}).Info("insecure connection apply")
+		}).Info("insecure connection applied")
 	} else {
 		cert, err := clientCert(cfg.ClientCert, cfg.ClientKey)
 		if err != nil {
