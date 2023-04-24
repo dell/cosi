@@ -45,7 +45,7 @@ func TestDriversetAdd(t *testing.T) {
 			driverset:    driverset,
 			driver:       &fake.Driver{FakeID: "driver0"},
 			want:         driverset,
-			wantErrorMsg: "failed to load new driver to driverset sync.Map",
+			wantErrorMsg: "failed to load new configuration for specified object storage platform",
 		},
 	}
 
@@ -116,7 +116,7 @@ func TestDriversetGet(t *testing.T) {
 			driverset:    driverset,
 			id:           "driver1",
 			want:         nil,
-			wantErrorMsg: "failed to get driver from driverset",
+			wantErrorMsg: "failed to retrieve configuration for specified object storage platform",
 		},
 	}
 

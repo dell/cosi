@@ -46,7 +46,7 @@ func main() {
 	if err != nil {
 		log.WithFields(log.Fields{
 			"error": err,
-		}).Fatal("failed to run main function")
+		}).Fatal("failed to start application")
 	}
 }
 
