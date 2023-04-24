@@ -32,21 +32,20 @@ func TestDriversetAdd(t *testing.T) {
 		driverset *Driverset
 		driver    driver.Driver
 		want      *Driverset
-		wantErr   error
+		errorMsg  string
 	}{
 		{
 			name:      "no duplicate",
 			driverset: &Driverset{},
 			driver:    &fake.Driver{FakeID: "driver0"},
 			want:      driverset,
-			wantErr:   nil,
 		},
 		{
 			name:      "duplicate",
 			driverset: driverset,
 			driver:    &fake.Driver{FakeID: "driver0"},
 			want:      driverset,
-			wantErr:   *fmt.wrapError,
+			errorMsg:  "failed to load new driver to driverset sync.Map",
 		},
 	}
 
@@ -55,7 +54,9 @@ func TestDriversetAdd(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 			err := tc.driverset.Add(tc.driver)
-			assert.IsType(t, tc.wantErr, err)
+			if err != nil {
+				assert.ErrorContains(t, err, tc.errorMsg)
+			}
 			compareSyncMaps(t, &tc.want.drivers, &tc.driverset.drivers)
 		})
 	}
@@ -102,21 +103,20 @@ func TestDriversetGet(t *testing.T) {
 		driverset *Driverset
 		id        string
 		want      driver.Driver
-		wantErr   error
+		errorMsg  string
 	}{
 		{
 			name:      "driver configured",
 			driverset: driverset,
 			id:        "driver0",
 			want:      &fake.Driver{FakeID: "driver0"},
-			wantErr:   nil,
 		},
 		{
 			name:      "driver not configured",
 			driverset: driverset,
 			id:        "driver1",
 			want:      nil,
-			wantErr:   ErrNotConfigured{},
+			errorMsg:  "failed to get driver from driverset",
 		},
 	}
 
@@ -125,7 +125,9 @@ func TestDriversetGet(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 			got, err := tc.driverset.Get(tc.id)
-			assert.IsTypef(t, tc.wantErr, err, "%+#v", tc.driverset)
+			if err != nil {
+				assert.ErrorContains(t, err, tc.errorMsg)
+			}
 			assert.Equal(t, tc.want, got)
 		})
 	}
