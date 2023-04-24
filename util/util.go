@@ -6,9 +6,13 @@ import (
 
 // SetLogLevel sets the log level based on the logLevel string.
 func SetLogLevel(logLevel string) {
+	log.SetReportCaller(false)
+
 	switch logLevel {
 	case "trace":
 		log.SetLevel(log.TraceLevel)
+		// SetReportCaller adds the calling method as a field.
+		log.SetReportCaller(true)
 	case "debug":
 		log.SetLevel(log.DebugLevel)
 	case "info":
@@ -34,4 +38,13 @@ func SetLogLevel(logLevel string) {
 	log.WithFields(log.Fields{
 		"log-level": logLevel,
 	}).Info("log level set")
+}
+
+// SetLoggingFormatter set timestamp in logs.
+func SetLoggingFormatter() {
+	formatter := &log.TextFormatter{
+		TimestampFormat: "2006-01-02 15:04:05.000",
+		FullTimestamp:   true,
+	}
+	log.SetFormatter(formatter)
 }

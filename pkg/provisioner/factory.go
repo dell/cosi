@@ -15,6 +15,8 @@ package provisioner
 import (
 	"errors"
 
+	log "github.com/sirupsen/logrus"
+
 	driver "github.com/dell/cosi-driver/pkg/provisioner/virtualdriver"
 
 	"github.com/dell/cosi-driver/pkg/config"
@@ -26,10 +28,11 @@ import (
 func NewVirtualDriver(config config.Configuration) (driver.Driver, error) {
 	// in the future, here can be more than one
 	if !exactlyOne(config.Objectscale) {
-		return nil, errors.New("expected exactly one OSP in configuration")
+		return nil, errors.New("expected exactly one object storage platform in configuration")
 	}
 
 	if config.Objectscale != nil {
+		log.Debug("ObjectScale config created")
 		return objectscale.New(config.Objectscale)
 	}
 

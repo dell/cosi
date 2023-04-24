@@ -18,8 +18,9 @@ import (
 	"regexp"
 	"testing"
 
+	log "github.com/sirupsen/logrus"
+
 	"github.com/dell/cosi-driver/pkg/config"
-	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -131,7 +132,7 @@ var (
 )
 
 func TestMain(m *testing.M) {
-	logrus.SetOutput(io.Discard)
+	log.SetOutput(io.Discard)
 	os.Exit(m.Run())
 }
 

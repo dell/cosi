@@ -2,7 +2,10 @@ package provisioner
 
 import (
 	"errors"
+	"fmt"
 	"sync"
+
+	log "github.com/sirupsen/logrus"
 
 	driver "github.com/dell/cosi-driver/pkg/provisioner/virtualdriver"
 )
@@ -17,7 +20,7 @@ func (ds *Driverset) Add(newDriver driver.Driver) error {
 	id := newDriver.ID()
 
 	if _, ok := ds.drivers.Load(id); ok {
-		return ErrDriverDuplicate{id}
+		return fmt.Errorf("failed to load new configuration for specified object storage platform: %w", ErrDriverDuplicate{id})
 	}
 
 	ds.drivers.Store(id, newDriver)
@@ -29,14 +32,18 @@ func (ds *Driverset) Add(newDriver driver.Driver) error {
 func (ds *Driverset) Get(id string) (driver.Driver, error) {
 	d, ok := ds.drivers.Load(id)
 	if !ok {
-		return nil, ErrNotConfigured{id}
+		return nil, fmt.Errorf("failed to retrieve configuration for specified object storage platform: %w", ErrNotConfigured{id})
 	}
 
 	switch d := d.(type) {
 	case driver.Driver:
+		log.WithFields(log.Fields{
+			"id": id,
+		}).Debug("driver exists")
+
 		return d, nil
 	default:
-		return nil, errors.New("invalid type")
+		return nil, fmt.Errorf("failed to retrieve configuration for specified object storage platform: %w", errors.New("invalid type"))
 	}
 }
 

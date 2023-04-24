@@ -37,12 +37,16 @@ func init() {
 	flag.Parse()
 	// Set the log level.
 	util.SetLogLevel(*logLevel)
+	// Set the log format.
+	util.SetLoggingFormatter()
 }
 
 func main() {
 	err := runMain()
 	if err != nil {
-		log.Fatal(err)
+		log.WithFields(log.Fields{
+			"error": err,
+		}).Fatal("failed to start application")
 	}
 }
 
@@ -58,6 +62,10 @@ func runMain() error {
 		}).Fatal("failed to create configuration")
 	}
 
+	log.WithFields(log.Fields{
+		"config_file_path": configFile,
+	}).Info("config successfully loaded")
+
 	// Create a channel to listen for signals.
 	sigs := make(chan os.Signal, 1)
 	// Listen for the SIGINT and SIGTERM signals.
@@ -70,14 +78,14 @@ func runMain() error {
 		// Log that a signal was received.
 		log.WithFields(log.Fields{
 			"type": sig,
-		}).Info("Signal received")
+		}).Info("signal received")
 		// Cancel the context.
 		cancel()
 		// Exit the program with an error.
 		os.Exit(1)
 	}()
 
-	log.Info("COSI driver starting")
+	log.Info("COSI driver is starting")
 	// Run the driver.
 	return driver.RunBlocking(ctx, cfg, driver.COSISocket, "cosi-driver")
 }

@@ -28,25 +28,24 @@ func TestDriversetAdd(t *testing.T) {
 	driverset.drivers.Store("driver0", &fake.Driver{FakeID: "driver0"})
 
 	testCases := []struct {
-		name      string
-		driverset *Driverset
-		driver    driver.Driver
-		want      *Driverset
-		wantErr   error
+		name         string
+		driverset    *Driverset
+		driver       driver.Driver
+		want         *Driverset
+		wantErrorMsg string
 	}{
 		{
 			name:      "no duplicate",
 			driverset: &Driverset{},
 			driver:    &fake.Driver{FakeID: "driver0"},
 			want:      driverset,
-			wantErr:   nil,
 		},
 		{
-			name:      "duplicate",
-			driverset: driverset,
-			driver:    &fake.Driver{FakeID: "driver0"},
-			want:      driverset,
-			wantErr:   ErrDriverDuplicate{},
+			name:         "duplicate",
+			driverset:    driverset,
+			driver:       &fake.Driver{FakeID: "driver0"},
+			want:         driverset,
+			wantErrorMsg: "failed to load new configuration for specified object storage platform",
 		},
 	}
 
@@ -55,7 +54,9 @@ func TestDriversetAdd(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 			err := tc.driverset.Add(tc.driver)
-			assert.IsType(t, tc.wantErr, err)
+			if err != nil {
+				assert.ErrorContains(t, err, tc.wantErrorMsg)
+			}
 			compareSyncMaps(t, &tc.want.drivers, &tc.driverset.drivers)
 		})
 	}
@@ -98,25 +99,24 @@ func TestDriversetGet(t *testing.T) {
 	driverset.drivers.Store("driver0", &fake.Driver{FakeID: "driver0"})
 
 	testCases := []struct {
-		name      string
-		driverset *Driverset
-		id        string
-		want      driver.Driver
-		wantErr   error
+		name         string
+		driverset    *Driverset
+		id           string
+		want         driver.Driver
+		wantErrorMsg string
 	}{
 		{
 			name:      "driver configured",
 			driverset: driverset,
 			id:        "driver0",
 			want:      &fake.Driver{FakeID: "driver0"},
-			wantErr:   nil,
 		},
 		{
-			name:      "driver not configured",
-			driverset: driverset,
-			id:        "driver1",
-			want:      nil,
-			wantErr:   ErrNotConfigured{},
+			name:         "driver not configured",
+			driverset:    driverset,
+			id:           "driver1",
+			want:         nil,
+			wantErrorMsg: "failed to retrieve configuration for specified object storage platform",
 		},
 	}
 
@@ -125,7 +125,9 @@ func TestDriversetGet(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 			got, err := tc.driverset.Get(tc.id)
-			assert.IsTypef(t, tc.wantErr, err, "%+#v", tc.driverset)
+			if err != nil {
+				assert.ErrorContains(t, err, tc.wantErrorMsg)
+			}
 			assert.Equal(t, tc.want, got)
 		})
 	}

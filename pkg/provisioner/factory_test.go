@@ -98,7 +98,7 @@ var (
 	}
 )
 
-var expectedOne = regexp.MustCompile("^expected exactly one OSP in configuration$")
+var expectedOne = regexp.MustCompile("^expected exactly one object storage platform in configuration$")
 
 func TestNewVirtualDriver(t *testing.T) {
 	t.Parallel()

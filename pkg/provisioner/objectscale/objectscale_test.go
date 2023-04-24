@@ -23,7 +23,7 @@ import (
 
 	"github.com/dell/goobjectscale/pkg/client/fake"
 	"github.com/dell/goobjectscale/pkg/client/model"
-	"github.com/sirupsen/logrus"
+	log "github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -120,12 +120,12 @@ var (
 
 // regex for error messages.
 var (
-	emptyID             = regexp.MustCompile(`^empty id$`)
-	transportInitFailed = regexp.MustCompile(`^initialization of transport failed:`)
+	emptyID             = regexp.MustCompile(`^empty driver id$`)
+	transportInitFailed = regexp.MustCompile(`^initialization of transport failed`)
 )
 
 func TestMain(m *testing.M) {
-	logrus.SetOutput(io.Discard)
+	log.SetOutput(io.Discard)
 	os.Exit(m.Run())
 }
 
@@ -248,7 +248,7 @@ func testDriverCreateBucket(t *testing.T) {
 		{
 			description:   "bucket already exists",
 			inputName:     "bucket-valid",
-			expectedError: status.Error(codes.AlreadyExists, "Bucket already exists"),
+			expectedError: status.Error(codes.AlreadyExists, "bucket already exists"),
 			server: Server{
 				mgmtClient: fake.NewClientSet(&model.Bucket{
 					Name:      "bucket-valid",
@@ -264,7 +264,7 @@ func testDriverCreateBucket(t *testing.T) {
 		{
 			description:   "invalid bucket name",
 			inputName:     "",
-			expectedError: status.Error(codes.InvalidArgument, "Empty bucket name"),
+			expectedError: status.Error(codes.InvalidArgument, "empty bucket name"),
 			server: Server{
 				mgmtClient: fake.NewClientSet(),
 				namespace:  namespace,
@@ -277,7 +277,7 @@ func testDriverCreateBucket(t *testing.T) {
 		{
 			description:   "cannot get existing bucket",
 			inputName:     "bucket-valid",
-			expectedError: status.Error(codes.Internal, "An unexpected error occurred"),
+			expectedError: status.Error(codes.Internal, "an unexpected error occurred"),
 			server: Server{
 				mgmtClient: fake.NewClientSet(),
 				namespace:  namespace,
@@ -291,7 +291,7 @@ func testDriverCreateBucket(t *testing.T) {
 		{
 			description:   "cannot create bucket",
 			inputName:     "FORCEFAIL-bucket-valid",
-			expectedError: status.Error(codes.Internal, "Bucket was not successfully created"),
+			expectedError: status.Error(codes.Internal, "bucket was not successfully created"),
 			server: Server{
 				mgmtClient: fake.NewClientSet(),
 				namespace:  namespace,
@@ -328,12 +328,12 @@ func testDriverDeleteBucket(t *testing.T) {
 		{
 			description:   "invalid bucketID",
 			inputBucketID: "",
-			expectedError: status.Error(codes.InvalidArgument, "Empty bucketID"),
+			expectedError: status.Error(codes.InvalidArgument, "empty bucketID"),
 		},
 		{
 			description:   "bucket does not exist",
 			inputBucketID: strings.Join([]string{testID, "bucket-invalid"}, "-"),
-			expectedError: status.Error(codes.NotFound, "Bucket not found"),
+			expectedError: status.Error(codes.NotFound, "bucket not found"),
 			server: Server{
 				mgmtClient: fake.NewClientSet(),
 				namespace:  namespace,
@@ -343,7 +343,7 @@ func testDriverDeleteBucket(t *testing.T) {
 		{
 			description:   "failed to delete bucket",
 			inputBucketID: strings.Join([]string{testID, "bucket-invalid-FORCEFAIL"}, "-"),
-			expectedError: status.Error(codes.Internal, "Bucket was not successfully deleted"),
+			expectedError: status.Error(codes.Internal, "bucket was not successfully deleted"),
 			server: Server{
 				mgmtClient: fake.NewClientSet(&model.Bucket{
 					Name:      "bucket-valid",

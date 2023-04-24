@@ -50,10 +50,14 @@ func (s *Server) DriverCreateBucket(ctx context.Context,
 		log.WithFields(log.Fields{
 			"id":    id,
 			"error": err,
-		}).Error("DriverCreateBucket: Invalid backend ID")
+		}).Error("invalid backend ID")
 
-		return nil, status.Error(codes.InvalidArgument, "DriverCreateBucket: Invalid backend ID")
+		return nil, status.Error(codes.InvalidArgument, "invalid backend ID")
 	}
+
+	log.WithFields(log.Fields{
+		"id": id,
+	}).Debug("valid backend ID")
 
 	// execute DriverCreateBucket from correct driver
 	return d.DriverCreateBucket(ctx, req)
@@ -72,10 +76,14 @@ func (s *Server) DriverDeleteBucket(ctx context.Context,
 		log.WithFields(log.Fields{
 			"id":    id,
 			"error": err,
-		}).Error("DriverDeleteBucket: Invalid backend ID")
+		}).Error("invalid backend ID")
 
-		return nil, status.Error(codes.InvalidArgument, "DriverDeleteBucket: Invalid backend ID")
+		return nil, status.Error(codes.InvalidArgument, "invalid backend ID")
 	}
+
+	log.WithFields(log.Fields{
+		"id": id,
+	}).Debug("valid backend ID")
 
 	// execute DriverDeleteBucket from correct driver
 	return d.DriverDeleteBucket(ctx, req)
@@ -94,10 +102,14 @@ func (s *Server) DriverGrantBucketAccess(ctx context.Context,
 		log.WithFields(log.Fields{
 			"id":    id,
 			"error": err,
-		}).Error("DriverGrantBucketAccess: Invalid backend ID")
+		}).Error("invalid backend ID")
 
-		return nil, status.Error(codes.InvalidArgument, "DriverGrantBucketAccess: Invalid backend ID")
+		return nil, status.Error(codes.InvalidArgument, "invalid backend ID")
 	}
+
+	log.WithFields(log.Fields{
+		"id": id,
+	}).Debug("valid backend ID")
 
 	// execute DriverGrantBucketAccess from correct driver
 	return d.DriverGrantBucketAccess(ctx, req)
@@ -116,10 +128,14 @@ func (s *Server) DriverRevokeBucketAccess(ctx context.Context,
 		log.WithFields(log.Fields{
 			"id":    id,
 			"error": err,
-		}).Error("DriverRevokeBucketAccess: Invalid backend ID")
+		}).Error("invalid backend ID")
 
-		return nil, status.Error(codes.InvalidArgument, "DriverRevokeBucketAccess: Invalid backend ID")
+		return nil, status.Error(codes.InvalidArgument, "invalid backend ID")
 	}
+
+	log.WithFields(log.Fields{
+		"id": id,
+	}).Debug("valid backend ID")
 
 	// execute DriverRevokeBucketAccess from correct driver
 	return d.DriverRevokeBucketAccess(ctx, req)

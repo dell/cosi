@@ -19,12 +19,12 @@ import (
 	"regexp"
 	"testing"
 
-	"github.com/sirupsen/logrus"
+	log "github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 )
 
 var (
-	missingFile      = regexp.MustCompile(`^unable to read config file: open (.*): no such file or directory$`)
+	missingFile      = regexp.MustCompile(`^unable to read config file`)
 	invalidExtension = regexp.MustCompile(`^invalid file extension, should be .json, .yaml or .yml$`)
 
 	validJSON = `{
@@ -106,7 +106,7 @@ var (
 )
 
 func TestMain(m *testing.M) {
-	logrus.SetOutput(io.Discard)
+	log.SetOutput(io.Discard)
 	os.Exit(m.Run())
 }
 

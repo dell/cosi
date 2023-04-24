@@ -20,6 +20,8 @@ import (
 	"fmt"
 	"net/http"
 
+	log "github.com/sirupsen/logrus"
+
 	"github.com/dell/cosi-driver/pkg/config"
 )
 
@@ -37,6 +39,10 @@ func New(cfg config.Tls) (*http.Transport, error) {
 	if cfg.Insecure {
 		/* #nosec */
 		tlsConfig = &tls.Config{InsecureSkipVerify: true}
+
+		log.WithFields(log.Fields{
+			"insecure": cfg.Insecure,
+		}).Info("insecure connection applied")
 	} else {
 		cert, err := clientCert(cfg.ClientCert, cfg.ClientKey)
 		if err != nil {
@@ -61,6 +67,10 @@ func New(cfg config.Tls) (*http.Transport, error) {
 			Certificates:       cert,
 			RootCAs:            caCertPool,
 		}
+
+		log.WithFields(log.Fields{
+			"secure": cfg.Insecure,
+		}).Debug("secure connection applied")
 	}
 
 	return &http.Transport{
@@ -70,18 +80,38 @@ func New(cfg config.Tls) (*http.Transport, error) {
 
 func clientCert(certData, keyData *string) ([]tls.Certificate, error) {
 	if certData == nil && keyData == nil {
+		log.WithFields(log.Fields{
+			"cert_data": certData == nil,
+			"key_data":  keyData == nil,
+		}).Debug("default certificate created")
+
 		// no certificates and key is a valid option
 		return []tls.Certificate{}, nil
 	} else if certData == nil || keyData == nil {
 		// only one of those two is missing, it is not a valid option
+		log.WithFields(log.Fields{
+			"cert_data": certData == nil,
+			"key_data":  keyData == nil,
+		}).Debug("client-cert or client-key missing")
+
 		return nil, ErrClientCertMissing
 	}
 
 	if *certData == "" && *keyData == "" {
 		// both certificate and key are empty, this is also a valid option
+		log.WithFields(log.Fields{
+			"cert_data": *certData == "",
+			"key_data":  *keyData == "",
+		}).Debug("default certificate created")
+
 		return []tls.Certificate{}, nil
 	} else if *certData == "" || *keyData == "" {
 		// only one of those two is empty, it is not a valid option
+		log.WithFields(log.Fields{
+			"cert_data": *certData == "",
+			"key_data":  *keyData == "",
+		}).Debug("client-cert or client-key missing")
+
 		return nil, ErrClientCertMissing
 	}
 
@@ -101,6 +131,8 @@ func clientCert(certData, keyData *string) ([]tls.Certificate, error) {
 	if err != nil {
 		return nil, fmt.Errorf("unable to parse a public/private key pair: %w", err)
 	}
+
+	log.Trace("X509 key pair created")
 
 	return []tls.Certificate{x509}, nil
 }

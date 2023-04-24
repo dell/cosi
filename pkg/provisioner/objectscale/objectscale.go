@@ -50,7 +50,7 @@ var _ driver.Driver = (*Server)(nil)
 func New(config *config.Objectscale) (*Server, error) {
 	id := config.Id
 	if id == "" {
-		return nil, errors.New("empty id")
+		return nil, errors.New("empty driver id")
 	}
 
 	if strings.Contains(id, "-") {
@@ -100,7 +100,7 @@ func (s *Server) DriverCreateBucket(
 ) (*cosi.DriverCreateBucketResponse, error) {
 	log.WithFields(log.Fields{
 		"bucket": req.GetName(),
-	}).Info("Bucket is being created")
+	}).Info("bucket is being created")
 
 	// Create bucket model.
 	bucket := &model.Bucket{}
@@ -109,8 +109,8 @@ func (s *Server) DriverCreateBucket(
 
 	// Check if bucket name is not empty.
 	if bucket.Name == "" {
-		log.Error("DriverCreateBucket: Empty bucket name")
-		return nil, status.Error(codes.InvalidArgument, "Empty bucket name")
+		log.Error("empty bucket name")
+		return nil, status.Error(codes.InvalidArgument, "empty bucket name")
 	}
 
 	// Display all request parameters.
@@ -124,7 +124,7 @@ func (s *Server) DriverCreateBucket(
 
 	log.WithFields(log.Fields{
 		"parameters": parameters,
-	}).Info("Parameters of the bucket")
+	}).Info("parameters of the bucket")
 
 	// Remove backendID, as this is not valid parameter for bucket creation in ObjectScale.
 	delete(parametersCopy, "backendID")
@@ -133,15 +133,15 @@ func (s *Server) DriverCreateBucket(
 	_, err := s.mgmtClient.Buckets().Get(bucket.Name, parametersCopy)
 	if err != nil && !errors.Is(err, model.Error{Code: model.CodeResourceNotFound}) {
 		log.WithFields(log.Fields{
-			"existing_bucket": bucket.Name,
-		}).Error("DriverCreateBucket: Failed to check bucket existence")
+			"bucket": bucket.Name,
+		}).Error("failed to check bucket existence")
 
-		return nil, status.Error(codes.Internal, "An unexpected error occurred")
+		return nil, status.Error(codes.Internal, "an unexpected error occurred")
 	} else if err == nil {
 		log.WithFields(log.Fields{
-			"existing_bucket": bucket.Name,
-		}).Error("DriverCreateBucket: Bucket already exists")
-		return nil, status.Error(codes.AlreadyExists, "Bucket already exists")
+			"bucket": bucket.Name,
+		}).Error("bucket already exists")
+		return nil, status.Error(codes.AlreadyExists, "bucket already exists")
 	}
 
 	// Create bucket.
@@ -149,14 +149,14 @@ func (s *Server) DriverCreateBucket(
 	if err != nil {
 		log.WithFields(log.Fields{
 			"bucket": bucket.Name,
-		}).Error("DriverCreateBucket: Bucket was not successfully created")
+		}).Error("failed to create bucket")
 
-		return nil, status.Error(codes.Internal, "Bucket was not successfully created")
+		return nil, status.Error(codes.Internal, "bucket was not successfully created")
 	}
 
 	log.WithFields(log.Fields{
 		"bucket": bucket.Name,
-	}).Info("DriverCreateBucket: Bucket has been successfully created")
+	}).Info("bucket successfully created")
 
 	// Return response.
 	return &cosi.DriverCreateBucketResponse{
@@ -170,12 +170,12 @@ func (s *Server) DriverDeleteBucket(ctx context.Context,
 ) (*cosi.DriverDeleteBucketResponse, error) {
 	log.WithFields(log.Fields{
 		"bucketID": req.BucketId,
-	}).Info("Bucket is being deleted")
+	}).Info("bucket is being deleted")
 
 	// Check if bucketID is not empty.
 	if req.GetBucketId() == "" {
-		log.Error("DriverDeleteBucket: Empty bucketID")
-		return nil, status.Error(codes.InvalidArgument, "Empty bucketID")
+		log.Error("empty bucketID")
+		return nil, status.Error(codes.InvalidArgument, "empty bucketID")
 	}
 
 	// Extract bucket name from bucketID.
@@ -187,22 +187,22 @@ func (s *Server) DriverDeleteBucket(ctx context.Context,
 	if errors.Is(err, model.Error{Code: model.CodeResourceNotFound}) {
 		log.WithFields(log.Fields{
 			"bucket": bucketName,
-		}).Error("DriverDeleteBucket: Bucket to delete not found")
+		}).Error("bucket to delete not found")
 
-		return nil, status.Error(codes.NotFound, "Bucket not found")
+		return nil, status.Error(codes.NotFound, "bucket not found")
 	}
 
 	if err != nil {
 		log.WithFields(log.Fields{
 			"bucket": bucketName,
-		}).Error("DriverDeleteBucket: Bucket was not successfully deleted")
+		}).Error("failed to delete bucket")
 
-		return nil, status.Error(codes.Internal, "Bucket was not successfully deleted")
+		return nil, status.Error(codes.Internal, "bucket was not successfully deleted")
 	}
 
 	log.WithFields(log.Fields{
 		"bucket": bucketName,
-	}).Error("DriverDeleteBucket: Bucket was not successfully deleted")
+	}).Info("bucket deleted")
 
 	return &cosi.DriverDeleteBucketResponse{}, nil
 }
@@ -211,12 +211,12 @@ func (s *Server) DriverDeleteBucket(ctx context.Context,
 func (s *Server) DriverGrantBucketAccess(ctx context.Context,
 	req *cosi.DriverGrantBucketAccessRequest,
 ) (*cosi.DriverGrantBucketAccessResponse, error) {
-	return nil, status.Error(codes.Unimplemented, "DriverCreateBucket: not implemented")
+	return nil, status.Error(codes.Unimplemented, "not implemented")
 }
 
 // DriverRevokeBucketAccess revokes access from Bucket on specific Object Storage Platform.
 func (s *Server) DriverRevokeBucketAccess(ctx context.Context,
 	req *cosi.DriverRevokeBucketAccessRequest,
 ) (*cosi.DriverRevokeBucketAccessResponse, error) {
-	return nil, status.Error(codes.Unimplemented, "DriverCreateBucket: not implemented")
+	return nil, status.Error(codes.Unimplemented, "not implemented")
 }

@@ -15,6 +15,7 @@ package driver
 import (
 	"context"
 	"errors"
+	"fmt"
 	"io/fs"
 	"net"
 	"os"
@@ -52,13 +53,21 @@ func New(config *config.ConfigSchemaJson, socket, name string) (*Driver, error) 
 	for _, cfg := range config.Connections {
 		driver, err := provisioner.NewVirtualDriver(cfg)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("failed to validate provided object storage platform connection: %w", err)
 		}
+
+		log.WithFields(log.Fields{
+			"driver": driver.ID(),
+		}).Debug("configuration for specified object storage platform validated")
 
 		err = driverset.Add(driver)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("failed to add object storage platform configuration: %w", err)
 		}
+
+		log.WithFields(log.Fields{
+			"driver": driver.ID(),
+		}).Debug("new configuration for specified object storage platform added")
 	}
 
 	provisionerServer := provisioner.New(driverset)
@@ -74,15 +83,19 @@ func New(config *config.ConfigSchemaJson, socket, name string) (*Driver, error) 
 	// so we can start a new driver after crash or pod restart
 	if _, err := os.Stat(socket); !errors.Is(err, fs.ErrNotExist) {
 		if err := os.RemoveAll(socket); err != nil {
-			log.Fatal(err)
+			log.Fatalf("failed to remove socket: %v", err)
 		}
 	}
 
 	// Create shared listener for gRPC server
 	listener, err := net.Listen("unix", socket)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to announce on the local network address: %w", err)
 	}
+
+	log.WithFields(log.Fields{
+		"socket": socket,
+	}).Debug("shared listener created")
 
 	return &Driver{server, listener}, nil
 }
@@ -94,7 +107,7 @@ func (s *Driver) start(ctx context.Context) <-chan struct{} {
 		close(ready)
 
 		if err := s.server.Serve(s.lis); err != nil {
-			log.Fatalf("Failed to serve gRPC server: %v", err)
+			log.Fatalf("failed to serve gRPC server: %v", err)
 		}
 	}()
 
@@ -108,10 +121,14 @@ func Run(ctx context.Context, config *config.ConfigSchemaJson, socket, name stri
 	// Create new driver
 	driver, err := New(config, socket, name)
 	if err != nil {
+		log.WithFields(log.Fields{
+			"error": err,
+		}).Error("failed to start gRPC server")
+
 		return nil, err
 	}
 
-	log.Infoln("gRPC server started")
+	log.Info("gRPC server started")
 
 	return driver.start(ctx), nil
 }
@@ -121,10 +138,14 @@ func RunBlocking(ctx context.Context, config *config.ConfigSchemaJson, socket, n
 	// Create new driver
 	driver, err := New(config, socket, name)
 	if err != nil {
+		log.WithFields(log.Fields{
+			"error": err,
+		}).Error("failed to start gRPC server")
+
 		return err
 	}
 
-	log.Infoln("gRPC server started")
+	log.Info("gRPC server started")
 	// Block until driver is ready
 	<-driver.start(ctx)
 

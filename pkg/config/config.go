@@ -20,6 +20,7 @@ import (
 	"os"
 	"path"
 
+	log "github.com/sirupsen/logrus"
 	"gopkg.in/yaml.v3"
 )
 
@@ -58,6 +59,8 @@ func NewJSON(bytes []byte) (*ConfigSchemaJson, error) {
 		return nil, err
 	}
 
+	log.Debug("JSON document unmarshalled")
+
 	return cfg, nil
 }
 
@@ -73,6 +76,7 @@ func NewYAML(bytes []byte) (*ConfigSchemaJson, error) {
 		return nil, err
 	}
 
+	log.Debug("YAML document unmarshalled")
 	// we ignore the error, as the config was previously successfully Unmarshaled from YAML.
 	// and there is no case, when the Marshaling will fail.
 	b, _ := json.Marshal(body)
@@ -90,6 +94,10 @@ func readFile(filename string) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	log.WithFields(log.Fields{
+		"config_file_path": filename,
+	}).Debug("config file opened")
 
 	// limit reader is used, so the we will read only 20MB of the file.
 	maxFileSize := 20000000
