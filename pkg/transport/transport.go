@@ -132,7 +132,7 @@ func clientCert(certData, keyData *string) ([]tls.Certificate, error) {
 		return nil, fmt.Errorf("unable to parse a public/private key pair: %w", err)
 	}
 
-	log.Debug("X509 key pair created")
+	log.Trace("X509 key pair created")
 
 	return []tls.Certificate{x509}, nil
 }
