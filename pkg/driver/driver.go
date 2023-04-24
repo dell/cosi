@@ -62,7 +62,7 @@ func New(config *config.ConfigSchemaJson, socket, name string) (*Driver, error) 
 
 		err = driverset.Add(driver)
 		if err != nil {
-			return nil, fmt.Errorf("failed to add new driver to driverset: %w", err)
+			return nil, fmt.Errorf("failed to add driver: %w", err)
 		}
 
 		log.WithFields(log.Fields{
@@ -123,7 +123,7 @@ func Run(ctx context.Context, config *config.ConfigSchemaJson, socket, name stri
 	if err != nil {
 		log.WithFields(log.Fields{
 			"error": err,
-		}).Error("failed to create a new driver for COSI API with identity and provisioner servers")
+		}).Error("failed to start gRPC server")
 
 		return nil, err
 	}
@@ -140,7 +140,7 @@ func RunBlocking(ctx context.Context, config *config.ConfigSchemaJson, socket, n
 	if err != nil {
 		log.WithFields(log.Fields{
 			"error": err,
-		}).Error("failed to create a new driver for COSI API with identity and provisioner servers")
+		}).Error("failed to start gRPC server")
 
 		return err
 	}
