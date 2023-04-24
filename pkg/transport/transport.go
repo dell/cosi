@@ -70,7 +70,7 @@ func New(cfg config.Tls) (*http.Transport, error) {
 
 		log.WithFields(log.Fields{
 			"secure": cfg.Insecure,
-		}).Info("secure connection applied")
+		}).Debug("secure connection applied")
 	}
 
 	return &http.Transport{

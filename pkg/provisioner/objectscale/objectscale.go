@@ -110,7 +110,7 @@ func (s *Server) DriverCreateBucket(
 	// Check if bucket name is not empty.
 	if bucket.Name == "" {
 		log.Error("empty bucket name")
-		return nil, status.Error(codes.InvalidArgument, "Empty bucket name")
+		return nil, status.Error(codes.InvalidArgument, "empty bucket name")
 	}
 
 	// Display all request parameters.
@@ -136,12 +136,12 @@ func (s *Server) DriverCreateBucket(
 			"bucket": bucket.Name,
 		}).Error("failed to check bucket existence")
 
-		return nil, status.Error(codes.Internal, "An unexpected error occurred")
+		return nil, status.Error(codes.Internal, "an unexpected error occurred")
 	} else if err == nil {
 		log.WithFields(log.Fields{
 			"bucket": bucket.Name,
 		}).Error("bucket already exists")
-		return nil, status.Error(codes.AlreadyExists, "Bucket already exists")
+		return nil, status.Error(codes.AlreadyExists, "bucket already exists")
 	}
 
 	// Create bucket.
@@ -151,7 +151,7 @@ func (s *Server) DriverCreateBucket(
 			"bucket": bucket.Name,
 		}).Error("failed to create bucket")
 
-		return nil, status.Error(codes.Internal, "Bucket was not successfully created")
+		return nil, status.Error(codes.Internal, "bucket was not successfully created")
 	}
 
 	log.WithFields(log.Fields{
@@ -175,7 +175,7 @@ func (s *Server) DriverDeleteBucket(ctx context.Context,
 	// Check if bucketID is not empty.
 	if req.GetBucketId() == "" {
 		log.Error("empty bucketID")
-		return nil, status.Error(codes.InvalidArgument, "Empty bucketID")
+		return nil, status.Error(codes.InvalidArgument, "empty bucketID")
 	}
 
 	// Extract bucket name from bucketID.
@@ -189,7 +189,7 @@ func (s *Server) DriverDeleteBucket(ctx context.Context,
 			"bucket": bucketName,
 		}).Error("bucket to delete not found")
 
-		return nil, status.Error(codes.NotFound, "Bucket not found")
+		return nil, status.Error(codes.NotFound, "bucket not found")
 	}
 
 	if err != nil {
@@ -197,7 +197,7 @@ func (s *Server) DriverDeleteBucket(ctx context.Context,
 			"bucket": bucketName,
 		}).Error("failed to delete bucket")
 
-		return nil, status.Error(codes.Internal, "Bucket was not successfully deleted")
+		return nil, status.Error(codes.Internal, "bucket was not successfully deleted")
 	}
 
 	log.WithFields(log.Fields{

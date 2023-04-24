@@ -28,11 +28,11 @@ func TestDriversetAdd(t *testing.T) {
 	driverset.drivers.Store("driver0", &fake.Driver{FakeID: "driver0"})
 
 	testCases := []struct {
-		name      string
-		driverset *Driverset
-		driver    driver.Driver
-		want      *Driverset
-		errorMsg  string
+		name         string
+		driverset    *Driverset
+		driver       driver.Driver
+		want         *Driverset
+		wantErrorMsg string
 	}{
 		{
 			name:      "no duplicate",
@@ -41,11 +41,11 @@ func TestDriversetAdd(t *testing.T) {
 			want:      driverset,
 		},
 		{
-			name:      "duplicate",
-			driverset: driverset,
-			driver:    &fake.Driver{FakeID: "driver0"},
-			want:      driverset,
-			errorMsg:  "failed to load new driver to driverset sync.Map",
+			name:         "duplicate",
+			driverset:    driverset,
+			driver:       &fake.Driver{FakeID: "driver0"},
+			want:         driverset,
+			wantErrorMsg: "failed to load new driver to driverset sync.Map",
 		},
 	}
 
@@ -55,7 +55,7 @@ func TestDriversetAdd(t *testing.T) {
 			t.Parallel()
 			err := tc.driverset.Add(tc.driver)
 			if err != nil {
-				assert.ErrorContains(t, err, tc.errorMsg)
+				assert.ErrorContains(t, err, tc.wantErrorMsg)
 			}
 			compareSyncMaps(t, &tc.want.drivers, &tc.driverset.drivers)
 		})
@@ -99,11 +99,11 @@ func TestDriversetGet(t *testing.T) {
 	driverset.drivers.Store("driver0", &fake.Driver{FakeID: "driver0"})
 
 	testCases := []struct {
-		name      string
-		driverset *Driverset
-		id        string
-		want      driver.Driver
-		errorMsg  string
+		name         string
+		driverset    *Driverset
+		id           string
+		want         driver.Driver
+		wantErrorMsg string
 	}{
 		{
 			name:      "driver configured",
@@ -112,11 +112,11 @@ func TestDriversetGet(t *testing.T) {
 			want:      &fake.Driver{FakeID: "driver0"},
 		},
 		{
-			name:      "driver not configured",
-			driverset: driverset,
-			id:        "driver1",
-			want:      nil,
-			errorMsg:  "failed to get driver from driverset",
+			name:         "driver not configured",
+			driverset:    driverset,
+			id:           "driver1",
+			want:         nil,
+			wantErrorMsg: "failed to get driver from driverset",
 		},
 	}
 
@@ -126,7 +126,7 @@ func TestDriversetGet(t *testing.T) {
 			t.Parallel()
 			got, err := tc.driverset.Get(tc.id)
 			if err != nil {
-				assert.ErrorContains(t, err, tc.errorMsg)
+				assert.ErrorContains(t, err, tc.wantErrorMsg)
 			}
 			assert.Equal(t, tc.want, got)
 		})

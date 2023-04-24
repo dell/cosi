@@ -106,7 +106,7 @@ func testServerDriverCreateBucket(t *testing.T, fakeServer Server) {
 					fake.ForceFail:   "true",
 				},
 			},
-			expectedError: status.Error(codes.Internal, "An unexpected error occurred"),
+			expectedError: status.Error(codes.Internal, "an unexpected error occurred"),
 		},
 		{
 			server:      fakeServer,
@@ -117,7 +117,7 @@ func testServerDriverCreateBucket(t *testing.T, fakeServer Server) {
 					fake.KeyDriverID: "invalid",
 				},
 			},
-			expectedError: status.Error(codes.InvalidArgument, "Invalid backend ID"),
+			expectedError: status.Error(codes.InvalidArgument, "invalid backend ID"),
 		},
 	}
 
@@ -156,7 +156,7 @@ func testServerDriverDeleteBucket(t *testing.T, fakeServer Server) {
 			req: &cosi.DriverDeleteBucketRequest{
 				BucketId: fmt.Sprintf("fake-%s", fake.ForceFail),
 			},
-			expectedError: status.Error(codes.Internal, "An unexpected error occurred"),
+			expectedError: status.Error(codes.Internal, "an unexpected error occurred"),
 		},
 		{
 			server:      fakeServer,
@@ -164,7 +164,7 @@ func testServerDriverDeleteBucket(t *testing.T, fakeServer Server) {
 			req: &cosi.DriverDeleteBucketRequest{
 				BucketId: "invalid",
 			},
-			expectedError: status.Error(codes.InvalidArgument, "Invalid backend ID"),
+			expectedError: status.Error(codes.InvalidArgument, "invalid backend ID"),
 		},
 	}
 
@@ -210,7 +210,7 @@ func testServerDriverGrantBucketAccess(t *testing.T, fakeServer Server) {
 					fake.ForceFail:   "true",
 				},
 			},
-			expectedError: status.Error(codes.Internal, "An unexpected error occurred"),
+			expectedError: status.Error(codes.Internal, "an unexpected error occurred"),
 		},
 		{
 			server:      fakeServer,
@@ -221,7 +221,7 @@ func testServerDriverGrantBucketAccess(t *testing.T, fakeServer Server) {
 					fake.KeyDriverID: "invalid",
 				},
 			},
-			expectedError: status.Error(codes.InvalidArgument, "Invalid backend ID"),
+			expectedError: status.Error(codes.InvalidArgument, "invalid backend ID"),
 		},
 	}
 
@@ -261,7 +261,7 @@ func testServerDriverRevokeBucketAccess(t *testing.T, fakeServer Server) {
 			req: &cosi.DriverRevokeBucketAccessRequest{
 				BucketId: fmt.Sprintf("fake-%s", fake.ForceFail),
 			},
-			expectedError: status.Error(codes.Internal, "An unexpected error occurred"),
+			expectedError: status.Error(codes.Internal, "an unexpected error occurred"),
 		},
 		{
 			server:      fakeServer,
@@ -269,7 +269,7 @@ func testServerDriverRevokeBucketAccess(t *testing.T, fakeServer Server) {
 			req: &cosi.DriverRevokeBucketAccessRequest{
 				BucketId: "invalid",
 			},
-			expectedError: status.Error(codes.InvalidArgument, "Invalid backend ID"),
+			expectedError: status.Error(codes.InvalidArgument, "invalid backend ID"),
 		},
 	}
 

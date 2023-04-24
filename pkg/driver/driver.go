@@ -53,21 +53,21 @@ func New(config *config.ConfigSchemaJson, socket, name string) (*Driver, error) 
 	for _, cfg := range config.Connections {
 		driver, err := provisioner.NewVirtualDriver(cfg)
 		if err != nil {
-			return nil, fmt.Errorf("failed to validate configuration and return correct driver: %w", err)
+			return nil, fmt.Errorf("failed to validate provided object storage platform connection: %w", err)
 		}
 
 		log.WithFields(log.Fields{
 			"driver": driver.ID(),
-		}).Debug("driver configuration validated")
+		}).Debug("configuration for specified object storage platform validated")
 
 		err = driverset.Add(driver)
 		if err != nil {
-			return nil, fmt.Errorf("failed to add driver: %w", err)
+			return nil, fmt.Errorf("failed to add object storage platform configuration: %w", err)
 		}
 
 		log.WithFields(log.Fields{
 			"driver": driver.ID(),
-		}).Debug("new driver added to driverset")
+		}).Debug("new configuration for specified object storage platform added")
 	}
 
 	provisionerServer := provisioner.New(driverset)
@@ -107,7 +107,7 @@ func (s *Driver) start(ctx context.Context) <-chan struct{} {
 		close(ready)
 
 		if err := s.server.Serve(s.lis); err != nil {
-			log.Fatalf("Failed to serve gRPC server: %v", err)
+			log.Fatalf("failed to serve gRPC server: %v", err)
 		}
 	}()
 
