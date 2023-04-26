@@ -218,6 +218,9 @@ func (s *Server) DriverDeleteBucket(ctx context.Context,
 func (s *Server) DriverGrantBucketAccess(ctx context.Context,
 	req *cosi.DriverGrantBucketAccessRequest,
 ) (*cosi.DriverGrantBucketAccessResponse, error) {
+	_, span := otel.Tracer("GrantBucketAccessRequest").Start(ctx, "ObjectscaleDriverGrantBucketAccess")
+	defer span.End()
+
 	return nil, status.Error(codes.Unimplemented, "not implemented")
 }
 
@@ -225,5 +228,8 @@ func (s *Server) DriverGrantBucketAccess(ctx context.Context,
 func (s *Server) DriverRevokeBucketAccess(ctx context.Context,
 	req *cosi.DriverRevokeBucketAccessRequest,
 ) (*cosi.DriverRevokeBucketAccessResponse, error) {
+	_, span := otel.Tracer("RevokeBucketAccessRequest").Start(ctx, "ObjectscaleDriverRevokeBucketAccess")
+	defer span.End()
+
 	return nil, status.Error(codes.Unimplemented, "not implemented")
 }

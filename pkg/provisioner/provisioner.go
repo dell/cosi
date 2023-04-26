@@ -100,6 +100,9 @@ func (s *Server) DriverDeleteBucket(ctx context.Context,
 func (s *Server) DriverGrantBucketAccess(ctx context.Context,
 	req *cosi.DriverGrantBucketAccessRequest,
 ) (*cosi.DriverGrantBucketAccessResponse, error) {
+	tracedCtx, span := otel.Tracer("GrantBucketAccessRequest").Start(ctx, "ProvisionerGrantBucketAccess")
+	defer span.End()
+
 	id := req.Parameters["id"]
 
 	// get the driver from driverset
@@ -119,13 +122,16 @@ func (s *Server) DriverGrantBucketAccess(ctx context.Context,
 	}).Debug("valid backend ID")
 
 	// execute DriverGrantBucketAccess from correct driver
-	return d.DriverGrantBucketAccess(ctx, req)
+	return d.DriverGrantBucketAccess(tracedCtx, req)
 }
 
 // DriverRevokeBucketAccess revokes access from Bucket on specific Object Storage Platform.
 func (s *Server) DriverRevokeBucketAccess(ctx context.Context,
 	req *cosi.DriverRevokeBucketAccessRequest,
 ) (*cosi.DriverRevokeBucketAccessResponse, error) {
+	tracedCtx, span := otel.Tracer("RevokeBucketAccessRequest").Start(ctx, "ProvisionerRevokeBucketAccess")
+	defer span.End()
+
 	id := getID(req.BucketId)
 
 	// get the driver from driverset
@@ -145,7 +151,7 @@ func (s *Server) DriverRevokeBucketAccess(ctx context.Context,
 	}).Debug("valid backend ID")
 
 	// execute DriverRevokeBucketAccess from correct driver
-	return d.DriverRevokeBucketAccess(ctx, req)
+	return d.DriverRevokeBucketAccess(tracedCtx, req)
 }
 
 // getID splits the string and returns ID from it
