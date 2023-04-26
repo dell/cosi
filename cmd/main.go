@@ -15,6 +15,11 @@ package main
 import (
 	"context"
 	"flag"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/exporters/jaeger"
+	"go.opentelemetry.io/otel/sdk/resource"
+	sdktrace "go.opentelemetry.io/otel/sdk/trace"
+	semconv "go.opentelemetry.io/otel/semconv/v1.17.0"
 	"os"
 	"os/signal"
 	"syscall"
@@ -29,6 +34,11 @@ import (
 var (
 	logLevel   = flag.String("log-level", "debug", "Log level (debug, info, warn, error, fatal, panic)")
 	configFile = flag.String("config", "/cosi/config.yaml", "path to config file")
+)
+
+const (
+	tracedServiceName = "cosi-driver"
+	jaegerURL         = "http://10.247.103.53/collector/"
 )
 
 // init is run before main and is used to define command line flags.
@@ -66,6 +76,17 @@ func runMain() error {
 		"config_file_path": configFile,
 	}).Info("config successfully loaded")
 
+	// Create TracerProvider with exporter to Jaeger.
+	// TODO: let user configure jaeger url.
+	tp, err := tracerProvider(jaegerURL)
+	if err != nil {
+		log.WithFields(log.Fields{
+			"error": err,
+		}).Warn("failed to connect to Jaeger")
+	}
+	// Set global TracerProvider.
+	otel.SetTracerProvider(tp)
+
 	// Create a channel to listen for signals.
 	sigs := make(chan os.Signal, 1)
 	// Listen for the SIGINT and SIGTERM signals.
@@ -88,4 +109,24 @@ func runMain() error {
 	log.Info("COSI driver is starting")
 	// Run the driver.
 	return driver.RunBlocking(ctx, cfg, driver.COSISocket, "cosi-driver")
+}
+
+// tracerProvider creates new tracerProvider and connects it to Jaeger running under provided URL.
+func tracerProvider(url string) (*sdktrace.TracerProvider, error) {
+	exp, err := jaeger.New(jaeger.WithCollectorEndpoint(jaeger.WithEndpoint(url)))
+	if err != nil {
+		return nil, err
+	}
+
+	tp := sdktrace.NewTracerProvider(
+		// Always be sure to batch in production.
+		sdktrace.WithBatcher(exp),
+		// Record information about this application in a Resource.
+		sdktrace.WithResource(resource.NewWithAttributes(
+			semconv.SchemaURL,
+			semconv.ServiceName(tracedServiceName),
+		)),
+	)
+
+	return tp, nil
 }
