@@ -14,8 +14,9 @@ package provisioner
 
 import (
 	"context"
-	"go.opentelemetry.io/otel"
 	"strings"
+
+	"go.opentelemetry.io/otel"
 
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"

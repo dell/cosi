@@ -16,9 +16,10 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"go.opentelemetry.io/otel"
 	"net/http"
 	"strings"
+
+	"go.opentelemetry.io/otel"
 
 	"github.com/dell/goobjectscale/pkg/client/api"
 	"github.com/dell/goobjectscale/pkg/client/model"
