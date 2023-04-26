@@ -107,9 +107,9 @@ var _ = Describe("Bucket Access Revoke", Ordered, Label("revoke", "objectscale")
 		By("Checking if the ObjectScale platform is ready")
 		steps.CheckObjectScaleInstallation(ctx, objectscale)
 
-		// STEP: ObjectStore "objectstore-dev" is created
-		By("Checking if the ObjectStore 'objectstore-dev' is created")
-		steps.CheckObjectStoreExists(ctx, objectscale, "objectstore-dev")
+		// STEP: ObjectStore "objectstore" is created
+		By("Checking if the ObjectStore 'objectstore' is created")
+		steps.CheckObjectStoreExists(ctx, objectscale, "objectstore")
 
 		// STEP: Kubernetes namespace "driver-ns" is created
 		By("Checking if namespace 'driver-ns' is created")
