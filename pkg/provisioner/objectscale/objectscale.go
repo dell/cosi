@@ -16,6 +16,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"go.opentelemetry.io/otel"
 	"net/http"
 	"strings"
 
@@ -98,6 +99,9 @@ func (s *Server) DriverCreateBucket(
 	ctx context.Context,
 	req *cosi.DriverCreateBucketRequest,
 ) (*cosi.DriverCreateBucketResponse, error) {
+	_, span := otel.Tracer("CreateBucketRequest").Start(ctx, "ObjectscaleDriverCreateBucket")
+	defer span.End()
+
 	log.WithFields(log.Fields{
 		"bucket": req.GetName(),
 	}).Info("bucket is being created")
@@ -168,6 +172,9 @@ func (s *Server) DriverCreateBucket(
 func (s *Server) DriverDeleteBucket(ctx context.Context,
 	req *cosi.DriverDeleteBucketRequest,
 ) (*cosi.DriverDeleteBucketResponse, error) {
+	_, span := otel.Tracer("DeleteBucketRequest").Start(ctx, "ObjectscaleDriverDeleteBucket")
+	defer span.End()
+
 	log.WithFields(log.Fields{
 		"bucketID": req.BucketId,
 	}).Info("bucket is being deleted")

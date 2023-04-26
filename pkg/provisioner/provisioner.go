@@ -14,6 +14,7 @@ package provisioner
 
 import (
 	"context"
+	"go.opentelemetry.io/otel"
 	"strings"
 
 	"google.golang.org/grpc/codes"
@@ -41,6 +42,9 @@ func New(driverset *Driverset) *Server {
 func (s *Server) DriverCreateBucket(ctx context.Context,
 	req *cosi.DriverCreateBucketRequest,
 ) (*cosi.DriverCreateBucketResponse, error) {
+	tracedCtx, span := otel.Tracer("CreateBucketRequest").Start(ctx, "ProvisionerCreateBucket")
+	defer span.End()
+
 	id := req.Parameters["id"]
 
 	// get the driver from driverset
@@ -60,13 +64,16 @@ func (s *Server) DriverCreateBucket(ctx context.Context,
 	}).Debug("valid backend ID")
 
 	// execute DriverCreateBucket from correct driver
-	return d.DriverCreateBucket(ctx, req)
+	return d.DriverCreateBucket(tracedCtx, req)
 }
 
 // DriverDeleteBucket deletes Bucket on specific Object Storage Platform.
 func (s *Server) DriverDeleteBucket(ctx context.Context,
 	req *cosi.DriverDeleteBucketRequest,
 ) (*cosi.DriverDeleteBucketResponse, error) {
+	tracedCtx, span := otel.Tracer("DeleteBucketRequest").Start(ctx, "ProvisionerDeleteBucket")
+	defer span.End()
+
 	id := getID(req.BucketId)
 
 	// get the driver from driverset
@@ -86,7 +93,7 @@ func (s *Server) DriverDeleteBucket(ctx context.Context,
 	}).Debug("valid backend ID")
 
 	// execute DriverDeleteBucket from correct driver
-	return d.DriverDeleteBucket(ctx, req)
+	return d.DriverDeleteBucket(tracedCtx, req)
 }
 
 // DriverGrantBucketAccess provides access to Bucket on specific Object Storage Platform.
