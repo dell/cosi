@@ -80,15 +80,19 @@ func runMain() error {
 
 	// Create TracerProvider with exporter to Jaeger.
 	// TODO: let user configure jaeger url.
-	// TODO: if otelEndpoint empty log a warning and don't start tracing.
-	tp, err := tracerProvider(*otelEndpoint)
-	if err != nil {
-		log.WithFields(log.Fields{
-			"error": err,
-		}).Warn("failed to connect to Jaeger")
+	if *otelEndpoint != "" {
+		tp, err := tracerProvider(*otelEndpoint)
+		if err != nil {
+			log.WithFields(log.Fields{
+				"error": err,
+			}).Warn("failed to connect to Jaeger")
+		}
+		// Set global TracerProvider.
+		otel.SetTracerProvider(tp)
+		log.Infof("tracing started successfully; collector at %s", *otelEndpoint)
+	} else {
+		log.Warn("OTEL endpoint is empty, disabling tracing; please refer to helm's values.yaml")
 	}
-	// Set global TracerProvider.
-	otel.SetTracerProvider(tp)
 
 	// Create a channel to listen for signals.
 	sigs := make(chan os.Signal, 1)
