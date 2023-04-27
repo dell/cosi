@@ -25,9 +25,7 @@ Feature: Bucket deletion from ObjectScale platform
         deletionPolicy: delete
         driverName: cosi-driver
         parameters:
-            objectScaleID: ${objectScaleID}
-            objectStoreID: ${objectStoreID}
-            accountSecret: ${secretName}
+            ID: ${driverID}
         """
         And specification of custom resource "my-bucket-claim-delete" is:
         """

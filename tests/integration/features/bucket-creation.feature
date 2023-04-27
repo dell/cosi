@@ -23,9 +23,7 @@ Feature: Bucket creation on ObjectScale platform
         deletionPolicy: delete
         driverName: cosi-driver
         parameters:
-            objectScaleID: ${objectScaleID}
-            objectStoreID: ${objectStoreID}
-            accountSecret: ${secretName}
+            ID: ${driverID}
         """
         And specification of custom resource "bucket-claim-valid" is:
         """

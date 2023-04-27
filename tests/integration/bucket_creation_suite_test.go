@@ -48,9 +48,7 @@ var _ = Describe("Bucket Creation", Ordered, Label("create", "objectscale"), fun
 			DeletionPolicy: "delete",
 			DriverName:     "cosi-driver",
 			Parameters: map[string]string{
-				"objectScaleID": "${objectScaleID}",
-				"objectStoreID": "${objectStoreID}",
-				"accountSecret": "${secretName}",
+				"ID": "${driverID}",
 			},
 		}
 		validBucketClaim = &v1alpha1.BucketClaim{
@@ -95,9 +93,9 @@ var _ = Describe("Bucket Creation", Ordered, Label("create", "objectscale"), fun
 		By("Checking if the ObjectScale platform is ready")
 		steps.CheckObjectScaleInstallation(ctx, objectscale)
 
-		// STEP: ObjectStore "objectstore-dev" is created
-		By("Checking if the ObjectStore 'objectstore-dev' is created")
-		steps.CheckObjectStoreExists(ctx, objectscale, "objectstore-dev")
+		// STEP: ObjectStore "objectstore" is created
+		By("Checking if the ObjectStore 'objectstore' is created")
+		steps.CheckObjectStoreExists(ctx, objectscale, "objectstore")
 
 		// STEP: Kubernetes namespace "driver-ns" is created
 		By("Checking if namespace 'driver-ns' is created")

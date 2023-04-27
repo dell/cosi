@@ -24,9 +24,7 @@ Feature: BucketAccess creation in IAM flow on ObjectScale platform
         deletionPolicy: delete
         driverName: cosi-driver
         parameters:
-            objectScaleID: ${objectScaleID}
-            objectStoreID: ${objectStoreID}
-            accountSecret: ${secretName}
+            ID: ${driverID}
         """
         And specification of custom resource "my-bucket-claim" is:
         """
@@ -57,9 +55,7 @@ Feature: BucketAccess creation in IAM flow on ObjectScale platform
         driverName: cosi-driver
         authenticationType: IAM
         parameters:
-            objectScaleID: ${objectScaleID}
-            objectStoreID: ${objectStoreID}
-            accountSecret: ${secretName}
+            ID: ${driverID}
         """
         And specification of custom resource "my-bucket-access" is:
         """
