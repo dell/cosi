@@ -22,13 +22,13 @@ provisioner:
   # Possible values: "trace" "debug" "info" "warn" "error" "fatal" "panic".
   logLevel: "debug"
   # otelEndpoint specifies the endpoint on which the OTEL Collector is set up and to which data is sent over gRPC.
-  otelEndpoint: ""
+  otelEndpoint: "grpc://10.247.103.53/collector"
   # image specifies the COSI driver provisioner container image.
   image:
     # repository is the COSI driver provisioner container image repository.
     repository: "amaas-eos-mw1.cec.lab.emc.com:5046/cosi-driver"
     # tag is the COSI driver provisioner container image tag.
-    tag: "ff11b04c3d5716d44b99642550cfbfe0bf63dbff"
+    tag: "d0a99d809e0bb6f98ef02d5e95dc2254a9398df3"
     # pullPolicy is the COSI driver provisioner container image pull policy.
     pullPolicy: "IfNotPresent"
 
