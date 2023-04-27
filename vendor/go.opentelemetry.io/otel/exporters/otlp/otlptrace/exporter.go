@@ -19,7 +19,6 @@ import (
 	"errors"
 	"sync"
 
-	"go.opentelemetry.io/otel/exporters/otlp/internal"
 	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/internal/tracetransform"
 	tracesdk "go.opentelemetry.io/otel/sdk/trace"
 )
@@ -46,11 +45,7 @@ func (e *Exporter) ExportSpans(ctx context.Context, ss []tracesdk.ReadOnlySpan) 
 		return nil
 	}
 
-	err := e.client.UploadTraces(ctx, protoSpans)
-	if err != nil {
-		return internal.WrapTracesError(err)
-	}
-	return nil
+	return e.client.UploadTraces(ctx, protoSpans)
 }
 
 // Start establishes a connection to the receiving endpoint.

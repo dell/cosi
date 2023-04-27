@@ -16,7 +16,6 @@ package otlpconfig // import "go.opentelemetry.io/otel/exporters/otlp/otlptrace/
 
 import (
 	"crypto/tls"
-	"crypto/x509"
 	"net/url"
 	"os"
 	"path"
@@ -54,7 +53,6 @@ func ApplyHTTPEnvConfigs(cfg Config) Config {
 func getOptionsFromEnv() []GenericOption {
 	opts := []GenericOption{}
 
-	tlsConf := &tls.Config{}
 	DefaultEnvOptionsReader.Apply(
 		envconfig.WithURL("ENDPOINT", func(u *url.URL) {
 			opts = append(opts, withEndpointScheme(u))
@@ -83,13 +81,8 @@ func getOptionsFromEnv() []GenericOption {
 				return cfg
 			}, withEndpointForGRPC(u)))
 		}),
-		envconfig.WithCertPool("CERTIFICATE", func(p *x509.CertPool) { tlsConf.RootCAs = p }),
-		envconfig.WithCertPool("TRACES_CERTIFICATE", func(p *x509.CertPool) { tlsConf.RootCAs = p }),
-		envconfig.WithClientCert("CLIENT_CERTIFICATE", "CLIENT_KEY", func(c tls.Certificate) { tlsConf.Certificates = []tls.Certificate{c} }),
-		envconfig.WithClientCert("TRACES_CLIENT_CERTIFICATE", "TRACES_CLIENT_KEY", func(c tls.Certificate) { tlsConf.Certificates = []tls.Certificate{c} }),
-		withTLSConfig(tlsConf, func(c *tls.Config) { opts = append(opts, WithTLSClientConfig(c)) }),
-		envconfig.WithBool("INSECURE", func(b bool) { opts = append(opts, withInsecure(b)) }),
-		envconfig.WithBool("TRACES_INSECURE", func(b bool) { opts = append(opts, withInsecure(b)) }),
+		envconfig.WithTLSConfig("CERTIFICATE", func(c *tls.Config) { opts = append(opts, WithTLSClientConfig(c)) }),
+		envconfig.WithTLSConfig("TRACES_CERTIFICATE", func(c *tls.Config) { opts = append(opts, WithTLSClientConfig(c)) }),
 		envconfig.WithHeaders("HEADERS", func(h map[string]string) { opts = append(opts, WithHeaders(h)) }),
 		envconfig.WithHeaders("TRACES_HEADERS", func(h map[string]string) { opts = append(opts, WithHeaders(h)) }),
 		WithEnvCompression("COMPRESSION", func(c Compression) { opts = append(opts, WithCompression(c)) }),
@@ -129,22 +122,6 @@ func WithEnvCompression(n string, fn func(Compression)) func(e *envconfig.EnvOpt
 			}
 
 			fn(cp)
-		}
-	}
-}
-
-// revive:disable-next-line:flag-parameter
-func withInsecure(b bool) GenericOption {
-	if b {
-		return WithInsecure()
-	}
-	return WithSecure()
-}
-
-func withTLSConfig(c *tls.Config, fn func(*tls.Config)) func(e *envconfig.EnvOptionsReader) {
-	return func(e *envconfig.EnvOptionsReader) {
-		if c.RootCAs != nil || len(c.Certificates) > 0 {
-			fn(c)
 		}
 	}
 }
