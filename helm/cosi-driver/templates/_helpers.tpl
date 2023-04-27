@@ -37,10 +37,23 @@ Create chart name and version as used by the chart label.
 */}}
 {{- define "cosi-driver.logLevel" }}
   {{- $logLevelValues := list "trace" "debug" "info" "warn" "error" "fatal" "panic" }}
-  {{- if (has .Values.logLevel $logLevelValues) }}
+  {{- if (has .Values.provisioner.logLevel $logLevelValues) }}
     {{- .Values.provisioner.logLevel }}
   {{- else }}
     {{- "debug" }}
+  {{- end }}
+{{- end }}
+
+{{/*
+# COSI driver OTEL endpoint
+# Default value is left empty on purpose, to not start any tracing if no argument was provided.
+# Default value: ""
+*/}}
+{{- define "cosi-driver.otelEndpoint" }}
+  {{- if .Values.provisioner.otelEndpoint }}
+    {{- .Values.provisioner.otelEndpoint }}
+  {{- else }}
+    {{- "" }}
   {{- end }}
 {{- end }}
 

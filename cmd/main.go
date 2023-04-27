@@ -33,13 +33,14 @@ import (
 )
 
 var (
-	logLevel   = flag.String("log-level", "debug", "Log level (debug, info, warn, error, fatal, panic)")
+	logLevel     = flag.String("log-level", "debug", "Log level (debug, info, warn, error, fatal, panic)")
+	otelEndpoint = flag.String("otel-endpoint", "",
+		"OTEL collector endpoint for collecting observability data")
 	configFile = flag.String("config", "/cosi/config.yaml", "path to config file")
 )
 
 const (
 	tracedServiceName = "cosi-driver"
-	jaegerURL         = "http://10.247.103.53/collector/"
 )
 
 // init is run before main and is used to define command line flags.
@@ -79,7 +80,8 @@ func runMain() error {
 
 	// Create TracerProvider with exporter to Jaeger.
 	// TODO: let user configure jaeger url.
-	tp, err := tracerProvider(jaegerURL)
+	// TODO: if otelEndpoint empty log a warning and don't start tracing.
+	tp, err := tracerProvider(*otelEndpoint)
 	if err != nil {
 		log.WithFields(log.Fields{
 			"error": err,

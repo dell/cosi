@@ -14,13 +14,15 @@
 # This is a YAML-formatted file.
 # Declare variables to be passed into your templates.
 
-# provisioner specifies parameters for the COSI driver provoisioner container.
+# provisioner specifies parameters for the COSI driver provisioner container.
 provisioner:
   # name of the COSI driver provisioner container.
   name: "objectstorage-provisioner"
   # logLevel is the logging level for the COSI driver provisioner,
   # Possible values: "trace" "debug" "info" "warn" "error" "fatal" "panic".
   logLevel: "debug"
+  # otelEndpoint specifies the endpoint on which the OTEL Collector is set up and to which data is sent over gRPC.
+  otelEndpoint: ""
   # image specifies the COSI driver provisioner container image.
   image:
     # repository is the COSI driver provisioner container image repository.
