@@ -15,17 +15,21 @@ package main
 import (
 	"context"
 	"flag"
+	"fmt"
+	"go.opentelemetry.io/otel/propagation"
+	"go.opentelemetry.io/otel/sdk/resource"
+	semconv "go.opentelemetry.io/otel/semconv/v1.17.0"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 	"os"
 	"os/signal"
 	"syscall"
-
-	"go.opentelemetry.io/otel"
-	"go.opentelemetry.io/otel/exporters/jaeger"
-	"go.opentelemetry.io/otel/sdk/resource"
-	sdktrace "go.opentelemetry.io/otel/sdk/trace"
-	semconv "go.opentelemetry.io/otel/semconv/v1.17.0"
+	"time"
 
 	log "github.com/sirupsen/logrus"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc"
+	sdktrace "go.opentelemetry.io/otel/sdk/trace"
 
 	"github.com/dell/cosi-driver/pkg/config"
 	"github.com/dell/cosi-driver/pkg/driver"
@@ -79,9 +83,9 @@ func runMain() error {
 	}).Info("config successfully loaded")
 
 	// Create TracerProvider with exporter to Jaeger.
-	// TODO: let user configure jaeger url.
+	var tp *sdktrace.TracerProvider
 	if *otelEndpoint != "" {
-		tp, err := tracerProvider(*otelEndpoint)
+		tp, err = tracerProvider(ctx, *otelEndpoint)
 		if err != nil {
 			log.WithFields(log.Fields{
 				"error": err,
@@ -89,6 +93,8 @@ func runMain() error {
 		}
 		// Set global TracerProvider.
 		otel.SetTracerProvider(tp)
+		// set global propagator to tracecontext (the default is no-op).
+		otel.SetTextMapPropagator(propagation.TraceContext{})
 		log.Infof("tracing started successfully; collector at %s", *otelEndpoint)
 	} else {
 		log.Warn("OTEL endpoint is empty, disabling tracing; please refer to helm's values.yaml")
@@ -119,20 +125,44 @@ func runMain() error {
 }
 
 // tracerProvider creates new tracerProvider and connects it to Jaeger running under provided URL.
-func tracerProvider(url string) (*sdktrace.TracerProvider, error) {
-	exp, err := jaeger.New(jaeger.WithCollectorEndpoint(jaeger.WithEndpoint(url)))
+func tracerProvider(ctx context.Context, url string) (*sdktrace.TracerProvider, error) {
+	ctx, cancel := context.WithTimeout(ctx, time.Second)
+	defer cancel()
+
+	res, err := resource.New(ctx,
+		resource.WithAttributes(
+			// the service name used to display traces in backends
+			semconv.ServiceName("cosi-driver"),
+		),
+	)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to create tracing resource: %w", err)
 	}
 
+	conn, err := grpc.DialContext(
+		ctx,
+		url,
+		// insecure transport left intentionally here
+		grpc.WithTransportCredentials(insecure.NewCredentials()),
+		grpc.WithBlock(),
+	)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create gRPC connection to collector: %w", err)
+	}
+
+	// Set up a trace exporter
+	traceExporter, err := otlptracegrpc.New(ctx, otlptracegrpc.WithGRPCConn(conn))
+	if err != nil {
+		return nil, fmt.Errorf("failed to create trace exporter: %w", err)
+	}
+
+	// Register the trace exporter with a TracerProvider, using a batch
+	// span processor to aggregate spans before export.
+	bsp := sdktrace.NewBatchSpanProcessor(traceExporter)
 	tp := sdktrace.NewTracerProvider(
-		// Always be sure to batch in production.
-		sdktrace.WithBatcher(exp),
-		// Record information about this application in a Resource.
-		sdktrace.WithResource(resource.NewWithAttributes(
-			semconv.SchemaURL,
-			semconv.ServiceName(tracedServiceName),
-		)),
+		sdktrace.WithSampler(sdktrace.AlwaysSample()),
+		sdktrace.WithResource(res),
+		sdktrace.WithSpanProcessor(bsp),
 	)
 
 	return tp, nil
