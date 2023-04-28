@@ -41,6 +41,11 @@ var (
 	iamClient    *iam.IAM
 )
 
+const (
+	objectstoreName = "objectstore"
+	driverID        = "exampleID"
+)
+
 func TestIntegration(t *testing.T) {
 	RegisterFailHandler(Fail)
 	RunSpecs(t, "COSI Integration Suite")

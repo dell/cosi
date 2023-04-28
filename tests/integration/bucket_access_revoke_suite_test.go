@@ -49,7 +49,7 @@ var _ = Describe("Bucket Access Revoke", Ordered, Label("revoke", "objectscale")
 			DeletionPolicy: "delete",
 			DriverName:     "cosi-driver",
 			Parameters: map[string]string{
-				"ID": "${driverID}",
+				"ID": driverID,
 			},
 		}
 		myBucketClaim = &v1alpha1.BucketClaim{
@@ -75,7 +75,7 @@ var _ = Describe("Bucket Access Revoke", Ordered, Label("revoke", "objectscale")
 			DriverName:         "cosi-driver",
 			AuthenticationType: v1alpha1.AuthenticationTypeKey,
 			Parameters: map[string]string{
-				"ID": "${driverID}",
+				"ID": driverID,
 			},
 		}
 		myBucketAccess = &v1alpha1.BucketAccess{
@@ -107,9 +107,9 @@ var _ = Describe("Bucket Access Revoke", Ordered, Label("revoke", "objectscale")
 		By("Checking if the ObjectScale platform is ready")
 		steps.CheckObjectScaleInstallation(ctx, objectscale)
 
-		// STEP: ObjectStore "objectstore" is created
-		By("Checking if the ObjectStore 'objectstore' is created")
-		steps.CheckObjectStoreExists(ctx, objectscale, "objectstore")
+		// STEP: ObjectStore "${objectstoreName}" is created
+		By("Checking if the ObjectStore '${objectstoreName}' is created")
+		steps.CheckObjectStoreExists(ctx, objectscale, objectstoreName)
 
 		// STEP: Kubernetes namespace "driver-ns" is created
 		By("Checking if namespace 'driver-ns' is created")
@@ -139,8 +139,8 @@ var _ = Describe("Bucket Access Revoke", Ordered, Label("revoke", "objectscale")
 		By("Checking if Bucket resource referencing BucketClaim resource 'my-bucket-claim' is created")
 		myBucket = steps.GetBucketResource(ctx, bucketClient, myBucketClaim)
 
-		// STEP: Bucket resource referencing BucketClaim resource "my-bucket-claim" is created in ObjectStore "objectstore-dev"
-		By("Checking if the Bucket referencing 'my-bucket-claim' is created in ObjectStore 'objectstore-dev'")
+		// STEP: Bucket resource referencing BucketClaim resource "my-bucket-claim" is created in ObjectStore "${objectstoreName}"
+		By("Checking if the Bucket referencing 'my-bucket-claim' is created in ObjectStore '${objectstoreName}'")
 		steps.CheckBucketResourceInObjectStore(objectscale, myBucket)
 
 		// STEP: BucketClaim resource "my-bucket-claim" in namespace "namespace-1" status "bucketReady" is "true"

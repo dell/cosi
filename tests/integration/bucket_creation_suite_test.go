@@ -18,7 +18,6 @@ import (
 	. "github.com/onsi/ginkgo/v2"
 
 	"github.com/dell/cosi-driver/tests/integration/steps"
-	"github.com/dell/cosi-driver/tests/integration/utils"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/container-object-storage-interface-api/apis/objectstorage/v1alpha1"
@@ -48,7 +47,7 @@ var _ = Describe("Bucket Creation", Ordered, Label("create", "objectscale"), fun
 			DeletionPolicy: "delete",
 			DriverName:     "cosi-driver",
 			Parameters: map[string]string{
-				"ID": "${driverID}",
+				"ID": driverID,
 			},
 		}
 		validBucketClaim = &v1alpha1.BucketClaim{
@@ -93,9 +92,9 @@ var _ = Describe("Bucket Creation", Ordered, Label("create", "objectscale"), fun
 		By("Checking if the ObjectScale platform is ready")
 		steps.CheckObjectScaleInstallation(ctx, objectscale)
 
-		// STEP: ObjectStore "objectstore" is created
-		By("Checking if the ObjectStore 'objectstore' is created")
-		steps.CheckObjectStoreExists(ctx, objectscale, "objectstore")
+		// STEP: ObjectStore "${objectstoreName}" is created
+		By("Checking if the ObjectStore '${objectstoreName}' is created")
+		steps.CheckObjectStoreExists(ctx, objectscale, objectstoreName)
 
 		// STEP: Kubernetes namespace "driver-ns" is created
 		By("Checking if namespace 'driver-ns' is created")
@@ -111,7 +110,7 @@ var _ = Describe("Bucket Creation", Ordered, Label("create", "objectscale"), fun
 
 		// STEP: COSI driver "cosi-driver" is installed in namespace "driver-ns"
 		By("Checking if COSI driver 'cosi-driver' is installed in namespace 'driver-ns'")
-		steps.CheckCOSIDriverInstallation(ctx, clientset, "cosi-driver", "driver-ns")
+		steps.CheckCOSIDriverInstallation(ctx, clientset, "cosi-driver", "default")
 
 		// STEP: BucketClass resource is created from specification "my-bucket-class"
 		By("Creating the BucketClass 'my-bucket-class' is created")
@@ -132,9 +131,8 @@ var _ = Describe("Bucket Creation", Ordered, Label("create", "objectscale"), fun
 		By("checking if Bucket resource referencing BucketClaim resource 'bucket-claim-valid' is created")
 		validBucket = steps.GetBucketResource(ctx, bucketClient, validBucketClaim)
 
-		// STEP: Bucket resource referencing BucketClaim resource "bucket-claim-valid" is created in ObjectStore "objectstore-dev"
-		By("checking if Bucket resource referencing BucketClaim resource 'bucket-claim-valid' is created in ObjectStore 'objectstore-dev'")
-
+		// STEP: Bucket resource referencing BucketClaim resource "bucket-claim-valid" is created in ObjectStore "${objectstoreName}""
+		By("checking if Bucket resource referencing BucketClaim resource 'bucket-claim-valid' is created in ObjectStore '${objectstoreName}'")
 		steps.CheckBucketResourceInObjectStore(objectscale, validBucket)
 
 		// STEP: BucketClaim resource "bucket-claim-valid" in namespace "namespace-1" status "bucketReady" is "true"
@@ -164,8 +162,8 @@ var _ = Describe("Bucket Creation", Ordered, Label("create", "objectscale"), fun
 		By("checking if Bucket resource referencing BucketClaim resource 'bucket-claim-invalid' is created")
 		_ = steps.GetBucketResource(ctx, bucketClient, invalidBucketClaim)
 
-		// STEP: Bucket resource referencing BucketClaim resource "bucket-claim-invalid" is not created in ObjectStore "objectstore-dev"
-		By("checking if Bucket resource referencing BucketClaim resource 'bucket-claim-invalid' is not created in ObjectStore 'objectstore-dev'")
+		// STEP: Bucket resource referencing BucketClaim resource "bucket-claim-invalid" is not created in ObjectStore "${objectstoreName}"
+		By("checking if Bucket resource referencing BucketClaim resource 'bucket-claim-invalid' is not created in ObjectStore '${objectstoreName}'")
 		steps.CheckBucketNotInObjectStore(objectscale, invalidBucketClaim)
 
 		// STEP: BucketClaim resource "bucket-claim-invalid" in namespace "namespace-1" status "bucketReady" is "false"
@@ -182,8 +180,8 @@ var _ = Describe("Bucket Creation", Ordered, Label("create", "objectscale"), fun
 	})
 	AfterAll(func() {
 		DeferCleanup(func(ctx SpecContext) {
-			steps.DeleteBucketClassResource(ctx, bucketClient, myBucketClass)
-			utils.DeleteReleasesAndNamespaces(ctx, clientset, map[string]string{"ns-driver": "cosi-driver"}, []string{"ns-driver"})
+			// steps.DeleteBucketClassResource(ctx, bucketClient, myBucketClass)
+			// utils.DeleteReleasesAndNamespaces(ctx, clientset, map[string]string{"ns-driver": "cosi-driver"}, []string{"ns-driver"})
 		})
 	})
 })

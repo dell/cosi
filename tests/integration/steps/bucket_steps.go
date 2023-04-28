@@ -13,6 +13,7 @@
 package steps
 
 import (
+	"fmt"
 	"time"
 
 	ginkgo "github.com/onsi/ginkgo/v2"
@@ -39,6 +40,7 @@ func CreateBucketClaimResource(ctx ginkgo.SpecContext, bucketClient *bucketclien
 
 // DeleteBucketClaimResource Function for deleting BucketClaim resource.
 func DeleteBucketClaimResource(ctx ginkgo.SpecContext, bucketClient *bucketclientset.Clientset, bucketClaim *v1alpha1.BucketClaim) {
+	fmt.Printf("bucketClaim.Namespace: %v", bucketClaim.Namespace)
 	err := bucketClient.ObjectstorageV1alpha1().BucketClaims(bucketClaim.Namespace).Delete(ctx, bucketClaim.Name, v1.DeleteOptions{})
 	gomega.Expect(err).ToNot(gomega.HaveOccurred())
 }
@@ -65,7 +67,9 @@ func CheckBucketID(ctx ginkgo.SpecContext, bucketClient *bucketclientset.Clients
 func CreateBucketClassResource(ctx ginkgo.SpecContext, bucketClient *bucketclientset.Clientset, bucketClass *v1alpha1.BucketClass) {
 	_, err := bucketClient.ObjectstorageV1alpha1().BucketClasses().Get(ctx, bucketClass.Name, v1.GetOptions{})
 	if errors.IsNotFound(err) {
-		_, err := bucketClient.ObjectstorageV1alpha1().BucketClasses().Create(ctx, bucketClass, v1.CreateOptions{})
+		bucketclass, err := bucketClient.ObjectstorageV1alpha1().BucketClasses().Create(ctx, bucketClass, v1.CreateOptions{})
+		fmt.Printf("Error: %v", err)
+		fmt.Printf("Bucketclass: %v", bucketclass)
 		gomega.Expect(err).ToNot(gomega.HaveOccurred())
 	} else {
 		gomega.Expect(err).ToNot(gomega.HaveOccurred())
