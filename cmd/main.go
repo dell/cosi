@@ -132,7 +132,7 @@ func tracerProvider(ctx context.Context, url string) (*sdktrace.TracerProvider, 
 	res, err := resource.New(ctx,
 		resource.WithAttributes(
 			// the service name used to display traces in backends
-			semconv.ServiceName("cosi-driver"),
+			semconv.ServiceName(tracedServiceName),
 		),
 	)
 	if err != nil {
