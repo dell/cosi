@@ -146,5 +146,6 @@ func GetBucketResource(ctx ginkgo.SpecContext, bucketClient *bucketclientset.Cli
 	gomega.Expect(bucket).NotTo(gomega.BeNil())
 
 	ginkgo.GinkgoWriter.Printf("Kubernetes Bucket: %+v\n", bucket)
+
 	return bucket
 }
