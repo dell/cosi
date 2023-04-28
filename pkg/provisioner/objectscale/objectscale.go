@@ -53,6 +53,7 @@ func New(config *config.Objectscale) (*Server, error) {
 	if id == "" {
 		return nil, errors.New("empty driver id")
 	}
+
 	namespace := config.ObjectstoreId
 	if namespace == "" {
 		return nil, errors.New("empty objectstore id")
