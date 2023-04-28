@@ -37,7 +37,7 @@ func CheckObjectStoreExists(ctx ginkgo.SpecContext, objectscale *objectscaleRest
 // CheckBucketResourceInObjectStore Function checking if Bucket resource is in objectstore.
 func CheckBucketResourceInObjectStore(objectscale *objectscaleRest.ClientSet, bucket *v1alpha1.Bucket) {
 	param := make(map[string]string)
-	param["namespace"] = "TODO:Separate-ObjectStoreID-from-bucket"
+	param["namespace"] = "objectstore"
 	objectScaleBucket, err := objectscale.Buckets().Get(bucket.Status.BucketID, param)
 	gomega.Expect(err).ToNot(gomega.HaveOccurred())
 	gomega.Expect(objectScaleBucket).NotTo(gomega.BeNil())

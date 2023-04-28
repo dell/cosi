@@ -116,6 +116,10 @@ type Objectscale struct {
 	// Endpoint of the ObjectScale ObjectStore Management Gateway service
 	ObjectstoreGateway string `json:"objectstore-gateway" yaml:"objectstore-gateway"`
 
+	// ID of objectstore retrieved from the ObjectScale Portal or directly from
+	// objectstore-objmt-* pod
+	ObjectstoreId string `json:"objectstoreId" yaml:"objectstoreId"`
+
 	// Protocols corresponds to the JSON schema field "protocols".
 	Protocols Protocols `json:"protocols" yaml:"protocols"`
 
@@ -144,6 +148,9 @@ func (j *Objectscale) UnmarshalJSON(b []byte) error {
 	}
 	if v, ok := raw["objectstore-gateway"]; !ok || v == nil {
 		return fmt.Errorf("field objectstore-gateway in Objectscale: required")
+	}
+	if v, ok := raw["objectstoreId"]; !ok || v == nil {
+		return fmt.Errorf("field objectstoreId in Objectscale: required")
 	}
 	if v, ok := raw["protocols"]; !ok || v == nil {
 		return fmt.Errorf("field protocols in Objectscale: required")

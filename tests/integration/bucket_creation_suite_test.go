@@ -47,7 +47,7 @@ var _ = Describe("Bucket Creation", Ordered, Label("create", "objectscale"), fun
 			DeletionPolicy: "delete",
 			DriverName:     "cosi-driver",
 			Parameters: map[string]string{
-				"ID": driverID,
+				"id": driverID,
 			},
 		}
 		validBucketClaim = &v1alpha1.BucketClaim{
@@ -130,7 +130,6 @@ var _ = Describe("Bucket Creation", Ordered, Label("create", "objectscale"), fun
 		// STEP: Bucket resource referencing BucketClaim resource 'bucket-claim-valid' is created
 		By("checking if Bucket resource referencing BucketClaim resource 'bucket-claim-valid' is created")
 		validBucket = steps.GetBucketResource(ctx, bucketClient, validBucketClaim)
-
 		// STEP: Bucket resource referencing BucketClaim resource "bucket-claim-valid" is created in ObjectStore "${objectstoreName}""
 		By("checking if Bucket resource referencing BucketClaim resource 'bucket-claim-valid' is created in ObjectStore '${objectstoreName}'")
 		steps.CheckBucketResourceInObjectStore(objectscale, validBucket)

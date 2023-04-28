@@ -36,6 +36,10 @@
           "format": "url",
           "$comment": "format field is placed here only for documentation purposes"
         },
+        "objectstoreId": {
+          "description": "ID of objectstore retrieved from the ObjectScale Portal or directly from objectstore-objmt-* pod",
+          "type": "string"
+        },
         "region": {
           "description": "Identity and Access Management (IAM) API specific field, points to the region in which object storage provider is installed",
           "type": "string"
@@ -55,6 +59,7 @@
       "required": [
         "credentials",
         "id",
+        "objectstoreId",
         "objectscale-gateway",
         "objectstore-gateway",
         "protocols",

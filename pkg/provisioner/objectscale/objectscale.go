@@ -53,6 +53,10 @@ func New(config *config.Objectscale) (*Server, error) {
 	if id == "" {
 		return nil, errors.New("empty driver id")
 	}
+	namespace := config.ObjectstoreId
+	if namespace == "" {
+		return nil, errors.New("empty objectstore id")
+	}
 
 	if strings.Contains(id, "-") {
 		id = strings.ReplaceAll(id, "-", "_")
@@ -85,6 +89,7 @@ func New(config *config.Objectscale) (*Server, error) {
 	return &Server{
 		mgmtClient:  mgmtClient,
 		backendID:   id,
+		namespace:   namespace,
 		emptyBucket: config.EmptyBucket,
 	}, nil
 }

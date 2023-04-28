@@ -43,7 +43,7 @@ var (
 
 const (
 	objectstoreName = "objectstore"
-	driverID        = "exampleID"
+	driverID        = "cokolwiektudej"
 )
 
 func TestIntegration(t *testing.T) {
