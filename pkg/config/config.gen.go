@@ -2,16 +2,16 @@
 
 package config
 
-import "fmt"
 import "encoding/json"
+import "fmt"
 
 // Credentials used for authentication to object storage provider
 type Credentials struct {
 	// Password for object storage provider
-	Password string `json:"password" yaml:"password"`
+	Password string `json:"password" yaml:"password" mapstructure:"password"`
 
 	// Username for object storage provider
-	Username string `json:"username" yaml:"username"`
+	Username string `json:"username" yaml:"username" mapstructure:"username"`
 }
 
 // UnmarshalJSON implements json.Unmarshaler.
@@ -38,7 +38,7 @@ func (j *Credentials) UnmarshalJSON(b []byte) error {
 // S3 configuration
 type S3 struct {
 	// Endpoint of the ObjectStore S3 service
-	Endpoint string `json:"endpoint" yaml:"endpoint"`
+	Endpoint string `json:"endpoint" yaml:"endpoint" mapstructure:"endpoint"`
 }
 
 // UnmarshalJSON implements json.Unmarshaler.
@@ -62,22 +62,22 @@ func (j *S3) UnmarshalJSON(b []byte) error {
 // Protocols supported by the connection
 type Protocols struct {
 	// S3 corresponds to the JSON schema field "s3".
-	S3 *S3 `json:"s3,omitempty" yaml:"s3,omitempty"`
+	S3 *S3 `json:"s3,omitempty" yaml:"s3,omitempty" mapstructure:"s3,omitempty"`
 }
 
 // TLS configuration details
 type Tls struct {
 	// Base64 encoded content of the clients's certificate file
-	ClientCert *string `json:"client-cert,omitempty" yaml:"client-cert,omitempty"`
+	ClientCert *string `json:"client-cert,omitempty" yaml:"client-cert,omitempty" mapstructure:"client-cert,omitempty"`
 
 	// Base64 encoded content of the clients's key certificate file
-	ClientKey *string `json:"client-key,omitempty" yaml:"client-key,omitempty"`
+	ClientKey *string `json:"client-key,omitempty" yaml:"client-key,omitempty" mapstructure:"client-key,omitempty"`
 
 	// Controls whether a client verifies the server's certificate chain and host name
-	Insecure bool `json:"insecure" yaml:"insecure"`
+	Insecure bool `json:"insecure" yaml:"insecure" mapstructure:"insecure"`
 
 	// Base64 encoded content of the root certificate authority file
-	RootCas *string `json:"root-cas,omitempty" yaml:"root-cas,omitempty"`
+	RootCas *string `json:"root-cas,omitempty" yaml:"root-cas,omitempty" mapstructure:"root-cas,omitempty"`
 }
 
 // UnmarshalJSON implements json.Unmarshaler.
@@ -101,34 +101,33 @@ func (j *Tls) UnmarshalJSON(b []byte) error {
 // Configuration specific to the Dell ObjectScale platform
 type Objectscale struct {
 	// Credentials corresponds to the JSON schema field "credentials".
-	Credentials Credentials `json:"credentials" yaml:"credentials"`
+	Credentials Credentials `json:"credentials" yaml:"credentials" mapstructure:"credentials"`
 
 	// Indicates if the contents of the bucket should be emptied as part of the
 	// deletion process
-	EmptyBucket bool `json:"emptyBucket,omitempty" yaml:"emptyBucket,omitempty"`
+	EmptyBucket bool `json:"emptyBucket,omitempty" yaml:"emptyBucket,omitempty" mapstructure:"emptyBucket,omitempty"`
 
 	// Default, unique identifier for the single connection.
-	Id string `json:"id" yaml:"id"`
+	Id string `json:"id" yaml:"id" mapstructure:"id"`
+
+	// Namespace associated with the user/tenant that is allowed to access the bucket
+	Namespace string `json:"namespace" yaml:"namespace" mapstructure:"namespace"`
 
 	// Endpoint of the ObjectScale Gateway Internal service
-	ObjectscaleGateway string `json:"objectscale-gateway" yaml:"objectscale-gateway"`
+	ObjectscaleGateway string `json:"objectscale-gateway" yaml:"objectscale-gateway" mapstructure:"objectscale-gateway"`
 
 	// Endpoint of the ObjectScale ObjectStore Management Gateway service
-	ObjectstoreGateway string `json:"objectstore-gateway" yaml:"objectstore-gateway"`
-
-	// ID of objectstore retrieved from the ObjectScale Portal or directly from
-	// objectstore-objmt-* pod
-	ObjectstoreId string `json:"objectstoreId" yaml:"objectstoreId"`
+	ObjectstoreGateway string `json:"objectstore-gateway" yaml:"objectstore-gateway" mapstructure:"objectstore-gateway"`
 
 	// Protocols corresponds to the JSON schema field "protocols".
-	Protocols Protocols `json:"protocols" yaml:"protocols"`
+	Protocols Protocols `json:"protocols" yaml:"protocols" mapstructure:"protocols"`
 
 	// Identity and Access Management (IAM) API specific field, points to the region
 	// in which object storage provider is installed
-	Region *string `json:"region,omitempty" yaml:"region,omitempty"`
+	Region *string `json:"region,omitempty" yaml:"region,omitempty" mapstructure:"region,omitempty"`
 
 	// Tls corresponds to the JSON schema field "tls".
-	Tls Tls `json:"tls" yaml:"tls"`
+	Tls Tls `json:"tls" yaml:"tls" mapstructure:"tls"`
 }
 
 // UnmarshalJSON implements json.Unmarshaler.
@@ -143,14 +142,14 @@ func (j *Objectscale) UnmarshalJSON(b []byte) error {
 	if v, ok := raw["id"]; !ok || v == nil {
 		return fmt.Errorf("field id in Objectscale: required")
 	}
+	if v, ok := raw["namespace"]; !ok || v == nil {
+		return fmt.Errorf("field namespace in Objectscale: required")
+	}
 	if v, ok := raw["objectscale-gateway"]; !ok || v == nil {
 		return fmt.Errorf("field objectscale-gateway in Objectscale: required")
 	}
 	if v, ok := raw["objectstore-gateway"]; !ok || v == nil {
 		return fmt.Errorf("field objectstore-gateway in Objectscale: required")
-	}
-	if v, ok := raw["objectstoreId"]; !ok || v == nil {
-		return fmt.Errorf("field objectstoreId in Objectscale: required")
 	}
 	if v, ok := raw["protocols"]; !ok || v == nil {
 		return fmt.Errorf("field protocols in Objectscale: required")
@@ -174,12 +173,12 @@ func (j *Objectscale) UnmarshalJSON(b []byte) error {
 type ConfigSchemaJson struct {
 	// List of connections to object storage platforms that can be used for object
 	// storage provisioning.
-	Connections []Configuration `json:"connections,omitempty" yaml:"connections,omitempty"`
+	Connections []Configuration `json:"connections,omitempty" yaml:"connections,omitempty" mapstructure:"connections,omitempty"`
 }
 
 // Configuration for single connection to object storage platform that is used for
 // object storage provisioning
 type Configuration struct {
 	// Objectscale corresponds to the JSON schema field "objectscale".
-	Objectscale *Objectscale `json:"objectscale,omitempty" yaml:"objectscale,omitempty"`
+	Objectscale *Objectscale `json:"objectscale,omitempty" yaml:"objectscale,omitempty" mapstructure:"objectscale,omitempty"`
 }

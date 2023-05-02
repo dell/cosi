@@ -36,8 +36,9 @@
           "format": "url",
           "$comment": "format field is placed here only for documentation purposes"
         },
-        "objectstoreId": {
-          "description": "ID of objectstore retrieved from the ObjectScale Portal or directly from objectstore-objmt-* pod",
+        "namespace": {
+          "description": "Namespace associated with the user/tenant that is allowed to access the bucket",
+          "$comment": "This is one of the most confusing things in ObjectScale - it is ID of account, not the namespace! We need to find a way to consistently name it and forward our feedback to the OBS team.",
           "type": "string"
         },
         "region": {
@@ -59,7 +60,7 @@
       "required": [
         "credentials",
         "id",
-        "objectstoreId",
+        "namespace",
         "objectscale-gateway",
         "objectstore-gateway",
         "protocols",

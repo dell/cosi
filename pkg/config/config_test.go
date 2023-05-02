@@ -36,6 +36,7 @@ var (
                     "password": "testpassword"
                 },
                 "id": "testid",
+                "namespace": "test-namespace",
                 "objectscale-gateway": "gateway.objectscale.test",
                 "objectstore-gateway": "gateway.objectstore.test",
                 "emptyBucket": false,
@@ -95,6 +96,7 @@ var (
     credentials:
       username: testuser
     id: testid
+    namespace: test-namespace
     objectscale-gateway: gateway.objectscale.test
     objectstore-gateway: gateway.objectstore.test
     emptyBucket: false
