@@ -16,11 +16,13 @@ import (
 	"context"
 	"strings"
 
+	log "github.com/sirupsen/logrus"
+	otelCodes "go.opentelemetry.io/otel/codes"
+	cosi "sigs.k8s.io/container-object-storage-interface-spec"
+
+	"go.opentelemetry.io/otel"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
-
-	log "github.com/sirupsen/logrus"
-	cosi "sigs.k8s.io/container-object-storage-interface-spec"
 )
 
 // Server is an implementation of a provisioner server.
@@ -29,6 +31,10 @@ type Server struct {
 }
 
 var _ cosi.ProvisionerServer = (*Server)(nil)
+
+const (
+	invalidBackendErr = "invalid backend ID"
+)
 
 // New initializes Server based on the config file.
 func New(driverset *Driverset) *Server {
@@ -41,6 +47,9 @@ func New(driverset *Driverset) *Server {
 func (s *Server) DriverCreateBucket(ctx context.Context,
 	req *cosi.DriverCreateBucketRequest,
 ) (*cosi.DriverCreateBucketResponse, error) {
+	tracedCtx, span := otel.Tracer("CreateBucketRequest").Start(ctx, "ProvisionerCreateBucket")
+	defer span.End()
+
 	id := req.Parameters["id"]
 
 	// get the driver from driverset
@@ -50,9 +59,12 @@ func (s *Server) DriverCreateBucket(ctx context.Context,
 		log.WithFields(log.Fields{
 			"id":    id,
 			"error": err,
-		}).Error("invalid backend ID")
+		}).Error(invalidBackendErr)
 
-		return nil, status.Error(codes.InvalidArgument, "invalid backend ID")
+		span.RecordError(err)
+		span.SetStatus(otelCodes.Error, invalidBackendErr)
+
+		return nil, status.Error(codes.InvalidArgument, invalidBackendErr)
 	}
 
 	log.WithFields(log.Fields{
@@ -60,13 +72,16 @@ func (s *Server) DriverCreateBucket(ctx context.Context,
 	}).Debug("valid backend ID")
 
 	// execute DriverCreateBucket from correct driver
-	return d.DriverCreateBucket(ctx, req)
+	return d.DriverCreateBucket(tracedCtx, req)
 }
 
 // DriverDeleteBucket deletes Bucket on specific Object Storage Platform.
 func (s *Server) DriverDeleteBucket(ctx context.Context,
 	req *cosi.DriverDeleteBucketRequest,
 ) (*cosi.DriverDeleteBucketResponse, error) {
+	tracedCtx, span := otel.Tracer("DeleteBucketRequest").Start(ctx, "ProvisionerDeleteBucket")
+	defer span.End()
+
 	id := getID(req.BucketId)
 
 	// get the driver from driverset
@@ -76,9 +91,12 @@ func (s *Server) DriverDeleteBucket(ctx context.Context,
 		log.WithFields(log.Fields{
 			"id":    id,
 			"error": err,
-		}).Error("invalid backend ID")
+		}).Error(invalidBackendErr)
 
-		return nil, status.Error(codes.InvalidArgument, "invalid backend ID")
+		span.RecordError(err)
+		span.SetStatus(otelCodes.Error, invalidBackendErr)
+
+		return nil, status.Error(codes.InvalidArgument, invalidBackendErr)
 	}
 
 	log.WithFields(log.Fields{
@@ -86,13 +104,16 @@ func (s *Server) DriverDeleteBucket(ctx context.Context,
 	}).Debug("valid backend ID")
 
 	// execute DriverDeleteBucket from correct driver
-	return d.DriverDeleteBucket(ctx, req)
+	return d.DriverDeleteBucket(tracedCtx, req)
 }
 
 // DriverGrantBucketAccess provides access to Bucket on specific Object Storage Platform.
 func (s *Server) DriverGrantBucketAccess(ctx context.Context,
 	req *cosi.DriverGrantBucketAccessRequest,
 ) (*cosi.DriverGrantBucketAccessResponse, error) {
+	tracedCtx, span := otel.Tracer("GrantBucketAccessRequest").Start(ctx, "ProvisionerGrantBucketAccess")
+	defer span.End()
+
 	id := req.Parameters["id"]
 
 	// get the driver from driverset
@@ -102,9 +123,12 @@ func (s *Server) DriverGrantBucketAccess(ctx context.Context,
 		log.WithFields(log.Fields{
 			"id":    id,
 			"error": err,
-		}).Error("invalid backend ID")
+		}).Error(invalidBackendErr)
 
-		return nil, status.Error(codes.InvalidArgument, "invalid backend ID")
+		span.RecordError(err)
+		span.SetStatus(otelCodes.Error, invalidBackendErr)
+
+		return nil, status.Error(codes.InvalidArgument, invalidBackendErr)
 	}
 
 	log.WithFields(log.Fields{
@@ -112,13 +136,16 @@ func (s *Server) DriverGrantBucketAccess(ctx context.Context,
 	}).Debug("valid backend ID")
 
 	// execute DriverGrantBucketAccess from correct driver
-	return d.DriverGrantBucketAccess(ctx, req)
+	return d.DriverGrantBucketAccess(tracedCtx, req)
 }
 
 // DriverRevokeBucketAccess revokes access from Bucket on specific Object Storage Platform.
 func (s *Server) DriverRevokeBucketAccess(ctx context.Context,
 	req *cosi.DriverRevokeBucketAccessRequest,
 ) (*cosi.DriverRevokeBucketAccessResponse, error) {
+	tracedCtx, span := otel.Tracer("RevokeBucketAccessRequest").Start(ctx, "ProvisionerRevokeBucketAccess")
+	defer span.End()
+
 	id := getID(req.BucketId)
 
 	// get the driver from driverset
@@ -128,9 +155,12 @@ func (s *Server) DriverRevokeBucketAccess(ctx context.Context,
 		log.WithFields(log.Fields{
 			"id":    id,
 			"error": err,
-		}).Error("invalid backend ID")
+		}).Error(invalidBackendErr)
 
-		return nil, status.Error(codes.InvalidArgument, "invalid backend ID")
+		span.RecordError(err)
+		span.SetStatus(otelCodes.Error, invalidBackendErr)
+
+		return nil, status.Error(codes.InvalidArgument, invalidBackendErr)
 	}
 
 	log.WithFields(log.Fields{
@@ -138,7 +168,7 @@ func (s *Server) DriverRevokeBucketAccess(ctx context.Context,
 	}).Debug("valid backend ID")
 
 	// execute DriverRevokeBucketAccess from correct driver
-	return d.DriverRevokeBucketAccess(ctx, req)
+	return d.DriverRevokeBucketAccess(tracedCtx, req)
 }
 
 // getID splits the string and returns ID from it

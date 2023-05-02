@@ -19,19 +19,20 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/dell/goobjectscale/pkg/client/api"
-	"github.com/dell/goobjectscale/pkg/client/model"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
-
 	driver "github.com/dell/cosi-driver/pkg/provisioner/virtualdriver"
 	objectscaleRest "github.com/dell/goobjectscale/pkg/client/rest"
 	objectscaleClient "github.com/dell/goobjectscale/pkg/client/rest/client"
 	log "github.com/sirupsen/logrus"
+	otelCodes "go.opentelemetry.io/otel/codes"
 	cosi "sigs.k8s.io/container-object-storage-interface-spec"
 
 	"github.com/dell/cosi-driver/pkg/config"
 	"github.com/dell/cosi-driver/pkg/transport"
+	"github.com/dell/goobjectscale/pkg/client/api"
+	"github.com/dell/goobjectscale/pkg/client/model"
+	"go.opentelemetry.io/otel"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 const splitNumber = 2
@@ -98,6 +99,9 @@ func (s *Server) DriverCreateBucket(
 	ctx context.Context,
 	req *cosi.DriverCreateBucketRequest,
 ) (*cosi.DriverCreateBucketResponse, error) {
+	_, span := otel.Tracer("CreateBucketRequest").Start(ctx, "ObjectscaleDriverCreateBucket")
+	defer span.End()
+
 	log.WithFields(log.Fields{
 		"bucket": req.GetName(),
 	}).Info("bucket is being created")
@@ -109,8 +113,13 @@ func (s *Server) DriverCreateBucket(
 
 	// Check if bucket name is not empty.
 	if bucket.Name == "" {
-		log.Error("empty bucket name")
-		return nil, status.Error(codes.InvalidArgument, "empty bucket name")
+		err := errors.New("empty bucket name")
+		log.Error(err.Error())
+
+		span.RecordError(err)
+		span.SetStatus(otelCodes.Error, err.Error())
+
+		return nil, status.Error(codes.InvalidArgument, err.Error())
 	}
 
 	// Display all request parameters.
@@ -136,11 +145,15 @@ func (s *Server) DriverCreateBucket(
 			"bucket": bucket.Name,
 		}).Error("failed to check bucket existence")
 
+		span.RecordError(err)
+		span.SetStatus(otelCodes.Error, "failed to check bucket existence")
+
 		return nil, status.Error(codes.Internal, "an unexpected error occurred")
 	} else if err == nil {
 		log.WithFields(log.Fields{
 			"bucket": bucket.Name,
 		}).Error("bucket already exists")
+
 		return nil, status.Error(codes.AlreadyExists, "bucket already exists")
 	}
 
@@ -150,6 +163,9 @@ func (s *Server) DriverCreateBucket(
 		log.WithFields(log.Fields{
 			"bucket": bucket.Name,
 		}).Error("failed to create bucket")
+
+		span.RecordError(err)
+		span.SetStatus(otelCodes.Error, "failed to create bucket")
 
 		return nil, status.Error(codes.Internal, "bucket was not successfully created")
 	}
@@ -168,14 +184,22 @@ func (s *Server) DriverCreateBucket(
 func (s *Server) DriverDeleteBucket(ctx context.Context,
 	req *cosi.DriverDeleteBucketRequest,
 ) (*cosi.DriverDeleteBucketResponse, error) {
+	_, span := otel.Tracer("DeleteBucketRequest").Start(ctx, "ObjectscaleDriverDeleteBucket")
+	defer span.End()
+
 	log.WithFields(log.Fields{
 		"bucketID": req.BucketId,
 	}).Info("bucket is being deleted")
 
 	// Check if bucketID is not empty.
 	if req.GetBucketId() == "" {
-		log.Error("empty bucketID")
-		return nil, status.Error(codes.InvalidArgument, "empty bucketID")
+		err := errors.New("empty bucketID")
+		log.Error(err.Error())
+
+		span.RecordError(err)
+		span.SetStatus(otelCodes.Error, err.Error())
+
+		return nil, status.Error(codes.InvalidArgument, err.Error())
 	}
 
 	// Extract bucket name from bucketID.
@@ -189,6 +213,9 @@ func (s *Server) DriverDeleteBucket(ctx context.Context,
 			"bucket": bucketName,
 		}).Error("bucket to delete not found")
 
+		span.RecordError(err)
+		span.SetStatus(otelCodes.Error, "bucket not found")
+
 		return nil, status.Error(codes.NotFound, "bucket not found")
 	}
 
@@ -196,6 +223,9 @@ func (s *Server) DriverDeleteBucket(ctx context.Context,
 		log.WithFields(log.Fields{
 			"bucket": bucketName,
 		}).Error("failed to delete bucket")
+
+		span.RecordError(err)
+		span.SetStatus(otelCodes.Error, "failed to delete bucket")
 
 		return nil, status.Error(codes.Internal, "bucket was not successfully deleted")
 	}
@@ -211,12 +241,26 @@ func (s *Server) DriverDeleteBucket(ctx context.Context,
 func (s *Server) DriverGrantBucketAccess(ctx context.Context,
 	req *cosi.DriverGrantBucketAccessRequest,
 ) (*cosi.DriverGrantBucketAccessResponse, error) {
-	return nil, status.Error(codes.Unimplemented, "not implemented")
+	_, span := otel.Tracer("GrantBucketAccessRequest").Start(ctx, "ObjectscaleDriverGrantBucketAccess")
+	defer span.End()
+
+	err := errors.New("not implemented")
+	span.RecordError(err)
+	span.SetStatus(otelCodes.Error, err.Error())
+
+	return nil, status.Error(codes.Unimplemented, err.Error())
 }
 
 // DriverRevokeBucketAccess revokes access from Bucket on specific Object Storage Platform.
 func (s *Server) DriverRevokeBucketAccess(ctx context.Context,
 	req *cosi.DriverRevokeBucketAccessRequest,
 ) (*cosi.DriverRevokeBucketAccessResponse, error) {
-	return nil, status.Error(codes.Unimplemented, "not implemented")
+	_, span := otel.Tracer("RevokeBucketAccessRequest").Start(ctx, "ObjectscaleDriverRevokeBucketAccess")
+	defer span.End()
+
+	err := errors.New("not implemented")
+	span.RecordError(err)
+	span.SetStatus(otelCodes.Error, err.Error())
+
+	return nil, status.Error(codes.Unimplemented, err.Error())
 }
