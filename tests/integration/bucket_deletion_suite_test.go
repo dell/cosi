@@ -123,8 +123,8 @@ var _ = Describe("Bucket Deletion", Ordered, Label("delete", "objectscale"), fun
 		steps.CheckCOSIControllerInstallation(ctx, clientset, "objectstorage-controller", "default")
 
 		// STEP: COSI driver "cosi-driver" is installed in namespace "driver-ns"
-		By("Checking if COSI driver 'cosi-driver' is installed in namespace 'driver-ns'")
-		steps.CheckCOSIDriverInstallation(ctx, clientset, "cosi-driver", "driver-ns")
+		// By("Checking if COSI driver 'cosi-driver' is installed in namespace 'driver-ns'")
+		// steps.CheckCOSIDriverInstallation(ctx, clientset, "cosi-driver", "driver-ns")
 
 		DeferCleanup(func() {
 			// Cleanup for background

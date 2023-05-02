@@ -139,6 +139,9 @@ func (s *Server) DriverCreateBucket(
 		parametersCopy[key] = value
 	}
 
+	// TODO: is this good way of doing this?
+	parametersCopy["namespace"] = s.namespace
+
 	log.WithFields(log.Fields{
 		"parameters": parameters,
 	}).Info("parameters of the bucket")
@@ -148,9 +151,12 @@ func (s *Server) DriverCreateBucket(
 
 	// Check if bucket with specific name and parameters already exists.
 	_, err := s.mgmtClient.Buckets().Get(bucket.Name, parametersCopy)
-	if err != nil && !errors.Is(err, model.Error{Code: model.CodeResourceNotFound}) {
+	if err != nil && !errors.Is(err, model.Error{Code: model.CodeParameterNotFound}) {
+		// FIXME: bug in goobjectscale preventing error assertion (goobjectscale/pkg/client/rest/client/simple.go:130)
+		// NOTE: this might also be present in service client!
 		log.WithFields(log.Fields{
 			"bucket": bucket.Name,
+			"error":  err,
 		}).Error("failed to check bucket existence")
 
 		span.RecordError(err)
@@ -174,6 +180,7 @@ func (s *Server) DriverCreateBucket(
 	if err != nil {
 		log.WithFields(log.Fields{
 			"bucket": bucket.Name,
+			"error":  err,
 		}).Error("failed to create bucket")
 
 		span.RecordError(err)
@@ -237,6 +244,7 @@ func (s *Server) DriverDeleteBucket(ctx context.Context,
 	if err != nil {
 		log.WithFields(log.Fields{
 			"bucket": bucketName,
+			"error":  err,
 		}).Error("failed to delete bucket")
 
 		span.RecordError(err)
