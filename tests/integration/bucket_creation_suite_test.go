@@ -132,7 +132,7 @@ var _ = Describe("Bucket Creation", Ordered, Label("create", "objectscale"), fun
 		validBucket = steps.GetBucketResource(ctx, bucketClient, validBucketClaim)
 		// STEP: Bucket resource referencing BucketClaim resource "bucket-claim-valid" is created in ObjectStore "${objectstoreName}""
 		By("checking if Bucket resource referencing BucketClaim resource 'bucket-claim-valid' is created in ObjectStore '${objectstoreName}'")
-		steps.CheckBucketResourceInObjectStore(objectscale, validBucket)
+		steps.CheckBucketResourceInObjectStore(objectscale, namespace, validBucket)
 
 		// STEP: BucketClaim resource "bucket-claim-valid" in namespace "namespace-1" status "bucketReady" is "true"
 		By("checking if the status 'bucketReady' of BucketClaim resource 'bucket-claim-valid' in namespace 'namespace-1' is 'true'")
@@ -146,7 +146,7 @@ var _ = Describe("Bucket Creation", Ordered, Label("create", "objectscale"), fun
 		By("checking the status 'bucketID' of Bucket resource referencing BucketClaim resource 'bucket-claim-valid' is not empty")
 		steps.CheckBucketID(ctx, bucketClient, validBucket)
 
-		DeferCleanup(func() {
+		DeferCleanup(func(ctx SpecContext) {
 			steps.DeleteBucketClaimResource(ctx, bucketClient, validBucketClaim)
 		})
 	})
@@ -173,7 +173,7 @@ var _ = Describe("Bucket Creation", Ordered, Label("create", "objectscale"), fun
 		By("checking if the BucketClaim events contains an error: 'Cannot create Bucket: BucketClass does not exist'")
 		steps.CheckBucketClaimEvents(ctx, clientset, invalidBucketClaim, myEvent)
 
-		DeferCleanup(func() {
+		DeferCleanup(func(ctx SpecContext) {
 			steps.DeleteBucketClaimResource(ctx, bucketClient, invalidBucketClaim)
 		})
 	})

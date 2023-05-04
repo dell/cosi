@@ -152,8 +152,6 @@ func (s *Server) DriverCreateBucket(
 	// Check if bucket with specific name and parameters already exists.
 	_, err := s.mgmtClient.Buckets().Get(bucket.Name, parametersCopy)
 	if err != nil && !errors.Is(err, model.Error{Code: model.CodeParameterNotFound}) {
-		// FIXME: bug in goobjectscale preventing error assertion (goobjectscale/pkg/client/rest/client/simple.go:130)
-		// NOTE: this might also be present in service client!
 		log.WithFields(log.Fields{
 			"bucket": bucket.Name,
 			"error":  err,

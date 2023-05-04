@@ -147,7 +147,7 @@ var _ = Describe("Bucket Deletion", Ordered, Label("delete", "objectscale"), fun
 
 		// STEP: Bucket resource referencing BucketClaim resource "bucket-claim-delete" is created in ObjectStore "${objectstoreName}"
 		By("checking if Bucket resource referencing BucketClaim resource 'bucket-claim-delete' is created in ObjectStore '${objectstoreName}'")
-		steps.CheckBucketResourceInObjectStore(objectscale, deleteBucket)
+		steps.CheckBucketResourceInObjectStore(objectscale, namespace, deleteBucket)
 
 		// STEP: BucketClaim resource "bucket-claim-delete" in namespace "namespace-1" status "bucketReady" is "true"
 		By("checking if the status 'bucketReady' of BucketClaim resource 'bucket-claim-delete' in namespace 'namespace-1' is 'true'")
@@ -190,7 +190,7 @@ var _ = Describe("Bucket Deletion", Ordered, Label("delete", "objectscale"), fun
 
 		// STEP: Bucket resource referencing BucketClaim resource "bucket-claim-retain" is created in ObjectStore "${objectstoreName}"
 		By("checking if Bucket resource referencing BucketClaim resource 'bucket-claim-retain' is created in ObjectStore '${objectstoreName}'")
-		steps.CheckBucketResourceInObjectStore(objectscale, retainBucket)
+		steps.CheckBucketResourceInObjectStore(objectscale, namespace, retainBucket)
 
 		// STEP: BucketClaim resource "bucket-claim-retain" in namespace "namespace-1" status "bucketReady" is "true"
 		By("checking if the status 'bucketReady' of BucketClaim resource 'bucket-claim-retain' in namespace 'namespace-1' is 'true'")
@@ -210,7 +210,7 @@ var _ = Describe("Bucket Deletion", Ordered, Label("delete", "objectscale"), fun
 
 		// STEP: Bucket referencing BucketClaim resource "my-bucket-claim-retain" is available in ObjectStore "${objectstoreName}"
 		By("checking if Bucket referencing BucketClaim resource 'my-bucket-claim-retain' is available in ObjectStore '${objectstoreName}'")
-		steps.CheckBucketResourceInObjectStore(objectscale, retainBucket)
+		steps.CheckBucketResourceInObjectStore(objectscale, namespace, retainBucket)
 	})
 	AfterAll(func() {
 		DeferCleanup(func(ctx SpecContext) {
