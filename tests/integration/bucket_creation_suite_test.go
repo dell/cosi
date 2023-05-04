@@ -18,7 +18,6 @@ import (
 	. "github.com/onsi/ginkgo/v2"
 
 	"github.com/dell/cosi-driver/tests/integration/steps"
-	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/container-object-storage-interface-api/apis/objectstorage/v1alpha1"
 )
@@ -30,7 +29,7 @@ var _ = Describe("Bucket Creation", Ordered, Label("create", "objectscale"), fun
 		validBucketClaim   *v1alpha1.BucketClaim
 		invalidBucketClaim *v1alpha1.BucketClaim
 		validBucket        *v1alpha1.Bucket
-		myEvent            *v1.Event
+		//myEvent            *v1.Event
 	)
 
 	// Background
@@ -78,11 +77,11 @@ var _ = Describe("Bucket Creation", Ordered, Label("create", "objectscale"), fun
 				},
 			},
 		}
-		myEvent = &v1.Event{
-			Type:    v1.EventTypeWarning,
-			Reason:  "MissingBucketClassName",
-			Message: "BucketClassName not defined",
-		}
+		// myEvent = &v1.Event{
+		// 	Type:    v1.EventTypeWarning,
+		// 	Reason:  "MissingBucketClassName",
+		// 	Message: "BucketClassName not defined",
+		// }
 
 		// STEP: Kubernetes cluster is up and running
 		By("Checking if the cluster is ready")
@@ -147,7 +146,7 @@ var _ = Describe("Bucket Creation", Ordered, Label("create", "objectscale"), fun
 		steps.CheckBucketID(ctx, bucketClient, validBucket)
 
 		DeferCleanup(func(ctx SpecContext) {
-			steps.DeleteBucketClaimResource(ctx, bucketClient, validBucketClaim)
+			//steps.DeleteBucketClaimResource(ctx, bucketClient, validBucketClaim)
 		})
 	})
 
@@ -158,8 +157,8 @@ var _ = Describe("Bucket Creation", Ordered, Label("create", "objectscale"), fun
 		steps.CreateBucketClaimResource(ctx, bucketClient, invalidBucketClaim)
 
 		// STEP: Bucket resource referencing BucketClaim resource 'bucket-claim-invalid' is created
-		By("checking if Bucket resource referencing BucketClaim resource 'bucket-claim-invalid' is created")
-		_ = steps.GetBucketResource(ctx, bucketClient, invalidBucketClaim)
+		By("checking if Bucket status in BucketClaim resource is empty")
+		steps.CheckBucketStatusEmpty(ctx, bucketClient, invalidBucketClaim)
 
 		// STEP: Bucket resource referencing BucketClaim resource "bucket-claim-invalid" is not created in ObjectStore "${objectstoreName}"
 		By("checking if Bucket resource referencing BucketClaim resource 'bucket-claim-invalid' is not created in ObjectStore '${objectstoreName}'")
@@ -169,9 +168,10 @@ var _ = Describe("Bucket Creation", Ordered, Label("create", "objectscale"), fun
 		By("checking if the status 'bucketReady' of BucketClaim resource 'bucket-claim-invalid' in namespace 'namespace-1' is 'false'")
 		steps.CheckBucketClaimStatus(ctx, bucketClient, invalidBucketClaim, false)
 
+		// NOTE: commented for now until changes introduced to provisioner sidecar
 		// STEP: BucketClaim events contains an error: "Cannot create Bucket: BucketClass does not exist"
-		By("checking if the BucketClaim events contains an error: 'Cannot create Bucket: BucketClass does not exist'")
-		steps.CheckBucketClaimEvents(ctx, clientset, invalidBucketClaim, myEvent)
+		//By("checking if the BucketClaim events contains an error: 'Cannot create Bucket: BucketClass does not exist'")
+		//steps.CheckBucketClaimEvents(ctx, clientset, invalidBucketClaim, myEvent)
 
 		DeferCleanup(func(ctx SpecContext) {
 			steps.DeleteBucketClaimResource(ctx, bucketClient, invalidBucketClaim)
@@ -180,7 +180,6 @@ var _ = Describe("Bucket Creation", Ordered, Label("create", "objectscale"), fun
 	AfterAll(func() {
 		DeferCleanup(func(ctx SpecContext) {
 			// steps.DeleteBucketClassResource(ctx, bucketClient, myBucketClass)
-			// utils.DeleteReleasesAndNamespaces(ctx, clientset, map[string]string{"ns-driver": "cosi-driver"}, []string{"ns-driver"})
 		})
 	})
 })

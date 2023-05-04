@@ -139,7 +139,7 @@ func GetBucketResource(ctx ginkgo.SpecContext, bucketClient *bucketclientset.Cli
 
 	myBucketClaim, err := bucketClient.ObjectstorageV1alpha1().BucketClaims(bucketClaim.Namespace).Get(ctx, bucketClaim.Name, v1.GetOptions{})
 	gomega.Expect(err).ToNot(gomega.HaveOccurred())
-	gomega.Expect(myBucketClaim.Status.BucketName).NotTo(gomega.BeNil())
+	gomega.Expect(myBucketClaim.Status.BucketName).NotTo(gomega.BeEmpty())
 
 	bucket, err := bucketClient.ObjectstorageV1alpha1().Buckets().Get(ctx, myBucketClaim.Status.BucketName, v1.GetOptions{})
 	gomega.Expect(err).ToNot(gomega.HaveOccurred())
@@ -148,4 +148,13 @@ func GetBucketResource(ctx ginkgo.SpecContext, bucketClient *bucketclientset.Cli
 	ginkgo.GinkgoWriter.Printf("Kubernetes Bucket: %+v\n", bucket)
 
 	return bucket
+}
+
+func CheckBucketStatusEmpty(ctx ginkgo.SpecContext, bucketClient *bucketclientset.Clientset, bucketClaim *v1alpha1.BucketClaim) {
+	// Wait for creations of bucket in cluster
+	time.Sleep(2 * time.Second) // nolint:gomnd
+
+	myBucketClaim, err := bucketClient.ObjectstorageV1alpha1().BucketClaims(bucketClaim.Namespace).Get(ctx, bucketClaim.Name, v1.GetOptions{})
+	gomega.Expect(err).ToNot(gomega.HaveOccurred())
+	gomega.Expect(myBucketClaim.Status.BucketName).To(gomega.BeEmpty())
 }
