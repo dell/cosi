@@ -52,7 +52,6 @@ type Simple struct {
 
 // MakeRemoteCall executes an API request against the client endpoint, returning
 // the object body of the response into a response object
-// NOTE: this is WET not DRY, as the same code is copied for Client
 func (c *Simple) MakeRemoteCall(r Request, into interface{}) error {
 	err := r.Validate(c.Endpoint)
 	if err != nil {
@@ -135,7 +134,7 @@ func (c *Simple) MakeRemoteCall(r Request, into interface{}) error {
 			if err = Unmarshal(resp, &ecsError); err != nil {
 				return err
 			}
-			return fmt.Errorf("%s: %s", ecsError.Description, ecsError.Details)
+			return ecsError
 		case into == nil:
 			// No errors found, and no response object defined, so just return
 			// without error
