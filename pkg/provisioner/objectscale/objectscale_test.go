@@ -48,6 +48,7 @@ var (
 		Id:                 "valid.id",
 		ObjectscaleGateway: "gateway.objectscale.test",
 		ObjectstoreGateway: "gateway.objectstore.test",
+		Namespace:          "validnamespace",
 		Credentials: config.Credentials{
 			Username: "testuser",
 			Password: "testpassword",
@@ -70,6 +71,7 @@ var (
 			Username: "testuser",
 			Password: "testpassword",
 		},
+		Namespace: "validnamespace",
 		Protocols: config.Protocols{
 			S3: &config.S3{
 				Endpoint: "s3.objectstore.test",
@@ -84,6 +86,7 @@ var (
 		Id:                 "",
 		ObjectscaleGateway: "gateway.objectscale.test",
 		ObjectstoreGateway: "gateway.objectstore.test",
+		Namespace:          "validnamespace",
 		Credentials: config.Credentials{
 			Username: "testuser",
 			Password: "testpassword",
@@ -102,6 +105,7 @@ var (
 		Id:                 "valid.id",
 		ObjectscaleGateway: "gateway.objectscale.test",
 		ObjectstoreGateway: "gateway.objectstore.test",
+		Namespace:          "validnamespace",
 		Credentials: config.Credentials{
 			Username: "testuser",
 			Password: "testpassword",
@@ -291,7 +295,7 @@ func testDriverCreateBucket(t *testing.T) {
 		{
 			description:   "cannot create bucket",
 			inputName:     "FORCEFAIL-bucket-valid",
-			expectedError: status.Error(codes.Internal, "bucket was not successfully created"),
+			expectedError: status.Error(codes.Internal, "Bucket was not successfully created"),
 			server: Server{
 				mgmtClient: fake.NewClientSet(),
 				namespace:  namespace,
