@@ -384,13 +384,128 @@ func testDriverDeleteBucket(t *testing.T) {
 	}
 }
 
-// FIXME: write valid test.
 func testDriverGrantBucketAccess(t *testing.T) {
-	srv := Server{}
+	// Namespace (ObjectstoreID) and testID (driver ID) provided in the config file
+	const (
+		namespace = "namespace"
+		testID    = "test.id"
+	)
 
-	_, err := srv.DriverGrantBucketAccess(context.TODO(), &cosi.DriverGrantBucketAccessRequest{})
-	if err == nil {
-		t.Error("expected error")
+	testCases := []struct {
+		description             string
+		inputBucketID           string
+		inputBucketAccessName   string
+		inputAuthenticationType cosi.AuthenticationType
+		expectedError           error
+		server                  Server
+		parameters              map[string]string
+	}{
+		{
+			description:             "valid access granting",
+			inputBucketID:           "bucket-valid",
+			inputBucketAccessName:   "bucket-access-valid",
+			inputAuthenticationType: cosi.AuthenticationType_Key,
+			expectedError:           nil,
+			server: Server{
+				mgmtClient: fake.NewClientSet(&model.Bucket{
+					Name:      "bucket-valid",
+					Namespace: namespace,
+				}),
+				namespace: namespace,
+				backendID: testID,
+			},
+		},
+		{
+			description:             "invalid bucket name for access granting",
+			inputBucketID:           "",
+			inputBucketAccessName:   "bucket-access-valid",
+			inputAuthenticationType: cosi.AuthenticationType_Key,
+			expectedError:           status.Error(codes.InvalidArgument, "empty bucketID"),
+			server: Server{
+				mgmtClient: fake.NewClientSet(),
+				namespace:  namespace,
+				backendID:  testID,
+			},
+		},
+		{
+			description:             "invalid bucket access name",
+			inputBucketID:           "bucket-valid",
+			inputBucketAccessName:   "",
+			inputAuthenticationType: cosi.AuthenticationType_Key,
+			expectedError:           status.Error(codes.InvalidArgument, "empty bucket access name"),
+			server: Server{
+				mgmtClient: fake.NewClientSet(),
+				namespace:  namespace,
+				backendID:  testID,
+			},
+		},
+		{
+			description:           "invalid authentication type",
+			inputBucketID:         "bucket-valid",
+			inputBucketAccessName: "bucket-access-valid",
+			// inputAuthenticationType: ?,
+			expectedError: status.Error(codes.InvalidArgument, "invalid authentication type"),
+			server: Server{
+				mgmtClient: fake.NewClientSet(),
+				namespace:  namespace,
+				backendID:  testID,
+			},
+		},
+		{
+			description:             "bucket does not exists",
+			inputBucketID:           "bucket-valid",
+			inputBucketAccessName:   "bucket-access-valid",
+			inputAuthenticationType: cosi.AuthenticationType_Key,
+			expectedError:           status.Error(codes.NotFound, "bucket not found"),
+			server: Server{
+				mgmtClient: fake.NewClientSet(),
+				namespace:  namespace,
+				backendID:  testID,
+			},
+		},
+		{
+			description:             "cannot get existing bucket ",
+			inputBucketID:           "bucket-valid",
+			inputBucketAccessName:   "bucket-access-valid",
+			inputAuthenticationType: cosi.AuthenticationType_Key,
+			expectedError:           status.Error(codes.Internal, "an unexpected error occurred"),
+			server: Server{
+				mgmtClient: fake.NewClientSet(),
+				namespace:  namespace,
+				backendID:  testID,
+			},
+			parameters: map[string]string{
+				"X-TEST/Buckets/Get/force-fail": "abc",
+			},
+		},
+		{
+			description: "user with specific name already exists",
+		},
+		{
+			description: "cannot get existing user",
+		},
+		{
+			description: "invalid user creation",
+		},
+		{
+			description: "cannot get existing bucket policy",
+		},
+		{
+			description: "invalid bucket policy update",
+		},
+		{
+			description: "invalid access key creation",
+		},
+	}
+
+	for _, scenario := range testCases {
+		t.Run(scenario.description, func(t *testing.T) {
+			ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+			defer cancel()
+			_, err := scenario.server.DriverGrantBucketAccess(ctx,
+				&cosi.DriverGrantBucketAccessRequest{BucketId: scenario.inputBucketID, Name: scenario.inputBucketAccessName, AuthenticationType: scenario.inputAuthenticationType, Parameters: scenario.parameters})
+			assert.ErrorIs(t, err, scenario.expectedError, err)
+		})
 	}
 }
 

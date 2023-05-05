@@ -267,9 +267,95 @@ func (s *Server) DriverGrantBucketAccess(ctx context.Context,
 	_, span := otel.Tracer("GrantBucketAccessRequest").Start(ctx, "ObjectscaleDriverGrantBucketAccess")
 	defer span.End()
 
-	err := errors.New("not implemented")
-	span.RecordError(err)
-	span.SetStatus(otelCodes.Error, err.Error())
+	// Check if bucketID is not empty.
+	if req.GetBucketId() == "" {
+		err := errors.New("empty bucketID")
+		log.Error(err.Error())
+
+		span.RecordError(err)
+		span.SetStatus(otelCodes.Error, err.Error())
+
+		return nil, status.Error(codes.InvalidArgument, err.Error())
+	}
+
+	// Check if bucket access name is not empty.
+	if req.GetName() == "" {
+		err := errors.New("empty bucket access name")
+		log.Error(err.Error())
+
+		span.RecordError(err)
+		span.SetStatus(otelCodes.Error, err.Error())
+
+		return nil, status.Error(codes.InvalidArgument, err.Error())
+	}
+
+	// Check authentication type.
+	if req.GetAuthenticationType() == cosi.AuthenticationType_UnknownAuthenticationType {
+		err := errors.New("invalid authentication type")
+		log.Error(err.Error())
+
+		span.RecordError(err)
+		span.SetStatus(otelCodes.Error, err.Error())
+
+		return nil, status.Error(codes.InvalidArgument, err.Error())
+	}
+
+	if req.AuthenticationType == cosi.AuthenticationType_IAM {
+		return nil, status.Error(codes.Unimplemented, "authentication type IAM not implemented")
+	}
+
+	// Extract bucket name from bucketID.
+	bucketName := strings.SplitN(req.BucketId, "-", splitNumber)[1]
+
+	log.WithFields(log.Fields{
+		"bucket":        bucketName,
+		"bucket_access": req.Name,
+	}).Info("bucket access for bucket is being created")
+
+	// Check if bucket for granting access exists.
+	_, err := s.mgmtClient.Buckets().Get(bucketName, req.GetParameters())
+	if err != nil && !errors.Is(err, model.Error{Code: model.CodeResourceNotFound}) {
+		log.WithFields(log.Fields{
+			"bucket": bucketName,
+		}).Error("failed to check bucket existence")
+
+		span.RecordError(err)
+		span.SetStatus(otelCodes.Error, "failed to check bucket existence")
+
+		return nil, status.Error(codes.Internal, "an unexpected error occurred")
+	} else if err != nil {
+		log.WithFields(log.Fields{
+			"bucket": bucketName,
+		}).Error("bucket not found")
+
+		span.RecordError(err)
+		span.SetStatus(otelCodes.Error, "bucket not found")
+
+		return nil, status.Error(codes.NotFound, "bucket not found")
+	}
+
+	// Create user.
+
+	// Check if policy for specific bucket exists.
+	_, err = s.mgmtClient.Buckets().GetPolicy(bucketName, req.GetParameters())
+	if err != nil && !errors.Is(err, model.Error{Code: model.CodeResourceNotFound}) {
+		log.WithFields(log.Fields{
+			"bucket": bucketName,
+		}).Error("failed to check bucket policy existence")
+
+		span.RecordError(err)
+		span.SetStatus(otelCodes.Error, "failed to check bucket policy existence")
+
+		return nil, status.Error(codes.Internal, "an unexpected error occurred")
+	} else if err == nil {
+		log.WithFields(log.Fields{
+			"bucket": bucketName,
+		}).Debug("bucket policy already exists")
+
+		//_, err = s.mgmtClient.Buckets().UpdatePolicy(bucketName)
+	}
+
+	// Create access key.
 
 	return nil, status.Error(codes.Unimplemented, err.Error())
 }
