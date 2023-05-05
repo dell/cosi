@@ -214,7 +214,7 @@ var _ = Describe("Bucket Deletion", Ordered, Label("delete", "objectscale"), fun
 	})
 	AfterAll(func() {
 		DeferCleanup(func(ctx SpecContext) {
-			steps.DeleteBucket(objectscale, retainBucket)
+			steps.DeleteBucket(objectscale, namespace, retainBucket)
 			steps.DeleteBucketClassResource(ctx, bucketClient, bucketClassRetain)
 			utils.DeleteReleasesAndNamespaces(ctx, clientset, map[string]string{"ns-driver": "cosi-driver"}, []string{"ns-driver"})
 		})

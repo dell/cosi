@@ -134,14 +134,33 @@ func CheckBucketAccessAccountID(ctx ginkgo.SpecContext, bucketClient *bucketclie
 
 // CheckBucketResource Function for getting Bucket resource.
 func GetBucketResource(ctx ginkgo.SpecContext, bucketClient *bucketclientset.Clientset, bucketClaim *v1alpha1.BucketClaim) *v1alpha1.Bucket {
-	// Wait for creations of bucket in cluster
-	time.Sleep(2 * time.Second) // nolint:gomnd
 
-	myBucketClaim, err := bucketClient.ObjectstorageV1alpha1().BucketClaims(bucketClaim.Namespace).Get(ctx, bucketClaim.Name, v1.GetOptions{})
+	var myBucketClaim *v1alpha1.BucketClaim
+
+	err := retry(ctx, 5, 2, func() error { // nolint:gomnd
+		var err error
+		myBucketClaim, err = bucketClient.ObjectstorageV1alpha1().BucketClaims(bucketClaim.Namespace).Get(ctx, bucketClaim.Name, v1.GetOptions{})
+		if err != nil {
+			return err
+		}
+
+		if myBucketClaim.Status.BucketName == "" {
+			return fmt.Errorf("BucketName is empty")
+		}
+		return nil
+	})
+
 	gomega.Expect(err).ToNot(gomega.HaveOccurred())
 	gomega.Expect(myBucketClaim.Status.BucketName).NotTo(gomega.BeEmpty())
 
-	bucket, err := bucketClient.ObjectstorageV1alpha1().Buckets().Get(ctx, myBucketClaim.Status.BucketName, v1.GetOptions{})
+	var bucket *v1alpha1.Bucket
+
+	err = retry(ctx, 5, 2, func() error { // nolint:gomnd
+		var err error
+		bucket, err = bucketClient.ObjectstorageV1alpha1().Buckets().Get(ctx, myBucketClaim.Status.BucketName, v1.GetOptions{})
+		return err
+	})
+
 	gomega.Expect(err).ToNot(gomega.HaveOccurred())
 	gomega.Expect(bucket).NotTo(gomega.BeNil())
 
@@ -157,4 +176,26 @@ func CheckBucketStatusEmpty(ctx ginkgo.SpecContext, bucketClient *bucketclientse
 	myBucketClaim, err := bucketClient.ObjectstorageV1alpha1().BucketClaims(bucketClaim.Namespace).Get(ctx, bucketClaim.Name, v1.GetOptions{})
 	gomega.Expect(err).ToNot(gomega.HaveOccurred())
 	gomega.Expect(myBucketClaim.Status.BucketName).To(gomega.BeEmpty())
+}
+
+func retry(ctx ginkgo.SpecContext, attempts int, sleep time.Duration, f func() error) error {
+	ticker := time.NewTicker(sleep)
+	retries := 0
+	for {
+		select {
+		case <-ticker.C:
+			err := f()
+			if err == nil {
+				return nil
+			}
+
+			retries++
+			if retries > attempts {
+				return err
+			}
+
+		case <-ctx.Done():
+			return ctx.Err()
+		}
+	}
 }
