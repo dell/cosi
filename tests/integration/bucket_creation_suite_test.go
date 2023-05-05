@@ -29,7 +29,7 @@ var _ = Describe("Bucket Creation", Ordered, Label("create", "objectscale"), fun
 		validBucketClaim   *v1alpha1.BucketClaim
 		invalidBucketClaim *v1alpha1.BucketClaim
 		validBucket        *v1alpha1.Bucket
-		//myEvent            *v1.Event
+		// myEvent            *v1.Event
 	)
 
 	// Background
@@ -171,8 +171,8 @@ var _ = Describe("Bucket Creation", Ordered, Label("create", "objectscale"), fun
 
 		// NOTE: commented for now until changes introduced to provisioner sidecar
 		// STEP: BucketClaim events contains an error: "Cannot create Bucket: BucketClass does not exist"
-		//By("checking if the BucketClaim events contains an error: 'Cannot create Bucket: BucketClass does not exist'")
-		//steps.CheckBucketClaimEvents(ctx, clientset, invalidBucketClaim, myEvent)
+		// By("checking if the BucketClaim events contains an error: 'Cannot create Bucket: BucketClass does not exist'")
+		// steps.CheckBucketClaimEvents(ctx, clientset, invalidBucketClaim, myEvent)
 
 		DeferCleanup(func(ctx SpecContext) {
 			steps.DeleteBucketClaimResource(ctx, bucketClient, invalidBucketClaim)

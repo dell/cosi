@@ -134,7 +134,6 @@ func CheckBucketAccessAccountID(ctx ginkgo.SpecContext, bucketClient *bucketclie
 
 // CheckBucketResource Function for getting Bucket resource.
 func GetBucketResource(ctx ginkgo.SpecContext, bucketClient *bucketclientset.Clientset, bucketClaim *v1alpha1.BucketClaim) *v1alpha1.Bucket {
-
 	var myBucketClaim *v1alpha1.BucketClaim
 
 	err := retry(ctx, 5, 2, func() error { // nolint:gomnd
@@ -181,6 +180,7 @@ func CheckBucketStatusEmpty(ctx ginkgo.SpecContext, bucketClient *bucketclientse
 func retry(ctx ginkgo.SpecContext, attempts int, sleep time.Duration, f func() error) error {
 	ticker := time.NewTicker(sleep)
 	retries := 0
+
 	for {
 		select {
 		case <-ticker.C:

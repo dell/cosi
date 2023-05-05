@@ -41,7 +41,7 @@ func CheckBucketResourceInObjectStore(objectscale *objectscaleRest.ClientSet, na
 	param := make(map[string]string)
 	param["namespace"] = namespace
 
-	id := strings.SplitN(bucket.Status.BucketID, "-", 2)[1]
+	id := strings.SplitN(bucket.Status.BucketID, "-", 2)[1] // nolint:gomnd
 
 	objectScaleBucket, err := objectscale.Buckets().Get(id, param)
 	gomega.Expect(err).ToNot(gomega.HaveOccurred())
