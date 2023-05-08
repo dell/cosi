@@ -40,7 +40,6 @@ func CreateBucketClaimResource(ctx ginkgo.SpecContext, bucketClient *bucketclien
 
 // DeleteBucketClaimResource Function for deleting BucketClaim resource.
 func DeleteBucketClaimResource(ctx ginkgo.SpecContext, bucketClient *bucketclientset.Clientset, bucketClaim *v1alpha1.BucketClaim) {
-	fmt.Printf("bucketClaim.Namespace: %v", bucketClaim.Namespace)
 	err := bucketClient.ObjectstorageV1alpha1().BucketClaims(bucketClaim.Namespace).Delete(ctx, bucketClaim.Name, v1.DeleteOptions{})
 	gomega.Expect(err).ToNot(gomega.HaveOccurred())
 }
@@ -67,9 +66,7 @@ func CheckBucketID(ctx ginkgo.SpecContext, bucketClient *bucketclientset.Clients
 func CreateBucketClassResource(ctx ginkgo.SpecContext, bucketClient *bucketclientset.Clientset, bucketClass *v1alpha1.BucketClass) {
 	_, err := bucketClient.ObjectstorageV1alpha1().BucketClasses().Get(ctx, bucketClass.Name, v1.GetOptions{})
 	if errors.IsNotFound(err) {
-		bucketclass, err := bucketClient.ObjectstorageV1alpha1().BucketClasses().Create(ctx, bucketClass, v1.CreateOptions{})
-		fmt.Printf("Error: %v", err)
-		fmt.Printf("Bucketclass: %v", bucketclass)
+		_, err := bucketClient.ObjectstorageV1alpha1().BucketClasses().Create(ctx, bucketClass, v1.CreateOptions{})
 		gomega.Expect(err).ToNot(gomega.HaveOccurred())
 	} else {
 		gomega.Expect(err).ToNot(gomega.HaveOccurred())
@@ -169,10 +166,14 @@ func GetBucketResource(ctx ginkgo.SpecContext, bucketClient *bucketclientset.Cli
 }
 
 func CheckBucketStatusEmpty(ctx ginkgo.SpecContext, bucketClient *bucketclientset.Clientset, bucketClaim *v1alpha1.BucketClaim) {
-	// Wait for creations of bucket in cluster
-	time.Sleep(2 * time.Second) // nolint:gomnd
+	var myBucketClaim *v1alpha1.BucketClaim
 
-	myBucketClaim, err := bucketClient.ObjectstorageV1alpha1().BucketClaims(bucketClaim.Namespace).Get(ctx, bucketClaim.Name, v1.GetOptions{})
+	err := retry(ctx, 5, 2, func() error {
+		var err error
+		myBucketClaim, err = bucketClient.ObjectstorageV1alpha1().BucketClaims(bucketClaim.Namespace).Get(ctx, bucketClaim.Name, v1.GetOptions{})
+		return err
+	})
+
 	gomega.Expect(err).ToNot(gomega.HaveOccurred())
 	gomega.Expect(myBucketClaim.Status.BucketName).To(gomega.BeEmpty())
 }

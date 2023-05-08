@@ -36,7 +36,7 @@ var (
                     "password": "testpassword"
                 },
                 "id": "testid",
-                "namespace": "test-namespace",
+                "namespace": "testnamespace",
                 "objectscale-gateway": "gateway.objectscale.test",
                 "objectstore-gateway": "gateway.objectstore.test",
                 "emptyBucket": false,
@@ -61,6 +61,7 @@ var (
                     "username": "testuser"
                 },
                 "id": "testid",
+                "namespace": "testnamespace",
                 "objectscale-gateway": "gateway.objectscale.test",
                 "objectstore-gateway": "gateway.objectstore.test",
                 "protocols": {
@@ -82,6 +83,7 @@ var (
       username: testuser
       password: testpassword
     id: testid
+    namespace: testnamespace
     objectscale-gateway: gateway.objectscale.test
     objectstore-gateway: gateway.objectstore.test
     emptyBucket: false

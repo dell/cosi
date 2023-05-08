@@ -29,6 +29,7 @@ var _ = Describe("Bucket Creation", Ordered, Label("create", "objectscale"), fun
 		validBucketClaim   *v1alpha1.BucketClaim
 		invalidBucketClaim *v1alpha1.BucketClaim
 		validBucket        *v1alpha1.Bucket
+		// TODO: waiting for event PR merge to sidecar
 		// myEvent            *v1.Event
 	)
 
@@ -77,6 +78,7 @@ var _ = Describe("Bucket Creation", Ordered, Label("create", "objectscale"), fun
 				},
 			},
 		}
+		// TODO: waiting for event PR merge to sidecar
 		// myEvent = &v1.Event{
 		// 	Type:    v1.EventTypeWarning,
 		// 	Reason:  "MissingBucketClassName",
@@ -108,8 +110,8 @@ var _ = Describe("Bucket Creation", Ordered, Label("create", "objectscale"), fun
 		steps.CheckCOSIControllerInstallation(ctx, clientset, "objectstorage-controller", "default")
 
 		// STEP: COSI driver "cosi-driver" is installed in namespace "driver-ns"
-		// By("Checking if COSI driver 'cosi-driver' is installed in namespace 'driver-ns'")
-		// steps.CheckCOSIDriverInstallation(ctx, clientset, "cosi-driver", "default")
+		By("Checking if COSI driver 'cosi-driver' is installed in namespace 'driver-ns'")
+		steps.CheckCOSIDriverInstallation(ctx, clientset, "cosi-driver", "default")
 
 		// STEP: BucketClass resource is created from specification "my-bucket-class"
 		By("Creating the BucketClass 'my-bucket-class' is created")
@@ -145,7 +147,7 @@ var _ = Describe("Bucket Creation", Ordered, Label("create", "objectscale"), fun
 		By("checking the status 'bucketID' of Bucket resource referencing BucketClaim resource 'bucket-claim-valid' is not empty")
 		steps.CheckBucketID(ctx, bucketClient, validBucket)
 
-		DeferCleanup(func(ctx SpecContext) {
+		DeferCleanup(func() {
 			steps.DeleteBucketClaimResource(ctx, bucketClient, validBucketClaim)
 			steps.DeleteBucket(objectscale, namespace, validBucket)
 		})
@@ -180,7 +182,7 @@ var _ = Describe("Bucket Creation", Ordered, Label("create", "objectscale"), fun
 	})
 	AfterAll(func() {
 		DeferCleanup(func(ctx SpecContext) {
-			// steps.DeleteBucketClassResource(ctx, bucketClient, myBucketClass)
+			steps.DeleteBucketClassResource(ctx, bucketClient, myBucketClass)
 		})
 	})
 })

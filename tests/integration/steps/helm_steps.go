@@ -34,28 +34,20 @@ import (
 // CheckCOSIControllerInstallation Ensure that COSI controller objectstorage-controller is installed in particular namespace.
 func CheckCOSIControllerInstallation(ctx ginkgo.SpecContext, clientset *kubernetes.Clientset, controllerName string, namespace string) {
 	// TODO: check if controller can be installed via chart
-	repo := ""
-	chartName := ""
-	version := ""
-	checkAppIsInstalled(ctx, clientset, controllerName, namespace, repo, chartName, version)
+	checkAppIsInstalled(ctx, clientset, controllerName, namespace)
 }
 
 // CheckCOSIDriverInstallation Ensure that COSI driver is installed in particular namespace.
 func CheckCOSIDriverInstallation(ctx ginkgo.SpecContext, clientset *kubernetes.Clientset, driver string, namespace string) {
-	repo := "cosi-driver"
-	chartName := "cosi-driver"
-	version := "0.1.0"
-	checkAppIsInstalled(ctx, clientset, driver, namespace, repo, chartName, version)
+	checkAppIsInstalled(ctx, clientset, driver, namespace)
 }
 
 // checkAppIsInstalled Ensure that an app is installed in particular namespace.
-func checkAppIsInstalled(ctx ginkgo.SpecContext, clientset *kubernetes.Clientset, releaseName, namespace, repo, chartName, version string) {
+func checkAppIsInstalled(ctx ginkgo.SpecContext, clientset *kubernetes.Clientset, releaseName, namespace string) {
 	deployment, err := clientset.AppsV1().Deployments(namespace).Get(ctx, releaseName, metav1.GetOptions{})
-	if err != nil {
-		InstallChartInNamespace(releaseName, namespace, repo, chartName, version)
-	} else {
-		gomega.Expect(deployment.Status.Conditions).To(gomega.ContainElement(gomega.HaveField("Type", gomega.Equal(v1.DeploymentAvailable))))
-	}
+	gomega.Expect(err).ToNot(gomega.HaveOccurred())
+	gomega.Expect(deployment.Status.Conditions).To(gomega.ContainElement(gomega.HaveField("Type", gomega.Equal(v1.DeploymentAvailable))))
+
 }
 
 // InstallChart Install particular release from k8s chart.

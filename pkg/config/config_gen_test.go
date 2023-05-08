@@ -40,6 +40,7 @@ func TestObjectscaleUnmarshalJSON(t *testing.T) {
 			data: []byte(
 				`{"credentials":{"username":"testuser","password":"testpassword"},
 				"id":"testid",
+				"namespace":"testnamespace",
 				"objectscale-gateway":"gateway.objectscale.test",
 				"objectstore-gateway":"gateway.objectstore.test",
 				"emptyBucket": false,
@@ -57,6 +58,7 @@ func TestObjectscaleUnmarshalJSON(t *testing.T) {
 			name: "invalid missing credentials",
 			data: []byte(
 				`{"id":"testid",
+				"namespace":"testnamespace",
 				"objectscale-gateway":"gateway.objectscale.test",
 				"objectstore-gateway":"gateway.objectstore.test",
 				"protocols":{"s3":{"endpoint":"test.endpoint"}},
@@ -68,6 +70,7 @@ func TestObjectscaleUnmarshalJSON(t *testing.T) {
 			name: "invalid missing id",
 			data: []byte(
 				`{"credentials":{"username":"testuser","password":"testpassword"},
+				"namespace":"testnamespace",
 				"objectscale-gateway":"gateway.objectscale.test",
 				"objectstore-gateway":"gateway.objectstore.test",
 				"protocols":{"s3":{"endpoint":"test.endpoint"}},
@@ -80,6 +83,7 @@ func TestObjectscaleUnmarshalJSON(t *testing.T) {
 			data: []byte(
 				`{"credentials":{"username":"testuser","password":"testpassword"},
 				"id":"testid",
+				"namespace":"testnamespace",
 				"objectstore-gateway":"gateway.objectstore.test",
 				"protocols":{"s3":{"endpoint":"test.endpoint"}},
 				"tls":{"insecure":true}}`),
@@ -91,6 +95,7 @@ func TestObjectscaleUnmarshalJSON(t *testing.T) {
 			data: []byte(
 				`{"credentials":{"username":"testuser","password":"testpassword"},
 				"id":"testid",
+				"namespace":"testnamespace",
 				"objectscale-gateway":"gateway.objectscale.test",
 				"protocols":{"s3":{"endpoint":"test.endpoint"}},
 				"tls":{"insecure":true}}`),
@@ -102,6 +107,7 @@ func TestObjectscaleUnmarshalJSON(t *testing.T) {
 			data: []byte(
 				`{"credentials":{"username":"testuser","password":"testpassword"},
 				"id":"testid",
+				"namespace":"testnamespace",
 				"objectscale-gateway":"gateway.objectscale.test",
 				"objectstore-gateway":"gateway.objectstore.test",
 				"tls":{"insecure":true}}`),
@@ -113,6 +119,7 @@ func TestObjectscaleUnmarshalJSON(t *testing.T) {
 			data: []byte(
 				`{"credentials":{"username":"testuser","password":"testpassword"},
 				"id":"testid",
+				"namespace":"testnamespace",
 				"objectscale-gateway":"gateway.objectscale.test",
 				"objectstore-gateway":"gateway.objectstore.test",
 				"protocols":{"s3":{"endpoint":"test.endpoint"}}}`),

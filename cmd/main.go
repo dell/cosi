@@ -82,7 +82,7 @@ func runMain() error {
 		"config_file_path": *configFile,
 	}).Info("config successfully loaded")
 
-	// Create TracerProvider with exporter to Open Telemetry Exporter.
+	// Create TracerProvider with exporter to Open Telemetry Collector.
 	var tp *sdktrace.TracerProvider
 	if *otelEndpoint != "" {
 		tp, err = tracerProvider(ctx, *otelEndpoint)

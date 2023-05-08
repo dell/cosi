@@ -49,7 +49,7 @@ var _ = Describe("Bucket Access Revoke", Ordered, Label("revoke", "objectscale")
 			DeletionPolicy: "delete",
 			DriverName:     "cosi-driver",
 			Parameters: map[string]string{
-				"ID": driverID,
+				"id": driverID,
 			},
 		}
 		myBucketClaim = &v1alpha1.BucketClaim{
@@ -75,7 +75,7 @@ var _ = Describe("Bucket Access Revoke", Ordered, Label("revoke", "objectscale")
 			DriverName:         "cosi-driver",
 			AuthenticationType: v1alpha1.AuthenticationTypeKey,
 			Parameters: map[string]string{
-				"ID": driverID,
+				"id": driverID,
 			},
 		}
 		myBucketAccess = &v1alpha1.BucketAccess{
@@ -124,8 +124,8 @@ var _ = Describe("Bucket Access Revoke", Ordered, Label("revoke", "objectscale")
 		steps.CheckCOSIControllerInstallation(ctx, clientset, "objectstorage-controller", "default")
 
 		// STEP: COSI driver "cosi-driver" is installed in namespace "driver-ns"
-		// By("Checking if COSI driver 'cosi-driver' is installed in namespace 'driver-ns'")
-		// steps.CheckCOSIDriverInstallation(ctx, clientset, "cosi-driver", "driver-ns")
+		By("Checking if COSI driver 'cosi-driver' is installed in namespace 'driver-ns'")
+		steps.CheckCOSIDriverInstallation(ctx, clientset, "cosi-driver", "driver-ns")
 
 		// STEP: BucketClass resource is created from specification "my-bucket-class"
 		By("Creating the BucketClass 'my-bucket-class'")
