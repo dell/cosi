@@ -106,6 +106,8 @@ func (s *Server) DriverCreateBucket(
 		"bucket": req.GetName(),
 	}).Info("bucket is being created")
 
+	span.AddEvent("bucket is being created")
+
 	// Create bucket model.
 	bucket := &model.Bucket{}
 	bucket.Name = req.GetName()
@@ -152,9 +154,13 @@ func (s *Server) DriverCreateBucket(
 	} else if err == nil {
 		log.WithFields(log.Fields{
 			"bucket": bucket.Name,
-		}).Error("bucket already exists")
+		}).Warn("bucket already exists")
 
-		return nil, status.Error(codes.AlreadyExists, "bucket already exists")
+		span.AddEvent("bucket already exists")
+
+		return &cosi.DriverCreateBucketResponse{
+			BucketId: strings.Join([]string{s.backendID, bucket.Name}, "-"),
+		}, nil
 	}
 
 	// Create bucket.
@@ -174,6 +180,8 @@ func (s *Server) DriverCreateBucket(
 		"bucket": bucket.Name,
 	}).Info("bucket successfully created")
 
+	span.AddEvent("bucket successfully created")
+
 	// Return response.
 	return &cosi.DriverCreateBucketResponse{
 		BucketId: strings.Join([]string{s.backendID, bucket.Name}, "-"),
@@ -190,6 +198,8 @@ func (s *Server) DriverDeleteBucket(ctx context.Context,
 	log.WithFields(log.Fields{
 		"bucketID": req.BucketId,
 	}).Info("bucket is being deleted")
+
+	span.AddEvent("bucket is being deleted")
 
 	// Check if bucketID is not empty.
 	if req.GetBucketId() == "" {
@@ -211,12 +221,11 @@ func (s *Server) DriverDeleteBucket(ctx context.Context,
 	if errors.Is(err, model.Error{Code: model.CodeResourceNotFound}) {
 		log.WithFields(log.Fields{
 			"bucket": bucketName,
-		}).Error("bucket to delete not found")
+		}).Warn("bucket does not exist")
 
-		span.RecordError(err)
-		span.SetStatus(otelCodes.Error, "bucket not found")
+		span.AddEvent("bucket does not exist")
 
-		return nil, status.Error(codes.NotFound, "bucket not found")
+		return &cosi.DriverDeleteBucketResponse{}, nil
 	}
 
 	if err != nil {
@@ -232,7 +241,9 @@ func (s *Server) DriverDeleteBucket(ctx context.Context,
 
 	log.WithFields(log.Fields{
 		"bucket": bucketName,
-	}).Info("bucket deleted")
+	}).Info("bucket successfully deleted")
+
+	span.AddEvent("bucket successfully deleted")
 
 	return &cosi.DriverDeleteBucketResponse{}, nil
 }

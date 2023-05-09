@@ -248,7 +248,7 @@ func testDriverCreateBucket(t *testing.T) {
 		{
 			description:   "bucket already exists",
 			inputName:     "bucket-valid",
-			expectedError: status.Error(codes.AlreadyExists, "bucket already exists"),
+			expectedError: nil,
 			server: Server{
 				mgmtClient: fake.NewClientSet(&model.Bucket{
 					Name:      "bucket-valid",
@@ -332,8 +332,8 @@ func testDriverDeleteBucket(t *testing.T) {
 		},
 		{
 			description:   "bucket does not exist",
-			inputBucketID: strings.Join([]string{testID, "bucket-invalid"}, "-"),
-			expectedError: status.Error(codes.NotFound, "bucket not found"),
+			inputBucketID: strings.Join([]string{testID, "bucket-valid"}, "-"),
+			expectedError: nil,
 			server: Server{
 				mgmtClient: fake.NewClientSet(),
 				namespace:  namespace,
