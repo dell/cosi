@@ -489,7 +489,7 @@ func (b *Buckets) Get(name string, params map[string]string) (*model.Bucket, err
 	}
 	return nil, model.Error{
 		Description: "not found",
-		Code:        model.CodeResourceNotFound,
+		Code:        model.CodeParameterNotFound,
 	}
 }
 
