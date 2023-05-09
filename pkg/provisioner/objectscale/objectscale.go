@@ -154,7 +154,7 @@ func (s *Server) DriverCreateBucket(
 	} else if err == nil {
 		log.WithFields(log.Fields{
 			"bucket": bucket.Name,
-		}).Info("bucket already exists")
+		}).Warn("bucket already exists")
 
 		span.AddEvent("bucket already exists")
 
@@ -221,7 +221,7 @@ func (s *Server) DriverDeleteBucket(ctx context.Context,
 	if errors.Is(err, model.Error{Code: model.CodeResourceNotFound}) {
 		log.WithFields(log.Fields{
 			"bucket": bucketName,
-		}).Info("bucket does not exist")
+		}).Warn("bucket does not exist")
 
 		span.AddEvent("bucket does not exist")
 
