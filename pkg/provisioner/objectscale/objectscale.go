@@ -260,10 +260,13 @@ func (s *Server) DriverDeleteBucket(ctx context.Context,
 	return &cosi.DriverDeleteBucketResponse{}, nil
 }
 
+// TODO: how about splitting key and IAM mechanisms into different functions?
 // DriverGrantBucketAccess provides access to Bucket on specific Object Storage Platform.
-func (s *Server) DriverGrantBucketAccess(ctx context.Context,
+func (s *Server) DriverGrantBucketAccess(
+	ctx context.Context,
 	req *cosi.DriverGrantBucketAccessRequest,
 ) (*cosi.DriverGrantBucketAccessResponse, error) {
+	// TODO: think about more spans' info
 	_, span := otel.Tracer("GrantBucketAccessRequest").Start(ctx, "ObjectscaleDriverGrantBucketAccess")
 	defer span.End()
 
@@ -289,6 +292,7 @@ func (s *Server) DriverGrantBucketAccess(ctx context.Context,
 		return nil, status.Error(codes.InvalidArgument, err.Error())
 	}
 
+	//TODO: after adding IAM the flow here could be if auth type key -> run key, if auth type iam -> run IAM, else error
 	// Check authentication type.
 	if req.GetAuthenticationType() == cosi.AuthenticationType_UnknownAuthenticationType {
 		err := errors.New("invalid authentication type")
@@ -304,6 +308,7 @@ func (s *Server) DriverGrantBucketAccess(ctx context.Context,
 		return nil, status.Error(codes.Unimplemented, "authentication type IAM not implemented")
 	}
 
+	// TODO: this should probably be moved to a separate function
 	// Extract bucket name from bucketID.
 	bucketName := strings.SplitN(req.BucketId, "-", splitNumber)[1]
 
