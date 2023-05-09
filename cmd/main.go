@@ -79,10 +79,10 @@ func runMain() error {
 	}
 
 	log.WithFields(log.Fields{
-		"config_file_path": configFile,
+		"config_file_path": *configFile,
 	}).Info("config successfully loaded")
 
-	// Create TracerProvider with exporter to Jaeger.
+	// Create TracerProvider with exporter to Open Telemetry Collector.
 	var tp *sdktrace.TracerProvider
 	if *otelEndpoint != "" {
 		tp, err = tracerProvider(ctx, *otelEndpoint)
@@ -90,12 +90,15 @@ func runMain() error {
 			log.WithFields(log.Fields{
 				"error": err,
 			}).Warn("failed to connect to Jaeger")
+		} else {
+			// Set global TracerProvider.
+			otel.SetTracerProvider(tp)
+			// set global propagator to tracecontext (the default is no-op).
+			otel.SetTextMapPropagator(propagation.TraceContext{})
+			log.WithFields(log.Fields{
+				"collector": *otelEndpoint,
+			}).Info("tracing started successfully")
 		}
-		// Set global TracerProvider.
-		otel.SetTracerProvider(tp)
-		// set global propagator to tracecontext (the default is no-op).
-		otel.SetTextMapPropagator(propagation.TraceContext{})
-		log.Infof("tracing started successfully; collector at %s", *otelEndpoint)
 	} else {
 		log.Warn("OTEL endpoint is empty, disabling tracing; please refer to helm's values.yaml")
 	}

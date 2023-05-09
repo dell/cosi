@@ -79,6 +79,7 @@ var (
 			Id:                 "valid.id",
 			ObjectscaleGateway: "gateway.objectscale.test",
 			ObjectstoreGateway: "gateway.objectstore.test",
+			Namespace:          "testnamespace",
 			Credentials: config.Credentials{
 				Username: "testuser",
 				Password: "testpassword",

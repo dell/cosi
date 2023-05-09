@@ -9,11 +9,11 @@ Feature: BucketAccess creation in KEY flow on ObjectScale platform
     Background:
         Given Kubernetes cluster is up and running
         And ObjectScale platform is installed on the cluster
-        And ObjectStore "objectstore-dev" is created
-        And Kubernetes namespace "driver-ns" is created
+        And ObjectStore "${objectstoreName}" is created
+        And Kubernetes namespace "cosi-driver" is created
         And Kubernetes namespace "namespace-1" is created
         And COSI controller "objectstorage-controller" is installed in namespace "default"
-        And COSI driver "cosi-driver" is installed in namespace "driver-ns"
+        And COSI driver "cosi-driver" is installed in namespace "cosi-driver"
         And specification of custom resource "my-bucket-class" is:
         """
         apiVersion: storage.k8s.io/v1
@@ -39,7 +39,7 @@ Feature: BucketAccess creation in KEY flow on ObjectScale platform
         And BucketClass resource is created from specification "my-bucket-class"
         And BucketClaim resource is created from specification "my-bucket-claim"
         And Bucket resource referencing BucketClaim resource "my-bucket-claim" is created
-        And Bucket resource referencing BucketClaim resource "my-bucket-claim" is created in ObjectStore "objectstore-dev"
+        And Bucket resource referencing BucketClaim resource "my-bucket-claim" is created in ObjectStore "${objectstoreName}"
         And BucketClaim resource "my-bucket-claim" in namespace "namespace-1" status "bucketReady" is "true"
         And Bucket resource referencing BucketClaim resource "my-bucket-claim" status "bucketReady" is "true"
         And Bucket resource referencing BucketClaim resource "my-bucket-claim" bucketID is not empty

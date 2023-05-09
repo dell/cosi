@@ -42,6 +42,7 @@ var (
 					Id:                 "test.id",
 					ObjectscaleGateway: "gateway.objectscale.test",
 					ObjectstoreGateway: "gateway.objectstore.test",
+					Namespace:          "testnamespace",
 					Protocols: config.Protocols{
 						S3: &config.S3{
 							Endpoint: "s3.objectstore.test",
@@ -67,6 +68,7 @@ var (
 					Id:                 "test.id",
 					ObjectscaleGateway: "gateway.objectscale.test",
 					ObjectstoreGateway: "gateway.objectstore.test",
+					Namespace:          "testnamespace",
 					Protocols: config.Protocols{
 						S3: &config.S3{
 							Endpoint: "s3.objectstore.test",
@@ -87,6 +89,7 @@ var (
 					Id:                 "test.id",
 					ObjectscaleGateway: "gateway.objectscale.test",
 					ObjectstoreGateway: "gateway.objectstore.test",
+					Namespace:          "testnamespace",
 					Protocols: config.Protocols{
 						S3: &config.S3{
 							Endpoint: "s3.objectstore.test",

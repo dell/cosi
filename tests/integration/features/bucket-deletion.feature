@@ -9,11 +9,11 @@ Feature: Bucket deletion from ObjectScale platform
     Background:
         Given Kubernetes cluster is up and running
         And ObjectScale platform is installed on the cluster
-        And ObjectStore "objectstore-dev" is created
-        And Kubernetes namespace "driver-ns" is created
+        And ObjectStore "${objectstoreName}" is created
+        And Kubernetes namespace "cosi-driver" is created
         And Kubernetes namespace "namespace-1" is created
         And COSI controller "objectstorage-controller" is installed in namespace "default"
-        And COSI driver "cosi-driver" is installed in namespace "driver-ns"
+        And COSI driver "cosi-driver" is installed in namespace "cosi-driver"
 
     Scenario: BucketClaim deletion with deletionPolicy set to "delete"
         Given specification of custom resource "my-bucket-class-delete" is:
@@ -41,12 +41,12 @@ Feature: Bucket deletion from ObjectScale platform
         And BucketClass resource is created from specification "my-bucket-class-delete"
         And BucketClaim resource is created from specification "my-bucket-claim-delete"
         And Bucket resource referencing BucketClaim resource "my-bucket-claim-delete" is created
-        And Bucket resource referencing BucketClaim resource "bucket-claim-delete" is created in ObjectStore "objectstore-dev"
+        And Bucket resource referencing BucketClaim resource "bucket-claim-delete" is created in ObjectStore "${objectstoreName}"
         And BucketClaim resource "bucket-claim-delete" in namespace "namespace-1" status "bucketReady" is "true"
         And Bucket resource referencing BucketClaim resource "bucket-claim-delete" status "bucketReady" is "true"
         And Bucket resource referencing BucketClaim resource "bucket-claim-delete" bucketID is not empty
         When BucketClaim resource "my-bucket-claim-delete" is deleted in namespace "namespace-1"
-        Then Bucket referencing BucketClaim resource "my-bucket-claim-delete" is deleted in ObjectStore "objectstore-dev"
+        Then Bucket referencing BucketClaim resource "my-bucket-claim-delete" is deleted in ObjectStore "${objectstoreName}"
 
     Scenario: BucketClaim deletion with deletionPolicy set to "retain" (default)
         Given specification of custom resource "my-bucket-class-retain" is:
@@ -76,9 +76,9 @@ Feature: Bucket deletion from ObjectScale platform
         And BucketClass resource is created from specification "my-bucket-class-retain"
         And BucketClaim resource is created from specification "my-bucket-claim-retain"
         And Bucket resource referencing BucketClaim resource "my-bucket-claim-retain" is created
-        And Bucket resource referencing BucketClaim resource "bucket-claim-retain" is created in ObjectStore "objectstore-dev"
+        And Bucket resource referencing BucketClaim resource "bucket-claim-retain" is created in ObjectStore "${objectstoreName}"
         And BucketClaim resource "bucket-claim-retain" in namespace "namespace-1" status "bucketReady" is "true"
         And Bucket resource referencing BucketClaim resource "bucket-claim-retain" status "bucketReady" is "true"
         And Bucket resource referencing BucketClaim resource "bucket-claim-retain" bucketID is not empty
         When BucketClaim resource "my-bucket-claim-retain" is deleted in namespace "namespace-1"
-        Then Bucket referencing BucketClaim resource "my-bucket-claim-retain" is available in ObjectStore "objectstore-dev"
+        Then Bucket referencing BucketClaim resource "my-bucket-claim-retain" is available in ObjectStore "${objectstoreName}"

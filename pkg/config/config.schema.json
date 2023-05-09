@@ -36,6 +36,11 @@
           "format": "url",
           "$comment": "format field is placed here only for documentation purposes"
         },
+        "namespace": {
+          "description": "Namespace associated with the user/tenant that is allowed to access the bucket",
+          "$comment": "This is one of the most confusing things in ObjectScale - it is ID of account, not the namespace! We need to find a way to consistently name it and forward our feedback to the OBS team.",
+          "type": "string"
+        },
         "region": {
           "description": "Identity and Access Management (IAM) API specific field, points to the region in which object storage provider is installed",
           "type": "string"
@@ -55,6 +60,7 @@
       "required": [
         "credentials",
         "id",
+        "namespace",
         "objectscale-gateway",
         "objectstore-gateway",
         "protocols",

@@ -13,6 +13,7 @@
 package steps
 
 import (
+	"fmt"
 	"time"
 
 	ginkgo "github.com/onsi/ginkgo/v2"
@@ -128,20 +129,79 @@ func CheckBucketAccessAccountID(ctx ginkgo.SpecContext, bucketClient *bucketclie
 	gomega.Expect(myBucketAccess.Status.AccountID).To(gomega.Equal(accountID))
 }
 
-// CheckBucketResource Function for getting Bucket resource.
+// GetBucketResource function for getting Bucket resource.
 func GetBucketResource(ctx ginkgo.SpecContext, bucketClient *bucketclientset.Clientset, bucketClaim *v1alpha1.BucketClaim) *v1alpha1.Bucket {
-	// Wait for creations of bucket in cluster
-	time.Sleep(2 * time.Second) // nolint:gomnd
+	var myBucketClaim *v1alpha1.BucketClaim
 
-	myBucketClaim, err := bucketClient.ObjectstorageV1alpha1().BucketClaims(bucketClaim.Namespace).Get(ctx, bucketClaim.Name, v1.GetOptions{})
+	err := retry(ctx, attempts, sleep, func() error {
+		var err error
+		myBucketClaim, err = bucketClient.ObjectstorageV1alpha1().BucketClaims(bucketClaim.Namespace).Get(ctx, bucketClaim.Name, v1.GetOptions{})
+		if err != nil {
+			return err
+		}
+
+		if myBucketClaim.Status.BucketName == "" {
+			return fmt.Errorf("BucketName is empty")
+		}
+		return nil
+	})
+
 	gomega.Expect(err).ToNot(gomega.HaveOccurred())
-	gomega.Expect(myBucketClaim.Status.BucketName).NotTo(gomega.BeNil())
+	gomega.Expect(myBucketClaim.Status.BucketName).NotTo(gomega.BeEmpty())
 
-	bucket, err := bucketClient.ObjectstorageV1alpha1().Buckets().Get(ctx, myBucketClaim.Status.BucketName, v1.GetOptions{})
+	var bucket *v1alpha1.Bucket
+
+	err = retry(ctx, attempts, sleep, func() error {
+		var err error
+		bucket, err = bucketClient.ObjectstorageV1alpha1().Buckets().Get(ctx, myBucketClaim.Status.BucketName, v1.GetOptions{})
+		return err
+	})
+
 	gomega.Expect(err).ToNot(gomega.HaveOccurred())
 	gomega.Expect(bucket).NotTo(gomega.BeNil())
 
 	ginkgo.GinkgoWriter.Printf("Kubernetes Bucket: %+v\n", bucket)
 
 	return bucket
+}
+
+func CheckBucketStatusEmpty(ctx ginkgo.SpecContext, bucketClient *bucketclientset.Clientset, bucketClaim *v1alpha1.BucketClaim) {
+	var myBucketClaim *v1alpha1.BucketClaim
+
+	err := retry(ctx, attempts, sleep, func() error {
+		var err error
+		myBucketClaim, err = bucketClient.ObjectstorageV1alpha1().BucketClaims(bucketClaim.Namespace).Get(ctx, bucketClaim.Name, v1.GetOptions{})
+		return err
+	})
+
+	gomega.Expect(err).ToNot(gomega.HaveOccurred())
+	gomega.Expect(myBucketClaim.Status.BucketName).To(gomega.BeEmpty())
+}
+
+const (
+	attempts = 5
+	sleep    = 2 * time.Second // nolint:gomnd
+)
+
+func retry(ctx ginkgo.SpecContext, attempts int, sleep time.Duration, f func() error) error {
+	ticker := time.NewTicker(sleep)
+	retries := 0
+
+	for {
+		select {
+		case <-ticker.C:
+			err := f()
+			if err == nil {
+				return nil
+			}
+
+			retries++
+			if retries > attempts {
+				return err
+			}
+
+		case <-ctx.Done():
+			return ctx.Err()
+		}
+	}
 }

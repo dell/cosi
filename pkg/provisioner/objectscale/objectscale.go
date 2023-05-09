@@ -54,6 +54,11 @@ func New(config *config.Objectscale) (*Server, error) {
 		return nil, errors.New("empty driver id")
 	}
 
+	namespace := config.Namespace
+	if namespace == "" {
+		return nil, errors.New("empty objectstore id")
+	}
+
 	if strings.Contains(id, "-") {
 		id = strings.ReplaceAll(id, "-", "_")
 
@@ -85,6 +90,7 @@ func New(config *config.Objectscale) (*Server, error) {
 	return &Server{
 		mgmtClient:  mgmtClient,
 		backendID:   id,
+		namespace:   namespace,
 		emptyBucket: config.EmptyBucket,
 	}, nil
 }
@@ -133,6 +139,9 @@ func (s *Server) DriverCreateBucket(
 		parametersCopy[key] = value
 	}
 
+	// TODO: is this good way of doing this?
+	parametersCopy["namespace"] = s.namespace
+
 	log.WithFields(log.Fields{
 		"parameters": parameters,
 	}).Info("parameters of the bucket")
@@ -142,9 +151,10 @@ func (s *Server) DriverCreateBucket(
 
 	// Check if bucket with specific name and parameters already exists.
 	_, err := s.mgmtClient.Buckets().Get(bucket.Name, parametersCopy)
-	if err != nil && !errors.Is(err, model.Error{Code: model.CodeResourceNotFound}) {
+	if err != nil && !errors.Is(err, model.Error{Code: model.CodeParameterNotFound}) {
 		log.WithFields(log.Fields{
 			"bucket": bucket.Name,
+			"error":  err,
 		}).Error("failed to check bucket existence")
 
 		span.RecordError(err)
@@ -168,6 +178,7 @@ func (s *Server) DriverCreateBucket(
 	if err != nil {
 		log.WithFields(log.Fields{
 			"bucket": bucket.Name,
+			"error":  err,
 		}).Error("failed to create bucket")
 
 		span.RecordError(err)
@@ -231,6 +242,7 @@ func (s *Server) DriverDeleteBucket(ctx context.Context,
 	if err != nil {
 		log.WithFields(log.Fields{
 			"bucket": bucketName,
+			"error":  err,
 		}).Error("failed to delete bucket")
 
 		span.RecordError(err)

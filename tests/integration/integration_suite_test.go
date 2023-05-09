@@ -39,6 +39,12 @@ var (
 	bucketClient *bucketclientset.Clientset
 	objectscale  *objectscaleRest.ClientSet
 	iamClient    *iam.IAM
+	namespace    string
+)
+
+const (
+	objectstoreName = "objectstore"
+	driverID        = "e2e.test.objectscale"
 )
 
 func TestIntegration(t *testing.T) {
@@ -49,6 +55,10 @@ func TestIntegration(t *testing.T) {
 var _ = BeforeSuite(func() {
 	// Global setup
 	// Load environment variables
+
+	exists := false
+	namespace, exists = os.LookupEnv("OBJECTSCALE_NAMESPACE")
+	Expect(exists).To(BeTrue())
 
 	kubeConfig, exists := os.LookupEnv("KUBECONFIG")
 	Expect(exists).To(BeTrue())
