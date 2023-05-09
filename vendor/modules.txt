@@ -118,6 +118,7 @@ github.com/dell/goobjectscale/pkg/client/rest/buckets
 github.com/dell/goobjectscale/pkg/client/rest/client
 github.com/dell/goobjectscale/pkg/client/rest/crr
 github.com/dell/goobjectscale/pkg/client/rest/federatedobjectstores
+github.com/dell/goobjectscale/pkg/client/rest/iam
 github.com/dell/goobjectscale/pkg/client/rest/objectuser
 github.com/dell/goobjectscale/pkg/client/rest/objmt
 github.com/dell/goobjectscale/pkg/client/rest/status
