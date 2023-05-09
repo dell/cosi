@@ -29,7 +29,7 @@ func CheckObjectScaleInstallation(ctx ginkgo.SpecContext, objectscale *objectsca
 	gomega.Expect(err).ToNot(gomega.HaveOccurred())
 }
 
-// CheckObjectStoreCreation Ensure that ObjectStore "${objectstoreName}" is created.
+// CheckObjectStoreExists Ensure that ObjectStore "${objectstoreName}" is created.
 func CheckObjectStoreExists(ctx ginkgo.SpecContext, objectscale *objectscaleRest.ClientSet, objectstore string) {
 	objectstores, err := objectscale.FederatedObjectStores().List(make(map[string]string))
 	gomega.Expect(err).ToNot(gomega.HaveOccurred())
