@@ -133,9 +133,6 @@ func CheckBucketAccessAccountID(ctx ginkgo.SpecContext, bucketClient *bucketclie
 func GetBucketResource(ctx ginkgo.SpecContext, bucketClient *bucketclientset.Clientset, bucketClaim *v1alpha1.BucketClaim) *v1alpha1.Bucket {
 	var myBucketClaim *v1alpha1.BucketClaim
 
-	attempts := 5
-	sleep := 2 * time.Second
-
 	err := retry(ctx, attempts, sleep, func() error {
 		var err error
 		myBucketClaim, err = bucketClient.ObjectstorageV1alpha1().BucketClaims(bucketClaim.Namespace).Get(ctx, bucketClaim.Name, v1.GetOptions{})
@@ -171,9 +168,6 @@ func GetBucketResource(ctx ginkgo.SpecContext, bucketClient *bucketclientset.Cli
 func CheckBucketStatusEmpty(ctx ginkgo.SpecContext, bucketClient *bucketclientset.Clientset, bucketClaim *v1alpha1.BucketClaim) {
 	var myBucketClaim *v1alpha1.BucketClaim
 
-	attempts := 5
-	sleep := 2 * time.Second
-
 	err := retry(ctx, attempts, sleep, func() error {
 		var err error
 		myBucketClaim, err = bucketClient.ObjectstorageV1alpha1().BucketClaims(bucketClaim.Namespace).Get(ctx, bucketClaim.Name, v1.GetOptions{})
@@ -183,6 +177,11 @@ func CheckBucketStatusEmpty(ctx ginkgo.SpecContext, bucketClient *bucketclientse
 	gomega.Expect(err).ToNot(gomega.HaveOccurred())
 	gomega.Expect(myBucketClaim.Status.BucketName).To(gomega.BeEmpty())
 }
+
+const (
+	attempts = 5
+	sleep    = 2 * time.Second // nolint:gomnd
+)
 
 func retry(ctx ginkgo.SpecContext, attempts int, sleep time.Duration, f func() error) error {
 	ticker := time.NewTicker(sleep)
