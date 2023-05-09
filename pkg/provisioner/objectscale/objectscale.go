@@ -199,6 +199,8 @@ func (s *Server) DriverDeleteBucket(ctx context.Context,
 		"bucketID": req.BucketId,
 	}).Info("bucket is being deleted")
 
+	span.AddEvent("bucket is being deleted")
+
 	// Check if bucketID is not empty.
 	if req.GetBucketId() == "" {
 		err := errors.New("empty bucketID")
