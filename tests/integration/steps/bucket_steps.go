@@ -133,7 +133,10 @@ func CheckBucketAccessAccountID(ctx ginkgo.SpecContext, bucketClient *bucketclie
 func GetBucketResource(ctx ginkgo.SpecContext, bucketClient *bucketclientset.Clientset, bucketClaim *v1alpha1.BucketClaim) *v1alpha1.Bucket {
 	var myBucketClaim *v1alpha1.BucketClaim
 
-	err := retry(ctx, 5, 2, func() error { // nolint:gomnd
+	attempts := 5
+	sleep := 2 * time.Second
+
+	err := retry(ctx, attempts, sleep, func() error {
 		var err error
 		myBucketClaim, err = bucketClient.ObjectstorageV1alpha1().BucketClaims(bucketClaim.Namespace).Get(ctx, bucketClaim.Name, v1.GetOptions{})
 		if err != nil {
@@ -151,7 +154,7 @@ func GetBucketResource(ctx ginkgo.SpecContext, bucketClient *bucketclientset.Cli
 
 	var bucket *v1alpha1.Bucket
 
-	err = retry(ctx, 5, 2, func() error { // nolint:gomnd
+	err = retry(ctx, attempts, sleep, func() error {
 		var err error
 		bucket, err = bucketClient.ObjectstorageV1alpha1().Buckets().Get(ctx, myBucketClaim.Status.BucketName, v1.GetOptions{})
 		return err
@@ -168,7 +171,10 @@ func GetBucketResource(ctx ginkgo.SpecContext, bucketClient *bucketclientset.Cli
 func CheckBucketStatusEmpty(ctx ginkgo.SpecContext, bucketClient *bucketclientset.Clientset, bucketClaim *v1alpha1.BucketClaim) {
 	var myBucketClaim *v1alpha1.BucketClaim
 
-	err := retry(ctx, 5, 2, func() error {
+	attempts := 5
+	sleep := 2 * time.Second
+
+	err := retry(ctx, attempts, sleep, func() error {
 		var err error
 		myBucketClaim, err = bucketClient.ObjectstorageV1alpha1().BucketClaims(bucketClaim.Namespace).Get(ctx, bucketClaim.Name, v1.GetOptions{})
 		return err
