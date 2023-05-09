@@ -10,10 +10,10 @@ Feature: BucketAccess creation in KEY flow on ObjectScale platform
         Given Kubernetes cluster is up and running
         And ObjectScale platform is installed on the cluster
         And ObjectStore "${objectstoreName}" is created
-        And Kubernetes namespace "driver-ns" is created
+        And Kubernetes namespace "cosi-driver" is created
         And Kubernetes namespace "namespace-1" is created
         And COSI controller "objectstorage-controller" is installed in namespace "default"
-        And COSI driver "cosi-driver" is installed in namespace "driver-ns"
+        And COSI driver "cosi-driver" is installed in namespace "cosi-driver"
         And specification of custom resource "my-bucket-class" is:
         """
         apiVersion: storage.k8s.io/v1

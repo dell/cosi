@@ -40,7 +40,6 @@ func CheckObjectStoreExists(ctx ginkgo.SpecContext, objectscale *objectscaleRest
 func CheckBucketResourceInObjectStore(objectscale *objectscaleRest.ClientSet, namespace string, bucket *v1alpha1.Bucket) {
 	param := make(map[string]string)
 	param["namespace"] = namespace
-
 	id := strings.SplitN(bucket.Status.BucketID, "-", 2)[1] // nolint:gomnd
 
 	objectScaleBucket, err := objectscale.Buckets().Get(id, param)

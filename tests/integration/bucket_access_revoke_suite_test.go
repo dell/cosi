@@ -123,9 +123,9 @@ var _ = Describe("Bucket Access Revoke", Ordered, Label("revoke", "objectscale")
 		By("Checking if COSI controller 'objectstorage-controller' is installed in namespace 'default'")
 		steps.CheckCOSIControllerInstallation(ctx, clientset, "objectstorage-controller", "default")
 
-		// STEP: COSI driver "cosi-driver" is installed in namespace "driver-ns"
-		By("Checking if COSI driver 'cosi-driver' is installed in namespace 'driver-ns'")
-		steps.CheckCOSIDriverInstallation(ctx, clientset, "cosi-driver", "driver-ns")
+		// STEP: COSI driver "cosi-driver" is installed in namespace "cosi-driver"
+		By("Checking if COSI driver 'cosi-driver' is installed in namespace 'cosi-driver'")
+		steps.CheckCOSIDriverInstallation(ctx, clientset, "cosi-driver", "cosi-driver")
 
 		// STEP: BucketClass resource is created from specification "my-bucket-class"
 		By("Creating the BucketClass 'my-bucket-class'")
