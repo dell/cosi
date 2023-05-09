@@ -129,7 +129,7 @@ func CheckBucketAccessAccountID(ctx ginkgo.SpecContext, bucketClient *bucketclie
 	gomega.Expect(myBucketAccess.Status.AccountID).To(gomega.Equal(accountID))
 }
 
-// CheckBucketResource Function for getting Bucket resource.
+// GetBucketResource function for getting Bucket resource.
 func GetBucketResource(ctx ginkgo.SpecContext, bucketClient *bucketclientset.Clientset, bucketClaim *v1alpha1.BucketClaim) *v1alpha1.Bucket {
 	var myBucketClaim *v1alpha1.BucketClaim
 
