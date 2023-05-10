@@ -12,5 +12,6 @@ ginkgo \
     --race \
     --trace \
     --tags integration \
+    --label-filter create
     --output-dir=../reports/integration \
     ./...
