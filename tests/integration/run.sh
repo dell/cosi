@@ -2,7 +2,12 @@
 
 set -aex
 
+if [ ! -z "${CI}" ]; then
+    NO_COLOR='--no-color'
+fi
+
 ginkgo \
+    "${NO_COLOR}" \
     --keep-going \
     --race \
     --trace \
