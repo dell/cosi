@@ -19,9 +19,13 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/aws/aws-sdk-go/service/iam"
 	driver "github.com/dell/cosi-driver/pkg/provisioner/virtualdriver"
 	objectscaleRest "github.com/dell/goobjectscale/pkg/client/rest"
 	objectscaleClient "github.com/dell/goobjectscale/pkg/client/rest/client"
+	iamObjectscale "github.com/dell/goobjectscale/pkg/client/rest/iam"
 	log "github.com/sirupsen/logrus"
 	otelCodes "go.opentelemetry.io/otel/codes"
 	cosi "sigs.k8s.io/container-object-storage-interface-spec"
@@ -39,14 +43,20 @@ const splitNumber = 2
 
 // Server is implementation of driver.Driver interface for ObjectScale platform.
 type Server struct {
-	mgmtClient  api.ClientSet
-	backendID   string
-	emptyBucket bool
-	namespace   string
+	mgmtClient         api.ClientSet
+	backendID          string
+	emptyBucket        bool
+	namespace          string
+	username           string
+	password           string
+	region             string
+	objectscaleGateway string
+	objectstoreGateway string
 }
 
 var _ driver.Driver = (*Server)(nil)
 
+// TODO: verify if emptiness verification can be moved to a separate function
 // New initializes server based on the config file.
 func New(config *config.Objectscale) (*Server, error) {
 	id := config.Id
@@ -57,6 +67,35 @@ func New(config *config.Objectscale) (*Server, error) {
 	namespace := config.Namespace
 	if namespace == "" {
 		return nil, errors.New("empty objectstore id")
+	}
+
+	username := config.Credentials.Username
+	if username == "" {
+		return nil, errors.New("empty username")
+	}
+
+	password := config.Credentials.Password
+	if password == "" {
+		return nil, errors.New("empty password")
+	}
+
+	region := config.Region
+	if region == nil {
+		return nil, errors.New("region was not specified in config")
+	}
+
+	if *region == "" {
+		return nil, errors.New("empty region provided")
+	}
+
+	objectscaleGateway := config.ObjectscaleGateway
+	if objectscaleGateway == "" {
+		return nil, errors.New("empty objectscale gateway")
+	}
+
+	objectstoreGateway := config.ObjectstoreGateway
+	if objectstoreGateway == "" {
+		return nil, errors.New("empty objectstore gateway")
 	}
 
 	if strings.Contains(id, "-") {
@@ -74,13 +113,13 @@ func New(config *config.Objectscale) (*Server, error) {
 	}
 
 	objectscaleAuthUser := objectscaleClient.AuthUser{
-		Gateway:  config.ObjectscaleGateway,
-		Username: config.Credentials.Username,
-		Password: config.Credentials.Password,
+		Gateway:  objectscaleGateway,
+		Username: username,
+		Password: password,
 	}
 	mgmtClient := objectscaleRest.NewClientSet(
 		&objectscaleClient.Simple{
-			Endpoint:       config.ObjectstoreGateway,
+			Endpoint:       objectstoreGateway,
 			Authenticator:  &objectscaleAuthUser,
 			HTTPClient:     &http.Client{Transport: transport},
 			OverrideHeader: false,
@@ -88,10 +127,15 @@ func New(config *config.Objectscale) (*Server, error) {
 	)
 
 	return &Server{
-		mgmtClient:  mgmtClient,
-		backendID:   id,
-		namespace:   namespace,
-		emptyBucket: config.EmptyBucket,
+		mgmtClient:         mgmtClient,
+		backendID:          id,
+		namespace:          namespace,
+		emptyBucket:        config.EmptyBucket,
+		username:           username,
+		password:           password,
+		region:             *region,
+		objectscaleGateway: objectscaleGateway,
+		objectstoreGateway: objectstoreGateway,
 	}, nil
 }
 
@@ -338,8 +382,55 @@ func (s *Server) DriverGrantBucketAccess(
 
 		return nil, status.Error(codes.NotFound, "bucket not found")
 	}
-
 	// Create user.
+	x509Client := *http.DefaultClient
+	objClient := objectscaleClient.AuthUser{
+		Gateway:  s.objectscaleGateway,
+		Username: s.username,
+		Password: s.password,
+	}
+	iamSession, err := session.NewSession(&aws.Config{
+		Endpoint:                      &s.objectstoreGateway,
+		Region:                        &s.region,
+		CredentialsChainVerboseErrors: aws.Bool(true),
+		HTTPClient:                    &x509Client,
+	},
+	)
+	if err != nil {
+		log.WithFields(log.Fields{
+			"endpoint": s.objectstoreGateway,
+			"region":   s.region,
+		}).Error("cannot create session")
+
+		span.RecordError(err)
+		span.SetStatus(otelCodes.Error, "cannot create session")
+
+		return nil, status.Error(codes.Internal, "cannot create session")
+	}
+
+	iamClient := iam.New(iamSession)
+	iamObjectscale.InjectTokenToIAMClient(iamClient, &objClient, x509Client)
+	// TODO: error handling
+	iamObjectscale.InjectAccountIDToIAMClient(iamClient, s.namespace)
+	// TODO: error handling
+	userName := fmt.Sprintf("user-%v", bucketName)
+	user, err := iamClient.CreateUser(&iam.CreateUserInput{
+		UserName: &userName,
+	})
+	if err != nil {
+		log.WithFields(log.Fields{
+			"user": userName,
+		}).Error("cannot create user")
+
+		span.RecordError(err)
+		span.SetStatus(otelCodes.Error, "cannot create user")
+
+		return nil, status.Error(codes.Internal, fmt.Sprintf("cannot create user %s", userName))
+	}
+
+	log.WithFields(log.Fields{
+		"user": userName,
+	}).Info("ObjectScale IAM user was created")
 
 	// Check if policy for specific bucket exists.
 	_, err = s.mgmtClient.Buckets().GetPolicy(bucketName, req.GetParameters())
