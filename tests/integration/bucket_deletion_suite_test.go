@@ -110,9 +110,9 @@ var _ = Describe("Bucket Deletion", Ordered, Label("delete", "objectscale"), fun
 		By("Checking if the ObjectStore '${objectstoreName}' is created")
 		steps.CheckObjectStoreExists(ctx, objectscale, objectstoreName)
 
-		// STEP: Kubernetes namespace "driver-ns" is created
-		By("Checking if namespace 'driver-ns' is created")
-		steps.CreateNamespace(ctx, clientset, "driver-ns")
+		// STEP: Kubernetes namespace "cosi-driver" is created
+		By("Checking if namespace 'cosi-driver' is created")
+		steps.CreateNamespace(ctx, clientset, "cosi-driver")
 
 		// STEP: Kubernetes namespace "namespace-1" is created
 		By("Checking if namespace 'namespace-1' is created")
