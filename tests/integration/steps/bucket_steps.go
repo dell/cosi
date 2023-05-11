@@ -146,6 +146,8 @@ func GetBucketResource(ctx ginkgo.SpecContext, bucketClient *bucketclientset.Cli
 		return nil
 	})
 
+	ginkgo.GinkgoWriter.Printf("Kubernetes BucketClaim: %+v\n", myBucketClaim)
+
 	gomega.Expect(err).ToNot(gomega.HaveOccurred())
 	gomega.Expect(myBucketClaim.Status.BucketName).NotTo(gomega.BeEmpty())
 
@@ -154,6 +156,10 @@ func GetBucketResource(ctx ginkgo.SpecContext, bucketClient *bucketclientset.Cli
 	err = retry(ctx, attempts, sleep, func() error {
 		var err error
 		bucket, err = bucketClient.ObjectstorageV1alpha1().Buckets().Get(ctx, myBucketClaim.Status.BucketName, v1.GetOptions{})
+		if !bucket.Status.BucketReady {
+			return fmt.Errorf("bucket %s is not ready", bucket.Name)
+		}
+
 		return err
 	})
 

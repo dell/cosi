@@ -18,7 +18,6 @@ import (
 	. "github.com/onsi/ginkgo/v2"
 
 	"github.com/dell/cosi-driver/tests/integration/steps"
-	"github.com/dell/cosi-driver/tests/integration/utils"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/container-object-storage-interface-api/apis/objectstorage/v1alpha1"
 )
@@ -110,9 +109,9 @@ var _ = Describe("Bucket Deletion", Ordered, Label("delete", "objectscale"), fun
 		By("Checking if the ObjectStore '${objectstoreName}' is created")
 		steps.CheckObjectStoreExists(ctx, objectscale, objectstoreName)
 
-		// STEP: Kubernetes namespace "driver-ns" is created
-		By("Checking if namespace 'driver-ns' is created")
-		steps.CreateNamespace(ctx, clientset, "driver-ns")
+		// STEP: Kubernetes namespace "cosi-driver" is created
+		By("Checking if namespace 'cosi-driver' is created")
+		steps.CreateNamespace(ctx, clientset, "cosi-driver")
 
 		// STEP: Kubernetes namespace "namespace-1" is created
 		By("Checking if namespace 'namespace-1' is created")
@@ -169,7 +168,7 @@ var _ = Describe("Bucket Deletion", Ordered, Label("delete", "objectscale"), fun
 		By("checking if Bucket referencing BucketClaim resource 'my-bucket-claim-delete' is deleted in ObjectStore '${objectstoreName}'")
 		steps.CheckBucketDeletionInObjectStore(objectscale, deleteBucket)
 
-		DeferCleanup(func() {
+		DeferCleanup(func(ctx SpecContext) {
 			steps.DeleteBucketClassResource(ctx, bucketClient, bucketClassDelete)
 		})
 	})
@@ -216,7 +215,6 @@ var _ = Describe("Bucket Deletion", Ordered, Label("delete", "objectscale"), fun
 		DeferCleanup(func(ctx SpecContext) {
 			steps.DeleteBucket(objectscale, namespace, retainBucket)
 			steps.DeleteBucketClassResource(ctx, bucketClient, bucketClassRetain)
-			utils.DeleteReleasesAndNamespaces(ctx, clientset, map[string]string{"ns-driver": "cosi-driver"}, []string{"ns-driver"})
 		})
 	})
 })
