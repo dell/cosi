@@ -18,7 +18,6 @@ import (
 	. "github.com/onsi/ginkgo/v2"
 
 	"github.com/dell/cosi-driver/tests/integration/steps"
-	"github.com/dell/cosi-driver/tests/integration/utils"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/container-object-storage-interface-api/apis/objectstorage/v1alpha1"
@@ -211,7 +210,6 @@ var _ = Describe("Bucket Access Revoke", Ordered, Label("revoke", "objectscale")
 			steps.DeleteBucketAccessResource(ctx, bucketClient, myBucketAccess)
 			steps.DeleteBucketClassResource(ctx, bucketClient, myBucketClass)
 			steps.DeleteBucketClaimResource(ctx, bucketClient, myBucketClaim)
-			utils.DeleteReleasesAndNamespaces(ctx, clientset, map[string]string{"ns-driver": "cosi-driver"}, []string{"ns-driver"})
 		})
 	})
 })

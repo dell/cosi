@@ -19,7 +19,6 @@ import (
 	ginkgo "github.com/onsi/ginkgo/v2"
 	gomega "github.com/onsi/gomega"
 
-	"github.com/dell/cosi-driver/util"
 	errors "k8s.io/apimachinery/pkg/api/errors"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/container-object-storage-interface-api/apis/objectstorage/v1alpha1"
@@ -134,7 +133,7 @@ func CheckBucketAccessAccountID(ctx ginkgo.SpecContext, bucketClient *bucketclie
 func GetBucketResource(ctx ginkgo.SpecContext, bucketClient *bucketclientset.Clientset, bucketClaim *v1alpha1.BucketClaim) *v1alpha1.Bucket {
 	var myBucketClaim *v1alpha1.BucketClaim
 
-	err := util.Retry(ctx, attempts, sleep, func() error {
+	err := retry(ctx, attempts, sleep, func() error {
 		var err error
 		myBucketClaim, err = bucketClient.ObjectstorageV1alpha1().BucketClaims(bucketClaim.Namespace).Get(ctx, bucketClaim.Name, v1.GetOptions{})
 		if err != nil {
@@ -154,7 +153,7 @@ func GetBucketResource(ctx ginkgo.SpecContext, bucketClient *bucketclientset.Cli
 
 	var bucket *v1alpha1.Bucket
 
-	err = util.Retry(ctx, attempts, sleep, func() error {
+	err = retry(ctx, attempts, sleep, func() error {
 		var err error
 		bucket, err = bucketClient.ObjectstorageV1alpha1().Buckets().Get(ctx, myBucketClaim.Status.BucketName, v1.GetOptions{})
 		if !bucket.Status.BucketReady {
@@ -175,7 +174,7 @@ func GetBucketResource(ctx ginkgo.SpecContext, bucketClient *bucketclientset.Cli
 func CheckBucketStatusEmpty(ctx ginkgo.SpecContext, bucketClient *bucketclientset.Clientset, bucketClaim *v1alpha1.BucketClaim) {
 	var myBucketClaim *v1alpha1.BucketClaim
 
-	err := util.Retry(ctx, attempts, sleep, func() error {
+	err := retry(ctx, attempts, sleep, func() error {
 		var err error
 		myBucketClaim, err = bucketClient.ObjectstorageV1alpha1().BucketClaims(bucketClaim.Namespace).Get(ctx, bucketClaim.Name, v1.GetOptions{})
 		return err
@@ -189,3 +188,26 @@ const (
 	attempts = 5
 	sleep    = 2 * time.Second // nolint:gomnd
 )
+
+func retry(ctx ginkgo.SpecContext, attempts int, sleep time.Duration, f func() error) error {
+	ticker := time.NewTicker(sleep)
+	retries := 0
+
+	for {
+		select {
+		case <-ticker.C:
+			err := f()
+			if err == nil {
+				return nil
+			}
+
+			retries++
+			if retries > attempts {
+				return err
+			}
+
+		case <-ctx.Done():
+			return ctx.Err()
+		}
+	}
+}

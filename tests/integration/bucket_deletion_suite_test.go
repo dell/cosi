@@ -18,7 +18,6 @@ import (
 	. "github.com/onsi/ginkgo/v2"
 
 	"github.com/dell/cosi-driver/tests/integration/steps"
-	"github.com/dell/cosi-driver/tests/integration/utils"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/container-object-storage-interface-api/apis/objectstorage/v1alpha1"
 )
@@ -216,7 +215,6 @@ var _ = Describe("Bucket Deletion", Ordered, Label("delete", "objectscale"), fun
 		DeferCleanup(func(ctx SpecContext) {
 			steps.DeleteBucket(objectscale, namespace, retainBucket)
 			steps.DeleteBucketClassResource(ctx, bucketClient, bucketClassRetain)
-			utils.DeleteReleasesAndNamespaces(ctx, clientset, map[string]string{"ns-driver": "cosi-driver"}, []string{"ns-driver"})
 		})
 	})
 })
