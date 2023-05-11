@@ -182,7 +182,7 @@ var _ = Describe("Bucket Creation", Ordered, Label("create", "objectscale"), fun
 	})
 	AfterAll(func() {
 		DeferCleanup(func(ctx SpecContext) {
-			//steps.DeleteBucketClassResource(ctx, bucketClient, myBucketClass)
+			steps.DeleteBucketClassResource(ctx, bucketClient, myBucketClass)
 		})
 	})
 })
