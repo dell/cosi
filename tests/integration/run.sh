@@ -7,12 +7,12 @@ if [ ! -z "${CI}" ]; then
 fi
 
 ginkgo \
-    "${NO_COLOR}" \
+    ${NO_COLOR} \
     -vv \
     --keep-going \
     --race \
     --trace \
     --tags integration \
-    --label-filter create
+    --label-filter create \
     --output-dir=../reports/integration \
     ./...
