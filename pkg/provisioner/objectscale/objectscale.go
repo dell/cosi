@@ -367,9 +367,23 @@ func (s *Server) DriverGrantBucketAccess(
 		"bucket":        bucketName,
 		"bucket_access": req.Name,
 	}).Info("bucket access for bucket is being created")
+	// Display all request parameters.
 
+	parameters := ""
+	parametersCopy := make(map[string]string)
+
+	for key, value := range req.GetParameters() {
+		parameters += key + ":" + value + ";"
+		parametersCopy[key] = value
+	}
+
+	parametersCopy["namespace"] = s.namespace
+
+	log.WithFields(log.Fields{
+		"parameters": parameters,
+	}).Info("parameters of the bucket")
 	// Check if bucket for granting access exists.
-	_, err := s.mgmtClient.Buckets().Get(bucketName, req.GetParameters())
+	_, err := s.mgmtClient.Buckets().Get(bucketName, parametersCopy)
 	if err != nil && !errors.Is(err, model.Error{Code: model.CodeResourceNotFound}) {
 		log.WithFields(log.Fields{
 			"bucket": bucketName,
@@ -420,7 +434,7 @@ func (s *Server) DriverGrantBucketAccess(
 	// TODO: error handling
 	iamObjectscale.InjectAccountIDToIAMClient(iamClient, s.namespace)
 	// TODO: error handling
-	userName := fmt.Sprintf("user-%v", bucketName)
+	userName := fmt.Sprintf("%v-user-%v", s.namespace, bucketName)
 	user, err := iamClient.CreateUser(&iam.CreateUserInput{
 		UserName: &userName,
 	})
@@ -441,7 +455,7 @@ func (s *Server) DriverGrantBucketAccess(
 	}).Info("ObjectScale IAM user was created")
 
 	// Check if policy for specific bucket exists.
-	_, err = s.mgmtClient.Buckets().GetPolicy(bucketName, req.GetParameters())
+	_, err = s.mgmtClient.Buckets().GetPolicy(bucketName, parametersCopy)
 	if err != nil && !errors.Is(err, model.Error{Code: model.CodeResourceNotFound}) {
 		log.WithFields(log.Fields{
 			"bucket": bucketName,
@@ -458,8 +472,7 @@ func (s *Server) DriverGrantBucketAccess(
 	}
 
 	policy := ""
-	err = s.mgmtClient.Buckets().UpdatePolicy(bucketName, policy, req.Parameters)
-
+	err = s.mgmtClient.Buckets().UpdatePolicy(bucketName, policy, parametersCopy)
 	if err != nil {
 		log.WithFields(log.Fields{
 			"bucket": bucketName,
@@ -475,11 +488,11 @@ func (s *Server) DriverGrantBucketAccess(
 	// Create access key.
 
 	requestModel := &model.ObjectUserSecretKeyCreateReq{
-		SecretKey: "",
-		Namespace: s.namespace,
+		SecretKey: "",          // ?
+		Namespace: s.namespace, // TODO: variables regarding the namespace should be renamed to smth like AccountID
 	}
-	secret, err := s.mgmtClient.ObjectUser().CreateSecret(userName, *requestModel, req.Parameters)
 
+	secret, err := s.mgmtClient.ObjectUser().CreateSecret(userName, *requestModel, parametersCopy)
 	if err != nil {
 		log.WithFields(log.Fields{
 			"user":   userName,
@@ -504,9 +517,7 @@ func (s *Server) DriverGrantBucketAccess(
 		"endpoint":  s.s3Endpont,
 	}).Info("secret access key for user with endpoint was created")
 
-	credentialDetails := cosi.CredentialDetails{
-		Secrets: secretsMap}
-
+	credentialDetails := cosi.CredentialDetails{Secrets: secretsMap}
 	credentials := make(map[string]*cosi.CredentialDetails)
 	credentials["s3"] = &credentialDetails
 
