@@ -470,7 +470,13 @@ func (s *Server) DriverGrantBucketAccess(
 			"bucket": bucketName,
 		}).Info("bucket policy already exists")
 	}
-
+	// statement := s3client.NewPolicyStatement().
+	// 	WithSID(userName).
+	// 	ForPrincipals(userName).
+	// 	ForResources(bucketName).
+	// 	ForSubResources(bucketName).
+	// 	Allows().
+	// 	Actions(s3client.AllowedActions...)
 	policy := ""
 	err = s.mgmtClient.Buckets().UpdatePolicy(bucketName, policy, parametersCopy)
 	if err != nil {
@@ -519,7 +525,7 @@ func (s *Server) DriverGrantBucketAccess(
 
 	credentialDetails := cosi.CredentialDetails{Secrets: secretsMap}
 	credentials := make(map[string]*cosi.CredentialDetails)
-	credentials["s3"] = &credentialDetails
+	credentials["s3"] = &credentialDetails // ?
 
 	log.WithFields(log.Fields{
 		"bucket": bucketName,
