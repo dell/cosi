@@ -52,6 +52,7 @@ type Server struct {
 	region             string
 	objectscaleGateway string
 	objectstoreGateway string
+	s3Endpont          string
 }
 
 var _ driver.Driver = (*Server)(nil)
@@ -98,6 +99,11 @@ func New(config *config.Objectscale) (*Server, error) {
 		return nil, errors.New("empty objectstore gateway")
 	}
 
+	protocolS3Endpoint := config.Protocols.S3.Endpoint
+	if protocolS3Endpoint == "" {
+		return nil, errors.New("empty protocol S3 endpoint")
+	}
+
 	if strings.Contains(id, "-") {
 		id = strings.ReplaceAll(id, "-", "_")
 
@@ -136,6 +142,7 @@ func New(config *config.Objectscale) (*Server, error) {
 		region:             *region,
 		objectscaleGateway: objectscaleGateway,
 		objectstoreGateway: objectstoreGateway,
+		s3Endpont:          protocolS3Endpoint,
 	}, nil
 }
 
@@ -429,7 +436,8 @@ func (s *Server) DriverGrantBucketAccess(
 	}
 
 	log.WithFields(log.Fields{
-		"user": userName,
+		"user":   userName,
+		"userId": user.User.UserId,
 	}).Info("ObjectScale IAM user was created")
 
 	// Check if policy for specific bucket exists.
@@ -446,14 +454,68 @@ func (s *Server) DriverGrantBucketAccess(
 	} else if err == nil {
 		log.WithFields(log.Fields{
 			"bucket": bucketName,
-		}).Debug("bucket policy already exists")
+		}).Info("bucket policy already exists")
+	}
 
-		//_, err = s.mgmtClient.Buckets().UpdatePolicy(bucketName)
+	policy := ""
+	err = s.mgmtClient.Buckets().UpdatePolicy(bucketName, policy, req.Parameters)
+
+	if err != nil {
+		log.WithFields(log.Fields{
+			"bucket": bucketName,
+			"policy": policy,
+		}).Error("failed to update policy")
+
+		span.RecordError(err)
+		span.SetStatus(otelCodes.Error, "failed to update policy")
+
+		return nil, status.Error(codes.Internal, "bucket policy was not successfully updated")
 	}
 
 	// Create access key.
 
-	return nil, status.Error(codes.Unimplemented, err.Error())
+	requestModel := &model.ObjectUserSecretKeyCreateReq{
+		SecretKey: "",
+		Namespace: s.namespace,
+	}
+	secret, err := s.mgmtClient.ObjectUser().CreateSecret(userName, *requestModel, req.Parameters)
+
+	if err != nil {
+		log.WithFields(log.Fields{
+			"user":   userName,
+			"secret": requestModel.SecretKey,
+		}).Error("failed to create secret key")
+
+		span.RecordError(err)
+		span.SetStatus(otelCodes.Error, "failed to create secret key")
+
+		return nil, status.Error(codes.Internal, "secret key was not successfully created")
+	}
+
+	// Assemble credential details and add to credentialRepo
+	secretsMap := make(map[string]string)
+	secretsMap["accessKeyID"] = userName
+	secretsMap["accessSecretKey"] = secret.SecretKey
+	secretsMap["endpoint"] = s.s3Endpont
+
+	log.WithFields(log.Fields{
+		"user":      userName,
+		"secretKey": secret.SecretKey,
+		"endpoint":  s.s3Endpont,
+	}).Info("secret access key for user with endpoint was created")
+
+	credentialDetails := cosi.CredentialDetails{
+		Secrets: secretsMap}
+
+	credentials := make(map[string]*cosi.CredentialDetails)
+	credentials["s3"] = &credentialDetails
+
+	log.WithFields(log.Fields{
+		"bucket": bucketName,
+		"user":   userName,
+	}).Info("access to the bucket for user successfully granted")
+
+	return &cosi.DriverGrantBucketAccessResponse{AccountId: userName, Credentials: credentials}, nil
 }
 
 // DriverRevokeBucketAccess revokes access from Bucket on specific Object Storage Platform.
