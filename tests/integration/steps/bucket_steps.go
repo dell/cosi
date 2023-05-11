@@ -146,6 +146,8 @@ func GetBucketResource(ctx ginkgo.SpecContext, bucketClient *bucketclientset.Cli
 		return nil
 	})
 
+	ginkgo.GinkgoWriter.Printf("Kubernetes BucketClaim: %+v\n", myBucketClaim)
+
 	gomega.Expect(err).ToNot(gomega.HaveOccurred())
 	gomega.Expect(myBucketClaim.Status.BucketName).NotTo(gomega.BeEmpty())
 

@@ -8,6 +8,7 @@ fi
 
 ginkgo \
     "${NO_COLOR}" \
+    -vv \
     --keep-going \
     --race \
     --trace \
