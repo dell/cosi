@@ -168,7 +168,7 @@ var _ = Describe("Bucket Deletion", Ordered, Label("delete", "objectscale"), fun
 		By("checking if Bucket referencing BucketClaim resource 'my-bucket-claim-delete' is deleted in ObjectStore '${objectstoreName}'")
 		steps.CheckBucketDeletionInObjectStore(objectscale, deleteBucket)
 
-		DeferCleanup(func() {
+		DeferCleanup(func(ctx SpecContext) {
 			steps.DeleteBucketClassResource(ctx, bucketClient, bucketClassDelete)
 		})
 	})
