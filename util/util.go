@@ -1,6 +1,9 @@
 package util
 
 import (
+	"context"
+	"time"
+
 	log "github.com/sirupsen/logrus"
 )
 
@@ -47,4 +50,27 @@ func SetLoggingFormatter() {
 		FullTimestamp:   true,
 	}
 	log.SetFormatter(formatter)
+}
+
+func Retry(ctx context.Context, attempts int, sleep time.Duration, f func() error) error {
+	ticker := time.NewTicker(sleep)
+	retries := 0
+
+	for {
+		select {
+		case <-ticker.C:
+			err := f()
+			if err == nil {
+				return nil
+			}
+
+			retries++
+			if retries > attempts {
+				return err
+			}
+
+		case <-ctx.Done():
+			return ctx.Err()
+		}
+	}
 }
