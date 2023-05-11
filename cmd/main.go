@@ -206,7 +206,7 @@ func setLogLevel(logLevel string) {
 	}).Info("log level set")
 }
 
-// setLogFormatter set is used to set proper formatter for logs
+// setLogFormatter set is used to set proper formatter for logs.
 func setLogFormatter() {
 	formatter := &log.TextFormatter{
 		TimestampFormat: "2006-01-02 15:04:05.000",
