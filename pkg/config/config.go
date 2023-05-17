@@ -96,7 +96,7 @@ func readFile(filename string) ([]byte, error) {
 	}
 
 	log.WithFields(log.Fields{
-		"config_file_path": filename,
+		"configFilePath": filename,
 	}).Debug("config file opened")
 
 	// limit reader is used, so the we will read only 20MB of the file.
