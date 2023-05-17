@@ -43,6 +43,7 @@ spec:
           imagePullPolicy: {{ .Values.provisioner.image.pullPolicy }}
           args:
             - "--log-level={{ include "cosi-driver.logLevel" . }}"
+            - "--log-format={{ include "cosi-driver.logFormat" . }}"
             - "--otel-endpoint={{ include "cosi-driver.otelEndpoint" . }}"
           {{- with .Values.resources }}
           resources:

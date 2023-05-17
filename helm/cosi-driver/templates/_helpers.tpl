@@ -45,6 +45,20 @@ Create chart name and version as used by the chart label.
 {{- end }}
 
 {{/*
+# COSI driver log format
+# Possible values: "json" "text"
+# Default value: "json"
+*/}}
+{{- define "cosi-driver.logFormat" }}
+  {{- $logFormatValues := list "json" "text" }}
+  {{- if (has .Values.provisioner.logFormat $logFormatValues) }}
+    {{- .Values.provisioner.logFormat }}
+  {{- else }}
+    {{- "text" }}
+  {{- end }}
+{{- end }}
+
+{{/*
 # COSI driver OTEL endpoint
 # Default value is left empty on purpose, to not start any tracing if no argument was provided.
 # Default value: ""
