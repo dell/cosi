@@ -37,6 +37,7 @@ import (
 
 var (
 	logLevel     = flag.String("log-level", "debug", "Log level (debug, info, warn, error, fatal, panic)")
+	logFormat    = flag.String("log-format", "text", "Log format (text, json)")
 	otelEndpoint = flag.String("otel-endpoint", "",
 		"OTEL collector endpoint for collecting observability data")
 	configFile = flag.String("config", "/cosi/config.yaml", "path to config file")
@@ -50,10 +51,11 @@ const (
 func init() {
 	// Parse command line flags.
 	flag.Parse()
+	// Set the log format.
+	// This must be done before the log level is set, so if any errors occur, they are logged in proper format.
+	setLogFormatter(*logFormat)
 	// Set the log level.
 	setLogLevel(*logLevel)
-	// Set the log format.
-	setLogFormatter()
 }
 
 func main() {
@@ -78,7 +80,7 @@ func runMain() error {
 	}
 
 	log.WithFields(log.Fields{
-		"config_file_path": *configFile,
+		"configFilePath": *configFile,
 	}).Info("config successfully loaded")
 
 	// Create TracerProvider with exporter to Open Telemetry Collector.
@@ -193,8 +195,8 @@ func setLogLevel(logLevel string) {
 		log.SetLevel(log.PanicLevel)
 	default:
 		log.WithFields(log.Fields{
-			"log-level":     logLevel,
-			"new-log-level": "debug",
+			"logLevel":    logLevel,
+			"newLogLevel": "debug",
 		}).Error("unknown log level, setting to debug")
 		log.SetLevel(log.DebugLevel)
 
@@ -202,15 +204,38 @@ func setLogLevel(logLevel string) {
 	}
 
 	log.WithFields(log.Fields{
-		"log-level": logLevel,
+		"logLevel": logLevel,
 	}).Info("log level set")
 }
 
 // setLogFormatter set is used to set proper formatter for logs.
-func setLogFormatter() {
-	formatter := &log.TextFormatter{
-		TimestampFormat: "2006-01-02 15:04:05.000",
-		FullTimestamp:   true,
+func setLogFormatter(logFormat string) {
+	timestampFormat := "2006-01-02 15:04:05.000"
+
+	switch logFormat {
+	case "json":
+		log.SetFormatter(&log.JSONFormatter{
+			TimestampFormat: timestampFormat,
+			PrettyPrint:     false, // do not indent JSON logs, print each log entry on one line
+		})
+
+	case "text":
+		log.SetFormatter(&log.TextFormatter{
+			TimestampFormat: timestampFormat,
+			FullTimestamp:   true, // always print full timestamp
+			DisableColors:   true, // never use colors in logs, even if the terminal supports it
+		})
+
+	default:
+		log.SetFormatter(&log.TextFormatter{
+			TimestampFormat: timestampFormat,
+			FullTimestamp:   true, // always print full timestamp
+			DisableColors:   true, // never use colors in logs, even if the terminal supports it
+		})
+
+		log.WithFields(log.Fields{
+			"logFormat":    logFormat,
+			"newLogFormat": "text",
+		}).Error("unknown log format, setting to text")
 	}
-	log.SetFormatter(formatter)
 }

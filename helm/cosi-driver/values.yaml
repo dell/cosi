@@ -21,6 +21,9 @@ provisioner:
   # logLevel is the logging level for the COSI driver provisioner,
   # Possible values: "trace" "debug" "info" "warn" "error" "fatal" "panic".
   logLevel: "debug"
+  # logFormat is the logging format for the COSI driver provisioner,
+  # Possible values: "json" "text".
+  logFormat: "text"
   # otelEndpoint specifies the endpoint on which the OTEL Collector is set up and to which data is sent over gRPC.
   otelEndpoint: "grpc://10.247.103.53/collector"
   # image specifies the COSI driver provisioner container image.

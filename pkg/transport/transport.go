@@ -81,8 +81,8 @@ func New(cfg config.Tls) (*http.Transport, error) {
 func clientCert(certData, keyData *string) ([]tls.Certificate, error) {
 	if certData == nil && keyData == nil {
 		log.WithFields(log.Fields{
-			"cert_data": certData == nil,
-			"key_data":  keyData == nil,
+			"certData": certData == nil,
+			"keyData":  keyData == nil,
 		}).Debug("default certificate created")
 
 		// no certificates and key is a valid option
@@ -90,8 +90,8 @@ func clientCert(certData, keyData *string) ([]tls.Certificate, error) {
 	} else if certData == nil || keyData == nil {
 		// only one of those two is missing, it is not a valid option
 		log.WithFields(log.Fields{
-			"cert_data": certData == nil,
-			"key_data":  keyData == nil,
+			"certData": certData == nil,
+			"keyData":  keyData == nil,
 		}).Debug("client-cert or client-key missing")
 
 		return nil, ErrClientCertMissing
@@ -100,16 +100,16 @@ func clientCert(certData, keyData *string) ([]tls.Certificate, error) {
 	if *certData == "" && *keyData == "" {
 		// both certificate and key are empty, this is also a valid option
 		log.WithFields(log.Fields{
-			"cert_data": *certData == "",
-			"key_data":  *keyData == "",
+			"certData": *certData == "",
+			"keyData":  *keyData == "",
 		}).Debug("default certificate created")
 
 		return []tls.Certificate{}, nil
 	} else if *certData == "" || *keyData == "" {
 		// only one of those two is empty, it is not a valid option
 		log.WithFields(log.Fields{
-			"cert_data": *certData == "",
-			"key_data":  *keyData == "",
+			"certData": *certData == "",
+			"keyData":  *keyData == "",
 		}).Debug("client-cert or client-key missing")
 
 		return nil, ErrClientCertMissing
