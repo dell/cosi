@@ -21,7 +21,6 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/bombsimon/logrusr/v4"
 	log "github.com/sirupsen/logrus"
 	sdktrace "go.opentelemetry.io/otel/sdk/trace"
 	semconv "go.opentelemetry.io/otel/semconv/v1.17.0"
