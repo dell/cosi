@@ -45,15 +45,21 @@ func CheckBucketResourceInObjectStore(objectscale *objectscaleRest.ClientSet, na
 	objectScaleBucket, err := objectscale.Buckets().Get(id, param)
 	gomega.Expect(err).ToNot(gomega.HaveOccurred())
 	gomega.Expect(objectScaleBucket).NotTo(gomega.BeNil())
+
+	ginkgo.GinkgoWriter.Printf("Bucket in Objectstore: %+v\n", objectScaleBucket)
 }
 
 // CheckBucketDeletionInObjectStore Function for checking Bucket deletion in ObjectStore.
-func CheckBucketDeletionInObjectStore(objectscale *objectscaleRest.ClientSet, bucket *v1alpha1.Bucket) {
+func CheckBucketDeletionInObjectStore(objectscale *objectscaleRest.ClientSet, namespace string, bucket *v1alpha1.Bucket) {
 	param := make(map[string]string)
-	param["namespace"] = "TODO:Separate-ObjectStoreID-from-bucket"
-	objectScaleBucket, err := objectscale.Buckets().Get(bucket.Status.BucketID, param)
-	gomega.Expect(err).To(gomega.HaveOccurred())
+	param["namespace"] = namespace
+	id := strings.SplitN(bucket.Status.BucketID, "-", 2)[1] // nolint:gomnd
+
+	objectScaleBucket, err := objectscale.Buckets().Get(id, param)
+	gomega.Expect(err).ToNot(gomega.HaveOccurred())
 	gomega.Expect(objectScaleBucket).To(gomega.BeNil())
+
+	ginkgo.GinkgoWriter.Printf("Bucket in Objectstore: %+v\n", objectScaleBucket)
 }
 
 // CheckBucketAccessFromSecret Check if Bucket can be accessed with data from specified secret.

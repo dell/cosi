@@ -50,16 +50,20 @@ func CheckBucketClaimStatus(ctx ginkgo.SpecContext, bucketClient *bucketclientse
 	gomega.Expect(err).ToNot(gomega.HaveOccurred())
 	gomega.Expect(myBucketClaim).NotTo(gomega.BeNil())
 	gomega.Expect(myBucketClaim.Status.BucketReady).To(gomega.Equal(status))
+
+	ginkgo.GinkgoWriter.Printf("Kubernetes BucketClaim status: %+v\n", myBucketClaim.Status)
 }
 
 // CheckBucketStatus Function for checking Bucket status.
 func CheckBucketStatus(ctx ginkgo.SpecContext, bucketClient *bucketclientset.Clientset, bucket *v1alpha1.Bucket, status bool) {
 	gomega.Expect(bucket.Status.BucketReady).To(gomega.Equal(status))
+	ginkgo.GinkgoWriter.Printf("Kubernetes Bucket status: %+v\n", bucket.Status)
 }
 
 // CheckBucketID Function for checking bucketID.
 func CheckBucketID(ctx ginkgo.SpecContext, bucketClient *bucketclientset.Clientset, bucket *v1alpha1.Bucket) {
 	gomega.Expect(bucket.Status.BucketID).NotTo(gomega.Or(gomega.BeEmpty(), gomega.BeNil()))
+	ginkgo.GinkgoWriter.Printf("Kubernetes Bucket status: %+v\n", bucket.Status)
 }
 
 // CreateBucketClassResource Function for creating BucketClass resource.
