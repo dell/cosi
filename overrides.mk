@@ -15,10 +15,10 @@
 # BASEIMAGE, DIGEST, GOVERSION, REGISTRY, IMAGENAME, IMAGETAG.
 
 # DEFAULT values
-# Image from https://catalog.redhat.com/software/containers/ubi8/ubi-minimal/5c359a62bed8bd75a2c3fba8
+# Image from https://catalog.redhat.com/software/containers/ubi8/ubi-micro/5ff3f50a831939b08d1b832a
 DEFAULT_BASEIMAGE=registry.access.redhat.com/ubi8/ubi-micro
-# DIGEST is the digest for version 8.7-1085 of ubi-micro.
-DEFAULT_DIGEST=sha256:c530ca8805f8cae3e469e12d985531f8d2ac259e150f935abf80339ea055ccbe
+# DIGEST is the digest for version 8.8-1 of ubi-micro.
+DEFAULT_DIGEST=sha256:ca61d14ebfdeaad344862694570a574adb2181f4339d3d2a2db93f20b6ccfe0e
 # GOVERSION is a build version for driver.
 DEFAULT_GOVERSION:=$(shell sed -En 's/^go (.*)$$/\1/p' go.mod)
 # REGISTRY in which COSI-Driver image resides.
