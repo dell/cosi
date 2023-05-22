@@ -21,6 +21,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/bombsimon/logrusr/v4"
 	log "github.com/sirupsen/logrus"
 	sdktrace "go.opentelemetry.io/otel/sdk/trace"
 	semconv "go.opentelemetry.io/otel/semconv/v1.17.0"
@@ -56,6 +57,8 @@ func init() {
 	setLogFormatter(*logFormat)
 	// Set the log level.
 	setLogLevel(*logLevel)
+	// Set the custom logger for OpenTelemetry
+	setOtelLogger()
 }
 
 func main() {
@@ -238,4 +241,10 @@ func setLogFormatter(logFormat string) {
 			"newLogFormat": "text",
 		}).Error("unknown log format, setting to text")
 	}
+}
+
+// setOtelLogger is used to set the custom logger from OpenTelemetry
+func setOtelLogger() {
+	logger := logrusr.New(log.StandardLogger())
+	otel.SetLogger(logger)
 }
