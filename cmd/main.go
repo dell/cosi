@@ -153,15 +153,15 @@ func tracerProvider(ctx context.Context, url string) (*sdktrace.TracerProvider, 
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
 		grpc.WithBlock(),
 	)
-	if err != nil {
-		return nil, fmt.Errorf("failed to create gRPC connection to collector: %w", err)
-	}
+	//if err != nil {
+	//	return nil, fmt.Errorf("failed to create gRPC connection to collector: %w", err)
+	//}
 
 	// Set up a trace exporter
 	traceExporter, err := otlptracegrpc.New(ctx, otlptracegrpc.WithGRPCConn(conn))
-	if err != nil {
-		return nil, fmt.Errorf("failed to create trace exporter: %w", err)
-	}
+	//if err != nil {
+	//	return nil, fmt.Errorf("failed to create trace exporter: %w", err)
+	//}
 
 	// Register the trace exporter with a TracerProvider, using a batch
 	// span processor to aggregate spans before export.
