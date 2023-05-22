@@ -26,5 +26,8 @@ RUN make build
 # Second stage: building final environment for running the driver.
 FROM ${BASEIMAGE}@${DIGEST} AS final
 WORKDIR /cosi-driver
+RUN addgroup -S cosi-driver && adduser -S cosi-user -G cosi-driver \
+&& mkdir /cosi && chown -R cosi-user:cosi-driver /cosi-driver /cosi
+USER cosi-user:cosi-driver
 COPY --from=builder /cosi-driver/build/cosi-driver .
 ENTRYPOINT ["./cosi-driver"]
