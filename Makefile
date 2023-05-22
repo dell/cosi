@@ -43,7 +43,6 @@ build:	##build project
 docker:	##generate the docker container
 	@echo "Base Images is set to: $(BASEIMAGE)"
 	@echo "Building: $(IMAGENAME):$(IMAGETAG)"
-	export DOCKER_CONTENT_TRUST=1
 	docker build -t "$(IMAGENAME):$(IMAGETAG)" --build-arg BASEIMAGE=$(BASEIMAGE) --build-arg GOVERSION=$(GOVERSION) --build-arg DIGEST=$(DIGEST) .
 
 # Pushes container to the repository
