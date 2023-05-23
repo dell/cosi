@@ -38,6 +38,10 @@ var _ = Describe("Bucket Access KEY", Ordered, Label("key-flow", "objectscale"),
 	BeforeEach(func(ctx SpecContext) {
 		// Initialize variables
 		myBucketClass = &v1alpha1.BucketClass{
+			TypeMeta: metav1.TypeMeta{
+				Kind:       "BucketClass",
+				APIVersion: "objectstorage.k8s.io/v1alpha1",
+			},
 			ObjectMeta: metav1.ObjectMeta{
 				Name: "my-bucket-class",
 			},
@@ -48,6 +52,10 @@ var _ = Describe("Bucket Access KEY", Ordered, Label("key-flow", "objectscale"),
 			},
 		}
 		myBucketClaim = &v1alpha1.BucketClaim{
+			TypeMeta: metav1.TypeMeta{
+				Kind:       "BucketClaim",
+				APIVersion: "objectstorage.k8s.io/v1alpha1",
+			},
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      "my-bucket-claim",
 				Namespace: "namespace-1",
@@ -60,6 +68,10 @@ var _ = Describe("Bucket Access KEY", Ordered, Label("key-flow", "objectscale"),
 			},
 		}
 		myBucketAccessClass = &v1alpha1.BucketAccessClass{
+			TypeMeta: metav1.TypeMeta{
+				Kind:       "BucketAccessClass",
+				APIVersion: "objectstorage.k8s.io/v1alpha1",
+			},
 			ObjectMeta: metav1.ObjectMeta{
 				Name: "my-bucket-access-class",
 			},
@@ -70,6 +82,10 @@ var _ = Describe("Bucket Access KEY", Ordered, Label("key-flow", "objectscale"),
 			},
 		}
 		myBucketAccess = &v1alpha1.BucketAccess{
+			TypeMeta: metav1.TypeMeta{
+				Kind:       "BucketAccess",
+				APIVersion: "objectstorage.k8s.io/v1alpha1",
+			},
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      "my-bucket-access",
 				Namespace: "namespace-1",

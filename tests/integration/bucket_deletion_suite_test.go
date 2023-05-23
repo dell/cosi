@@ -39,12 +39,12 @@ var _ = Describe("Bucket Deletion", Ordered, Label("delete", "objectscale"), fun
 		bucketClassDelete = &v1alpha1.BucketClass{
 			TypeMeta: metav1.TypeMeta{
 				Kind:       "BucketClass",
-				APIVersion: "storage.k8s.io/v1",
+				APIVersion: "objectstorage.k8s.io/v1alpha1",
 			},
 			ObjectMeta: metav1.ObjectMeta{
 				Name: "my-bucket-class-delete",
 			},
-			DeletionPolicy: "delete",
+			DeletionPolicy: v1alpha1.DeletionPolicyDelete,
 			DriverName:     "cosi-driver",
 			Parameters: map[string]string{
 				"id": driverID,
@@ -53,12 +53,12 @@ var _ = Describe("Bucket Deletion", Ordered, Label("delete", "objectscale"), fun
 		bucketClassRetain = &v1alpha1.BucketClass{
 			TypeMeta: metav1.TypeMeta{
 				Kind:       "BucketClass",
-				APIVersion: "storage.k8s.io/v1",
+				APIVersion: "objectstorage.k8s.io/v1alpha1",
 			},
 			ObjectMeta: metav1.ObjectMeta{
 				Name: "my-bucket-class-retain",
 			},
-			DeletionPolicy: "retain",
+			DeletionPolicy: v1alpha1.DeletionPolicyRetain,
 			DriverName:     "cosi-driver",
 			Parameters: map[string]string{
 				"id": driverID,
@@ -67,7 +67,7 @@ var _ = Describe("Bucket Deletion", Ordered, Label("delete", "objectscale"), fun
 		bucketClaimDelete = &v1alpha1.BucketClaim{
 			TypeMeta: metav1.TypeMeta{
 				Kind:       "BucketClaim",
-				APIVersion: "storage.k8s.io/v1",
+				APIVersion: "objectstorage.k8s.io/v1alpha1",
 			},
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      "my-bucket-claim-delete",
@@ -83,7 +83,7 @@ var _ = Describe("Bucket Deletion", Ordered, Label("delete", "objectscale"), fun
 		bucketClaimRetain = &v1alpha1.BucketClaim{
 			TypeMeta: metav1.TypeMeta{
 				Kind:       "BucketClaim",
-				APIVersion: "storage.k8s.io/v1",
+				APIVersion: "objectstorage.k8s.io/v1alpha1",
 			},
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      "my-bucket-claim-retain",

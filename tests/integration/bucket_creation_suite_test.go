@@ -39,18 +39,22 @@ var _ = Describe("Bucket Creation", Ordered, Label("create", "objectscale"), fun
 		myBucketClass = &v1alpha1.BucketClass{
 			TypeMeta: metav1.TypeMeta{
 				Kind:       "BucketClass",
-				APIVersion: "storage.k8s.io/v1",
+				APIVersion: "objectstorage.k8s.io/v1alpha1",
 			},
 			ObjectMeta: metav1.ObjectMeta{
 				Name: "my-bucket-class",
 			},
-			DeletionPolicy: "delete",
+			DeletionPolicy: v1alpha1.DeletionPolicyDelete,
 			DriverName:     "cosi-driver",
 			Parameters: map[string]string{
 				"id": driverID,
 			},
 		}
 		validBucketClaim = &v1alpha1.BucketClaim{
+			TypeMeta: metav1.TypeMeta{
+				Kind:       "BucketClaim",
+				APIVersion: "objectstorage.k8s.io/v1alpha1",
+			},
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      "bucket-claim-valid",
 				Namespace: "namespace-1",
@@ -65,7 +69,7 @@ var _ = Describe("Bucket Creation", Ordered, Label("create", "objectscale"), fun
 		invalidBucketClaim = &v1alpha1.BucketClaim{
 			TypeMeta: metav1.TypeMeta{
 				Kind:       "BucketClaim",
-				APIVersion: "storage.k8s.io/v1",
+				APIVersion: "objectstorage.k8s.io/v1alpha1",
 			},
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      "bucket-claim-invalid",
