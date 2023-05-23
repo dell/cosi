@@ -49,13 +49,12 @@ Create chart name and version as used by the chart label.
 # Values are set to the integer value, higher value means more verbose logging
 */}}
 {{- define "cosi-driver.provisionerSidecarVerbosity" }}
-  {{- $verbosityValues := list 0 1 2 3 4 5 6 7 8 9 }}
-  {{- if (has .Values.sidecar.verbosity $verbosityValues) }}
+  {{- if (kindIs "int" .Values.sidecar.verbosity) }}
     {{- .Values.sidecar.verbosity }}
   {{- else }}
     {{- 5 }}
   {{- end }}
-{{- end }
+{{- end }}
 
 {{/*
 # COSI driver log format

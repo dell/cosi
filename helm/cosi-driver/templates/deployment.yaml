@@ -58,7 +58,7 @@ spec:
           image: {{ include "cosi-driver.provisionerSidecarImageName" . }}
           imagePullPolicy: {{ .Values.sidecar.image.pullPolicy }}
           args:
-            - "-v={{ include "cosi-driver.provisionerSidecarVerbosity" }}"
+            - "-v={{ include "cosi-driver.provisionerSidecarVerbosity" . }}"
           {{- with .Values.securityContext }}
           securityContext:
             {{- toYaml . | nindent 12 }}
