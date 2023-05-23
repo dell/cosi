@@ -45,6 +45,19 @@ Create chart name and version as used by the chart label.
 {{- end }}
 
 {{/*
+# COSI driver sidecar log level
+# Values are set to the integer value, higher value means more verbose logging
+*/}}
+{{- define "cosi-driver.provisionerSidecarVerbosity" }}
+  {{- $verbosityValues := list 0 1 2 3 4 5 6 7 8 9 }}
+  {{- if (has .Values.sidecar.verbosity $verbosityValues) }}
+    {{- .Values.sidecar.verbosity }}
+  {{- else }}
+    {{- 5 }}
+  {{- end }}
+{{- end }
+
+{{/*
 # COSI driver log format
 # Possible values: "json" "text"
 # Default value: "json"
@@ -128,14 +141,14 @@ Create the name of the service account to use
 Create the name of provisioner container
 */}}
 {{- define "cosi-driver.provisionerContainerName" }}
-  {{- default "cosi-provisioner" .Values.provisioner.name }}
+  {{- default "objectstorage-provisioner" .Values.provisioner.name }}
 {{- end }}
 
 {{/*
 Create the name of provisioner sidecar container
 */}}
 {{- define "cosi-driver.provisionerSidecarContainerName" }}
-  {{- default "cosi-provisioner-sidecar" .Values.sidecar.name }}
+  {{- default "objectstorage-provisioner-sidecar" .Values.sidecar.name }}
 {{- end }}
 
 {{/*
