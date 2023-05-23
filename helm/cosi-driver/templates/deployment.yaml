@@ -42,6 +42,7 @@ spec:
           image: {{ include "cosi-driver.provisionerImageName" . }}
           imagePullPolicy: {{ .Values.provisioner.image.pullPolicy }}
           args:
+            - "-v=100"
             - "--log-level={{ include "cosi-driver.logLevel" . }}"
             - "--log-format={{ include "cosi-driver.logFormat" . }}"
             - "--otel-endpoint={{ include "cosi-driver.otelEndpoint" . }}"
