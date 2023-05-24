@@ -39,9 +39,9 @@ provisioner:
 sidecar:
   # name of the COSI driver sidecar container.
   name: "objectstorage-provisioner-sidecar"
-  # verbosity is the logging verbosity for the COSI driver sidecar,
+  # verbosity is the logging verbosity for the COSI driver sidecar, higher values are more verbose,
   # Possible values: integers.
-  verbosity: 4
+  verbosity: 5
   # image specifies the COSI driver sidecar container image.
   image:
     # repository is the COSI driver sidecar container image repository.
