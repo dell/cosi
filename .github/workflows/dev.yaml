@@ -92,8 +92,6 @@ jobs:
         image-ref: ${{ env.IMAGENAME }}:${{ env.IMAGETAG }}
     - name: Run dockle action
       uses: erzz/dockle-action@v1.3.1
-      env:
-        DOCKER_CONTENT_TRUST: 1
       with:
         image: ${{ env.IMAGENAME }}:${{ env.IMAGETAG }}
     # TODO: There is no registry for now

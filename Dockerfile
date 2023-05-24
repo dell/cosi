@@ -25,10 +25,12 @@ RUN make build
 
 # Second stage: building final environment for running the driver.
 FROM ${BASEIMAGE}@${DIGEST} AS final
-RUN echo 'cosi:x:625:625:cosi:/cosi:/bin/nologin' >> /etc/passwd
-USER cosi
-WORKDIR /cosi
-CMD [ "whoami" ]
 WORKDIR /cosi-driver
 COPY --from=builder /cosi-driver/build/cosi-driver .
+RUN echo "cosi:*:1001:cosi-user" >> /etc/group && \
+    echo "cosi-user:*:1001:1001::/cosi-driver:/bin/false" >> /etc/passwd && \
+    chown 1001:1001 ./cosi-driver && \
+    chmod 0550 ./cosi-driver
+USER cosi-user
+HEALTHCHECK NONE
 ENTRYPOINT ["./cosi-driver"]
