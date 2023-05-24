@@ -170,7 +170,7 @@ var _ = Describe("Bucket Deletion", Ordered, Label("delete", "objectscale"), fun
 
 		// STEP: Bucket referencing BucketClaim resource "my-bucket-claim-delete" is deleted in ObjectStore "${objectstoreName}"
 		By("checking if Bucket referencing BucketClaim resource 'my-bucket-claim-delete' is deleted in ObjectStore '${objectstoreName}'")
-		steps.CheckBucketDeletionInObjectStore(objectscale, namespace, deleteBucket)
+		steps.CheckBucketDeletionInObjectStore(ctx, objectscale, namespace, deleteBucket)
 
 		DeferCleanup(func(ctx SpecContext) {
 			steps.DeleteBucketClassResource(ctx, bucketClient, bucketClassDelete)

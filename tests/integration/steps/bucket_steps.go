@@ -188,31 +188,3 @@ func CheckBucketStatusEmpty(ctx ginkgo.SpecContext, bucketClient *bucketclientse
 	gomega.Expect(err).ToNot(gomega.HaveOccurred())
 	gomega.Expect(myBucketClaim.Status.BucketName).To(gomega.BeEmpty())
 }
-
-const (
-	attempts = 5
-	sleep    = 2 * time.Second // nolint:gomnd
-)
-
-func retry(ctx ginkgo.SpecContext, attempts int, sleep time.Duration, f func() error) error {
-	ticker := time.NewTicker(sleep)
-	retries := 0
-
-	for {
-		select {
-		case <-ticker.C:
-			err := f()
-			if err == nil {
-				return nil
-			}
-
-			retries++
-			if retries > attempts {
-				return err
-			}
-
-		case <-ctx.Done():
-			return ctx.Err()
-		}
-	}
-}
