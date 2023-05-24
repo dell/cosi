@@ -152,7 +152,7 @@ var _ = Describe("Bucket Creation", Ordered, Label("create", "objectscale"), fun
 		steps.CheckBucketID(ctx, bucketClient, validBucket)
 
 		DeferCleanup(func(ctx SpecContext) {
-			//
+			steps.DeleteBucketClaimResource(ctx, bucketClient, validBucketClaim)
 		})
 	})
 
@@ -185,8 +185,6 @@ var _ = Describe("Bucket Creation", Ordered, Label("create", "objectscale"), fun
 	})
 	AfterAll(func() {
 		DeferCleanup(func(ctx SpecContext) {
-			steps.DeleteBucket(objectscale, namespace, validBucket)
-			steps.DeleteBucketClaimResource(ctx, bucketClient, validBucketClaim)
 			steps.DeleteBucketClassResource(ctx, bucketClient, myBucketClass)
 		})
 	})
