@@ -14,7 +14,6 @@ package steps
 
 import (
 	"fmt"
-	"time"
 
 	ginkgo "github.com/onsi/ginkgo/v2"
 	gomega "github.com/onsi/gomega"
@@ -40,7 +39,6 @@ func CreateBucketClaimResource(ctx ginkgo.SpecContext, bucketClient *bucketclien
 
 // DeleteBucketClaimResource Function for deleting BucketClaim resource.
 func DeleteBucketClaimResource(ctx ginkgo.SpecContext, bucketClient *bucketclientset.Clientset, bucketClaim *v1alpha1.BucketClaim) {
-	time.Sleep(100)
 	err := bucketClient.ObjectstorageV1alpha1().BucketClaims(bucketClaim.Namespace).Delete(ctx, bucketClaim.Name, v1.DeleteOptions{})
 	gomega.Expect(err).ToNot(gomega.HaveOccurred())
 }
