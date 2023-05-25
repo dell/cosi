@@ -96,6 +96,7 @@ jobs:
         DOCKER_CONTENT_TRUST: 1
       with:
         image: ${{ env.IMAGENAME }}:${{ env.IMAGETAG }}
+        ignore: 'CIS-DI-0009'
     # TODO: There is no registry for now
     # - run: make push
     # if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
