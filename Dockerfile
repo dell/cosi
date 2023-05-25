@@ -36,8 +36,8 @@ RUN echo "cosi:*:1001:cosi-user" >> /etc/group && \
     chown -R 1001:1001 /var/lib/cosi /cosi
 # Run as non-root
 USER cosi-user
-# set volume mount point for app socket
-VOLUME [ "/var/lib/cosi" ]
+# set volume mount point for app socket and config file
+VOLUME [ "/var/lib/cosi", "/cosi" ]
 # Disable healthcheck
 HEALTHCHECK NONE
 ENTRYPOINT ["./cosi-driver"]
