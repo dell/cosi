@@ -39,6 +39,14 @@ provisioner:
 sidecar:
   # name of the COSI driver sidecar container.
   name: "objectstorage-provisioner-sidecar"
+  # verbosity is the logging verbosity for the COSI driver sidecar, higher values are more verbose,
+  # Possible values: integers from -2,147,483,648 to 2,147,483,647
+  #
+  # Generally the range used is between -4 and 12. However, there may be cases where numbers outside
+  # that range might provide more information.
+  # For additional information, refer to the cosi sidecar documentation:
+  # - https://github.com/kubernetes-sigs/container-object-storage-interface-provisioner-sidecar
+  verbosity: 5
   # image specifies the COSI driver sidecar container image.
   image:
     # repository is the COSI driver sidecar container image repository.
@@ -49,10 +57,10 @@ sidecar:
     pullPolicy: "IfNotPresent"
 
 # configuration of the driver can be set with with --set-file configuration.data=path/to/config.yaml
-# or created manually and provided with --set configuration.name=existing-secret-name
+# or created manually and provided with --set configuration.secretName=existing-secret-name
 configuration:
   # Specifies whether a secret with driver configuration should be created
-  # If set to false, you must set `configuration.name` field to an existing configuration secret name.
+  # If set to false, you must set `configuration.secretName` field to an existing configuration secret name.
   create: true
   annotations: {}
   # name can be used to specify an existing secret name to use for the driver configuration or override the generated name (default `cosi-driver`).

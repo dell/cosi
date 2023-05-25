@@ -39,12 +39,12 @@ var _ = Describe("Bucket Deletion", Ordered, Label("delete", "objectscale"), fun
 		bucketClassDelete = &v1alpha1.BucketClass{
 			TypeMeta: metav1.TypeMeta{
 				Kind:       "BucketClass",
-				APIVersion: "storage.k8s.io/v1",
+				APIVersion: "objectstorage.k8s.io/v1alpha1",
 			},
 			ObjectMeta: metav1.ObjectMeta{
 				Name: "my-bucket-class-delete",
 			},
-			DeletionPolicy: "delete",
+			DeletionPolicy: v1alpha1.DeletionPolicyDelete,
 			DriverName:     "cosi-driver",
 			Parameters: map[string]string{
 				"id": driverID,
@@ -53,12 +53,12 @@ var _ = Describe("Bucket Deletion", Ordered, Label("delete", "objectscale"), fun
 		bucketClassRetain = &v1alpha1.BucketClass{
 			TypeMeta: metav1.TypeMeta{
 				Kind:       "BucketClass",
-				APIVersion: "storage.k8s.io/v1",
+				APIVersion: "objectstorage.k8s.io/v1alpha1",
 			},
 			ObjectMeta: metav1.ObjectMeta{
 				Name: "my-bucket-class-retain",
 			},
-			DeletionPolicy: "retain",
+			DeletionPolicy: v1alpha1.DeletionPolicyRetain,
 			DriverName:     "cosi-driver",
 			Parameters: map[string]string{
 				"id": driverID,
@@ -67,7 +67,7 @@ var _ = Describe("Bucket Deletion", Ordered, Label("delete", "objectscale"), fun
 		bucketClaimDelete = &v1alpha1.BucketClaim{
 			TypeMeta: metav1.TypeMeta{
 				Kind:       "BucketClaim",
-				APIVersion: "storage.k8s.io/v1",
+				APIVersion: "objectstorage.k8s.io/v1alpha1",
 			},
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      "my-bucket-claim-delete",
@@ -83,7 +83,7 @@ var _ = Describe("Bucket Deletion", Ordered, Label("delete", "objectscale"), fun
 		bucketClaimRetain = &v1alpha1.BucketClaim{
 			TypeMeta: metav1.TypeMeta{
 				Kind:       "BucketClaim",
-				APIVersion: "storage.k8s.io/v1",
+				APIVersion: "objectstorage.k8s.io/v1alpha1",
 			},
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      "my-bucket-claim-retain",
@@ -160,13 +160,17 @@ var _ = Describe("Bucket Deletion", Ordered, Label("delete", "objectscale"), fun
 		By("checking the status 'bucketID' of Bucket resource referencing BucketClaim resource 'bucket-claim-delete' is not empty")
 		steps.CheckBucketID(ctx, bucketClient, deleteBucket)
 
+		// STEP: Bucket referencing BucketClaim resource "my-bucket-claim-retain" is available in ObjectStore "${objectstoreName}"
+		By("checking if Bucket referencing BucketClaim resource 'my-bucket-claim-retain' is available in ObjectStore '${objectstoreName}'")
+		steps.CheckBucketResourceInObjectStore(objectscale, namespace, deleteBucket)
+
 		// STEP: BucketClaim resource "my-bucket-claim-delete" is deleted in namespace "namespace-1"
 		By("deleting BucketClaim resource 'my-bucket-claim-delete' in namespace 'namespace-1'")
 		steps.DeleteBucketClaimResource(ctx, bucketClient, bucketClaimDelete)
 
 		// STEP: Bucket referencing BucketClaim resource "my-bucket-claim-delete" is deleted in ObjectStore "${objectstoreName}"
 		By("checking if Bucket referencing BucketClaim resource 'my-bucket-claim-delete' is deleted in ObjectStore '${objectstoreName}'")
-		steps.CheckBucketDeletionInObjectStore(objectscale, deleteBucket)
+		steps.CheckBucketDeletionInObjectStore(ctx, objectscale, namespace, deleteBucket)
 
 		DeferCleanup(func(ctx SpecContext) {
 			steps.DeleteBucketClassResource(ctx, bucketClient, bucketClassDelete)
@@ -202,6 +206,10 @@ var _ = Describe("Bucket Deletion", Ordered, Label("delete", "objectscale"), fun
 		// STEP: Bucket resource referencing BucketClaim resource "bucket-claim-retain" status "bucketID" is not empty
 		By("checking the ID of Bucket resource referencing BucketClaim resource 'bucket-claim-retain' is not empty")
 		steps.CheckBucketID(ctx, bucketClient, retainBucket)
+
+		// STEP: Bucket referencing BucketClaim resource "my-bucket-claim-retain" is available in ObjectStore "${objectstoreName}"
+		By("checking if Bucket referencing BucketClaim resource 'my-bucket-claim-retain' is available in ObjectStore '${objectstoreName}'")
+		steps.CheckBucketResourceInObjectStore(objectscale, namespace, retainBucket)
 
 		// STEP: BucketClaim resource "my-bucket-claim-retain" is deleted in namespace "namespace-1"
 		By("deleting BucketClaim resource 'my-bucket-claim-retain' in namespace 'namespace-1'")
