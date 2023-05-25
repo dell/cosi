@@ -13,6 +13,7 @@ ginkgo \
     --race \
     --trace \
     --tags integration \
-    --label-filter create \
+    --label-filter "create || delete" \
     --output-dir=../reports/integration \
     ./...
+    

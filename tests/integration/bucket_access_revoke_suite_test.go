@@ -40,12 +40,12 @@ var _ = Describe("Bucket Access Revoke", Ordered, Label("revoke", "objectscale")
 		myBucketClass = &v1alpha1.BucketClass{
 			TypeMeta: metav1.TypeMeta{
 				Kind:       "BucketClass",
-				APIVersion: "storage.k8s.io/v1",
+				APIVersion: "objectstorage.k8s.io/v1alpha1",
 			},
 			ObjectMeta: metav1.ObjectMeta{
 				Name: "my-bucket-class",
 			},
-			DeletionPolicy: "delete",
+			DeletionPolicy: v1alpha1.DeletionPolicyDelete,
 			DriverName:     "cosi-driver",
 			Parameters: map[string]string{
 				"id": driverID,
@@ -54,7 +54,7 @@ var _ = Describe("Bucket Access Revoke", Ordered, Label("revoke", "objectscale")
 		myBucketClaim = &v1alpha1.BucketClaim{
 			TypeMeta: metav1.TypeMeta{
 				Kind:       "BucketClaim",
-				APIVersion: "storage.k8s.io/v1",
+				APIVersion: "objectstorage.k8s.io/v1alpha1",
 			},
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      "my-bucket-claim",
@@ -68,6 +68,10 @@ var _ = Describe("Bucket Access Revoke", Ordered, Label("revoke", "objectscale")
 			},
 		}
 		myBucketAccessClass = &v1alpha1.BucketAccessClass{
+			TypeMeta: metav1.TypeMeta{
+				Kind:       "BucketAccessClass",
+				APIVersion: "objectstorage.k8s.io/v1alpha1",
+			},
 			ObjectMeta: metav1.ObjectMeta{
 				Name: "my-bucket-access-class",
 			},
@@ -78,6 +82,10 @@ var _ = Describe("Bucket Access Revoke", Ordered, Label("revoke", "objectscale")
 			},
 		}
 		myBucketAccess = &v1alpha1.BucketAccess{
+			TypeMeta: metav1.TypeMeta{
+				Kind:       "BucketAccess",
+				APIVersion: "objectstorage.k8s.io/v1alpha1",
+			},
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      "my-bucket-access",
 				Namespace: "namespace-1",
