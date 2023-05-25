@@ -57,7 +57,7 @@ func init() {
 	setLogFormatter(*logFormat)
 	// Set the log level.
 	setLogLevel(*logLevel)
-	// Set the custom logger for OpenTelemetry
+	// Set the custom logger for OpenTelemetry.
 	setOtelLogger()
 }
 
@@ -243,7 +243,7 @@ func setLogFormatter(logFormat string) {
 	}
 }
 
-// setOtelLogger is used to set the custom logger from OpenTelemetry
+// setOtelLogger is used to set the custom logger from OpenTelemetry.
 func setOtelLogger() {
 	logger := logrusr.New(log.StandardLogger())
 	otel.SetLogger(logger)
