@@ -45,7 +45,7 @@ var _ = Describe("Bucket Creation", Ordered, Label("create", "objectscale"), fun
 				Name: "my-bucket-class",
 			},
 			DeletionPolicy: v1alpha1.DeletionPolicyDelete,
-			DriverName:     "cosi-driver",
+			DriverName:     "cosi.dellemc.com",
 			Parameters: map[string]string{
 				"id": driverID,
 			},

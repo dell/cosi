@@ -44,7 +44,7 @@ var (
 )
 
 const (
-	tracedServiceName = "cosi-driver"
+	tracedServiceName = "cosi.dellemc.com"
 )
 
 // init is run before main and is used to define command line flags.

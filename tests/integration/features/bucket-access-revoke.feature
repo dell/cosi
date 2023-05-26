@@ -21,7 +21,7 @@ Feature: BucketAccess deletion on ObjectScale platform
         metadata:
             name: my-bucket-class
         deletionPolicy: delete
-        driverName: cosi-driver
+        driverName: cosi.dellemc.com
         parameters:
             ID: ${driverID}
         """
@@ -49,7 +49,7 @@ Feature: BucketAccess deletion on ObjectScale platform
         kind: BucketAccessClass
         metadata:
             name: my-bucket-access-class
-        driverName: cosi-driver
+        driverName: cosi.dellemc.com
         authenticationType: KEY
         parameters:
             ID: ${driverID}

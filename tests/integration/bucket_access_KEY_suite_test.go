@@ -45,7 +45,7 @@ var _ = Describe("Bucket Access KEY", Ordered, Label("key-flow", "objectscale"),
 			ObjectMeta: metav1.ObjectMeta{
 				Name: "my-bucket-class",
 			},
-			DriverName:     "cosi-driver",
+			DriverName:     "cosi.dellemc.com",
 			DeletionPolicy: v1alpha1.DeletionPolicyDelete,
 			Parameters: map[string]string{
 				"id": driverID,
@@ -75,7 +75,7 @@ var _ = Describe("Bucket Access KEY", Ordered, Label("key-flow", "objectscale"),
 			ObjectMeta: metav1.ObjectMeta{
 				Name: "my-bucket-access-class",
 			},
-			DriverName:         "cosi-driver",
+			DriverName:         "cosi.dellemc.com",
 			AuthenticationType: v1alpha1.AuthenticationTypeKey,
 			Parameters: map[string]string{
 				"id": driverID,
