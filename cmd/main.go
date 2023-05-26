@@ -25,6 +25,7 @@ import (
 	sdktrace "go.opentelemetry.io/otel/sdk/trace"
 	semconv "go.opentelemetry.io/otel/semconv/v1.17.0"
 
+	"github.com/bombsimon/logrusr/v4"
 	"github.com/dell/cosi-driver/pkg/config"
 	"github.com/dell/cosi-driver/pkg/driver"
 	"go.opentelemetry.io/otel"
@@ -56,6 +57,8 @@ func init() {
 	setLogFormatter(*logFormat)
 	// Set the log level.
 	setLogLevel(*logLevel)
+	// Set the custom logger for OpenTelemetry.
+	setOtelLogger()
 }
 
 func main() {
@@ -238,4 +241,21 @@ func setLogFormatter(logFormat string) {
 			"newLogFormat": "text",
 		}).Error("unknown log format, setting to text")
 	}
+}
+
+// errorHandler implements otel.ErrorHandler interface.
+type errorHandler struct{}
+
+// Handle is used to handle errors from OpenTelemetry.
+func (e *errorHandler) Handle(err error) {
+	log.WithFields(log.Fields{
+		"error": err,
+	}).Error("error occurred in OpenTelemetry")
+}
+
+// setOtelLogger is used to set the custom logger from OpenTelemetry.
+func setOtelLogger() {
+	logger := logrusr.New(log.StandardLogger())
+	otel.SetLogger(logger)
+	otel.SetErrorHandler(&errorHandler{})
 }
