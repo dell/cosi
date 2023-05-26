@@ -243,8 +243,19 @@ func setLogFormatter(logFormat string) {
 	}
 }
 
+// errorHandler implements otel.ErrorHandler interface.
+type errorHandler struct{}
+
+// Handle is used to handle errors from OpenTelemetry.
+func (e *errorHandler) Handle(err error) {
+	log.WithFields(log.Fields{
+		"error": err,
+	}).Error("error occurred in OpenTelemetry")
+}
+
 // setOtelLogger is used to set the custom logger from OpenTelemetry.
 func setOtelLogger() {
 	logger := logrusr.New(log.StandardLogger())
 	otel.SetLogger(logger)
+	otel.SetErrorHandler(&errorHandler{})
 }
