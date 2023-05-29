@@ -567,7 +567,6 @@ func (s *Server) DriverGrantBucketAccess(
 
 	for _, s := range policyRequest.Statement {
 		// TODO: extract this into separate method
-
 		foundResource := false
 
 		if s.Resource == nil {
@@ -672,46 +671,40 @@ func (s *Server) DriverGrantBucketAccess(
 		log.WithFields(log.Fields{
 			"bucket": bucketName,
 			"policy": updateBucketPolicyJson,
+			"error":  err,
 		}).Error("failed to update policy")
 
 		span.RecordError(err)
 		span.SetStatus(otelCodes.Error, "failed to update policy")
 
-		return nil, status.Error(codes.Internal, fmt.Sprintf("failed to update bucket policy: %e", err))
+		return nil, status.Error(codes.Internal, "failed to update bucket policy")
 	}
 
-	// TODO: fixme - i finished here
-	s.mgmtClient.ObjectUser().GetSecret(userName, parametersCopy)
-
-	// Create access key.
-	requestModel := &model.ObjectUserSecretKeyCreateReq{
-		SecretKey: "",          // ?
-		Namespace: s.namespace, // TODO: variables regarding the namespace should be renamed to smth like AccountID
-	}
-
-	secret, err := s.mgmtClient.ObjectUser().CreateSecret(userName, *requestModel, parametersCopy)
+	accessKey, err := iamClient.CreateAccessKey(&iam.CreateAccessKeyInput{
+		UserName: &userName,
+	})
 	if err != nil {
 		log.WithFields(log.Fields{
-			"user":   userName,
-			"secret": requestModel.SecretKey,
-		}).Error("failed to create the secret key")
+			"user":  userName,
+			"error": err,
+		}).Error("cannot create access key")
 
 		span.RecordError(err)
-		span.SetStatus(otelCodes.Error, "failed to create the secret key")
+		span.SetStatus(otelCodes.Error, "cannot create access key")
 
-		return nil, status.Error(codes.Internal, "failed to create the secret key")
+		return nil, status.Error(codes.Internal, "failed to create access key")
 	}
 
 	// Assemble credential details and add to credentialRepo
 	secretsMap := make(map[string]string)
-	secretsMap["accessKeyID"] = userName
-	secretsMap["accessSecretKey"] = secret.SecretKey
+	secretsMap["accessKeyID"] = *accessKey.AccessKey.AccessKeyId
+	secretsMap["accessSecretKey"] = *accessKey.AccessKey.SecretAccessKey
 	secretsMap["endpoint"] = s.s3Endpont
 
 	log.WithFields(log.Fields{
-		"user":      userName,
-		"secretKey": secret.SecretKey,
-		"endpoint":  s.s3Endpont,
+		"user":        userName,
+		"secretKeyId": *accessKey.AccessKey.AccessKeyId,
+		"endpoint":    s.s3Endpont,
 	}).Info("secret access key for user with endpoint was created")
 
 	credentialDetails := cosi.CredentialDetails{Secrets: secretsMap}
