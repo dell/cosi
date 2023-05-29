@@ -36,6 +36,16 @@
           "format": "url",
           "$comment": "format field is placed here only for documentation purposes"
         },
+        "objectscale-id": {
+          "description": "The ID of the Objectscale the driver should communicate with",
+          "type": "string",
+          "$comment": "Used i.a. when sending bucket update policy request"
+        },
+        "objecstore-id": {
+          "description": "The ID of the Objectstore under specific Objectscale, with which the driver should communicate",
+          "type": "string",
+          "$comment": "Used i.a. when sending bucket update policy request"
+        },
         "namespace": {
           "description": "Namespace associated with the user/tenant that is allowed to access the bucket",
           "$comment": "This is one of the most confusing things in ObjectScale - it is ID of account, not the namespace! We need to find a way to consistently name it and forward our feedback to the OBS team.",
