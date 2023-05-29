@@ -480,6 +480,7 @@ func (s *Server) DriverGrantBucketAccess(
 	user, err := iamClient.CreateUser(&iam.CreateUserInput{
 		UserName: &userName,
 	})
+	// add idempotency case (user exists)
 	if err != nil {
 		log.WithFields(log.Fields{
 			"user": userName,
@@ -523,7 +524,7 @@ func (s *Server) DriverGrantBucketAccess(
 		span.RecordError(err)
 		span.SetStatus(otelCodes.Error, "failed to generate PolicyID UUID")
 
-		return nil, status.Error(codes.Internal, "bucket policy was not updated")
+		return nil, status.Error(codes.Internal, "failed to update bucket policy")
 	}
 
 	if policyID.String() == "" {
@@ -560,7 +561,7 @@ func (s *Server) DriverGrantBucketAccess(
 	// Marshal the struct to JSON to confirm JSON validity
 	updateBucketPolicyJson, err := json.Marshal(bucketPolicy)
 	if err != nil {
-		errMsg := errors.New("could not marshal updateBucketPolicyRequest into JSON")
+		errMsg := errors.New("failed to marshal updateBucketPolicyRequest into JSON")
 		log.WithFields(log.Fields{
 			"bucket":   bucketName,
 			"PolicyID": policyID,
@@ -582,7 +583,7 @@ func (s *Server) DriverGrantBucketAccess(
 		span.RecordError(err)
 		span.SetStatus(otelCodes.Error, "failed to update policy")
 
-		return nil, status.Error(codes.Internal, fmt.Sprintf("bucket policy was not updated: %e", err))
+		return nil, status.Error(codes.Internal, fmt.Sprintf("failed to update bucket policy: %e", err))
 	}
 
 	// Create access key.
@@ -596,12 +597,12 @@ func (s *Server) DriverGrantBucketAccess(
 		log.WithFields(log.Fields{
 			"user":   userName,
 			"secret": requestModel.SecretKey,
-		}).Error("failed to create secret key")
+		}).Error("failed to create the secret key")
 
 		span.RecordError(err)
-		span.SetStatus(otelCodes.Error, "failed to create secret key")
+		span.SetStatus(otelCodes.Error, "failed to create the secret key")
 
-		return nil, status.Error(codes.Internal, "secret key was not successfully created")
+		return nil, status.Error(codes.Internal, "failed to create the secret key")
 	}
 
 	// Assemble credential details and add to credentialRepo
