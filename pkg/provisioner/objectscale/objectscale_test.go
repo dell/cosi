@@ -21,16 +21,18 @@ import (
 	"testing"
 	"time"
 
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/iam"
 	"github.com/dell/goobjectscale/pkg/client/fake"
 	"github.com/dell/goobjectscale/pkg/client/model"
 	log "github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
-
 	cosi "sigs.k8s.io/container-object-storage-interface-spec"
 
 	"github.com/dell/cosi-driver/pkg/config"
+	"github.com/dell/cosi-driver/pkg/iamfake"
 )
 
 type expected int
@@ -61,6 +63,7 @@ var (
 		Tls: config.Tls{
 			Insecure: true,
 		},
+		Region: aws.String("us-east-1"),
 	}
 
 	invalidConfigWithHyphens = &config.Objectscale{
@@ -80,6 +83,7 @@ var (
 		Tls: config.Tls{
 			Insecure: true,
 		},
+		Region: aws.String("us-east-1"),
 	}
 
 	invalidConfigEmptyID = &config.Objectscale{
@@ -99,6 +103,7 @@ var (
 		Tls: config.Tls{
 			Insecure: true,
 		},
+		Region: aws.String("us-east-1"),
 	}
 
 	invalidConfigTLS = &config.Objectscale{
@@ -119,6 +124,7 @@ var (
 			Insecure: false,
 			RootCas:  &invalidBase64,
 		},
+		Region: aws.String("us-east-1"),
 	}
 )
 
@@ -398,6 +404,7 @@ func testDriverGrantBucketAccess(t *testing.T) {
 		inputAuthenticationType cosi.AuthenticationType
 		expectedError           error
 		server                  Server
+		iamclient               iamfake.FakeIAMClient
 		parameters              map[string]string
 	}{
 		{
@@ -408,11 +415,21 @@ func testDriverGrantBucketAccess(t *testing.T) {
 			expectedError:           nil,
 			server: Server{
 				mgmtClient: fake.NewClientSet(&model.Bucket{
-					Name:      "bucket-valid",
+					Name:      "valid",
 					Namespace: namespace,
 				}),
 				namespace: namespace,
 				backendID: testID,
+				iamClient: iamfake.NewFakeIAMClient(
+					&iam.CreateUserOutput{
+						User: &iam.User{
+							UserName: aws.String("namesapce-user-valid"),
+						},
+					},
+				),
+			},
+			parameters: map[string]string{
+				"X-TEST/Buckets/UpdatePolicy/force-success": "true",
 			},
 		},
 		{
@@ -425,6 +442,7 @@ func testDriverGrantBucketAccess(t *testing.T) {
 				mgmtClient: fake.NewClientSet(),
 				namespace:  namespace,
 				backendID:  testID,
+				iamClient:  iamfake.NewFakeIAMClient(),
 			},
 		},
 		{
@@ -437,6 +455,7 @@ func testDriverGrantBucketAccess(t *testing.T) {
 				mgmtClient: fake.NewClientSet(),
 				namespace:  namespace,
 				backendID:  testID,
+				iamClient:  iamfake.NewFakeIAMClient(),
 			},
 		},
 		{
@@ -449,11 +468,12 @@ func testDriverGrantBucketAccess(t *testing.T) {
 				mgmtClient: fake.NewClientSet(),
 				namespace:  namespace,
 				backendID:  testID,
+				iamClient:  iamfake.NewFakeIAMClient(),
 			},
 		},
 		{
 			description:             "bucket does not exists",
-			inputBucketID:           "bucket-valid",
+			inputBucketID:           "valid",
 			inputBucketAccessName:   "bucket-access-valid",
 			inputAuthenticationType: cosi.AuthenticationType_Key,
 			expectedError:           status.Error(codes.NotFound, "bucket not found"),
@@ -461,46 +481,177 @@ func testDriverGrantBucketAccess(t *testing.T) {
 				mgmtClient: fake.NewClientSet(),
 				namespace:  namespace,
 				backendID:  testID,
+				iamClient:  iamfake.NewFakeIAMClient(),
 			},
 		},
 		{
-			description:             "cannot get existing bucket ",
-			inputBucketID:           "bucket-valid",
+			description:             "cannot get existing bucket",
+			inputBucketID:           "valid",
 			inputBucketAccessName:   "bucket-access-valid",
 			inputAuthenticationType: cosi.AuthenticationType_Key,
 			expectedError:           status.Error(codes.Internal, "an unexpected error occurred"),
 			server: Server{
-				mgmtClient: fake.NewClientSet(),
-				namespace:  namespace,
-				backendID:  testID,
+				mgmtClient: fake.NewClientSet(
+					&model.Bucket{
+						Name:      "valid",
+						Namespace: namespace,
+					},
+				),
+				namespace: namespace,
+				backendID: testID,
+				iamClient: iamfake.NewFakeIAMClient(),
 			},
 			parameters: map[string]string{
 				"X-TEST/Buckets/Get/force-fail": "abc",
 			},
 		},
 		{
-			description: "user with specific name already exists",
+			// FIXME: this needs to be idempotent, i.e. return OK if user already exists
+			description:             "user with specific name already exists",
+			inputBucketID:           "bucket-valid",
+			inputBucketAccessName:   "bucket-access-valid",
+			inputAuthenticationType: cosi.AuthenticationType_Key,
+			expectedError:           status.Error(codes.Internal, "user with specific name already exists"),
+			server: Server{
+				mgmtClient: fake.NewClientSet(
+					&model.Bucket{
+						Name:      "valid",
+						Namespace: namespace,
+					},
+				),
+				namespace: namespace,
+				backendID: testID,
+				iamClient: iamfake.NewFakeIAMClient(
+					&iam.CreateUserOutput{
+						User: &iam.User{
+							UserName: aws.String("namesapce-user-valid"),
+						},
+					},
+				), // FIXME: ensure that there is a duplicate user
+			},
+			parameters: map[string]string{},
 		},
 		{
-			description: "cannot get existing user",
+			// FIXME: the user creation must be stubbed?
+			// Waiting for implementation in code
+			description:             "cannot get existing user",
+			inputBucketID:           "bucket-valid-but-user-fail",
+			inputBucketAccessName:   "bucket-access-valid",
+			inputAuthenticationType: cosi.AuthenticationType_Key,
+			expectedError:           status.Error(codes.Internal, "cannot create user"),
+			server: Server{
+				mgmtClient: fake.NewClientSet(
+					&model.Bucket{
+						Name:      "valid-but-user-fail",
+						Namespace: namespace,
+					},
+				),
+				namespace: namespace,
+				backendID: testID,
+				iamClient: iamfake.NewFakeIAMClient(), // FIXME: force fail
+			},
+			parameters: map[string]string{},
 		},
 		{
-			description: "invalid user creation",
+			// FIXME: the user creation must be stubbed?
+			description:             "invalid user creation",
+			inputBucketID:           "bucket-valid-but-user-fail",
+			inputBucketAccessName:   "bucket-access-valid",
+			inputAuthenticationType: cosi.AuthenticationType_Key,
+			expectedError:           status.Error(codes.Internal, "cannot create user"),
+			server: Server{
+				mgmtClient: fake.NewClientSet(
+					&model.Bucket{
+						Name:      "valid-but-user-fail",
+						Namespace: namespace,
+					},
+				),
+				namespace: namespace,
+				backendID: testID,
+				iamClient: iamfake.NewFakeIAMClient(), // FIXME: force fail
+			},
+			parameters: map[string]string{},
 		},
 		{
-			description: "cannot get existing bucket policy",
+			description:             "cannot get existing bucket policy",
+			inputBucketID:           "bucket-valid",
+			inputBucketAccessName:   "bucket-access-valid",
+			inputAuthenticationType: cosi.AuthenticationType_Key,
+			expectedError:           status.Error(codes.Internal, "an unexpected error occurred"),
+			server: Server{
+				mgmtClient: fake.NewClientSet(&model.Bucket{
+					Name:      "valid",
+					Namespace: namespace,
+				}),
+				iamClient: iamfake.NewFakeIAMClient(
+					&iam.CreateUserOutput{
+						User: &iam.User{
+							UserName: aws.String("namesapce-user-valid"),
+						},
+					},
+				),
+				namespace: namespace,
+				backendID: testID,
+			},
+			parameters: map[string]string{
+				"X-TEST/Buckets/GetPolicy/force-fail": "abc",
+			},
 		},
 		{
-			description: "invalid bucket policy update",
+			// FIXME: add iam to Server, so the fake can be failed
+			description:             "invalid bucket policy update",
+			inputBucketID:           "bucket-valid",
+			inputBucketAccessName:   "bucket-access-valid",
+			inputAuthenticationType: cosi.AuthenticationType_Key,
+			expectedError:           status.Error(codes.Internal, "failed to update policy"),
+			server: Server{
+				mgmtClient: fake.NewClientSet(&model.Bucket{
+					Name:      "valid",
+					Namespace: namespace,
+				}),
+				namespace: namespace,
+				backendID: testID,
+				iamClient: iamfake.NewFakeIAMClient(
+					&iam.CreateUserOutput{
+						User: &iam.User{
+							UserName: aws.String("namesapce-user-valid"),
+						},
+					},
+				),
+			},
 		},
 		{
-			description: "invalid access key creation",
+			// FIXME: CreateSecret has no force-fail option, after it is added, this test should work
+			description:             "invalid access key creation",
+			inputBucketID:           "bucket-valid",
+			inputBucketAccessName:   "bucket-access-valid",
+			inputAuthenticationType: cosi.AuthenticationType_Key,
+			expectedError:           status.Error(codes.Internal, "secret key was not successfully created"),
+			server: Server{
+				mgmtClient: fake.NewClientSet(&model.Bucket{
+					Name:      "valid",
+					Namespace: namespace,
+				}),
+				namespace: namespace,
+				backendID: testID,
+				iamClient: iamfake.NewFakeIAMClient(
+					&iam.CreateUserOutput{
+						User: &iam.User{
+							UserName: aws.String("namesapce-user-valid"),
+						},
+					},
+				),
+			},
+			parameters: map[string]string{
+				"X-TEST/ObjectUser/CreateSecret/force-fail": "abc",
+				"X-TEST/Buckets/UpdatePolicy/force-success": "abc",
+			},
 		},
 	}
 
 	for _, scenario := range testCases {
 		t.Run(scenario.description, func(t *testing.T) {
-			ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+			ctx, cancel := context.WithTimeout(context.Background(), time.Second*100)
 			defer cancel()
 			_, err := scenario.server.DriverGrantBucketAccess(ctx,
 				&cosi.DriverGrantBucketAccessRequest{BucketId: scenario.inputBucketID, Name: scenario.inputBucketAccessName, AuthenticationType: scenario.inputAuthenticationType, Parameters: scenario.parameters})
