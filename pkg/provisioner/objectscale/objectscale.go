@@ -20,7 +20,15 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/aws/aws-sdk-go/service/iam"
+	"github.com/aws/aws-sdk-go/service/iam/iamiface"
+	"github.com/dell/cosi-driver/pkg/config"
 	driver "github.com/dell/cosi-driver/pkg/provisioner/virtualdriver"
+	"github.com/dell/cosi-driver/pkg/transport"
+	"github.com/dell/goobjectscale/pkg/client/api"
+	"github.com/dell/goobjectscale/pkg/client/model"
 	objectscaleRest "github.com/dell/goobjectscale/pkg/client/rest"
 	objectscaleClient "github.com/dell/goobjectscale/pkg/client/rest/client"
 	iamObjectscale "github.com/dell/goobjectscale/pkg/client/rest/iam"
@@ -35,11 +43,13 @@ import (
 	"github.com/dell/goobjectscale/pkg/client/model"
 	"github.com/google/uuid"
 	"go.opentelemetry.io/otel"
+	otelCodes "go.opentelemetry.io/otel/codes"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
 	"github.com/dell/cosi-driver/pkg/config"
 	"github.com/dell/cosi-driver/pkg/transport"
+	cosi "sigs.k8s.io/container-object-storage-interface-spec"
 )
 
 const (
@@ -53,6 +63,9 @@ const (
 // Server is implementation of driver.Driver interface for ObjectScale platform.
 type Server struct {
 	mgmtClient         api.ClientSet
+	iamClient          iamiface.IAMAPI
+	x509Client         http.Client
+	objClient          objectscaleClient.AuthUser
 	backendID          string
 	emptyBucket        bool
 	namespace          string
@@ -143,8 +156,39 @@ func New(config *config.Objectscale) (*Server, error) {
 		},
 	)
 
+	x509Client := *http.DefaultClient
+	objClient := objectscaleClient.AuthUser{
+		Gateway:  objectscaleGateway,
+		Username: username,
+		Password: password,
+	}
+	iamSession, err := session.NewSession(
+		&aws.Config{
+			Endpoint:                      &objectstoreGateway,
+			Region:                        region,
+			CredentialsChainVerboseErrors: aws.Bool(true),
+			HTTPClient:                    &x509Client,
+		},
+	)
+	if err != nil {
+		log.WithFields(log.Fields{
+			"endpoint": objectstoreGateway,
+			"region":   *region,
+		}).Error("cannot create session")
+
+		// span.RecordError(err)
+		// span.SetStatus(otelCodes.Error, "cannot create session")
+
+		return nil, status.Error(codes.Internal, "cannot create session")
+	}
+
+	iamClient := iam.New(iamSession)
+
 	return &Server{
 		mgmtClient:         mgmtClient,
+		iamClient:          iamClient,
+		x509Client:         x509Client,
+		objClient:          objClient,
 		backendID:          id,
 		namespace:          namespace,
 		emptyBucket:        config.EmptyBucket,
@@ -361,16 +405,16 @@ func (s *Server) DriverGrantBucketAccess(
 	req *cosi.DriverGrantBucketAccessRequest,
 ) (*cosi.DriverGrantBucketAccessResponse, error) {
 	// TODO: think about more spans' info
-	_, span := otel.Tracer("GrantBucketAccessRequest").Start(ctx, "ObjectscaleDriverGrantBucketAccess")
-	defer span.End()
+	// _, span := otel.Tracer("GrantBucketAccessRequest").Start(ctx, "ObjectscaleDriverGrantBucketAccess")
+	// defer span.End()
 
 	// Check if bucketID is not empty.
 	if req.GetBucketId() == "" {
 		err := errors.New("empty bucketID")
 		log.Error(err.Error())
 
-		span.RecordError(err)
-		span.SetStatus(otelCodes.Error, err.Error())
+		// span.RecordError(err)
+		// span.SetStatus(otelCodes.Error, err.Error())
 
 		return nil, status.Error(codes.InvalidArgument, err.Error())
 	}
@@ -380,20 +424,20 @@ func (s *Server) DriverGrantBucketAccess(
 		err := errors.New("empty bucket access name")
 		log.Error(err.Error())
 
-		span.RecordError(err)
-		span.SetStatus(otelCodes.Error, err.Error())
+		// span.RecordError(err)
+		// span.SetStatus(otelCodes.Error, err.Error())
 
 		return nil, status.Error(codes.InvalidArgument, err.Error())
 	}
 
-	//TODO: after adding IAM the flow here could be if auth type key -> run key, if auth type iam -> run IAM, else error
+	// TODO: after adding IAM the flow here could be if auth type key -> run key, if auth type iam -> run IAM, else error
 	// Check authentication type.
 	if req.GetAuthenticationType() == cosi.AuthenticationType_UnknownAuthenticationType {
 		err := errors.New("invalid authentication type")
 		log.Error(err.Error())
 
-		span.RecordError(err)
-		span.SetStatus(otelCodes.Error, err.Error())
+		// span.RecordError(err)
+		// span.SetStatus(otelCodes.Error, err.Error())
 
 		return nil, status.Error(codes.InvalidArgument, err.Error())
 	}
@@ -427,13 +471,13 @@ func (s *Server) DriverGrantBucketAccess(
 	}).Info("parameters of the bucket")
 	// Check if bucket for granting access exists.
 	_, err := s.mgmtClient.Buckets().Get(bucketName, parametersCopy)
-	if err != nil && !errors.Is(err, model.Error{Code: model.CodeResourceNotFound}) {
+	if err != nil && !errors.Is(err, model.Error{Code: model.CodeParameterNotFound}) {
 		log.WithFields(log.Fields{
 			"bucket": bucketName,
 		}).Error("failed to check bucket existence")
 
-		span.RecordError(err)
-		span.SetStatus(otelCodes.Error, "failed to check bucket existence")
+		// span.RecordError(err)
+		// span.SetStatus(otelCodes.Error, "failed to check bucket existence")
 
 		return nil, status.Error(codes.Internal, "an unexpected error occurred")
 	} else if err != nil {
@@ -441,8 +485,8 @@ func (s *Server) DriverGrantBucketAccess(
 			"bucket": bucketName,
 		}).Error("bucket not found")
 
-		span.RecordError(err)
-		span.SetStatus(otelCodes.Error, "bucket not found")
+		// span.RecordError(err)
+		// span.SetStatus(otelCodes.Error, "bucket not found")
 
 		return nil, status.Error(codes.NotFound, "bucket not found")
 	}
@@ -475,9 +519,9 @@ func (s *Server) DriverGrantBucketAccess(
 	}
 
 	iamClient := iam.New(iamSession)
-	iamObjectscale.InjectTokenToIAMClient(iamClient, &objClient, x509Client)
+	iamObjectscale.InjectTokenToIAMClient(s.iamClient, &s.objClient, s.x509Client)
 	// TODO: error handling
-	iamObjectscale.InjectAccountIDToIAMClient(iamClient, s.namespace)
+	iamObjectscale.InjectAccountIDToIAMClient(s.iamClient, s.namespace)
 	// TODO: error handling
 	userName := fmt.Sprintf("%v-user-%v", s.namespace, bucketName)
 
@@ -530,8 +574,8 @@ func (s *Server) DriverGrantBucketAccess(
 			"error":  err,
 		}).Error(errMsg.Error())
 
-		span.RecordError(err)
-		span.SetStatus(otelCodes.Error, errMsg.Error())
+		// span.RecordError(err)
+		// span.SetStatus(otelCodes.Error, errMsg.Error())
 
 		return nil, status.Error(codes.Internal, errMsg.Error())
 	} else if err == nil {
@@ -634,8 +678,8 @@ func (s *Server) DriverGrantBucketAccess(
 				"error":  err,
 			}).Error(errMsg.Error())
 
-			span.RecordError(err)
-			span.SetStatus(otelCodes.Error, errMsg.Error())
+			// span.RecordError(err)
+			// span.SetStatus(otelCodes.Error, errMsg.Error())
 
 			return nil, status.Error(codes.Internal, errMsg.Error())
 		}
@@ -647,8 +691,8 @@ func (s *Server) DriverGrantBucketAccess(
 				"PolicyID": policyID,
 			}).Error(errMsg.Error())
 
-			span.RecordError(errMsg)
-			span.SetStatus(otelCodes.Error, errMsg.Error())
+			// span.RecordError(errMsg)
+			// span.SetStatus(otelCodes.Error, errMsg.Error())
 
 			return nil, status.Error(codes.Internal, errMsg.Error())
 		}
@@ -670,8 +714,8 @@ func (s *Server) DriverGrantBucketAccess(
 			"error":    err,
 		}).Error(errMsg.Error())
 
-		span.RecordError(err)
-		span.SetStatus(otelCodes.Error, errMsg.Error())
+		// span.RecordError(err)
+		// span.SetStatus(otelCodes.Error, errMsg.Error())
 
 		return nil, status.Error(codes.Internal, errMsg.Error())
 	}
@@ -685,8 +729,8 @@ func (s *Server) DriverGrantBucketAccess(
 			"error":  err,
 		}).Error(errMsg.Error())
 
-		span.RecordError(err)
-		span.SetStatus(otelCodes.Error, errMsg.Error())
+		// span.RecordError(err)
+		// span.SetStatus(otelCodes.Error, errMsg.Error())
 
 		return nil, status.Error(codes.Internal, errMsg.Error())
 	}
@@ -701,8 +745,8 @@ func (s *Server) DriverGrantBucketAccess(
 			"error": err,
 		}).Error(errMsg.Error())
 
-		span.RecordError(err)
-		span.SetStatus(otelCodes.Error, errMsg.Error())
+		// span.RecordError(err)
+		// span.SetStatus(otelCodes.Error, errMsg.Error())
 
 		return nil, status.Error(codes.Internal, errMsg.Error())
 	}
@@ -735,12 +779,12 @@ func (s *Server) DriverGrantBucketAccess(
 func (s *Server) DriverRevokeBucketAccess(ctx context.Context,
 	req *cosi.DriverRevokeBucketAccessRequest,
 ) (*cosi.DriverRevokeBucketAccessResponse, error) {
-	_, span := otel.Tracer("RevokeBucketAccessRequest").Start(ctx, "ObjectscaleDriverRevokeBucketAccess")
-	defer span.End()
+	// _, span := otel.Tracer("RevokeBucketAccessRequest").Start(ctx, "ObjectscaleDriverRevokeBucketAccess")
+	// defer span.End()
 
 	err := errors.New("not implemented")
-	span.RecordError(err)
-	span.SetStatus(otelCodes.Error, err.Error())
+	// span.RecordError(err)
+	// span.SetStatus(otelCodes.Error, err.Error())
 
 	return nil, status.Error(codes.Unimplemented, err.Error())
 }
