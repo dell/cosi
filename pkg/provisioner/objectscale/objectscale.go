@@ -461,15 +461,17 @@ func (s *Server) DriverGrantBucketAccess(
 	},
 	)
 	if err != nil {
+		errMsg := errors.New("cannot create session")
 		log.WithFields(log.Fields{
 			"endpoint": s.objectStoreGateway,
 			"region":   s.region,
-		}).Error("cannot create session")
+			"error":    err,
+		}).Error(errMsg.Error())
 
 		span.RecordError(err)
-		span.SetStatus(otelCodes.Error, "cannot create session")
+		span.SetStatus(otelCodes.Error, errMsg.Error())
 
-		return nil, status.Error(codes.Internal, "cannot create session")
+		return nil, status.Error(codes.Internal, errMsg.Error())
 	}
 
 	iamClient := iam.New(iamSession)
@@ -481,12 +483,14 @@ func (s *Server) DriverGrantBucketAccess(
 
 	userGet, err := iamClient.GetUser(&iam.GetUserInput{})
 	if err != nil && err.Error() != iam.ErrCodeNoSuchEntityException {
+		errMsg := errors.New("failed to check for user existence")
 		log.WithFields(log.Fields{
-			"user": userName,
-		}).Error("cannot get user")
+			"user":  userName,
+			"error": err,
+		}).Error(errMsg.Error())
 
 		span.RecordError(err)
-		span.SetStatus(otelCodes.Error, "cannot get user")
+		span.SetStatus(otelCodes.Error, errMsg.Error())
 
 		return nil, status.Error(codes.Internal, "failed to check for user existence")
 	}
@@ -520,14 +524,16 @@ func (s *Server) DriverGrantBucketAccess(
 	// Check if policy for specific bucket exists.
 	policy, err := s.mgmtClient.Buckets().GetPolicy(bucketName, parametersCopy)
 	if err != nil && !errors.Is(err, model.Error{Code: model.CodeResourceNotFound}) {
+		errMsg := errors.New("failed to check bucket policy existence")
 		log.WithFields(log.Fields{
 			"bucket": bucketName,
-		}).Error("failed to check bucket policy existence")
+			"error":  err,
+		}).Error(errMsg.Error())
 
 		span.RecordError(err)
-		span.SetStatus(otelCodes.Error, "failed to check bucket policy existence")
+		span.SetStatus(otelCodes.Error, errMsg.Error())
 
-		return nil, status.Error(codes.Internal, "an unexpected error occurred")
+		return nil, status.Error(codes.Internal, errMsg.Error())
 	} else if err == nil {
 		// Even if we get no error, the policy can be empty, e.g. we get a 200 OK response and empty policy
 		log.WithFields(log.Fields{
@@ -538,16 +544,17 @@ func (s *Server) DriverGrantBucketAccess(
 	policyRequest := updateBucketPolicyRequest{}
 	err = json.NewDecoder(strings.NewReader(policy)).Decode(&policyRequest)
 	if err != nil {
+		errMsg := errors.New("failed to decode bucket policy")
 		log.WithFields(log.Fields{
 			"bucket": bucketName,
 			"policy": policy,
 			"error":  err,
-		}).Error("failed to decode bucket policy")
+		}).Error(errMsg.Error())
 
 		span.RecordError(err)
-		span.SetStatus(otelCodes.Error, "failed to decode bucket policy")
+		span.SetStatus(otelCodes.Error, errMsg.Error())
 
-		return nil, status.Error(codes.Internal, "failed to decode bucket policy")
+		return nil, status.Error(codes.Internal, errMsg.Error())
 	}
 
 	// TODO:
@@ -621,14 +628,16 @@ func (s *Server) DriverGrantBucketAccess(
 	if policyRequest.PolicyID == "" {
 		policyID, err := uuid.NewUUID()
 		if err != nil {
+			errMsg := errors.New("failed to generate PolicyID UUID")
 			log.WithFields(log.Fields{
 				"bucket": bucketName,
-			}).Error("failed to generate PolicyID UUID")
+				"error":  err,
+			}).Error(errMsg.Error())
 
 			span.RecordError(err)
-			span.SetStatus(otelCodes.Error, "failed to generate PolicyID UUID")
+			span.SetStatus(otelCodes.Error, errMsg.Error())
 
-			return nil, status.Error(codes.Internal, "failed to update bucket policy")
+			return nil, status.Error(codes.Internal, errMsg.Error())
 		}
 
 		if policyID.String() == "" {
@@ -658,41 +667,44 @@ func (s *Server) DriverGrantBucketAccess(
 		log.WithFields(log.Fields{
 			"bucket":   bucketName,
 			"PolicyID": policyRequest.PolicyID,
-		}).Error(errMsg)
+			"error":    err,
+		}).Error(errMsg.Error())
 
 		span.RecordError(err)
 		span.SetStatus(otelCodes.Error, errMsg.Error())
 
-		return nil, status.Error(codes.Internal, fmt.Sprintf("%s: %e", errMsg.Error(), err))
+		return nil, status.Error(codes.Internal, errMsg.Error())
 	}
 
 	err = s.mgmtClient.Buckets().UpdatePolicy(bucketName, string(updateBucketPolicyJson), parametersCopy)
 	if err != nil {
+		errMsg := errors.New("failed to update bucket policy")
 		log.WithFields(log.Fields{
 			"bucket": bucketName,
 			"policy": updateBucketPolicyJson,
 			"error":  err,
-		}).Error("failed to update policy")
+		}).Error(errMsg.Error())
 
 		span.RecordError(err)
-		span.SetStatus(otelCodes.Error, "failed to update policy")
+		span.SetStatus(otelCodes.Error, errMsg.Error())
 
-		return nil, status.Error(codes.Internal, "failed to update bucket policy")
+		return nil, status.Error(codes.Internal, errMsg.Error())
 	}
 
 	accessKey, err := iamClient.CreateAccessKey(&iam.CreateAccessKeyInput{
 		UserName: &userName,
 	})
 	if err != nil {
+		errMsg := errors.New("failed to create access key")
 		log.WithFields(log.Fields{
 			"user":  userName,
 			"error": err,
-		}).Error("cannot create access key")
+		}).Error(errMsg.Error())
 
 		span.RecordError(err)
-		span.SetStatus(otelCodes.Error, "cannot create access key")
+		span.SetStatus(otelCodes.Error, errMsg.Error())
 
-		return nil, status.Error(codes.Internal, "failed to create access key")
+		return nil, status.Error(codes.Internal, errMsg.Error())
 	}
 
 	// Assemble credential details and add to credentialRepo
