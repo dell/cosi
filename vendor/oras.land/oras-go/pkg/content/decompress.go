@@ -34,8 +34,8 @@ import (
 //
 // For example:
 //
-//        fileStore := NewFileStore(rootPath)
-//        Decompress := store.NewDecompress(fileStore, WithBlocksize(blocksize))
+//	fileStore := NewFileStore(rootPath)
+//	Decompress := store.NewDecompress(fileStore, WithBlocksize(blocksize))
 //
 // The above example works if there is no tar, i.e. each artifact is just a single file, perhaps gzipped,
 // or if there is only one file in each tar archive. In other words, when each content.Writer has only one target output stream.
@@ -43,9 +43,8 @@ import (
 // you need a way to select how to handle each file in the tar archive. In other words, when each content.Writer has more than one
 // target output stream. In that case, use the following example:
 //
-//        multiStore := NewMultiStore(rootPath) // some store that can handle different filenames
-//        Decompress := store.NewDecompress(multiStore, WithBlocksize(blocksize), WithMultiWriterIngester())
-//
+//	multiStore := NewMultiStore(rootPath) // some store that can handle different filenames
+//	Decompress := store.NewDecompress(multiStore, WithBlocksize(blocksize), WithMultiWriterIngester())
 type Decompress struct {
 	pusher              remotes.Pusher
 	blocksize           int

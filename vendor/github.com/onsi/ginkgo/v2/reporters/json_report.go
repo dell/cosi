@@ -8,7 +8,7 @@ import (
 	"github.com/onsi/ginkgo/v2/types"
 )
 
-//GenerateJSONReport produces a JSON-formatted report at the passed in destination
+// GenerateJSONReport produces a JSON-formatted report at the passed in destination
 func GenerateJSONReport(report types.Report, destination string) error {
 	f, err := os.Create(destination)
 	if err != nil {
@@ -25,8 +25,8 @@ func GenerateJSONReport(report types.Report, destination string) error {
 	return f.Close()
 }
 
-//MergeJSONReports produces a single JSON-formatted report at the passed in destination by merging the JSON-formatted reports provided in sources
-//It skips over reports that fail to decode but reports on them via the returned messages []string
+// MergeJSONReports produces a single JSON-formatted report at the passed in destination by merging the JSON-formatted reports provided in sources
+// It skips over reports that fail to decode but reports on them via the returned messages []string
 func MergeAndCleanupJSONReports(sources []string, destination string) ([]string, error) {
 	messages := []string{}
 	allReports := []types.Report{}

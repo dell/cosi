@@ -28,10 +28,11 @@ import (
 // store to find the content, which it does based on the hash.
 //
 // Example:
-//        fileStore := NewFileStore(rootPath)
-//        memoryStore := NewMemoryStore()
-//        // load up content in fileStore and memoryStore
-//        multiStore := MultiReader([]content.Provider{fileStore, memoryStore})
+//
+//	fileStore := NewFileStore(rootPath)
+//	memoryStore := NewMemoryStore()
+//	// load up content in fileStore and memoryStore
+//	multiStore := MultiReader([]content.Provider{fileStore, memoryStore})
 //
 // You now can use multiStore anywhere that content.Provider is accepted
 type MultiReader struct {

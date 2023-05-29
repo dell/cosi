@@ -44,6 +44,7 @@ func IsEmptyString(s starlark.String) bool {
 }
 
 // Unmarshal decodes a starlark.Value into it's golang counterpart
+//
 //nolint:nakedret
 func Unmarshal(x starlark.Value) (val interface{}, err error) {
 	switch v := x.(type) {
@@ -176,6 +177,7 @@ func Unmarshal(x starlark.Value) (val interface{}, err error) {
 }
 
 // Marshal turns go values into starlark types
+//
 //nolint:nakedret
 func Marshal(data interface{}) (v starlark.Value, err error) {
 	switch x := data.(type) {

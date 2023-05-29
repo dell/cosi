@@ -33,8 +33,8 @@ func init() {
 type DeletionPolicy string
 
 const (
-	DeletionPolicyRetain      DeletionPolicy = "Retain"
-	DeletionPolicyDelete      DeletionPolicy = "Delete"
+	DeletionPolicyRetain DeletionPolicy = "Retain"
+	DeletionPolicyDelete DeletionPolicy = "Delete"
 )
 
 type Protocol string
@@ -77,7 +77,7 @@ type BucketSpec struct {
 	// Name of the BucketClass specified in the BucketRequest
 	BucketClassName string `json:"bucketClassName"`
 
-	// Name of the BucketClaim that resulted in the creation of this Bucket 
+	// Name of the BucketClaim that resulted in the creation of this Bucket
 	// In case the Bucket object was created manually, then this should refer
 	// to the BucketClaim with which this Bucket should be bound
 	BucketClaim *corev1.ObjectReference `json:"bucketClaim"`
@@ -168,7 +168,7 @@ type BucketClaimStatus struct {
 	BucketReady bool `json:"bucketReady"`
 
 	// BucketName is the name of the provisioned Bucket in response
-	// to this BucketClaim. It is generated and set by the COSI controller 
+	// to this BucketClaim. It is generated and set by the COSI controller
 	// before making the creation request to the OSP backend.
 	// +optional
 	BucketName string `json:"bucketName,omitempty"`
@@ -276,11 +276,11 @@ type BucketAccessSpec struct {
 	// BucketClaimName is the name of the BucketClaim.
 	BucketClaimName string `json:"bucketClaimName"`
 
-	// Protocol is the name of the Protocol 
+	// Protocol is the name of the Protocol
 	// that this access credential is supposed to support
 	// If left empty, it will choose the protocol supported
 	// by the bucket. If the bucket supports multiple protocols,
-	// the end protocol is determined by the driver. 
+	// the end protocol is determined by the driver.
 	// +optional
 	Protocol Protocol `json:"protocol,omitempty"`
 
@@ -317,4 +317,3 @@ type BucketAccessList struct {
 	metav1.ListMeta `json:"metadata,omitempty"`
 	Items           []BucketAccess `json:"items"`
 }
-
