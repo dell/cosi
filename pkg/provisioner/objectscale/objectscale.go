@@ -14,8 +14,10 @@ package objectscale
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/google/uuid"
 	"net/http"
 	"strings"
 
@@ -39,7 +41,13 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-const splitNumber = 2
+const (
+	splitNumber = 2
+	// bucketVersion is used when sending the bucket policy update request
+	bucketVersion = "2012-10-17"
+	// allowEffect is used when updating the bucket policy, in order to grant permissions to user
+	allowEffect = "Allow"
+)
 
 // Server is implementation of driver.Driver interface for ObjectScale platform.
 type Server struct {
@@ -50,8 +58,10 @@ type Server struct {
 	username           string
 	password           string
 	region             string
-	objectscaleGateway string
-	objectstoreGateway string
+	objectScaleGateway string
+	objectStoreGateway string
+	objectScaleID      string
+	objectStoreID      string
 	s3Endpont          string
 }
 
@@ -140,8 +150,8 @@ func New(config *config.Objectscale) (*Server, error) {
 		username:           username,
 		password:           password,
 		region:             *region,
-		objectscaleGateway: objectscaleGateway,
-		objectstoreGateway: objectstoreGateway,
+		objectScaleGateway: objectscaleGateway,
+		objectStoreGateway: objectstoreGateway,
 		s3Endpont:          protocolS3Endpoint,
 	}, nil
 }
@@ -311,8 +321,40 @@ func (s *Server) DriverDeleteBucket(ctx context.Context,
 	return &cosi.DriverDeleteBucketResponse{}, nil
 }
 
-// TODO: how about splitting key and IAM mechanisms into different functions?
+//{
+//   "Id" : "S3PolicyId1",
+//   "Version" : "2012-10-17",
+//   "Statement" : [ {
+//   "Resource" : [ "arn:aws:s3:osci5b022e718aa7e0ff:osti202e682782ebcbfd:lynxbucket/*" ],
+//   "Sid" : "GetObject_permission",
+//   "Effect" : "Allow",
+//   "Principal" : {
+//      "AWS" : [ "urn:osc:iam::osai07c2ae318ae9d6f2:user/iam_user20230523061025118" ]
+//    },
+//    "Action" : [ "s3:GetObjectVersion" ]
+//} ]
+// }
+
+type principal struct {
+	AWS    []string `json:"AWS"`
+	Action []string `json:"Action"`
+}
+
+type updateBucketPolicyStatement struct {
+	Resource  []string  `json:"Resource"`
+	SID       string    `json:"Sid"`
+	Effect    string    `json:"Effect"`
+	Principal principal `json:"Principal"`
+}
+
+type updateBucketPolicyRequest struct {
+	PolicyID  string                        `json:"Id"`
+	Version   string                        `json:"Version"`
+	Statement []updateBucketPolicyStatement `json:"Statement"`
+}
+
 // DriverGrantBucketAccess provides access to Bucket on specific Object Storage Platform.
+// TODO: how about splitting key and IAM mechanisms into different functions?
 func (s *Server) DriverGrantBucketAccess(
 	ctx context.Context,
 	req *cosi.DriverGrantBucketAccessRequest,
@@ -406,12 +448,12 @@ func (s *Server) DriverGrantBucketAccess(
 	// Create user.
 	x509Client := *http.DefaultClient
 	objClient := objectscaleClient.AuthUser{
-		Gateway:  s.objectscaleGateway,
+		Gateway:  s.objectScaleGateway,
 		Username: s.username,
 		Password: s.password,
 	}
 	iamSession, err := session.NewSession(&aws.Config{
-		Endpoint:                      &s.objectstoreGateway,
+		Endpoint:                      &s.objectStoreGateway,
 		Region:                        &s.region,
 		CredentialsChainVerboseErrors: aws.Bool(true),
 		HTTPClient:                    &x509Client,
@@ -419,7 +461,7 @@ func (s *Server) DriverGrantBucketAccess(
 	)
 	if err != nil {
 		log.WithFields(log.Fields{
-			"endpoint": s.objectstoreGateway,
+			"endpoint": s.objectStoreGateway,
 			"region":   s.region,
 		}).Error("cannot create session")
 
@@ -465,34 +507,85 @@ func (s *Server) DriverGrantBucketAccess(
 		span.SetStatus(otelCodes.Error, "failed to check bucket policy existence")
 
 		return nil, status.Error(codes.Internal, "an unexpected error occurred")
+		// Even if we get no error, the policy can be empty, e.g. we get a 200 OK response and empty policy
 	} else if err == nil {
 		log.WithFields(log.Fields{
 			"bucket": bucketName,
 		}).Info("bucket policy already exists")
 	}
-	// statement := s3client.NewPolicyStatement().
-	// 	WithSID(userName).
-	// 	ForPrincipals(userName).
-	// 	ForResources(bucketName).
-	// 	ForSubResources(bucketName).
-	// 	Allows().
-	// 	Actions(s3client.AllowedActions...)
-	policy := ""
-	err = s.mgmtClient.Buckets().UpdatePolicy(bucketName, policy, parametersCopy)
+
+	policyID, err := uuid.NewUUID()
 	if err != nil {
 		log.WithFields(log.Fields{
 			"bucket": bucketName,
-			"policy": policy,
+		}).Error("failed to generate PolicyID UUID")
+
+		span.RecordError(err)
+		span.SetStatus(otelCodes.Error, "failed to generate PolicyID UUID")
+
+		return nil, status.Error(codes.Internal, "bucket policy was not updated")
+	}
+
+	if policyID.String() == "" {
+		errMsg := errors.New("generated PolicyID was empty")
+		log.WithFields(log.Fields{
+			"bucket":   bucketName,
+			"PolicyID": policyID,
+		}).Error(errMsg.Error())
+
+		span.RecordError(errMsg)
+		span.SetStatus(otelCodes.Error, errMsg.Error())
+
+		return nil, status.Error(codes.Internal, errMsg.Error())
+	}
+
+	awsBucketResourceARN := fmt.Sprintf("arn:aws:s3:%s:%s:%s/*", s.objectScaleID, s.objectStoreID, bucketName)
+	awsPrincipalString := fmt.Sprintf("urn:osc:iam::%s:user/%s", s.namespace, userName)
+
+	bucketPolicy := updateBucketPolicyRequest{
+		PolicyID: policyID.String(),
+		Version:  bucketVersion,
+		Statement: []updateBucketPolicyStatement{
+			{
+				Resource: []string{awsBucketResourceARN},
+				Effect:   allowEffect,
+				Principal: principal{
+					AWS:    []string{awsPrincipalString},
+					Action: []string{"*"},
+				},
+			},
+		},
+	}
+
+	// Marshal the struct to JSON to confirm JSON validity
+	updateBucketPolicyJson, err := json.Marshal(bucketPolicy)
+	if err != nil {
+		errMsg := errors.New("could not marshal updateBucketPolicyRequest into JSON")
+		log.WithFields(log.Fields{
+			"bucket":   bucketName,
+			"PolicyID": policyID,
+		}).Error(errMsg)
+
+		span.RecordError(err)
+		span.SetStatus(otelCodes.Error, errMsg.Error())
+
+		return nil, status.Error(codes.Internal, fmt.Sprintf("%s: %e", errMsg.Error(), err))
+	}
+
+	err = s.mgmtClient.Buckets().UpdatePolicy(bucketName, string(updateBucketPolicyJson), parametersCopy)
+	if err != nil {
+		log.WithFields(log.Fields{
+			"bucket": bucketName,
+			"policy": updateBucketPolicyJson,
 		}).Error("failed to update policy")
 
 		span.RecordError(err)
 		span.SetStatus(otelCodes.Error, "failed to update policy")
 
-		return nil, status.Error(codes.Internal, "bucket policy was not successfully updated")
+		return nil, status.Error(codes.Internal, fmt.Sprintf("bucket policy was not updated: %e", err))
 	}
 
 	// Create access key.
-
 	requestModel := &model.ObjectUserSecretKeyCreateReq{
 		SecretKey: "",          // ?
 		Namespace: s.namespace, // TODO: variables regarding the namespace should be renamed to smth like AccountID
