@@ -10,7 +10,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-all: clean generate format build
+all: clean format build
 
 COSI_BUILD_DIR   := build
 COSI_BUILD_PATH  := ./cmd/
@@ -39,6 +39,7 @@ clean:	##clean directory
 	go clean
 
 .PHONY: generate
+
 generate:	##regenerate files
 	go generate ./...
 

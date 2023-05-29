@@ -24,7 +24,7 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-//go:generate go run github.com/atombender/go-jsonschema/cmd/gojsonschema@main --package=config --output=config.gen.go config.schema.json
+//go:generate go run github.com/atombender/go-jsonschema/cmd/gojsonschema@main --package=config --output=config.gen.go config.schema.json --extra-imports
 
 // New takes filename and returns populated configuration struct.
 func New(filename string) (*ConfigSchemaJson, error) {
