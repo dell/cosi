@@ -409,13 +409,13 @@ func testDriverGrantBucketAccess(t *testing.T) {
 	}{
 		{
 			description:             "valid access granting",
-			inputBucketID:           "bucket-valid",
+			inputBucketID:           "bucket-invalid",
 			inputBucketAccessName:   "bucket-access-valid",
 			inputAuthenticationType: cosi.AuthenticationType_Key,
 			expectedError:           nil,
 			server: Server{
 				mgmtClient: fake.NewClientSet(&model.Bucket{
-					Name:      "valid",
+					Name:      "invalid",
 					Namespace: namespace,
 				}),
 				namespace: namespace,
@@ -423,10 +423,12 @@ func testDriverGrantBucketAccess(t *testing.T) {
 				iamClient: iamfake.NewFakeIAMClient(
 					&iam.CreateUserOutput{
 						User: &iam.User{
-							UserName: aws.String("namesapce-user-valid"),
+							UserName: aws.String("namesapce-user-invalid"),
 						},
 					},
 				),
+				objectScaleID: "objectscale",
+				objectStoreID: "objectstore",
 			},
 			parameters: map[string]string{
 				"X-TEST/Buckets/UpdatePolicy/force-success": "true",
