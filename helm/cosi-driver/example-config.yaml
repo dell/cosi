@@ -37,6 +37,12 @@ connections:
     # REQUIRED
     objectstore-gateway: gateway.objectstore.test
 
+    # REQUIRED
+    objectscale-id: osci5b022e718aa7e0ff
+
+    # REQUIRED
+    objectstore-id: osti202e682782ebcbfd
+
     # Identity and Access Management (IAM) API specific field.
     # It points to the region in which object storage provider is installed.
     region: us-east-1
