@@ -493,7 +493,6 @@ func (s *Server) DriverGrantBucketAccess(
 		return nil, status.Error(codes.Internal, errMsg.Error())
 	}
 
-	iamClient := iam.New(iamSession)
 	iamObjectscale.InjectTokenToIAMClient(s.iamClient, &s.objClient, s.x509Client)
 	// TODO: error handling
 	iamObjectscale.InjectAccountIDToIAMClient(s.iamClient, s.namespace)
@@ -572,8 +571,8 @@ func (s *Server) DriverGrantBucketAccess(
 				"error":  err,
 			}).Error(errMsg.Error())
 
-			span.RecordError(err)
-			span.SetStatus(otelCodes.Error, errMsg.Error())
+			// span.RecordError(err)
+			// span.SetStatus(otelCodes.Error, errMsg.Error())
 
 			return nil, status.Error(codes.Internal, errMsg.Error())
 		}
@@ -713,7 +712,7 @@ func (s *Server) DriverGrantBucketAccess(
 		return nil, status.Error(codes.Internal, errMsg.Error())
 	}
 
-	accessKey, err := iamClient.CreateAccessKey(&iam.CreateAccessKeyInput{
+	accessKey, err := s.iamClient.CreateAccessKey(&iam.CreateAccessKeyInput{
 		UserName: &userName,
 	})
 	if err != nil {
