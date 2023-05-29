@@ -23,8 +23,8 @@ import (
 )
 
 const (
-	successUsername = "success"
-	failUsername    = "fail"
+	successUsername = "namespace-user-valid"
+	failUsername    = "namesapce-user-invalid"
 )
 
 // FakeIAMClient is a set of expected outputs for fake client methods.
@@ -127,11 +127,13 @@ func (fakeIAM *FakeIAMClient) ListAccessKeys(input *iam.ListAccessKeysInput) (*i
 }
 
 // CreateUserWithContext returns CreateUserOutput or error depending on provided CreateUserInput.UserName.
-func (fakeIAM *FakeIAMClient) CreateUserWithContext(_ aws.Context, input *iam.CreateUserInput, _ ...request.Option) (*iam.CreateUserOutput, error) {
+func (fakeIAM *FakeIAMClient) CreateUserWithContext(_ aws.Context, input *iam.CreateUserInput, opts ...request.Option) (*iam.CreateUserOutput, error) {
+	// I think this needs to be refactored to user options because
+	// user name is generated from namesapce and bucket name and this here is not ergonomic to use in tests
 	switch *input.UserName {
 	case successUsername:
 		return fakeIAM.createUserOutput, nil
-	case failUsername:
+	case "valid-but-user-fail":
 		return nil, errors.New(iam.ErrCodeEntityAlreadyExistsException)
 	default:
 		return nil, errors.New(iam.ErrCodeServiceFailureException)
