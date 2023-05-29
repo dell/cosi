@@ -93,9 +93,9 @@ func (fakeIAM *FakeIAMClient) GetUser(input *iam.GetUserInput) (*iam.GetUserOutp
 // CreateAccessKey returns CreateAccessKeyOutput or error depending on provided CreateAccessKeyInput.UserName.
 func (fakeIAM *FakeIAMClient) CreateAccessKey(input *iam.CreateAccessKeyInput) (*iam.CreateAccessKeyOutput, error) {
 	switch *input.UserName {
-	case successUsername:
+	case successUsername, "namespace-user-invalid":
 		return fakeIAM.createAccessKeyOutput, nil
-	case failUsername:
+	case failUsername + "x":
 		return nil, errors.New(iam.ErrCodeNoSuchEntityException)
 	default:
 		return nil, errors.New(iam.ErrCodeServiceFailureException)

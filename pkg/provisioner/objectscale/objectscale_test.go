@@ -426,6 +426,12 @@ func testDriverGrantBucketAccess(t *testing.T) {
 							UserName: aws.String("namesapce-user-invalid"),
 						},
 					},
+					&iam.CreateAccessKeyOutput{
+						AccessKey: &iam.AccessKey{
+							AccessKeyId:     aws.String("access-key-id"),
+							SecretAccessKey: aws.String("secret-access-key"),
+						},
+					},
 				),
 				objectScaleID: "objectscale",
 				objectStoreID: "objectstore",
@@ -475,7 +481,7 @@ func testDriverGrantBucketAccess(t *testing.T) {
 		},
 		{
 			description:             "bucket does not exists",
-			inputBucketID:           "valid",
+			inputBucketID:           "bucket-valid",
 			inputBucketAccessName:   "bucket-access-valid",
 			inputAuthenticationType: cosi.AuthenticationType_Key,
 			expectedError:           status.Error(codes.NotFound, "bucket not found"),
@@ -483,12 +489,18 @@ func testDriverGrantBucketAccess(t *testing.T) {
 				mgmtClient: fake.NewClientSet(),
 				namespace:  namespace,
 				backendID:  testID,
-				iamClient:  iamfake.NewFakeIAMClient(),
+				iamClient: iamfake.NewFakeIAMClient(
+					&iam.CreateUserOutput{
+						User: &iam.User{
+							UserName: aws.String("namesapce-user-invalid"),
+						},
+					},
+				),
 			},
 		},
 		{
 			description:             "cannot get existing bucket",
-			inputBucketID:           "valid",
+			inputBucketID:           "bucket-valid",
 			inputBucketAccessName:   "bucket-access-valid",
 			inputAuthenticationType: cosi.AuthenticationType_Key,
 			expectedError:           status.Error(codes.Internal, "an unexpected error occurred"),
