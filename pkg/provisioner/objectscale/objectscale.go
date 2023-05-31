@@ -559,7 +559,7 @@ func (s *Server) DriverGrantBucketAccess(
 	if policy != "" {
 		err = json.NewDecoder(strings.NewReader(policy)).Decode(&policyRequest)
 		if err != nil {
-			errMsg := errors.New("failed to decode bucket policy")
+			errMsg := errors.New("failed to decode existing bucket policy")
 			log.WithFields(log.Fields{
 				"bucket": bucketName,
 				"policy": policy,
@@ -583,64 +583,13 @@ func (s *Server) DriverGrantBucketAccess(
 
 	awsBucketResourceARN := fmt.Sprintf("arn:aws:s3:%s:%s:%s/*", s.objectScaleID, s.objectStoreID, bucketName)
 	awsPrincipalString := fmt.Sprintf("urn:osc:iam::%s:user/%s", s.namespace, userName)
+	parsePolicyStatement(&policyRequest.Statement, awsBucketResourceARN, awsPrincipalString)
 
-	if policyRequest.Statement == nil || len(policyRequest.Statement) == 0 {
-		policyRequest.Statement = []updateBucketPolicyStatement{}
-	}
-
-	for _, statement := range policyRequest.Statement {
-		// TODO: extract this into separate methods, ASAP, so tests are easier to handle
-		// TODO: add logging
-		foundResource := false
-
-		if statement.Resource == nil {
-			statement.Resource = []string{}
-		}
-
-		for _, r := range statement.Resource {
-			if r == awsBucketResourceARN {
-				foundResource = true
-			}
-		}
-
-		if !foundResource {
-			statement.Resource = append(statement.Resource, awsBucketResourceARN)
-		}
-
-		foundPrincipal := false
-
-		if statement.Principal.AWS == nil {
-			statement.Principal.AWS = []string{}
-		}
-
-		for _, p := range statement.Principal.AWS {
-			if p == awsPrincipalString {
-				foundPrincipal = true
-			}
-		}
-
-		if !foundPrincipal {
-			statement.Principal.AWS = append(statement.Principal.AWS, awsPrincipalString)
-		}
-
-		// TODO: shouldn't action be validated with params? Maybe we only want to grant read access by default?
-		// if yes, then this should be done later, when we have more info about the params (MVP is to grant all permissions)
-		foundAction := false
-
-		if statement.Principal.Action == nil {
-			statement.Principal.Action = []string{}
-		}
-
-		for _, a := range statement.Principal.Action {
-			if a == "*" {
-				foundAction = true
-			}
-		}
-
-		if !foundAction {
-			statement.Principal.Action = append(statement.Principal.Action, "*")
-		}
-	}
+	log.WithFields(log.Fields{
+		"awsBucketResourceARN": awsBucketResourceARN,
+		"awsPrincipalString":   awsPrincipalString,
+		"statement":            policyRequest.Statement,
+	}).Info("policy request statemant was parsed")
 
 	if policyRequest.PolicyID == "" {
 		policyID, err := uuid.NewUUID()
@@ -760,4 +709,69 @@ func (s *Server) DriverRevokeBucketAccess(ctx context.Context,
 	span.SetStatus(otelCodes.Error, err.Error())
 
 	return nil, status.Error(codes.Unimplemented, err.Error())
+}
+
+func parsePolicyStatement(
+	inputStatements *[]updateBucketPolicyStatement,
+	awsBucketResourceARN,
+	awsPrincipalString string,
+) {
+	if inputStatements == nil || *inputStatements == nil || len(*inputStatements) == 0 {
+		inputStatements = &[]updateBucketPolicyStatement{}
+	}
+
+	for _, statement := range *inputStatements {
+		// TODO: add logging
+		foundResource := false
+
+		if statement.Resource == nil {
+			statement.Resource = []string{}
+		}
+
+		for _, r := range statement.Resource {
+			if r == awsBucketResourceARN {
+				foundResource = true
+			}
+		}
+
+		if !foundResource {
+			statement.Resource = append(statement.Resource, awsBucketResourceARN)
+		}
+
+		foundPrincipal := false
+
+		if statement.Principal.AWS == nil {
+			statement.Principal.AWS = []string{}
+		}
+
+		for _, p := range statement.Principal.AWS {
+			if p == awsPrincipalString {
+				foundPrincipal = true
+			}
+		}
+
+		if !foundPrincipal {
+			statement.Principal.AWS = append(statement.Principal.AWS, awsPrincipalString)
+		}
+
+		// TODO: shouldn't action be validated with params? Maybe we only want to grant read access by default?
+		// if yes, then this should be done later, when we have more info about the params (MVP is to grant all permissions)
+		foundAction := false
+
+		if statement.Principal.Action == nil {
+			statement.Principal.Action = []string{}
+		}
+
+		for _, a := range statement.Principal.Action {
+			if a == "*" {
+				foundAction = true
+			}
+		}
+
+		if !foundAction {
+			statement.Principal.Action = append(statement.Principal.Action, "*")
+		}
+	}
+
+	return
 }
