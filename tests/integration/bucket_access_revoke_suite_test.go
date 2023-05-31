@@ -46,7 +46,7 @@ var _ = Describe("Bucket Access Revoke", Ordered, Label("revoke", "objectscale")
 				Name: "my-bucket-class",
 			},
 			DeletionPolicy: v1alpha1.DeletionPolicyDelete,
-			DriverName:     "cosi-driver",
+			DriverName:     "cosi.dellemc.com",
 			Parameters: map[string]string{
 				"id": driverID,
 			},
@@ -75,7 +75,7 @@ var _ = Describe("Bucket Access Revoke", Ordered, Label("revoke", "objectscale")
 			ObjectMeta: metav1.ObjectMeta{
 				Name: "my-bucket-access-class",
 			},
-			DriverName:         "cosi-driver",
+			DriverName:         "cosi.dellemc.com",
 			AuthenticationType: v1alpha1.AuthenticationTypeKey,
 			Parameters: map[string]string{
 				"id": driverID,

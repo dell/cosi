@@ -21,7 +21,7 @@ Feature: Bucket creation on ObjectScale platform
         metadata:
             name: my-bucket-class
         deletionPolicy: delete
-        driverName: cosi-driver
+        driverName: cosi.dellemc.com
         parameters:
             ID: ${driverID}
         """
