@@ -387,7 +387,7 @@ func (s *Server) DriverGrantBucketAccess(
 	ctx context.Context,
 	req *cosi.DriverGrantBucketAccessRequest,
 ) (*cosi.DriverGrantBucketAccessResponse, error) {
-	_, span := otel.Tracer("GrantBucketAccessRequest").Start(ctx, "ObjectscaleDriverGrantBucketAccess")
+	ctx, span := otel.Tracer("GrantBucketAccessRequest").Start(ctx, "ObjectscaleDriverGrantBucketAccess")
 	defer span.End()
 
 	// Check if bucketID is not empty.
@@ -583,43 +583,16 @@ func (s *Server) DriverGrantBucketAccess(
 
 	awsBucketResourceARN := fmt.Sprintf("arn:aws:s3:%s:%s:%s/*", s.objectScaleID, s.objectStoreID, bucketName)
 	awsPrincipalString := fmt.Sprintf("urn:osc:iam::%s:user/%s", s.namespace, userName)
-	parsePolicyStatement(&policyRequest.Statement, awsBucketResourceARN, awsPrincipalString)
+	parsePolicyStatement(ctx, &policyRequest.Statement, awsBucketResourceARN, awsPrincipalString)
 
 	log.WithFields(log.Fields{
 		"awsBucketResourceARN": awsBucketResourceARN,
 		"awsPrincipalString":   awsPrincipalString,
 		"statement":            policyRequest.Statement,
-	}).Info("policy request statemant was parsed")
+	}).Info("policy request statement was parsed")
 
 	if policyRequest.PolicyID == "" {
-		policyID, err := uuid.NewUUID()
-		if err != nil {
-			errMsg := errors.New("failed to generate PolicyID UUID")
-			log.WithFields(log.Fields{
-				"bucket": bucketName,
-				"error":  err,
-			}).Error(errMsg.Error())
-
-			span.RecordError(err)
-			span.SetStatus(otelCodes.Error, errMsg.Error())
-
-			return nil, status.Error(codes.Internal, errMsg.Error())
-		}
-
-		if policyID.String() == "" {
-			errMsg := errors.New("generated PolicyID was empty")
-			log.WithFields(log.Fields{
-				"bucket":   bucketName,
-				"PolicyID": policyID,
-			}).Error(errMsg.Error())
-
-			span.RecordError(errMsg)
-			span.SetStatus(otelCodes.Error, errMsg.Error())
-
-			return nil, status.Error(codes.Internal, errMsg.Error())
-		}
-
-		policyRequest.PolicyID = policyID.String()
+		generatePolicyID(ctx, policyRequest.PolicyID, bucketName)
 	}
 
 	if policyRequest.Version == "" {
@@ -712,16 +685,18 @@ func (s *Server) DriverRevokeBucketAccess(ctx context.Context,
 }
 
 func parsePolicyStatement(
+	ctx context.Context,
 	inputStatements *[]updateBucketPolicyStatement,
 	awsBucketResourceARN,
 	awsPrincipalString string,
 ) {
+	_, span := otel.Tracer("GrantBucketAccessRequest").Start(ctx, "ObjectscaleParsePolicyStatement")
+	defer span.End()
+
 	if inputStatements == nil || *inputStatements == nil || len(*inputStatements) == 0 {
 		inputStatements = &[]updateBucketPolicyStatement{}
 	}
-
 	for _, statement := range *inputStatements {
-		// TODO: add logging
 		foundResource := false
 
 		if statement.Resource == nil {
@@ -774,4 +749,44 @@ func parsePolicyStatement(
 	}
 
 	return
+}
+
+func generatePolicyID(ctx context.Context, inputPolicy, bucketName string) (*cosi.DriverGrantBucketAccessResponse, error) {
+	_, span := otel.Tracer("GrantBucketAccessRequest").Start(ctx, "ObjectscaleGeneratePolicyID")
+	defer span.End()
+
+	policyID, err := uuid.NewUUID()
+	if err != nil {
+		errMsg := errors.New("failed to generate PolicyID UUID")
+		log.WithFields(log.Fields{
+			"bucket": bucketName,
+			"error":  err,
+		}).Error(errMsg.Error())
+
+		span.RecordError(err)
+		span.SetStatus(otelCodes.Error, errMsg.Error())
+
+		return nil, status.Error(codes.Internal, errMsg.Error())
+	}
+
+	if policyID.String() == "" {
+		errMsg := errors.New("generated PolicyID was empty")
+		log.WithFields(log.Fields{
+			"bucket":   bucketName,
+			"PolicyID": policyID,
+		}).Error(errMsg.Error())
+
+		span.RecordError(errMsg)
+		span.SetStatus(otelCodes.Error, errMsg.Error())
+
+		return nil, status.Error(codes.Internal, errMsg.Error())
+	}
+
+	inputPolicy = policyID.String()
+
+	log.WithFields(log.Fields{
+		"policy": inputPolicy,
+	}).Info("policy was generated")
+
+	return nil, nil
 }
