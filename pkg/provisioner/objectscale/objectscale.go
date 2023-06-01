@@ -37,6 +37,7 @@ import (
 	"github.com/dell/goobjectscale/pkg/client/api"
 	"github.com/dell/goobjectscale/pkg/client/model"
 	"go.opentelemetry.io/otel"
+	"sigs.k8s.io/container-object-storage-interface-provisioner-sidecar/pkg/consts"
 
 	"github.com/google/uuid"
 	"google.golang.org/grpc/codes"
@@ -67,7 +68,7 @@ type Server struct {
 	objectStoreGateway string
 	objectScaleID      string
 	objectStoreID      string
-	s3Endpont          string
+	s3Endpoint         string
 }
 
 var _ driver.Driver = (*Server)(nil)
@@ -180,7 +181,7 @@ func New(config *config.Objectscale) (*Server, error) {
 		region:             *region,
 		objectScaleGateway: objectscaleGateway,
 		objectStoreGateway: objectstoreGateway,
-		s3Endpont:          protocolS3Endpoint,
+		s3Endpoint:         protocolS3Endpoint,
 	}, nil
 }
 
@@ -349,20 +350,6 @@ func (s *Server) DriverDeleteBucket(ctx context.Context,
 	return &cosi.DriverDeleteBucketResponse{}, nil
 }
 
-//{
-//   "Id" : "S3PolicyId1",
-//   "Version" : "2012-10-17",
-//   "Statement" : [ {
-//   "Resource" : [ "arn:aws:s3:osci5b022e718aa7e0ff:osti202e682782ebcbfd:lynxbucket/*" ],
-//   "Sid" : "GetObject_permission",
-//   "Effect" : "Allow",
-//   "Principal" : {
-//      "AWS" : [ "urn:osc:iam::osai07c2ae318ae9d6f2:user/iam_user20230523061025118" ]
-//    },
-//    "Action" : [ "s3:GetObjectVersion" ]
-//} ]
-// }
-
 type principal struct {
 	AWS    []string `json:"AWS"`
 	Action []string `json:"Action"`
@@ -436,19 +423,16 @@ func (s *Server) DriverGrantBucketAccess(
 		"bucket":        bucketName,
 		"bucket_access": req.Name,
 	}).Info("bucket access for bucket is being created")
-	// Display all request parameters.
 
-	parameters := ""
-	parametersCopy := make(map[string]string)
-
-	parametersCopy["namespace"] = s.namespace
+	parameters := make(map[string]string)
+	parameters["namespace"] = s.namespace
 
 	log.WithFields(log.Fields{
 		"parameters": parameters,
 	}).Info("parameters of the bucket")
 
 	// Check if bucket for granting access exists.
-	_, err := s.mgmtClient.Buckets().Get(bucketName, parametersCopy)
+	_, err := s.mgmtClient.Buckets().Get(bucketName, parameters)
 	if err != nil && !errors.Is(err, model.Error{Code: model.CodeParameterNotFound}) {
 		log.WithFields(log.Fields{
 			"bucket": bucketName,
@@ -471,8 +455,10 @@ func (s *Server) DriverGrantBucketAccess(
 		return nil, status.Error(codes.NotFound, "bucket not found")
 	}
 
-	if err != nil {
-		errMsg := errors.New("cannot create session")
+	// TODO: interface
+	iamClient, ok := s.iamClient.(*iam.IAM)
+	if !ok {
+		errMsg := errors.New("cannot cast s.iamClient to type *iam.IAM")
 		log.WithFields(log.Fields{
 			"endpoint": s.objectStoreGateway,
 			"region":   s.region,
@@ -482,11 +468,11 @@ func (s *Server) DriverGrantBucketAccess(
 		span.RecordError(err)
 		span.SetStatus(otelCodes.Error, errMsg.Error())
 
-		return nil, status.Error(codes.Internal, errMsg.Error())
+		return nil, status.Error(codes.Internal, "internal error, something went terribly wrong on our side")
 	}
 
-	iamObjectscale.InjectTokenToIAMClient(s.iamClient, &s.objClient, s.x509Client)
-	iamObjectscale.InjectAccountIDToIAMClient(s.iamClient, s.namespace)
+	iamObjectscale.InjectTokenToIAMClient(iamClient, &s.objClient, s.x509Client)
+	iamObjectscale.InjectAccountIDToIAMClient(iamClient, s.namespace)
 	userName := fmt.Sprintf("%v-user-%v", s.namespace, bucketName)
 
 	userGet, err := s.iamClient.GetUser(&iam.GetUserInput{UserName: &userName})
@@ -531,7 +517,7 @@ func (s *Server) DriverGrantBucketAccess(
 	}
 
 	// Check if policy for specific bucket exists.
-	policy, err := s.mgmtClient.Buckets().GetPolicy(bucketName, parametersCopy)
+	policy, err := s.mgmtClient.Buckets().GetPolicy(bucketName, parameters)
 	if err != nil && !errors.Is(err, model.Error{Code: model.CodeResourceNotFound}) {
 		errMsg := errors.New("failed to check bucket policy existence")
 		log.WithFields(log.Fields{
@@ -569,17 +555,12 @@ func (s *Server) DriverGrantBucketAccess(
 		}
 	}
 
-	// TODO:
-	// 1. check if policy is empty
-	// 2a. if empty, create new policy
-	// 2b. if not, check if user is already in policy
-	// 3a. if not, add user to policy
-	// 3b. if yes, do nothing
-	// 4. update policy
-
+	// Update policy.
 	awsBucketResourceARN := fmt.Sprintf("arn:aws:s3:%s:%s:%s/*", s.objectScaleID, s.objectStoreID, bucketName)
 	awsPrincipalString := fmt.Sprintf("urn:osc:iam::%s:user/%s", s.namespace, userName)
-	parsePolicyStatement(ctx, &policyRequest.Statement, awsBucketResourceARN, awsPrincipalString)
+	policyRequest.Statement = parsePolicyStatement(
+		ctx, policyRequest.Statement, awsBucketResourceARN, awsPrincipalString,
+	)
 
 	log.WithFields(log.Fields{
 		"awsBucketResourceARN": awsBucketResourceARN,
@@ -588,15 +569,15 @@ func (s *Server) DriverGrantBucketAccess(
 	}).Info("policy request statement was parsed")
 
 	if policyRequest.PolicyID == "" {
-		err := generatePolicyID(ctx, policyRequest.PolicyID, bucketName)
-
+		policyID, err := generatePolicyID(ctx, bucketName)
 		if err != nil {
 			return nil, err
 		}
 
 		log.WithFields(log.Fields{
-			"policyID": policyRequest.PolicyID,
-		}).Info("policy was generated")
+			"policy": policyRequest,
+		}).Infof("policyID %v was generated", policyID)
+		span.AddEvent("policyID was generated")
 	}
 
 	if policyRequest.Version == "" {
@@ -619,7 +600,7 @@ func (s *Server) DriverGrantBucketAccess(
 		return nil, status.Error(codes.Internal, errMsg.Error())
 	}
 
-	err = s.mgmtClient.Buckets().UpdatePolicy(bucketName, string(updateBucketPolicyJson), parametersCopy)
+	err = s.mgmtClient.Buckets().UpdatePolicy(bucketName, string(updateBucketPolicyJson), parameters)
 	if err != nil {
 		errMsg := errors.New("failed to update bucket policy")
 		log.WithFields(log.Fields{
@@ -634,9 +615,7 @@ func (s *Server) DriverGrantBucketAccess(
 		return nil, status.Error(codes.Internal, errMsg.Error())
 	}
 
-	accessKey, err := s.iamClient.CreateAccessKey(&iam.CreateAccessKeyInput{
-		UserName: &userName,
-	})
+	accessKey, err := s.iamClient.CreateAccessKey(&iam.CreateAccessKeyInput{UserName: &userName})
 	if err != nil {
 		errMsg := errors.New("failed to create access key")
 		log.WithFields(log.Fields{
@@ -650,26 +629,8 @@ func (s *Server) DriverGrantBucketAccess(
 		return nil, status.Error(codes.Internal, errMsg.Error())
 	}
 
-	// Assemble credential details and add to credentialRepo
-	secretsMap := make(map[string]string)
-	secretsMap["accessKeyID"] = *accessKey.AccessKey.AccessKeyId
-	secretsMap["accessSecretKey"] = *accessKey.AccessKey.SecretAccessKey
-	secretsMap["endpoint"] = s.s3Endpont
-
-	log.WithFields(log.Fields{
-		"user":        userName,
-		"secretKeyId": *accessKey.AccessKey.AccessKeyId,
-		"endpoint":    s.s3Endpont,
-	}).Info("secret access key for user with endpoint was created")
-
-	credentialDetails := cosi.CredentialDetails{Secrets: secretsMap}
-	credentials := make(map[string]*cosi.CredentialDetails)
-	credentials["s3"] = &credentialDetails // ?
-
-	log.WithFields(log.Fields{
-		"bucket": bucketName,
-		"user":   userName,
-	}).Info("access to the bucket for user successfully granted")
+	// TODO: can credentials have empty values? if no, should we check any specific fields for non-emptiness?
+	credentials := assembleCredentials(ctx, accessKey, s.s3Endpoint, userName, bucketName)
 
 	return &cosi.DriverGrantBucketAccessResponse{AccountId: userName, Credentials: credentials}, nil
 }
@@ -688,20 +649,23 @@ func (s *Server) DriverRevokeBucketAccess(ctx context.Context,
 	return nil, status.Error(codes.Unimplemented, err.Error())
 }
 
-// parsePolicyStatement updates resource and principal in bucket policy statement.
+// parsePolicyStatement generates new bucket policy statements array with updated resource and principal.
 func parsePolicyStatement(
 	ctx context.Context,
-	inputStatements *[]updateBucketPolicyStatement,
+	inputStatements []updateBucketPolicyStatement,
 	awsBucketResourceARN,
 	awsPrincipalString string,
-) {
+) []updateBucketPolicyStatement {
 	_, span := otel.Tracer("GrantBucketAccessRequest").Start(ctx, "ObjectscaleParsePolicyStatement")
 	defer span.End()
 
-	if inputStatements == nil || *inputStatements == nil || len(*inputStatements) == 0 {
-		inputStatements = &[]updateBucketPolicyStatement{}
+	outputStatements := []updateBucketPolicyStatement{}
+
+	if inputStatements != nil && len(inputStatements) > 0 {
+		outputStatements = inputStatements
 	}
-	for _, statement := range *inputStatements {
+
+	for _, statement := range outputStatements {
 		foundResource := false
 
 		if statement.Resource == nil {
@@ -759,11 +723,11 @@ func parsePolicyStatement(
 		span.AddEvent("update principal action in policy statement")
 	}
 
-	return
+	return outputStatements
 }
 
 // generatePolicyID creates new policy for the bucket.
-func generatePolicyID(ctx context.Context, inputPolicy, bucketName string) error {
+func generatePolicyID(ctx context.Context, bucketName string) (*uuid.UUID, error) {
 	_, span := otel.Tracer("GrantBucketAccessRequest").Start(ctx, "ObjectscaleGeneratePolicyID")
 	defer span.End()
 
@@ -778,7 +742,7 @@ func generatePolicyID(ctx context.Context, inputPolicy, bucketName string) error
 		span.RecordError(err)
 		span.SetStatus(otelCodes.Error, errMsg.Error())
 
-		return status.Error(codes.Internal, errMsg.Error())
+		return nil, status.Error(codes.Internal, errMsg.Error())
 	}
 
 	if policyID.String() == "" {
@@ -791,14 +755,46 @@ func generatePolicyID(ctx context.Context, inputPolicy, bucketName string) error
 		span.RecordError(errMsg)
 		span.SetStatus(otelCodes.Error, errMsg.Error())
 
-		return status.Error(codes.Internal, errMsg.Error())
+		return nil, status.Error(codes.Internal, errMsg.Error())
 	}
 
-	inputPolicy = policyID.String()
+	return &policyID, nil
+}
+
+// assembleCredentials assembles credentials details and adds them to the credentialRepo.
+func assembleCredentials(
+	ctx context.Context,
+	accessKey *iam.CreateAccessKeyOutput,
+	s3Endpoint,
+	userName,
+	bucketName string,
+) map[string]*cosi.CredentialDetails {
+	_, span := otel.Tracer("GrantBucketAccessRequest").Start(ctx, "ObjectscaleAssembeCredentials")
+	defer span.End()
+
+	secretsMap := make(map[string]string)
+	secretsMap[consts.S3SecretAccessKeyID] = *accessKey.AccessKey.AccessKeyId
+	secretsMap[consts.S3SecretAccessSecretKey] = *accessKey.AccessKey.SecretAccessKey
+	secretsMap[consts.s3Endpoint] = s3Endpoint
 
 	log.WithFields(log.Fields{
-		"policy": inputPolicy,
-	}).Info("policy was generated")
+		"user":        userName,
+		"secretKeyId": *accessKey.AccessKey.AccessKeyId,
+		"endpoint":    s3Endpoint,
+	}).Info("secret access key for user with endpoint was created")
 
-	return nil
+	span.AddEvent("secret access key for user with endpoint was created")
+
+	credentialDetails := cosi.CredentialDetails{Secrets: secretsMap}
+	credentials := make(map[string]*cosi.CredentialDetails)
+	credentials["s3"] = &credentialDetails // ?
+
+	log.WithFields(log.Fields{
+		"bucket": bucketName,
+		"user":   userName,
+	}).Info("access to the bucket for user successfully granted")
+
+	span.AddEvent("access to the bucket for user successfully granted")
+
+	return credentials
 }
