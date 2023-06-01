@@ -441,16 +441,12 @@ func (s *Server) DriverGrantBucketAccess(
 	parameters := ""
 	parametersCopy := make(map[string]string)
 
-	for key, value := range req.GetParameters() {
-		parameters += key + ":" + value + ";"
-		parametersCopy[key] = value
-	}
-
 	parametersCopy["namespace"] = s.namespace
 
 	log.WithFields(log.Fields{
 		"parameters": parameters,
 	}).Info("parameters of the bucket")
+
 	// Check if bucket for granting access exists.
 	_, err := s.mgmtClient.Buckets().Get(bucketName, parametersCopy)
 	if err != nil && !errors.Is(err, model.Error{Code: model.CodeParameterNotFound}) {
@@ -592,7 +588,15 @@ func (s *Server) DriverGrantBucketAccess(
 	}).Info("policy request statement was parsed")
 
 	if policyRequest.PolicyID == "" {
-		generatePolicyID(ctx, policyRequest.PolicyID, bucketName)
+		err := generatePolicyID(ctx, policyRequest.PolicyID, bucketName)
+
+		if err != nil {
+			return nil, err
+		}
+
+		log.WithFields(log.Fields{
+			"policyID": policyRequest.PolicyID,
+		}).Info("policy was generated")
 	}
 
 	if policyRequest.Version == "" {
@@ -684,6 +688,7 @@ func (s *Server) DriverRevokeBucketAccess(ctx context.Context,
 	return nil, status.Error(codes.Unimplemented, err.Error())
 }
 
+// parsePolicyStatement updates resource and principal in bucket policy statement.
 func parsePolicyStatement(
 	ctx context.Context,
 	inputStatements *[]updateBucketPolicyStatement,
@@ -713,6 +718,8 @@ func parsePolicyStatement(
 			statement.Resource = append(statement.Resource, awsBucketResourceARN)
 		}
 
+		span.AddEvent("update resource in policy statement")
+
 		foundPrincipal := false
 
 		if statement.Principal.AWS == nil {
@@ -728,6 +735,8 @@ func parsePolicyStatement(
 		if !foundPrincipal {
 			statement.Principal.AWS = append(statement.Principal.AWS, awsPrincipalString)
 		}
+
+		span.AddEvent("update principal AWS in policy statement")
 
 		// TODO: shouldn't action be validated with params? Maybe we only want to grant read access by default?
 		// if yes, then this should be done later, when we have more info about the params (MVP is to grant all permissions)
@@ -746,12 +755,15 @@ func parsePolicyStatement(
 		if !foundAction {
 			statement.Principal.Action = append(statement.Principal.Action, "*")
 		}
+
+		span.AddEvent("update principal action in policy statement")
 	}
 
 	return
 }
 
-func generatePolicyID(ctx context.Context, inputPolicy, bucketName string) (*cosi.DriverGrantBucketAccessResponse, error) {
+// generatePolicyID creates new policy for the bucket.
+func generatePolicyID(ctx context.Context, inputPolicy, bucketName string) error {
 	_, span := otel.Tracer("GrantBucketAccessRequest").Start(ctx, "ObjectscaleGeneratePolicyID")
 	defer span.End()
 
@@ -766,7 +778,7 @@ func generatePolicyID(ctx context.Context, inputPolicy, bucketName string) (*cos
 		span.RecordError(err)
 		span.SetStatus(otelCodes.Error, errMsg.Error())
 
-		return nil, status.Error(codes.Internal, errMsg.Error())
+		return status.Error(codes.Internal, errMsg.Error())
 	}
 
 	if policyID.String() == "" {
@@ -779,7 +791,7 @@ func generatePolicyID(ctx context.Context, inputPolicy, bucketName string) (*cos
 		span.RecordError(errMsg)
 		span.SetStatus(otelCodes.Error, errMsg.Error())
 
-		return nil, status.Error(codes.Internal, errMsg.Error())
+		return status.Error(codes.Internal, errMsg.Error())
 	}
 
 	inputPolicy = policyID.String()
@@ -788,5 +800,5 @@ func generatePolicyID(ctx context.Context, inputPolicy, bucketName string) (*cos
 		"policy": inputPolicy,
 	}).Info("policy was generated")
 
-	return nil, nil
+	return nil
 }
