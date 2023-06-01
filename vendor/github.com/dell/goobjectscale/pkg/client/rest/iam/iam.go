@@ -41,7 +41,6 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws/request"
 	"github.com/aws/aws-sdk-go/service/iam"
-	"github.com/aws/aws-sdk-go/service/iam/iamiface"
 
 	v4 "github.com/aws/aws-sdk-go/aws/signer/v4"
 
@@ -57,13 +56,8 @@ const (
 )
 
 // InjectTokenToIAMClient configure IAM client to connect with Objectscale
-func InjectTokenToIAMClient(clientIam iamiface.IAMAPI, clientObjectscale client.Authenticator, httpClient http.Client) {
-	realIam, ok := clientIam.(*iam.IAM)
-	if !ok {
-		return
-	}
-
-	realIam.Handlers.Sign.RemoveByName(v4.SignRequestHandler.Name)
+func InjectTokenToIAMClient(clientIam *iam.IAM, clientObjectscale client.Authenticator, httpClient http.Client) {
+	clientIam.Handlers.Sign.RemoveByName(v4.SignRequestHandler.Name)
 
 	handler := request.NamedHandler{
 		Name: SDSHandlerName,
@@ -80,20 +74,15 @@ func InjectTokenToIAMClient(clientIam iamiface.IAMAPI, clientObjectscale client.
 		},
 	}
 
-	swapped := realIam.Handlers.Sign.SwapNamed(handler)
+	swapped := clientIam.Handlers.Sign.SwapNamed(handler)
 	if !swapped {
-		realIam.Handlers.Sign.PushFrontNamed(handler)
+		clientIam.Handlers.Sign.PushFrontNamed(handler)
 	}
 }
 
 // InjectAccountIDToIAMClient configure IAM client to connect with Objectscale Accont
-func InjectAccountIDToIAMClient(clientIam iamiface.IAMAPI, AccountID string) {
-	realIam, ok := clientIam.(*iam.IAM)
-	if !ok {
-		return
-	}
-
-	realIam.Handlers.Sign.RemoveByName(v4.SignRequestHandler.Name)
+func InjectAccountIDToIAMClient(clientIam *iam.IAM, AccountID string) {
+	clientIam.Handlers.Sign.RemoveByName(v4.SignRequestHandler.Name)
 	handler := request.NamedHandler{
 		Name: AccountIDHandlerName,
 		Fn: func(r *request.Request) {
@@ -101,8 +90,8 @@ func InjectAccountIDToIAMClient(clientIam iamiface.IAMAPI, AccountID string) {
 		},
 	}
 
-	swapped := realIam.Handlers.Sign.SwapNamed(handler)
+	swapped := clientIam.Handlers.Sign.SwapNamed(handler)
 	if !swapped {
-		realIam.Handlers.Sign.PushFrontNamed(handler)
+		clientIam.Handlers.Sign.PushFrontNamed(handler)
 	}
 }

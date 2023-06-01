@@ -251,14 +251,7 @@ func (o *ObjectUsers) GetSecret(uid string, _ map[string]string) (*model.ObjectU
 }
 
 // CreateSecret will create a specific secret
-func (o *ObjectUsers) CreateSecret(uid string, req model.ObjectUserSecretKeyCreateReq, params map[string]string) (*model.ObjectUserSecretKeyCreateRes, error) {
-	if _, ok := params["X-TEST/ObjectUser/CreateSecret/force-fail"]; ok {
-		return nil, model.Error{
-			Description: "An unexpected error occurred",
-			Code:        model.CodeInternalException,
-		}
-	}
-
+func (o *ObjectUsers) CreateSecret(uid string, req model.ObjectUserSecretKeyCreateReq, _ map[string]string) (*model.ObjectUserSecretKeyCreateRes, error) {
 	if _, ok := o.Secrets[uid]; !ok {
 		o.Secrets[uid] = &model.ObjectUserSecret{
 			SecretKey1: req.SecretKey,
@@ -547,13 +540,6 @@ func (b *Buckets) UpdatePolicy(bucketName string, policy string, params map[stri
 			Code:        model.CodeInternalException,
 		}
 	}
-
-	_, ok = params["X-TEST/Buckets/UpdatePolicy/force-success"]
-	if ok {
-		b.policy[fmt.Sprintf("%s/%s", bucketName, params["namespace"])] = policy
-		return nil
-	}
-
 	found := false
 	if found {
 		b.policy[fmt.Sprintf("%s/%s", bucketName, params["namespace"])] = policy
@@ -740,7 +726,7 @@ var _ api.CRRInterface = (*CRR)(nil) // interface guard
 
 // PauseReplication implements the CRR API
 func (c *CRR) PauseReplication(destObjectScale string, destObjectStore string, params map[string]string) error {
-	// resume, _ := strconv.Atoi(params["pauseEndMills"])
+	//resume, _ := strconv.Atoi(params["pauseEndMills"])
 	resume, _ := strconv.ParseInt(params["pauseEndMills"], 10, 64)
 	c.Config.DestObjectScale = destObjectScale
 	c.Config.DestObjectStore = destObjectStore
