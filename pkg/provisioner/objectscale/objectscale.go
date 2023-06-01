@@ -46,10 +46,8 @@ import (
 
 const (
 	splitNumber = 2
-	// bucketVersion is used when sending the bucket policy update request
+	// bucketVersion is used when sending the bucket policy update request.
 	bucketVersion = "2012-10-17"
-	// allowEffect is used when updating the bucket policy, in order to grant permissions to user
-	allowEffect = "Allow"
 )
 
 // Server is implementation of driver.Driver interface for ObjectScale platform.
@@ -162,6 +160,7 @@ func New(config *config.Objectscale) (*Server, error) {
 			HTTPClient:                    &x509Client,
 		},
 	)
+
 	if err != nil {
 		return nil, fmt.Errorf("failed to create new IAM session: %w", err)
 	}
@@ -530,7 +529,7 @@ func (s *Server) DriverGrantBucketAccess(
 
 		return nil, status.Error(codes.Internal, errMsg.Error())
 	} else if err == nil {
-		// TODO: this block is not neccessary
+		// TODO: this block is not necessary
 		// Even if we get no error, the policy can be empty, e.g. we get a 200 OK response and empty policy
 		log.WithFields(log.Fields{
 			"bucket": bucketName,
