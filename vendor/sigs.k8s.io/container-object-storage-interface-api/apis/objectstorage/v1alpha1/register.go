@@ -18,8 +18,8 @@ package v1alpha1
 
 import (
 	"k8s.io/apimachinery/pkg/runtime/schema"
-	objectstorage "sigs.k8s.io/container-object-storage-interface-api/apis/objectstorage"
 	"sigs.k8s.io/controller-runtime/pkg/scheme"
+	objectstorage "sigs.k8s.io/container-object-storage-interface-api/apis/objectstorage"
 )
 
 var (

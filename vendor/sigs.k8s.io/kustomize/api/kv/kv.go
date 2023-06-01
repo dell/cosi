@@ -177,10 +177,10 @@ func (kvl *loader) keyValuesFromLine(line []byte, currentLine int) (types.Pair, 
 
 // ParseFileSource parses the source given.
 //
-//	Acceptable formats include:
-//	 1.  source-path: the basename will become the key name
-//	 2.  source-name=source-path: the source-name will become the key name and
-//	     source-path is the path to the key file.
+//  Acceptable formats include:
+//   1.  source-path: the basename will become the key name
+//   2.  source-name=source-path: the source-name will become the key name and
+//       source-path is the path to the key file.
 //
 // Key names cannot include '='.
 func parseFileSource(source string) (keyName, filePath string, err error) {

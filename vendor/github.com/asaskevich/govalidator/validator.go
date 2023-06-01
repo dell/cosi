@@ -37,32 +37,25 @@ const RF3339WithoutZone = "2006-01-02T15:04:05"
 // SetFieldsRequiredByDefault causes validation to fail when struct fields
 // do not include validations or are not explicitly marked as exempt (using `valid:"-"` or `valid:"email,optional"`).
 // This struct definition will fail govalidator.ValidateStruct() (and the field values do not matter):
-//
-//	type exampleStruct struct {
-//	    Name  string ``
-//	    Email string `valid:"email"`
-//
+//     type exampleStruct struct {
+//         Name  string ``
+//         Email string `valid:"email"`
 // This, however, will only fail when Email is empty or an invalid email address:
-//
-//	type exampleStruct2 struct {
-//	    Name  string `valid:"-"`
-//	    Email string `valid:"email"`
-//
+//     type exampleStruct2 struct {
+//         Name  string `valid:"-"`
+//         Email string `valid:"email"`
 // Lastly, this will only fail when Email is an invalid email address but not when it's empty:
-//
-//	type exampleStruct2 struct {
-//	    Name  string `valid:"-"`
-//	    Email string `valid:"email,optional"`
+//     type exampleStruct2 struct {
+//         Name  string `valid:"-"`
+//         Email string `valid:"email,optional"`
 func SetFieldsRequiredByDefault(value bool) {
 	fieldsRequiredByDefault = value
 }
 
 // SetNilPtrAllowedByRequired causes validation to pass for nil ptrs when a field is set to required.
 // The validation will still reject ptr fields in their zero value state. Example with this enabled:
-//
-//	type exampleStruct struct {
-//	    Name  *string `valid:"required"`
-//
+//     type exampleStruct struct {
+//         Name  *string `valid:"required"`
 // With `Name` set to "", this will be considered invalid input and will cause a validation error.
 // With `Name` set to nil, this will be considered valid by validation.
 // By default this is disabled.
@@ -161,8 +154,8 @@ func IsAlpha(str string) bool {
 	return rxAlpha.MatchString(str)
 }
 
-// IsUTFLetter check if the string contains only unicode letter characters.
-// Similar to IsAlpha but for all languages. Empty string is valid.
+//IsUTFLetter check if the string contains only unicode letter characters.
+//Similar to IsAlpha but for all languages. Empty string is valid.
 func IsUTFLetter(str string) bool {
 	if IsNull(str) {
 		return true
@@ -822,8 +815,7 @@ func PrependPathToErrors(err error, path string) error {
 // result will be equal to `false` if there are any errors.
 // s is the map containing the data to be validated.
 // m is the validation map in the form:
-//
-//	map[string]interface{}{"name":"required,alpha","address":map[string]interface{}{"line1":"required,alphanum"}}
+//   map[string]interface{}{"name":"required,alpha","address":map[string]interface{}{"line1":"required,alphanum"}}
 func ValidateMap(s map[string]interface{}, m map[string]interface{}) (bool, error) {
 	if s == nil {
 		return true, nil

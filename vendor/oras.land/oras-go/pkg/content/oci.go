@@ -262,8 +262,7 @@ func (s *OCI) Info(ctx context.Context, dgst digest.Digest) (content.Info, error
 // If one or more fieldpaths are provided, only those
 // fields will be updated.
 // Mutable fields:
-//
-//	labels.*
+//  labels.*
 func (s *OCI) Update(ctx context.Context, info content.Info, fieldpaths ...string) (content.Info, error) {
 	return content.Info{}, errors.New("not yet implemented: Update (content.Store interface)")
 }

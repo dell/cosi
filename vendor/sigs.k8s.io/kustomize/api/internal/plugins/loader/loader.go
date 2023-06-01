@@ -130,19 +130,15 @@ func (l *Loader) AbsolutePluginPath(id resid.ResId) (string, error) {
 // absPluginHome is the home of kustomize Exec and Go plugins.
 // Kustomize plugin configuration files are k8s-style objects
 // containing the fields 'apiVersion' and 'kind', e.g.
-//
-//	apiVersion: apps/v1
-//	kind: Deployment
-//
+//   apiVersion: apps/v1
+//   kind: Deployment
 // kustomize reads plugin configuration data from a file path
 // specified in the 'generators:' or 'transformers:' field of a
 // kustomization file.  For Exec and Go plugins, kustomize
 // uses this data to both locate the plugin and configure it.
 // Each Exec or Go plugin (its code, its tests, its supporting data
 // files, etc.) must be housed in its own directory at
-//
-//	${absPluginHome}/${pluginApiVersion}/LOWERCASE(${pluginKind})
-//
+//   ${absPluginHome}/${pluginApiVersion}/LOWERCASE(${pluginKind})
 // where
 //   - ${absPluginHome} is an absolute path, defined below.
 //   - ${pluginApiVersion} is taken from the plugin config file.

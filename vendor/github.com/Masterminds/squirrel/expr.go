@@ -23,8 +23,7 @@ type expr struct {
 // Expr builds an expression from a SQL fragment and arguments.
 //
 // Ex:
-//
-//	Expr("FROM_UNIXTIME(?)", t)
+//     Expr("FROM_UNIXTIME(?)", t)
 func Expr(sql string, args ...interface{}) Sqlizer {
 	return expr{sql: sql, args: args}
 }
@@ -106,9 +105,8 @@ func (ce concatExpr) ToSql() (sql string, args []interface{}, err error) {
 // ConcatExpr builds an expression by concatenating strings and other expressions.
 //
 // Ex:
-//
-//	name_expr := Expr("CONCAT(?, ' ', ?)", firstName, lastName)
-//	ConcatExpr("COALESCE(full_name,", name_expr, ")")
+//     name_expr := Expr("CONCAT(?, ' ', ?)", firstName, lastName)
+//     ConcatExpr("COALESCE(full_name,", name_expr, ")")
 func ConcatExpr(parts ...interface{}) concatExpr {
 	return concatExpr(parts)
 }
@@ -122,8 +120,7 @@ type aliasExpr struct {
 // Alias allows to define alias for column in SelectBuilder. Useful when column is
 // defined as complex expression like IF or CASE
 // Ex:
-//
-//	.Column(Alias(caseStmt, "case_column"))
+//		.Column(Alias(caseStmt, "case_column"))
 func Alias(expr Sqlizer, alias string) aliasExpr {
 	return aliasExpr{expr, alias}
 }
@@ -215,8 +212,7 @@ func (eq Eq) ToSql() (sql string, args []interface{}, err error) {
 
 // NotEq is syntactic sugar for use with Where/Having/Set methods.
 // Ex:
-//
-//	.Where(NotEq{"id": 1}) == "id <> 1"
+//     .Where(NotEq{"id": 1}) == "id <> 1"
 type NotEq Eq
 
 func (neq NotEq) ToSql() (sql string, args []interface{}, err error) {
@@ -225,8 +221,7 @@ func (neq NotEq) ToSql() (sql string, args []interface{}, err error) {
 
 // Like is syntactic sugar for use with LIKE conditions.
 // Ex:
-//
-//	.Where(Like{"name": "%irrel"})
+//     .Where(Like{"name": "%irrel"})
 type Like map[string]interface{}
 
 func (lk Like) toSql(opr string) (sql string, args []interface{}, err error) {
@@ -265,8 +260,7 @@ func (lk Like) ToSql() (sql string, args []interface{}, err error) {
 
 // NotLike is syntactic sugar for use with LIKE conditions.
 // Ex:
-//
-//	.Where(NotLike{"name": "%irrel"})
+//     .Where(NotLike{"name": "%irrel"})
 type NotLike Like
 
 func (nlk NotLike) ToSql() (sql string, args []interface{}, err error) {
@@ -275,8 +269,7 @@ func (nlk NotLike) ToSql() (sql string, args []interface{}, err error) {
 
 // ILike is syntactic sugar for use with ILIKE conditions.
 // Ex:
-//
-//	.Where(ILike{"name": "sq%"})
+//    .Where(ILike{"name": "sq%"})
 type ILike Like
 
 func (ilk ILike) ToSql() (sql string, args []interface{}, err error) {
@@ -285,8 +278,7 @@ func (ilk ILike) ToSql() (sql string, args []interface{}, err error) {
 
 // NotILike is syntactic sugar for use with ILIKE conditions.
 // Ex:
-//
-//	.Where(NotILike{"name": "sq%"})
+//    .Where(NotILike{"name": "sq%"})
 type NotILike Like
 
 func (nilk NotILike) ToSql() (sql string, args []interface{}, err error) {
@@ -295,8 +287,7 @@ func (nilk NotILike) ToSql() (sql string, args []interface{}, err error) {
 
 // Lt is syntactic sugar for use with Where/Having/Set methods.
 // Ex:
-//
-//	.Where(Lt{"id": 1})
+//     .Where(Lt{"id": 1})
 type Lt map[string]interface{}
 
 func (lt Lt) toSql(opposite, orEq bool) (sql string, args []interface{}, err error) {
@@ -348,8 +339,7 @@ func (lt Lt) ToSql() (sql string, args []interface{}, err error) {
 
 // LtOrEq is syntactic sugar for use with Where/Having/Set methods.
 // Ex:
-//
-//	.Where(LtOrEq{"id": 1}) == "id <= 1"
+//     .Where(LtOrEq{"id": 1}) == "id <= 1"
 type LtOrEq Lt
 
 func (ltOrEq LtOrEq) ToSql() (sql string, args []interface{}, err error) {
@@ -358,8 +348,7 @@ func (ltOrEq LtOrEq) ToSql() (sql string, args []interface{}, err error) {
 
 // Gt is syntactic sugar for use with Where/Having/Set methods.
 // Ex:
-//
-//	.Where(Gt{"id": 1}) == "id > 1"
+//     .Where(Gt{"id": 1}) == "id > 1"
 type Gt Lt
 
 func (gt Gt) ToSql() (sql string, args []interface{}, err error) {
@@ -368,8 +357,7 @@ func (gt Gt) ToSql() (sql string, args []interface{}, err error) {
 
 // GtOrEq is syntactic sugar for use with Where/Having/Set methods.
 // Ex:
-//
-//	.Where(GtOrEq{"id": 1}) == "id >= 1"
+//     .Where(GtOrEq{"id": 1}) == "id >= 1"
 type GtOrEq Lt
 
 func (gtOrEq GtOrEq) ToSql() (sql string, args []interface{}, err error) {

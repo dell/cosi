@@ -24,8 +24,9 @@ import (
 //
 // Example:
 //
-//	dialect := gorp.MySQLDialect{"InnoDB", "UTF8"}
-//	dbmap := &gorp.DbMap{Db: db, Dialect: dialect}
+//     dialect := gorp.MySQLDialect{"InnoDB", "UTF8"}
+//     dbmap := &gorp.DbMap{Db: db, Dialect: dialect}
+//
 type DbMap struct {
 	ctx context.Context
 

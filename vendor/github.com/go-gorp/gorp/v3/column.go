@@ -40,6 +40,7 @@ type ColumnMap struct {
 // Rename allows you to specify the column name in the table
 //
 // Example:  table.ColMap("Updated").Rename("date_updated")
+//
 func (c *ColumnMap) Rename(colname string) *ColumnMap {
 	c.ColumnName = colname
 	return c

@@ -3,6 +3,7 @@
 //
 // It is only suitable for use as a 'private' cache (i.e. for a web-browser or an API-client
 // and not for a shared proxy).
+//
 package httpcache
 
 import (
@@ -415,14 +416,14 @@ func canStaleOnError(respHeaders, reqHeaders http.Header) bool {
 func getEndToEndHeaders(respHeaders http.Header) []string {
 	// These headers are always hop-by-hop
 	hopByHopHeaders := map[string]struct{}{
-		"Connection":          {},
-		"Keep-Alive":          {},
-		"Proxy-Authenticate":  {},
-		"Proxy-Authorization": {},
-		"Te":                  {},
-		"Trailers":            {},
-		"Transfer-Encoding":   {},
-		"Upgrade":             {},
+		"Connection":          struct{}{},
+		"Keep-Alive":          struct{}{},
+		"Proxy-Authenticate":  struct{}{},
+		"Proxy-Authorization": struct{}{},
+		"Te":                struct{}{},
+		"Trailers":          struct{}{},
+		"Transfer-Encoding": struct{}{},
+		"Upgrade":           struct{}{},
 	}
 
 	for _, extra := range strings.Split(respHeaders.Get("connection"), ",") {
@@ -432,7 +433,7 @@ func getEndToEndHeaders(respHeaders http.Header) []string {
 		}
 	}
 	endToEndHeaders := []string{}
-	for respHeader := range respHeaders {
+	for respHeader, _ := range respHeaders {
 		if _, ok := hopByHopHeaders[respHeader]; !ok {
 			endToEndHeaders = append(endToEndHeaders, respHeader)
 		}
