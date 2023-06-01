@@ -5,16 +5,21 @@ weight: 1
 Description: Description of configuration file for ObjectScale
 ---
 
+## Notational Conventions
+
+The keywords "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT", "SHOULD", "SHOULD NOT", "RECOMMENDED", "NOT RECOMMENDED", "MAY", and "OPTIONAL" are to be interpreted as described in [RFC 2119](http://tools.ietf.org/html/rfc2119) (Bradner, S., "Key words for use in RFCs to Indicate Requirement Levels", BCP 14, RFC 2119, March 1997).
+
 ## Dell COSI Driver Configuration Schema
 
 This configuration file is used to specify the settings for the Dell COSI Driver, which is responsible for managing connections to the Dell ObjectScale platform. The configuration file is written in YAML format and based on the JSON schema and adheres to it's specification.
 
 YAML files can have comments, which are lines in the file that begin with the `#` character. Comments can be used to provide context and explanations for the data in the file, and they are ignored by parsers when reading the YAML data.
 
-
 ## Configuration file example
 
 ```yaml
+"$schema": "https://raw.githubusercontent.com/dell/cosi-driver/main/pkg/config/config.schema.json"
+
 # List of connections to object storage platforms that is used for object storage provisioning.
 connections:
 
@@ -23,8 +28,7 @@ connections:
 
     # Default, unique identifier for the single connection. 
     #
-    # All hyphens '-' are replaced with underscores '_', and may cause issues.
-    # It is adviced to not use hyphens at all.
+    # It MUST NOT contain any hyphens '-'.
     #
     # REQUIRED
     id: example.id
@@ -44,6 +48,27 @@ connections:
       # REQUIRED
       password: testpassword
 
+    # Namespace associated with the user/tenant that is allowed to access the bucket.
+    #
+    # It can be retrieved from the ObjectScale Portal, under the Accounts tab. // TODO: add more details
+    #
+    # REQUIRED
+    namespace: osaia3382ab190a7a3df
+
+    # The ID of the Objectscale the driver should communicate with.
+    #
+    # It can be retrieved from the ObjectScale Portal, under the ObjectStore tab. // TODO: add more details
+    #
+    # REQUIRED
+    objectscale-id: osci809ccd51aade874b
+
+    # The ID of the Objectstore under specific Objectscale, with which the driver should communicate.
+    #
+    # It can be retrieved from the ObjectScale Portal, under the ObjectScale tab. // TODO: add more details
+    #
+    # REQUIRED
+    objectstore-id: ostibd2054393c389b1a
+
     # Endpoint of the ObjectScale Gateway Internal service.
     #
     # REQUIRED
@@ -56,6 +81,8 @@ connections:
 
     # Identity and Access Management (IAM) API specific field.
     # It points to the region in which object storage provider is installed.
+    #
+    # OPTIONAL
     region: us-east-1
 
     # Indicates if the contents of the bucket should be emptied as part of the deletion process
@@ -65,6 +92,7 @@ connections:
     # - false - default - deletion of bucket will fail, if the bucket is not empty. 
     #                     All contents of the bucket must be cleared manually.
     #
+    # OPTIONAL
     emptyBucket: false
 
     # Protocols supported by the connection

@@ -12,14 +12,15 @@ Dell COSI Driver is a multi-backend driver, meaning that it can connect to multi
 ## Features and capabilities
 
 ### COSI Driver Capabilities
-| Features                 | ObjectStore | ECS       | PowerScale  |
-|--------------------------|:-----------:|:---------:|:-----------:|
-| Bucket Creation          | yes         | no        | no          |
-| Bucket Deletion          | yes         | no        | no          |
-| Bucket Access Granting   | yes         | no        | no          |
-| Bucket Access Revoking   | yes         | no        | no          | 
+
+| Features               | ObjectStore | ECS | PowerScale |
+|------------------------|:-----------:|:---:|:----------:|
+| Bucket Creation        |     yes     | no  |     no     |
+| Bucket Deletion        |     yes     | no  |     no     |
+| Bucket Access Granting |     yes     | no  |     no     |
+| Bucket Access Revoking |     yes     | no  |     no     |
 
 ## Bucket Lifecycle Workflow
+
 1. Create Bucket &rarr; Delete Bucket
-2. Create Bucket &rarr; Access Bucket &rarr; Delete Bucket
-3. Create Bucket &rarr; Access Bucket &rarr; Revoke Access &rarr; Delete Bucket
+1. Create Bucket &rarr; Grant Access &rarr; Revoke Access &rarr; Delete Bucket
