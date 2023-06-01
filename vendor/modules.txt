@@ -1100,6 +1100,8 @@ sigs.k8s.io/container-object-storage-interface-api/apis/objectstorage/v1alpha1
 sigs.k8s.io/container-object-storage-interface-api/client/clientset/versioned
 sigs.k8s.io/container-object-storage-interface-api/client/clientset/versioned/scheme
 sigs.k8s.io/container-object-storage-interface-api/client/clientset/versioned/typed/objectstorage/v1alpha1
+# sigs.k8s.io/container-object-storage-interface-provisioner-sidecar v0.1.0
+## explicit; go 1.18
 # sigs.k8s.io/container-object-storage-interface-spec v0.1.0
 ## explicit; go 1.18
 sigs.k8s.io/container-object-storage-interface-spec

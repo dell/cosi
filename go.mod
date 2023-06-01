@@ -146,6 +146,7 @@ require (
 	k8s.io/kubectl v0.26.0 // indirect
 	k8s.io/utils v0.0.0-20221107191617-1a15be271d1d // indirect
 	oras.land/oras-go v1.2.2 // indirect
+	sigs.k8s.io/container-object-storage-interface-provisioner-sidecar v0.1.0 // indirect
 	sigs.k8s.io/controller-runtime v0.12.3 // indirect
 	sigs.k8s.io/json v0.0.0-20220713155537-f223a00ba0e2 // indirect
 	sigs.k8s.io/kustomize/api v0.12.1 // indirect
