@@ -71,8 +71,8 @@ type Server struct {
 
 var _ driver.Driver = (*Server)(nil)
 
-// TODO: verify if emptiness verification can be moved to a separate function
 // New initializes server based on the config file.
+// TODO: verify if emptiness verification can be moved to a separate function
 func New(config *config.Objectscale) (*Server, error) {
 	id := config.Id
 	if id == "" {
@@ -160,7 +160,6 @@ func New(config *config.Objectscale) (*Server, error) {
 			HTTPClient:                    &x509Client,
 		},
 	)
-
 	if err != nil {
 		return nil, fmt.Errorf("failed to create new IAM session: %w", err)
 	}
@@ -584,7 +583,7 @@ func (s *Server) DriverGrantBucketAccess(
 	}
 
 	// Marshal the struct to JSON to confirm JSON validity
-	updateBucketPolicyJson, err := json.Marshal(policyRequest)
+	updateBucketPolicyJSON, err := json.Marshal(policyRequest)
 	if err != nil {
 		errMsg := errors.New("failed to marshal updateBucketPolicyRequest into JSON")
 		log.WithFields(log.Fields{
@@ -599,12 +598,12 @@ func (s *Server) DriverGrantBucketAccess(
 		return nil, status.Error(codes.Internal, errMsg.Error())
 	}
 
-	err = s.mgmtClient.Buckets().UpdatePolicy(bucketName, string(updateBucketPolicyJson), parameters)
+	err = s.mgmtClient.Buckets().UpdatePolicy(bucketName, string(updateBucketPolicyJSON), parameters)
 	if err != nil {
 		errMsg := errors.New("failed to update bucket policy")
 		log.WithFields(log.Fields{
 			"bucket": bucketName,
-			"policy": updateBucketPolicyJson,
+			"policy": updateBucketPolicyJSON,
 			"error":  err,
 		}).Error(errMsg.Error())
 
