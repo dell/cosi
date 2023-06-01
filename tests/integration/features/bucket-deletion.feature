@@ -23,7 +23,7 @@ Feature: Bucket deletion from ObjectScale platform
         metadata:
             name: my-bucket-class-delete
         deletionPolicy: delete
-        driverName: cosi-driver
+        driverName: cosi.dellemc.com
         parameters:
             ID: ${driverID}
         """
@@ -56,7 +56,7 @@ Feature: Bucket deletion from ObjectScale platform
         metadata:
             name: my-bucket-class-retain
         deletionPolicy: retain
-        driverName: cosi-driver
+        driverName: cosi.dellemc.com
         parameters:
             objectScaleID: ${objectScaleID}
             objectStoreID: ${objectStoreID}

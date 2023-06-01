@@ -10,23 +10,38 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package utils
+package steps
 
 import (
-	ginkgo "github.com/onsi/ginkgo/v2"
+	"time"
 
-	"github.com/dell/cosi-driver/tests/integration/steps"
-	"k8s.io/client-go/kubernetes"
+	ginkgo "github.com/onsi/ginkgo/v2"
 )
 
-// DeleteReleasesAndNamespaces Delete releases and namespaces from k8s cluster.
-func DeleteReleasesAndNamespaces(ctx ginkgo.SpecContext, clientset *kubernetes.Clientset, releases map[string]string, namespaces []string) {
-	// uninstall releases
-	for namespace, release := range releases {
-		steps.UninstallChartReleaseinNamespace(release, namespace)
-	}
-	// delete namespaces
-	for _, namespace := range namespaces {
-		steps.DeleteNamespace(ctx, clientset, namespace)
+const (
+	attempts = 5
+	sleep    = 2 * time.Second // nolint:gomnd
+)
+
+func retry(ctx ginkgo.SpecContext, attempts int, sleep time.Duration, f func() error) error {
+	ticker := time.NewTicker(sleep)
+	retries := 0
+
+	for {
+		select {
+		case <-ticker.C:
+			err := f()
+			if err == nil {
+				return nil
+			}
+
+			retries++
+			if retries > attempts {
+				return err
+			}
+
+		case <-ctx.Done():
+			return ctx.Err()
+		}
 	}
 }

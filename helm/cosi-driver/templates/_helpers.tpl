@@ -45,6 +45,32 @@ Create chart name and version as used by the chart label.
 {{- end }}
 
 {{/*
+# COSI driver sidecar log level
+# Values are set to the integer value, higher value means more verbose logging
+*/}}
+{{- define "cosi-driver.provisionerSidecarVerbosity" }}
+  {{- if (kindIs "int" .Values.sidecar.verbosity) }}
+    {{- .Values.sidecar.verbosity }}
+  {{- else }}
+    {{- 5 }}
+  {{- end }}
+{{- end }}
+
+{{/*
+# COSI driver log format
+# Possible values: "json" "text"
+# Default value: "json"
+*/}}
+{{- define "cosi-driver.logFormat" }}
+  {{- $logFormatValues := list "json" "text" }}
+  {{- if (has .Values.provisioner.logFormat $logFormatValues) }}
+    {{- .Values.provisioner.logFormat }}
+  {{- else }}
+    {{- "text" }}
+  {{- end }}
+{{- end }}
+
+{{/*
 # COSI driver OTEL endpoint
 # Default value is left empty on purpose, to not start any tracing if no argument was provided.
 # Default value: ""
@@ -114,14 +140,14 @@ Create the name of the service account to use
 Create the name of provisioner container
 */}}
 {{- define "cosi-driver.provisionerContainerName" }}
-  {{- default "cosi-provisioner" .Values.provisioner.name }}
+  {{- default "objectstorage-provisioner" .Values.provisioner.name }}
 {{- end }}
 
 {{/*
 Create the name of provisioner sidecar container
 */}}
 {{- define "cosi-driver.provisionerSidecarContainerName" }}
-  {{- default "cosi-provisioner-sidecar" .Values.sidecar.name }}
+  {{- default "objectstorage-provisioner-sidecar" .Values.sidecar.name }}
 {{- end }}
 
 {{/*

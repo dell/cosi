@@ -51,6 +51,15 @@ jobs:
         with:
           args: /github/workspace/pkg
 
+  dockerfile-linter:
+    name: Run Hadolint Dockerfile lint
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout the code
+        uses: actions/checkout@v3.2.0
+      - name: Run Hadolint
+        uses: hadolint/hadolint-action@v3.1.0
+
   tests:
     name: Run Go unit tests and check package coverage
     runs-on: ubuntu-latest
@@ -77,13 +86,16 @@ jobs:
         id: go
     - uses: actions/checkout@v3.2.0
     - run: make docker
-    # TODO: Analyze and fix vulnerabilities
-    # - uses: Azure/container-scan@v0
-    #   env:
-    #     DOCKLE_HOST: "unix:///var/run/docker.sock"
-    #   with:
-    #     image-name: ${{ env.REGISTRY }}/${{ env.IMAGENAME }}:${{ env.IMAGETAG }}
-    #     severity-threshold: HIGH
+    - name: Run trivy action
+      uses: aquasecurity/trivy-action@master
+      with:
+        image-ref: ${{ env.IMAGENAME }}:${{ env.IMAGETAG }}
+    - name: Run dockle action
+      uses: erzz/dockle-action@v1.3.1
+      env:
+        DOCKER_CONTENT_TRUST: 1
+      with:
+        image: ${{ env.IMAGENAME }}:${{ env.IMAGETAG }}
     # TODO: There is no registry for now
     # - run: make push
     # if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
