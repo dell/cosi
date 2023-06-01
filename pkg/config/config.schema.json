@@ -41,7 +41,7 @@
           "type": "string",
           "$comment": "Used i.a. when sending bucket update policy request"
         },
-        "objecstore-id": {
+        "objectstore-id": {
           "description": "The ID of the Objectstore under specific Objectscale, with which the driver should communicate",
           "type": "string",
           "$comment": "Used i.a. when sending bucket update policy request"
@@ -73,6 +73,8 @@
         "namespace",
         "objectscale-gateway",
         "objectstore-gateway",
+        "objectscale-id",
+        "objectstore-id",
         "protocols",
         "tls"
       ]
