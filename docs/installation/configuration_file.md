@@ -50,21 +50,27 @@ connections:
 
     # Namespace associated with the user/tenant that is allowed to access the bucket.
     #
-    # It can be retrieved from the ObjectScale Portal, under the Accounts tab. // TODO: add more details
+    # How to:
+    #   It can be retrieved from the ObjectScale Portal, under the Accounts tab.
+    #   TODO: add more details
     #
     # REQUIRED
     namespace: osaia3382ab190a7a3df
 
     # The ID of the Objectscale the driver should communicate with.
     #
-    # It can be retrieved from the ObjectScale Portal, under the ObjectStore tab. // TODO: add more details
+    # How to:
+    #   It can be retrieved from the ObjectScale Portal, under the ObjectStore tab.
+    #   TODO: add more details
     #
     # REQUIRED
     objectscale-id: osci809ccd51aade874b
 
     # The ID of the Objectstore under specific Objectscale, with which the driver should communicate.
     #
-    # It can be retrieved from the ObjectScale Portal, under the ObjectScale tab. // TODO: add more details
+    # How to:
+    #   It can be retrieved from the ObjectScale Portal, under the ObjectScale tab.
+    #   TODO: add more details
     #
     # REQUIRED
     objectstore-id: ostibd2054393c389b1a
