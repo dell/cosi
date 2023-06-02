@@ -8,6 +8,7 @@ Description: Code features for ObjectScale COSI Driver
 <!--
 TODO: add brownfield provisioning info to Bucket,BucketClaim
 TODO: add description of `spec.existingBucketName` for Bucket,BucketClaim - needs to be done after brownfield tests
+TODO: what are the defaults with which bucket is provisioned? E.g. encryption, block size, and other? This needs to be described.
 FIXME: is the `parameters.driverID` a good name?
 -->
 
@@ -115,6 +116,8 @@ There are a few crucial details regarding bucket deletion. The first one is Dele
 `emptyBucket` has no effect when Deletion Policy is set to `Retain`.
 
 ## Bucket Access Granting Feature
+
+> ⚠ **WARNING**: only full access granting is supported.
 
 ### Bucket Access Class
 
