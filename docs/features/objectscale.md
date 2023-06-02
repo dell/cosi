@@ -16,7 +16,7 @@ FIXME: is the `parameters.driverID` a good name?
 
 The keywords "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT", "SHOULD", "SHOULD NOT", "RECOMMENDED", "NOT RECOMMENDED", "MAY", and "OPTIONAL" are to be interpreted as described in [RFC 2119](http://tools.ietf.org/html/rfc2119) (Bradner, S., "Key words for use in RFCs to Indicate Requirement Levels", BCP 14, RFC 2119, March 1997).
 
-Fields are specified by their's path. Consider the following examples:
+Fields are specified by theirs path. Consider the following examples:
 
 1. Field specified by the following path `spec.authenticationType=IAM` is reflected in their resouces YAML as the following:
 
@@ -148,7 +148,7 @@ parameters:
 
 ### Bucket Access
 
-`BucketAccess` represents a access request to generate a `Secret`, that will allow you to access ObjectStorage . The following is a sample manifest for creating a BucketClaim resource:
+`BucketAccess` resource represents a access request to generate a `Secret`, that will allow you to access ObjectStorage . The following is a sample manifest for creating a BucketClaim resource:
 
 ```yaml
 apiVersion: objectstorage.k8s.io/v1alpha1
@@ -172,6 +172,6 @@ spec:
 ### Unsupported options
 
 - `spec.serviceAccountName=...` - is the name of the serviceAccount that COSI will map to the object storage provider service account when IAM styled authentication is specified. As the IAM style authentication is not supported, this field is also unsupported.
-- `spec.protocol=...` - Protocols are the set of data API this bucket is required to support. From protocols specified by COSI (`v1alpha1`), Dell ObjectScale platform only supports the S3 protocol. Protocols `Azure` and `GCS` MUST NOT be used.
+- `spec.protocol=...` - Protocols are the set of data API this bucket is required to support. From protocols specified by COSI (`v1alpha1`), Dell ObjectScale platform only supports the `S3` protocol. Protocols `Azure` and `GCS` MUST NOT be used.
 
 ## Bucket Access Revoking Feature
