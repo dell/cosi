@@ -18,7 +18,7 @@ YAML files can have comments, which are lines in the file that begin with the `#
 ## Configuration file example
 
 ```yaml
-# This is sample config. You MUST edit it before applying!
+# This is example of configuration file. You MUST edit it before applying!
 
 # List of connections to object storage platforms that is used for object storage provisioning.
 connections:
