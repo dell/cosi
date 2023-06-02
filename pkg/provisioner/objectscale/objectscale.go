@@ -48,6 +48,8 @@ const (
 	splitNumber = 2
 	// bucketVersion is used when sending the bucket policy update request.
 	bucketVersion = "2012-10-17"
+	// allowEffect is used when updating the bucket policy, in order to grant permissions to user.
+	allowEffect = "Allow"
 )
 
 // Server is implementation of driver.Driver interface for ObjectScale platform.
@@ -569,7 +571,7 @@ func (s *Server) DriverGrantBucketAccess(
 	if policyRequest.PolicyID == "" {
 		policyID, err := generatePolicyID(ctx, bucketName)
 		if err != nil {
-			return nil, err
+			return nil, status.Error(codes.Internal, err.Error())
 		}
 
 		log.WithFields(log.Fields{
@@ -682,6 +684,10 @@ func parsePolicyStatement(
 
 		span.AddEvent("update resource in policy statement")
 
+		if statement.Effect == "" {
+			statement.Effect = allowEffect
+		}
+
 		foundPrincipal := false
 
 		if statement.Principal.AWS == nil {
@@ -740,7 +746,7 @@ func generatePolicyID(ctx context.Context, bucketName string) (*uuid.UUID, error
 		span.RecordError(err)
 		span.SetStatus(otelCodes.Error, errMsg.Error())
 
-		return nil, status.Error(codes.Internal, errMsg.Error())
+		return nil, errMsg
 	}
 
 	if policyID.String() == "" {
@@ -753,7 +759,7 @@ func generatePolicyID(ctx context.Context, bucketName string) (*uuid.UUID, error
 		span.RecordError(errMsg)
 		span.SetStatus(otelCodes.Error, errMsg.Error())
 
-		return nil, status.Error(codes.Internal, errMsg.Error())
+		return nil, errMsg
 	}
 
 	return &policyID, nil
