@@ -44,18 +44,18 @@ type Objectscale struct {
 	// Namespace associated with the user/tenant that is allowed to access the bucket
 	Namespace string `json:"namespace" yaml:"namespace" mapstructure:"namespace"`
 
-	// The ID of the Objectstore under specific Objectscale, with which the driver
-	// should communicate
-	ObjecstoreId *string `json:"objecstore-id,omitempty" yaml:"objecstore-id,omitempty" mapstructure:"objecstore-id,omitempty"`
-
 	// Endpoint of the ObjectScale Gateway Internal service
 	ObjectscaleGateway string `json:"objectscale-gateway" yaml:"objectscale-gateway" mapstructure:"objectscale-gateway"`
 
 	// The ID of the Objectscale the driver should communicate with
-	ObjectscaleId *string `json:"objectscale-id,omitempty" yaml:"objectscale-id,omitempty" mapstructure:"objectscale-id,omitempty"`
+	ObjectscaleId string `json:"objectscale-id" yaml:"objectscale-id" mapstructure:"objectscale-id"`
 
 	// Endpoint of the ObjectScale ObjectStore Management Gateway service
 	ObjectstoreGateway string `json:"objectstore-gateway" yaml:"objectstore-gateway" mapstructure:"objectstore-gateway"`
+
+	// The ID of the Objectstore under specific Objectscale, with which the driver
+	// should communicate
+	ObjectstoreId string `json:"objectstore-id" yaml:"objectstore-id" mapstructure:"objectstore-id"`
 
 	// Protocols corresponds to the JSON schema field "protocols".
 	Protocols Protocols `json:"protocols" yaml:"protocols" mapstructure:"protocols"`
@@ -185,8 +185,14 @@ func (j *Objectscale) UnmarshalJSON(b []byte) error {
 	if v, ok := raw["objectscale-gateway"]; !ok || v == nil {
 		return fmt.Errorf("field objectscale-gateway in Objectscale: required")
 	}
+	if v, ok := raw["objectscale-id"]; !ok || v == nil {
+		return fmt.Errorf("field objectscale-id in Objectscale: required")
+	}
 	if v, ok := raw["objectstore-gateway"]; !ok || v == nil {
 		return fmt.Errorf("field objectstore-gateway in Objectscale: required")
+	}
+	if v, ok := raw["objectstore-id"]; !ok || v == nil {
+		return fmt.Errorf("field objectstore-id in Objectscale: required")
 	}
 	if v, ok := raw["protocols"]; !ok || v == nil {
 		return fmt.Errorf("field protocols in Objectscale: required")
@@ -224,8 +230,14 @@ func (j *Objectscale) UnmarshalYAML(b []byte) error {
 	if v, ok := raw["objectscale-gateway"]; !ok || v == nil {
 		return fmt.Errorf("field objectscale-gateway in Objectscale: required")
 	}
+	if v, ok := raw["objectscale-id"]; !ok || v == nil {
+		return fmt.Errorf("field objectscale-id in Objectscale: required")
+	}
 	if v, ok := raw["objectstore-gateway"]; !ok || v == nil {
 		return fmt.Errorf("field objectstore-gateway in Objectscale: required")
+	}
+	if v, ok := raw["objectstore-id"]; !ok || v == nil {
+		return fmt.Errorf("field objectstore-id in Objectscale: required")
 	}
 	if v, ok := raw["protocols"]; !ok || v == nil {
 		return fmt.Errorf("field protocols in Objectscale: required")
