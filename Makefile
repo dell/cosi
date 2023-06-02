@@ -15,6 +15,9 @@ all: clean generate format build
 COSI_BUILD_DIR   := build
 COSI_BUILD_PATH  := ./cmd/
 
+# When developing docs, chage it so it points to the right file.
+CONFIGURATION_DOCS ?= ./docs/installation/configuration_file.md
+
 include overrides.mk
 
 # Get the currently used golang install path (in GOPATH/bin, unless GOBIN is set)
@@ -36,7 +39,7 @@ clean:	##clean directory
 	go clean
 
 .PHONY: generate
-generate: ##regenerate files
+generate:	##regenerate files
 	go generate ./...
 
 .PHONY: build
@@ -68,9 +71,15 @@ integration-test:	##run integration test (Linux only)
 	( cd tests/integration; sh run.sh )
 
 .PHONY: lint
-lint: 
+lint:	##run golangci-lint over the repository
 	golangci-lint run
 
 .PHONY: gofumpt
-gofumpt:
-	gofumpt -w cmd pkg tests util  
+gofumpt:	##run gofumpt over specific packages
+	gofumpt -w cmd pkg tests
+
+.PHONY: example-config
+example-config:	##generate the example configuration file
+	./scripts/example-config.pl \
+		--filename $(CONFIGURATION_DOCS) \
+		--output ./sample-config.generated.yaml

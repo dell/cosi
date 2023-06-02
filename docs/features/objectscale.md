@@ -6,18 +6,10 @@ Description: Code features for ObjectScale COSI Driver
 ---
 
 <!--
-TODO: add brownfield provisioning info to Bucket
-TODO: add brownfield provisioning info to BucketClaim
-TODO: add description of `spec.existingBucketName` for Bucket
-TODO: add description of `spec.existingBucketName` for BucketClaim
-TODO: add description of `spec.authenticationType` for BucketAccessClass
-TODO: write Bucket Access Granting feature description
+TODO: add brownfield provisioning info to Bucket,BucketClaim
+TODO: add description of `spec.existingBucketName` for Bucket,BucketClaim - needs to be done after brownfield tests
 FIXME: is the `parameters.driverID` a good name?
 -->
-
-In order to use COSI Driver on ObjectScale platform, ensure the following components are deployed to your cluster:
-- Kubernetes Container Object Storage Interface CRDs
-- Container Object Storage Interface Controller
 
 ## Notational Conventions
 
@@ -31,6 +23,7 @@ Fields are specified by their's path. Consider the following examples:
 spec:
   authenticationType: IAM
 ```
+
 2. field specified by path `spec.protocols=[Azure,GCS]` is reflected in their resouces YAML as the following:
 
 ```yaml
@@ -39,6 +32,12 @@ spec:
     - Azure
     - GCS
 ```
+
+## Prerequisites
+
+In order to use COSI Driver on ObjectScale platform, the following components MUST be deployed to your cluster:
+- Kubernetes Container Object Storage Interface CRDs
+- Container Object Storage Interface Controller
 
 ## Bucket Creation Feature
 
@@ -82,8 +81,8 @@ spec:
 
 ### Bucket Class
 
-Installation of ObjectScale COSI driver does not create `BucketClass` resource. `BucketClass` represents a class of `Buckets` with similar characteristics. 
-Dell COSI Driver is a multi-backend driver, meaning that for every platform the specific `BucketClass` should be created. The `BucketClass` resource should contain the name of multi-backend driver and driverID for specific Object Storage Platform. 
+Installation of ObjectScale COSI driver does not create `BucketClass` resource. `BucketClass` represents a class of `Bucket` resources with similar characteristics.
+Dell COSI Driver is a multi-backend driver, meaning that for every platform the specific `BucketClass` should be created. The `BucketClass` resource should contain the name of multi-backend driver and `parameters.driverID` for specific Object Storage Platform. 
 The default sample is shown below:
 
 ```yaml
@@ -105,19 +104,23 @@ There are a few crucial details regarding bucket deletion. The first one is Dele
 
 > ⚠ **WARNING**: this field is case sensitive, and the bucket deletion will fail if policy is not set exactly to *Delete* or *Retain*.
 
-DeletionPolicy in `BucketClass` resource is used to specify how COSI should handle deletion of the bucket. There are two possible values:
+`deletionPolicy` in `BucketClass` resource is used to specify how COSI should handle deletion of the bucket. There are two possible values:
 - **Retain**: Indicates that the bucket should not be deleted from the Object Storage Platform (OSP), it means that the underlying bucket is not cleaned up when the `Bucket` object is deleted. It makes the bucket unreachable from k8s level. 
 - **Delete**: Indicates that the bucket should be permanently deleted from the Object Storage Platform (OSP) once all the workloads accessing this bucket are done, it means that the underlying bucket is cleaned up when the Bucket object is deleted.
 
 ### `emptyBucket`
 
-`emptyBucket` field is set in config `.yaml` file passed to the chart during COSI driver installation. If it is set to `true`, then the bucket will be emptied before deletion. If it is set to `false`, then Objectscale will not be able to delete not empty bucket and return error.
+`emptyBucket` field is set in config YAML file passed to the chart during COSI driver installation. If it is set to `true`, then the bucket will be emptied before deletion. If it is set to `false`, then Objectscale will not be able to delete not empty bucket and return error.
 
 `emptyBucket` has no effect when Deletion Policy is set to `Retain`.
 
 ## Bucket Access Granting Feature
 
 ### Bucket Access Class
+
+Installation of ObjectScale COSI driver does not create `BucketAccessClass` resource. `BucketAccessClass` represents a class of `BucketAccess` resources with similar characteristics.
+Dell COSI Driver is a multi-backend driver, meaning that for every platform the specific `BucketAccessClass` should be created. The `BucketClass` resource should contain the name of multi-backend driver and `parameters.driverID` for specific Object Storage Platform. 
+The default sample is shown below:
 
 ```yaml
 apiVersion: objectstorage.k8s.io/v1alpha1
@@ -132,12 +135,17 @@ parameters:
 
 ### `authenticationType`
 
+> ⚠ **WARNING**: this field is case sensitive, and the granting access will fail if it is not set exactly to *Key* or *IAM*.
+
+`authenticationType` denotes the style of authentication. The only supported option for COSI Driver is `Key`.
+
 ### Unsupported options
 
-- `authenticationType=IAM` - denotes the style of authentication. The `IAM` value MUST NOT be used, because IAM style authentication is not supported. 
-
+- `authenticationType=IAM` - denotes the style of authentication. The `IAM` value MUST NOT be used, because IAM style authentication is not supported.
 
 ### Bucket Access
+
+`BucketAccess` represents a access request to generate a `Secret`, that will allow you to access ObjectStorage . The following is a sample manifest for creating a BucketClaim resource:
 
 ```yaml
 apiVersion: objectstorage.k8s.io/v1alpha1
@@ -156,6 +164,7 @@ spec:
 
 > ⚠ **WARNING**: this field is case sensitive, and the provisioning will fail if protocol is not set exactly to *S3*.
 
+`spec.protocol` is the name of the Protocol that this access credential is supposed to support.
 
 ### Unsupported options
 

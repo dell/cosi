@@ -1,6 +1,7 @@
-# The driver's binary
-/cosi-driver
+# generated example config
+*.generated.yaml
 
+# build directory
 build/
 
 # Binaries for programs and plugins
