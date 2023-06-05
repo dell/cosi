@@ -71,6 +71,9 @@ github.com/aws/aws-sdk-go/service/sts/stsiface
 # github.com/beorn7/perks v1.0.1
 ## explicit; go 1.11
 github.com/beorn7/perks/quantile
+# github.com/bombsimon/logrusr/v4 v4.0.0
+## explicit; go 1.17
+github.com/bombsimon/logrusr/v4
 # github.com/cenkalti/backoff/v4 v4.2.0
 ## explicit; go 1.18
 github.com/cenkalti/backoff/v4
@@ -1104,6 +1107,9 @@ sigs.k8s.io/container-object-storage-interface-api/apis/objectstorage/v1alpha1
 sigs.k8s.io/container-object-storage-interface-api/client/clientset/versioned
 sigs.k8s.io/container-object-storage-interface-api/client/clientset/versioned/scheme
 sigs.k8s.io/container-object-storage-interface-api/client/clientset/versioned/typed/objectstorage/v1alpha1
+# sigs.k8s.io/container-object-storage-interface-provisioner-sidecar v0.1.1-0.20230130215648-c0cf9951ffc6
+## explicit; go 1.18
+sigs.k8s.io/container-object-storage-interface-provisioner-sidecar/pkg/consts
 # sigs.k8s.io/container-object-storage-interface-spec v0.1.1-0.20221006174327-ec782953b8ac
 ## explicit; go 1.18
 sigs.k8s.io/container-object-storage-interface-spec
