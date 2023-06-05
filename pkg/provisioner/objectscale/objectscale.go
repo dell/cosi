@@ -117,6 +117,16 @@ func New(config *config.Objectscale) (*Server, error) {
 		return nil, errors.New("empty objectstore gateway")
 	}
 
+	objectscaleID := config.ObjectscaleId
+	if objectscaleID == "" {
+		return nil, errors.New("empty objectscaleID")
+	}
+
+	objectstoreID := config.ObjectstoreId
+	if objectstoreID == "" {
+		return nil, errors.New("empty objectstoreID")
+	}
+
 	protocolS3Endpoint := config.Protocols.S3.Endpoint
 	if protocolS3Endpoint == "" {
 		return nil, errors.New("empty protocol S3 endpoint")
@@ -221,6 +231,8 @@ func New(config *config.Objectscale) (*Server, error) {
 		region:             *region,
 		objectScaleGateway: objectscaleGateway,
 		objectStoreGateway: objectstoreGateway,
+		objectScaleID:      objectscaleID,
+		objectStoreID:      objectstoreID,
 		s3Endpoint:         protocolS3Endpoint,
 	}, nil
 }
