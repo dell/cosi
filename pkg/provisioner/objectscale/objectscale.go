@@ -29,7 +29,9 @@ import (
 	cosi "sigs.k8s.io/container-object-storage-interface-spec"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/request"
 	"github.com/aws/aws-sdk-go/aws/session"
+	v4 "github.com/aws/aws-sdk-go/aws/signer/v4"
 	"github.com/aws/aws-sdk-go/service/iam"
 	"github.com/aws/aws-sdk-go/service/iam/iamiface"
 	"github.com/dell/cosi-driver/pkg/config"
@@ -154,14 +156,52 @@ func New(config *config.Objectscale) (*Server, error) {
 		Username: username,
 		Password: password,
 	}
-	iamSession, err := session.NewSession(
-		&aws.Config{
-			Endpoint:                      &objectstoreGateway,
-			Region:                        region,
-			CredentialsChainVerboseErrors: aws.Bool(true),
-			HTTPClient:                    &x509Client,
+
+	handler := request.NamedHandler{
+		Name: iamObjectscale.SDSHandlerName,
+		Fn: func(r *request.Request) {
+			if !objClient.IsAuthenticated() {
+				err := objClient.Login(&x509Client)
+				if err != nil {
+					r.Error = err // no return intentional
+				}
+			}
+
+			token := objClient.Token()
+			r.HTTPRequest.Header.Add(iamObjectscale.SDSHeaderName, token)
+		},
+	}
+
+	iamSession, err := session.NewSessionWithOptions(
+		session.Options{
+			Config: aws.Config{
+				Endpoint:                      &objectstoreGateway,
+				Region:                        region,
+				CredentialsChainVerboseErrors: aws.Bool(true),
+				HTTPClient:                    &x509Client,
+			},
 		},
 	)
+
+	iamSession.Handlers.Sign.RemoveByName(v4.SignRequestHandler.Name)
+	swapped := iamSession.Handlers.Sign.SwapNamed(handler)
+
+	if !swapped {
+		iamSession.Handlers.Sign.PushFrontNamed(handler)
+	}
+
+	handler2 := request.NamedHandler{
+		Name: iamObjectscale.AccountIDHandlerName,
+		Fn: func(r *request.Request) {
+			r.HTTPRequest.Header.Add(iamObjectscale.AccountIDHeaderName, namespace)
+		},
+	}
+
+	swapped = iamSession.Handlers.Sign.SwapNamed(handler2)
+	if !swapped {
+		iamSession.Handlers.Sign.PushFrontNamed(handler2)
+	}
+
 	if err != nil {
 		return nil, fmt.Errorf("failed to create new IAM session: %w", err)
 	}
@@ -424,15 +464,20 @@ func (s *Server) DriverGrantBucketAccess(
 		"bucket_access": req.Name,
 	}).Info("bucket access for bucket is being created")
 
-	parameters := make(map[string]string)
-	parameters["namespace"] = s.namespace
+	parameters := ""
+	parametersCopy := make(map[string]string)
+	for key, value := range req.GetParameters() {
+		parameters += key + ":" + value + ";"
+		parametersCopy[key] = value
+	}
+	parametersCopy["namespace"] = s.namespace
 
 	log.WithFields(log.Fields{
 		"parameters": parameters,
 	}).Info("parameters of the bucket")
 
 	// Check if bucket for granting access exists.
-	_, err := s.mgmtClient.Buckets().Get(bucketName, parameters)
+	_, err := s.mgmtClient.Buckets().Get(bucketName, parametersCopy)
 	if err != nil && !errors.Is(err, model.Error{Code: model.CodeParameterNotFound}) {
 		log.WithFields(log.Fields{
 			"bucket": bucketName,
@@ -455,24 +500,6 @@ func (s *Server) DriverGrantBucketAccess(
 		return nil, status.Error(codes.NotFound, "bucket not found")
 	}
 
-	// TODO: interface
-	iamClient, ok := s.iamClient.(*iam.IAM)
-	if !ok {
-		errMsg := errors.New("cannot cast s.iamClient to type *iam.IAM")
-		log.WithFields(log.Fields{
-			"endpoint": s.objectStoreGateway,
-			"region":   s.region,
-			"error":    err,
-		}).Error(errMsg.Error())
-
-		span.RecordError(err)
-		span.SetStatus(otelCodes.Error, errMsg.Error())
-
-		return nil, status.Error(codes.Internal, "internal error, something went terribly wrong on our side")
-	}
-
-	iamObjectscale.InjectTokenToIAMClient(iamClient, &s.objClient, s.x509Client)
-	iamObjectscale.InjectAccountIDToIAMClient(iamClient, s.namespace)
 	userName := fmt.Sprintf("%v-user-%v", s.namespace, bucketName)
 
 	userGet, err := s.iamClient.GetUser(&iam.GetUserInput{UserName: &userName})
@@ -517,7 +544,7 @@ func (s *Server) DriverGrantBucketAccess(
 	}
 
 	// Check if policy for specific bucket exists.
-	policy, err := s.mgmtClient.Buckets().GetPolicy(bucketName, parameters)
+	policy, err := s.mgmtClient.Buckets().GetPolicy(bucketName, parametersCopy)
 	if err != nil && !errors.Is(err, model.Error{Code: model.CodeResourceNotFound}) {
 		errMsg := errors.New("failed to check bucket policy existence")
 		log.WithFields(log.Fields{
@@ -600,7 +627,7 @@ func (s *Server) DriverGrantBucketAccess(
 		return nil, status.Error(codes.Internal, errMsg.Error())
 	}
 
-	err = s.mgmtClient.Buckets().UpdatePolicy(bucketName, string(updateBucketPolicyJSON), parameters)
+	err = s.mgmtClient.Buckets().UpdatePolicy(bucketName, string(updateBucketPolicyJSON), parametersCopy)
 	if err != nil {
 		errMsg := errors.New("failed to update bucket policy")
 		log.WithFields(log.Fields{
@@ -779,7 +806,7 @@ func assembleCredentials(
 	secretsMap := make(map[string]string)
 	secretsMap[consts.S3SecretAccessKeyID] = *accessKey.AccessKey.AccessKeyId
 	secretsMap[consts.S3SecretAccessSecretKey] = *accessKey.AccessKey.SecretAccessKey
-	secretsMap[consts.s3Endpoint] = s3Endpoint
+	secretsMap[consts.S3Endpoint] = s3Endpoint
 
 	log.WithFields(log.Fields{
 		"user":        userName,
