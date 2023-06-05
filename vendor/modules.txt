@@ -110,7 +110,7 @@ github.com/cyphar/filepath-securejoin
 # github.com/davecgh/go-spew v1.1.1
 ## explicit
 github.com/davecgh/go-spew/spew
-# github.com/dell/goobjectscale v0.0.0-20230605084317-dc2db160b744
+# github.com/dell/goobjectscale v0.0.0-20230605102711-e304aba506eb
 ## explicit; go 1.20
 github.com/dell/goobjectscale/pkg/client/api
 github.com/dell/goobjectscale/pkg/client/fake

@@ -130,8 +130,8 @@ github.com/cyphar/filepath-securejoin v0.2.3/go.mod h1:aPGpWjXOXUn2NCNjFvBE6aRxG
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c=
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
-github.com/dell/goobjectscale v0.0.0-20230605084317-dc2db160b744 h1:GdtqepNi6pEEeOm5JEp4kNjTlMCQ8XLSGpLT43N1gHY=
-github.com/dell/goobjectscale v0.0.0-20230605084317-dc2db160b744/go.mod h1:pyos8k8Lr/ROjAxTdauTEi4joqOZN7YiOBDmbwTm1Q4=
+github.com/dell/goobjectscale v0.0.0-20230605102711-e304aba506eb h1:fvSY8hAH2SfIG3A1YcAO0s0IYjW+bxVOh91CSdM2L+U=
+github.com/dell/goobjectscale v0.0.0-20230605102711-e304aba506eb/go.mod h1:pyos8k8Lr/ROjAxTdauTEi4joqOZN7YiOBDmbwTm1Q4=
 github.com/denisenkom/go-mssqldb v0.9.0/go.mod h1:xbL0rPBG9cCiLr28tMa8zpbdarY27NDyej4t/EjAShU=
 github.com/dgrijalva/jwt-go v3.2.0+incompatible/go.mod h1:E3ru+11k8xSBh+hMPgOLZmtrrCbhqsmaPHjLKYnJCaQ=
 github.com/dgryski/go-sip13 v0.0.0-20181026042036-e10d5fee7954/go.mod h1:vAd38F8PWV+bWy6jNmig1y/TA+kYO4g3RSRF0IAv0no=
