@@ -150,6 +150,18 @@ func testDriverNew(t *testing.T) {
 			result:       fail,
 			errorMessage: regexp.MustCompile("empty protocol S3 endpoint"),
 		},
+		{
+			name:         "empty objectscale id",
+			config:       emptyObjectscaleIDConfig,
+			result:       fail,
+			errorMessage: regexp.MustCompile("empty objectscaleID"),
+		},
+		{
+			name:         "empty objectstore id",
+			config:       emptyObjectstoreIDConfig,
+			result:       fail,
+			errorMessage: regexp.MustCompile("empty objectstoreID"),
+		},
 	}
 
 	for _, tc := range testCases {

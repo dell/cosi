@@ -26,7 +26,9 @@ var (
 		Tls: config.Tls{
 			Insecure: true,
 		},
-		Region: aws.String("us-east-1"),
+		Region:        aws.String("us-east-1"),
+		ObjectscaleId: "valid.objectscale.id",
+		ObjectstoreId: "valid.objectstore.id",
 	}
 
 	invalidConfigWithHyphens = &config.Objectscale{
@@ -46,7 +48,9 @@ var (
 		Tls: config.Tls{
 			Insecure: true,
 		},
-		Region: aws.String("us-east-1"),
+		Region:        aws.String("us-east-1"),
+		ObjectscaleId: "valid.objectscale.id",
+		ObjectstoreId: "valid.objectstore.id",
 	}
 
 	invalidConfigEmptyID = &config.Objectscale{
@@ -66,7 +70,9 @@ var (
 		Tls: config.Tls{
 			Insecure: true,
 		},
-		Region: aws.String("us-east-1"),
+		Region:        aws.String("us-east-1"),
+		ObjectscaleId: "valid.objectscale.id",
+		ObjectstoreId: "valid.objectstore.id",
 	}
 
 	invalidConfigTLS = &config.Objectscale{
@@ -87,7 +93,9 @@ var (
 			Insecure: false,
 			RootCas:  &invalidBase64,
 		},
-		Region: aws.String("us-east-1"),
+		Region:        aws.String("us-east-1"),
+		ObjectscaleId: "valid.objectscale.id",
+		ObjectstoreId: "valid.objectstore.id",
 	}
 
 	emptyNamespaceConfig = &config.Objectscale{
@@ -107,7 +115,9 @@ var (
 		Tls: config.Tls{
 			Insecure: true,
 		},
-		Region: aws.String("us-east-1"),
+		Region:        aws.String("us-east-1"),
+		ObjectscaleId: "valid.objectscale.id",
+		ObjectstoreId: "valid.objectstore.id",
 	}
 	emptyUsernameConfig = &config.Objectscale{
 		Id:                 "valid.id",
@@ -126,7 +136,9 @@ var (
 		Tls: config.Tls{
 			Insecure: true,
 		},
-		Region: aws.String("us-east-1"),
+		Region:        aws.String("us-east-1"),
+		ObjectscaleId: "valid.objectscale.id",
+		ObjectstoreId: "valid.objectstore.id",
 	}
 	emptyPasswordConfig = &config.Objectscale{
 		Id:                 "valid.id",
@@ -145,7 +157,9 @@ var (
 		Tls: config.Tls{
 			Insecure: true,
 		},
-		Region: aws.String("us-east-1"),
+		Region:        aws.String("us-east-1"),
+		ObjectscaleId: "valid.objectscale.id",
+		ObjectstoreId: "valid.objectstore.id",
 	}
 	emptyRegionConfig = &config.Objectscale{
 		Id:                 "valid.id",
@@ -164,7 +178,9 @@ var (
 		Tls: config.Tls{
 			Insecure: true,
 		},
-		Region: aws.String(""),
+		Region:        aws.String(""),
+		ObjectscaleId: "valid.objectscale.id",
+		ObjectstoreId: "valid.objectstore.id",
 	}
 	regionNotSetConfig = &config.Objectscale{
 		Id:                 "valid.id",
@@ -183,7 +199,9 @@ var (
 		Tls: config.Tls{
 			Insecure: true,
 		},
-		Region: nil,
+		Region:        nil,
+		ObjectscaleId: "valid.objectscale.id",
+		ObjectstoreId: "valid.objectstore.id",
 	}
 	emptyObjectscaleGatewayConfig = &config.Objectscale{
 		Id:                 "valid.id",
@@ -202,7 +220,9 @@ var (
 		Tls: config.Tls{
 			Insecure: true,
 		},
-		Region: aws.String("us-east-1"),
+		Region:        aws.String("us-east-1"),
+		ObjectscaleId: "valid.objectscale.id",
+		ObjectstoreId: "valid.objectstore.id",
 	}
 	emptyObjectstoreGatewayConfig = &config.Objectscale{
 		Id:                 "valid.id",
@@ -221,7 +241,9 @@ var (
 		Tls: config.Tls{
 			Insecure: true,
 		},
-		Region: aws.String("us-east-1"),
+		Region:        aws.String("us-east-1"),
+		ObjectscaleId: "valid.objectscale.id",
+		ObjectstoreId: "valid.objectstore.id",
 	}
 	emptyS3EndpointConfig = &config.Objectscale{
 		Id:                 "valid.id",
@@ -240,6 +262,50 @@ var (
 		Tls: config.Tls{
 			Insecure: true,
 		},
-		Region: aws.String("us-east-1"),
+		Region:        aws.String("us-east-1"),
+		ObjectscaleId: "valid.objectscale.id",
+		ObjectstoreId: "valid.objectstore.id",
+	}
+	emptyObjectscaleIDConfig = &config.Objectscale{
+		Id:                 "valid.id",
+		ObjectscaleGateway: "gateway.objectscale.test",
+		ObjectstoreGateway: "gateway.objectstore.test",
+		Namespace:          "validnamespace",
+		Credentials: config.Credentials{
+			Username: "testuser",
+			Password: "testpassword",
+		},
+		Protocols: config.Protocols{
+			S3: &config.S3{
+				Endpoint: "s3.objectstore.test",
+			},
+		},
+		Tls: config.Tls{
+			Insecure: true,
+		},
+		Region:        aws.String("us-east-1"),
+		ObjectscaleId: "",
+		ObjectstoreId: "valid.objectstore.id",
+	}
+	emptyObjectstoreIDConfig = &config.Objectscale{
+		Id:                 "valid.id",
+		ObjectscaleGateway: "gateway.objectscale.test",
+		ObjectstoreGateway: "gateway.objectstore.test",
+		Namespace:          "validnamespace",
+		Credentials: config.Credentials{
+			Username: "testuser",
+			Password: "testpassword",
+		},
+		Protocols: config.Protocols{
+			S3: &config.S3{
+				Endpoint: "s3.objectstore.test",
+			},
+		},
+		Tls: config.Tls{
+			Insecure: true,
+		},
+		Region:        aws.String("us-east-1"),
+		ObjectscaleId: "valid.objectscale.id",
+		ObjectstoreId: "",
 	}
 )

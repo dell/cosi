@@ -39,6 +39,8 @@ var (
                 "namespace": "testnamespace",
                 "objectscale-gateway": "gateway.objectscale.test",
                 "objectstore-gateway": "gateway.objectstore.test",
+                "objectscale-id": "objectscale123",
+                "objectstore-id": "objectstore123",
                 "emptyBucket": false,
                 "protocols": {
                     "s3": {
@@ -64,6 +66,8 @@ var (
                 "namespace": "testnamespace",
                 "objectscale-gateway": "gateway.objectscale.test",
                 "objectstore-gateway": "gateway.objectstore.test",
+                "objectscale-id": "objectscale123",
+                "objectstore-id": "objectstore123",
                 "protocols": {
                     "s3": {
                         "endpoint": "test.endpoint"
@@ -86,6 +90,8 @@ var (
     namespace: testnamespace
     objectscale-gateway: gateway.objectscale.test
     objectstore-gateway: gateway.objectstore.test
+    objectscale-id: objectscale123
+    objectstore-id: objectstore123
     emptyBucket: false
     protocols:
       s3:
@@ -101,6 +107,8 @@ var (
     namespace: test-namespace
     objectscale-gateway: gateway.objectscale.test
     objectstore-gateway: gateway.objectstore.test
+    objectscale-id: objectscale123
+    objectstore-id: objectstore123
     emptyBucket: false
     protocols:
       s3:
