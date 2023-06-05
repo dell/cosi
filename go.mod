@@ -6,11 +6,16 @@ require (
 	github.com/aws/aws-sdk-go v1.44.271
 	github.com/bombsimon/logrusr/v4 v4.0.0
 <<<<<<< HEAD
+<<<<<<< HEAD
 	github.com/dell/goobjectscale v0.0.0-20230605102711-e304aba506eb
 =======
 	github.com/dell/goobjectscale v0.0.0-20230605084317-dc2db160b744
 	github.com/google/uuid v1.3.0
 >>>>>>> 365deba (Rebase on main)
+=======
+	github.com/dell/goobjectscale v0.0.0-20230605102711-e304aba506eb
+	github.com/google/uuid v1.3.0
+>>>>>>> 2fce5cf (correct vendor)
 	github.com/onsi/ginkgo/v2 v2.9.2
 	github.com/onsi/gomega v1.27.5
 	github.com/sirupsen/logrus v1.9.0
@@ -25,7 +30,7 @@ require (
 	k8s.io/apimachinery v0.26.3
 	k8s.io/client-go v0.26.3
 	sigs.k8s.io/container-object-storage-interface-api v0.1.0
-	sigs.k8s.io/container-object-storage-interface-provisioner-sidecar v0.1.0
+	sigs.k8s.io/container-object-storage-interface-provisioner-sidecar v0.1.1-0.20230130215648-c0cf9951ffc6
 	sigs.k8s.io/container-object-storage-interface-spec v0.1.1-0.20221006174327-ec782953b8ac
 )
 
