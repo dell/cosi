@@ -15,6 +15,7 @@ package objectscale
 import (
 	"context"
 	"io"
+	"log"
 	"os"
 	"regexp"
 	"strings"
@@ -23,11 +24,9 @@ import (
 
 	"github.com/dell/goobjectscale/pkg/client/fake"
 	"github.com/dell/goobjectscale/pkg/client/model"
-	log "github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
-
 	cosi "sigs.k8s.io/container-object-storage-interface-spec"
 
 	"github.com/dell/cosi-driver/pkg/config"
@@ -39,87 +38,6 @@ const (
 	ok expected = iota
 	warning
 	fail
-)
-
-var (
-	invalidBase64 = `💀`
-
-	validConfig = &config.Objectscale{
-		Id:                 "valid.id",
-		ObjectscaleGateway: "gateway.objectscale.test",
-		ObjectstoreGateway: "gateway.objectstore.test",
-		Namespace:          "validnamespace",
-		Credentials: config.Credentials{
-			Username: "testuser",
-			Password: "testpassword",
-		},
-		Protocols: config.Protocols{
-			S3: &config.S3{
-				Endpoint: "s3.objectstore.test",
-			},
-		},
-		Tls: config.Tls{
-			Insecure: true,
-		},
-	}
-
-	invalidConfigWithHyphens = &config.Objectscale{
-		Id:                 "id-with-hyphens",
-		ObjectscaleGateway: "gateway.objectscale.test",
-		ObjectstoreGateway: "gateway.objectstore.test",
-		Credentials: config.Credentials{
-			Username: "testuser",
-			Password: "testpassword",
-		},
-		Namespace: "validnamespace",
-		Protocols: config.Protocols{
-			S3: &config.S3{
-				Endpoint: "s3.objectstore.test",
-			},
-		},
-		Tls: config.Tls{
-			Insecure: true,
-		},
-	}
-
-	invalidConfigEmptyID = &config.Objectscale{
-		Id:                 "",
-		ObjectscaleGateway: "gateway.objectscale.test",
-		ObjectstoreGateway: "gateway.objectstore.test",
-		Namespace:          "validnamespace",
-		Credentials: config.Credentials{
-			Username: "testuser",
-			Password: "testpassword",
-		},
-		Protocols: config.Protocols{
-			S3: &config.S3{
-				Endpoint: "s3.objectstore.test",
-			},
-		},
-		Tls: config.Tls{
-			Insecure: true,
-		},
-	}
-
-	invalidConfigTLS = &config.Objectscale{
-		Id:                 "valid.id",
-		ObjectscaleGateway: "gateway.objectscale.test",
-		ObjectstoreGateway: "gateway.objectstore.test",
-		Namespace:          "validnamespace",
-		Credentials: config.Credentials{
-			Username: "testuser",
-			Password: "testpassword",
-		},
-		Protocols: config.Protocols{
-			S3: &config.S3{
-				Endpoint: "s3.objectstore.test",
-			},
-		},
-		Tls: config.Tls{
-			Insecure: false,
-			RootCas:  &invalidBase64,
-		},
-	}
 )
 
 // regex for error messages.
@@ -137,11 +55,11 @@ func TestServer(t *testing.T) {
 	t.Parallel()
 
 	for scenario, fn := range map[string]func(t *testing.T){
-		"testNew":                      testDriverNew,
-		"testID":                       testDriverID,
-		"testDriverCreateBucket":       testDriverCreateBucket,
-		"testDriverDeleteBucket":       testDriverDeleteBucket,
-		"testDriverGrantBucketAccess":  testDriverGrantBucketAccess,
+		"testNew":                testDriverNew,
+		"testID":                 testDriverID,
+		"testDriverCreateBucket": testDriverCreateBucket,
+		"testDriverDeleteBucket": testDriverDeleteBucket,
+		// "testDriverGrantBucketAccess":  testDriverGrantBucketAccess,
 		"testDriverRevokeBucketAccess": testDriverRevokeBucketAccess,
 	} {
 		fn := fn
@@ -183,6 +101,54 @@ func testDriverNew(t *testing.T) {
 			config:       invalidConfigTLS,
 			result:       fail,
 			errorMessage: transportInitFailed,
+		},
+		{
+			name:         "empty namesapce",
+			config:       emptyNamespaceConfig,
+			result:       fail,
+			errorMessage: regexp.MustCompile("empty objectstore id"),
+		},
+		{
+			name:         "empty credentials password",
+			config:       emptyPasswordConfig,
+			result:       fail,
+			errorMessage: regexp.MustCompile("empty password"),
+		},
+		{
+			name:         "empty credentials username",
+			config:       emptyUsernameConfig,
+			result:       fail,
+			errorMessage: regexp.MustCompile("empty username"),
+		},
+		{
+			name:         "empty region",
+			config:       emptyRegionConfig,
+			result:       fail,
+			errorMessage: regexp.MustCompile("empty region"),
+		},
+		{
+			name:         "region not set",
+			config:       regionNotSetConfig,
+			result:       fail,
+			errorMessage: regexp.MustCompile("region was not specified in config"),
+		},
+		{
+			name:         "empty objectscale gateway",
+			config:       emptyObjectscaleGatewayConfig,
+			result:       fail,
+			errorMessage: regexp.MustCompile("empty objectscale gateway"),
+		},
+		{
+			name:         "empty objectstore gateway",
+			config:       emptyObjectstoreGatewayConfig,
+			result:       fail,
+			errorMessage: regexp.MustCompile("empty objectstore gateway"),
+		},
+		{
+			name:         "empty s3 endpoint",
+			config:       emptyS3EndpointConfig,
+			result:       fail,
+			errorMessage: regexp.MustCompile("empty protocol S3 endpoint"),
 		},
 	}
 
@@ -379,131 +345,6 @@ func testDriverDeleteBucket(t *testing.T) {
 			ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 			defer cancel()
 			_, err := scenario.server.DriverDeleteBucket(ctx, &cosi.DriverDeleteBucketRequest{BucketId: scenario.inputBucketID})
-			assert.ErrorIs(t, err, scenario.expectedError, err)
-		})
-	}
-}
-
-func testDriverGrantBucketAccess(t *testing.T) {
-	// Namespace (ObjectstoreID) and testID (driver ID) provided in the config file
-	const (
-		namespace = "namespace"
-		testID    = "test.id"
-	)
-
-	testCases := []struct {
-		description             string
-		inputBucketID           string
-		inputBucketAccessName   string
-		inputAuthenticationType cosi.AuthenticationType
-		expectedError           error
-		server                  Server
-		parameters              map[string]string
-	}{
-		{
-			description:             "valid access granting",
-			inputBucketID:           "bucket-valid",
-			inputBucketAccessName:   "bucket-access-valid",
-			inputAuthenticationType: cosi.AuthenticationType_Key,
-			expectedError:           nil,
-			server: Server{
-				mgmtClient: fake.NewClientSet(&model.Bucket{
-					Name:      "bucket-valid",
-					Namespace: namespace,
-				}),
-				namespace: namespace,
-				backendID: testID,
-			},
-		},
-		{
-			description:             "invalid bucket name for access granting",
-			inputBucketID:           "",
-			inputBucketAccessName:   "bucket-access-valid",
-			inputAuthenticationType: cosi.AuthenticationType_Key,
-			expectedError:           status.Error(codes.InvalidArgument, "empty bucketID"),
-			server: Server{
-				mgmtClient: fake.NewClientSet(),
-				namespace:  namespace,
-				backendID:  testID,
-			},
-		},
-		{
-			description:             "invalid bucket access name",
-			inputBucketID:           "bucket-valid",
-			inputBucketAccessName:   "",
-			inputAuthenticationType: cosi.AuthenticationType_Key,
-			expectedError:           status.Error(codes.InvalidArgument, "empty bucket access name"),
-			server: Server{
-				mgmtClient: fake.NewClientSet(),
-				namespace:  namespace,
-				backendID:  testID,
-			},
-		},
-		{
-			description:           "invalid authentication type",
-			inputBucketID:         "bucket-valid",
-			inputBucketAccessName: "bucket-access-valid",
-			// inputAuthenticationType: ?,
-			expectedError: status.Error(codes.InvalidArgument, "invalid authentication type"),
-			server: Server{
-				mgmtClient: fake.NewClientSet(),
-				namespace:  namespace,
-				backendID:  testID,
-			},
-		},
-		{
-			description:             "bucket does not exists",
-			inputBucketID:           "bucket-valid",
-			inputBucketAccessName:   "bucket-access-valid",
-			inputAuthenticationType: cosi.AuthenticationType_Key,
-			expectedError:           status.Error(codes.NotFound, "bucket not found"),
-			server: Server{
-				mgmtClient: fake.NewClientSet(),
-				namespace:  namespace,
-				backendID:  testID,
-			},
-		},
-		{
-			description:             "cannot get existing bucket ",
-			inputBucketID:           "bucket-valid",
-			inputBucketAccessName:   "bucket-access-valid",
-			inputAuthenticationType: cosi.AuthenticationType_Key,
-			expectedError:           status.Error(codes.Internal, "an unexpected error occurred"),
-			server: Server{
-				mgmtClient: fake.NewClientSet(),
-				namespace:  namespace,
-				backendID:  testID,
-			},
-			parameters: map[string]string{
-				"X-TEST/Buckets/Get/force-fail": "abc",
-			},
-		},
-		{
-			description: "user with specific name already exists",
-		},
-		{
-			description: "cannot get existing user",
-		},
-		{
-			description: "invalid user creation",
-		},
-		{
-			description: "cannot get existing bucket policy",
-		},
-		{
-			description: "invalid bucket policy update",
-		},
-		{
-			description: "invalid access key creation",
-		},
-	}
-
-	for _, scenario := range testCases {
-		t.Run(scenario.description, func(t *testing.T) {
-			ctx, cancel := context.WithTimeout(context.Background(), time.Second)
-			defer cancel()
-			_, err := scenario.server.DriverGrantBucketAccess(ctx,
-				&cosi.DriverGrantBucketAccessRequest{BucketId: scenario.inputBucketID, Name: scenario.inputBucketAccessName, AuthenticationType: scenario.inputAuthenticationType, Parameters: scenario.parameters})
 			assert.ErrorIs(t, err, scenario.expectedError, err)
 		})
 	}

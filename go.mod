@@ -4,6 +4,7 @@ go 1.20
 
 require (
 	github.com/aws/aws-sdk-go v1.44.232
+	github.com/bombsimon/logrusr/v4 v4.0.0
 	github.com/dell/goobjectscale v0.0.0-20230505142708-35973c4161f9
 	github.com/google/uuid v1.3.0
 	github.com/onsi/ginkgo/v2 v2.9.2
@@ -20,6 +21,7 @@ require (
 	k8s.io/apimachinery v0.26.3
 	k8s.io/client-go v0.26.3
 	sigs.k8s.io/container-object-storage-interface-api v0.1.0
+	sigs.k8s.io/container-object-storage-interface-provisioner-sidecar v0.1.1-0.20230130215648-c0cf9951ffc6
 	sigs.k8s.io/container-object-storage-interface-spec v0.1.1-0.20221006174327-ec782953b8ac
 )
 

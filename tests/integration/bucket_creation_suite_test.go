@@ -39,18 +39,22 @@ var _ = Describe("Bucket Creation", Ordered, Label("create", "objectscale"), fun
 		myBucketClass = &v1alpha1.BucketClass{
 			TypeMeta: metav1.TypeMeta{
 				Kind:       "BucketClass",
-				APIVersion: "storage.k8s.io/v1",
+				APIVersion: "objectstorage.k8s.io/v1alpha1",
 			},
 			ObjectMeta: metav1.ObjectMeta{
 				Name: "my-bucket-class",
 			},
-			DeletionPolicy: "delete",
-			DriverName:     "cosi-driver",
+			DeletionPolicy: v1alpha1.DeletionPolicyDelete,
+			DriverName:     "cosi.dellemc.com",
 			Parameters: map[string]string{
 				"id": driverID,
 			},
 		}
 		validBucketClaim = &v1alpha1.BucketClaim{
+			TypeMeta: metav1.TypeMeta{
+				Kind:       "BucketClaim",
+				APIVersion: "objectstorage.k8s.io/v1alpha1",
+			},
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      "bucket-claim-valid",
 				Namespace: "namespace-1",
@@ -65,7 +69,7 @@ var _ = Describe("Bucket Creation", Ordered, Label("create", "objectscale"), fun
 		invalidBucketClaim = &v1alpha1.BucketClaim{
 			TypeMeta: metav1.TypeMeta{
 				Kind:       "BucketClaim",
-				APIVersion: "storage.k8s.io/v1",
+				APIVersion: "objectstorage.k8s.io/v1alpha1",
 			},
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      "bucket-claim-invalid",
@@ -97,9 +101,9 @@ var _ = Describe("Bucket Creation", Ordered, Label("create", "objectscale"), fun
 		By("Checking if the ObjectStore '${objectstoreName}' is created")
 		steps.CheckObjectStoreExists(ctx, objectscale, objectstoreName)
 
-		// STEP: Kubernetes namespace "driver-ns" is created
-		By("Checking if namespace 'driver-ns' is created")
-		steps.CreateNamespace(ctx, clientset, "driver-ns")
+		// STEP: Kubernetes namespace "cosi-driver" is created
+		By("Checking if namespace 'cosi-driver' is created")
+		steps.CreateNamespace(ctx, clientset, "cosi-driver")
 
 		// STEP: Kubernetes namespace "namespace-1" is created
 		By("Checking if namespace 'namespace-1' is created")
@@ -149,7 +153,6 @@ var _ = Describe("Bucket Creation", Ordered, Label("create", "objectscale"), fun
 
 		DeferCleanup(func(ctx SpecContext) {
 			steps.DeleteBucketClaimResource(ctx, bucketClient, validBucketClaim)
-			steps.DeleteBucket(objectscale, namespace, validBucket)
 		})
 	})
 

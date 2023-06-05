@@ -18,7 +18,6 @@ import (
 	. "github.com/onsi/ginkgo/v2"
 
 	"github.com/dell/cosi-driver/tests/integration/steps"
-	"github.com/dell/cosi-driver/tests/integration/utils"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/container-object-storage-interface-api/apis/objectstorage/v1alpha1"
@@ -39,16 +38,24 @@ var _ = Describe("Bucket Access KEY", Ordered, Label("key-flow", "objectscale"),
 	BeforeEach(func(ctx SpecContext) {
 		// Initialize variables
 		myBucketClass = &v1alpha1.BucketClass{
+			TypeMeta: metav1.TypeMeta{
+				Kind:       "BucketClass",
+				APIVersion: "objectstorage.k8s.io/v1alpha1",
+			},
 			ObjectMeta: metav1.ObjectMeta{
 				Name: "my-bucket-class",
 			},
-			DriverName:     "cosi-driver",
+			DriverName:     "cosi.dellemc.com",
 			DeletionPolicy: v1alpha1.DeletionPolicyDelete,
 			Parameters: map[string]string{
 				"id": driverID,
 			},
 		}
 		myBucketClaim = &v1alpha1.BucketClaim{
+			TypeMeta: metav1.TypeMeta{
+				Kind:       "BucketClaim",
+				APIVersion: "objectstorage.k8s.io/v1alpha1",
+			},
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      "my-bucket-claim",
 				Namespace: "namespace-1",
@@ -61,16 +68,24 @@ var _ = Describe("Bucket Access KEY", Ordered, Label("key-flow", "objectscale"),
 			},
 		}
 		myBucketAccessClass = &v1alpha1.BucketAccessClass{
+			TypeMeta: metav1.TypeMeta{
+				Kind:       "BucketAccessClass",
+				APIVersion: "objectstorage.k8s.io/v1alpha1",
+			},
 			ObjectMeta: metav1.ObjectMeta{
 				Name: "my-bucket-access-class",
 			},
-			DriverName:         "cosi-driver",
+			DriverName:         "cosi.dellemc.com",
 			AuthenticationType: v1alpha1.AuthenticationTypeKey,
 			Parameters: map[string]string{
 				"id": driverID,
 			},
 		}
 		myBucketAccess = &v1alpha1.BucketAccess{
+			TypeMeta: metav1.TypeMeta{
+				Kind:       "BucketAccess",
+				APIVersion: "objectstorage.k8s.io/v1alpha1",
+			},
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      "my-bucket-access",
 				Namespace: "namespace-1",
@@ -103,9 +118,9 @@ var _ = Describe("Bucket Access KEY", Ordered, Label("key-flow", "objectscale"),
 		By("Checking if the ObjectStore '${objectstoreName}' is created")
 		steps.CheckObjectStoreExists(ctx, objectscale, objectstoreName)
 
-		// STEP: Kubernetes namespace "driver-ns" is created
-		By("Checking if namespace 'driver-ns' is created")
-		steps.CreateNamespace(ctx, clientset, "driver-ns")
+		// STEP: Kubernetes namespace "cosi-driver" is created
+		By("Checking if namespace 'cosi-driver' is created")
+		steps.CreateNamespace(ctx, clientset, "cosi-driver")
 
 		// STEP: Kubernetes namespace "namespace-1" is created
 		By("Checking if namespace 'namespace-1' is created")
@@ -197,7 +212,6 @@ var _ = Describe("Bucket Access KEY", Ordered, Label("key-flow", "objectscale"),
 		DeferCleanup(func(ctx SpecContext) {
 			steps.DeleteBucketClassResource(ctx, bucketClient, myBucketClass)
 			steps.DeleteBucketClaimResource(ctx, bucketClient, myBucketClaim)
-			utils.DeleteReleasesAndNamespaces(ctx, clientset, map[string]string{"ns-driver": "cosi-driver"}, []string{"ns-driver"})
 		})
 	})
 })

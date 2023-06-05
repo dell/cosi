@@ -27,4 +27,17 @@ RUN make build
 FROM ${BASEIMAGE}@${DIGEST} AS final
 WORKDIR /cosi-driver
 COPY --from=builder /cosi-driver/build/cosi-driver .
+# Create a non-root user and set permissions on the binary
+RUN echo "cosi:*:1001:cosi-user" >> /etc/group && \
+    echo "cosi-user:*:1001:1001::/cosi-driver:/bin/false" >> /etc/passwd && \
+    chown 1001:1001 ./cosi-driver && \
+    chmod 0550 ./cosi-driver && \
+    mkdir -p /var/lib/cosi /cosi && \
+    chown -R 1001:1001 /var/lib/cosi /cosi
+# Run as non-root
+USER cosi-user
+# set volume mount point for app socket and config file
+VOLUME [ "/var/lib/cosi", "/cosi" ]
+# Disable healthcheck
+HEALTHCHECK NONE
 ENTRYPOINT ["./cosi-driver"]

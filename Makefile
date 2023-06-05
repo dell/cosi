@@ -73,4 +73,4 @@ lint:
 
 .PHONY: gofumpt
 gofumpt:
-	gofumpt -w cmd pkg tests util  
+	gofumpt -w cmd pkg tests   

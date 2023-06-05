@@ -17,13 +17,9 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/google/uuid"
 	"net/http"
 	"strings"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/session"
-	"github.com/aws/aws-sdk-go/service/iam"
 	driver "github.com/dell/cosi-driver/pkg/provisioner/virtualdriver"
 	objectscaleRest "github.com/dell/goobjectscale/pkg/client/rest"
 	objectscaleClient "github.com/dell/goobjectscale/pkg/client/rest/client"
@@ -32,26 +28,38 @@ import (
 	otelCodes "go.opentelemetry.io/otel/codes"
 	cosi "sigs.k8s.io/container-object-storage-interface-spec"
 
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/request"
+	"github.com/aws/aws-sdk-go/aws/session"
+	v4 "github.com/aws/aws-sdk-go/aws/signer/v4"
+	"github.com/aws/aws-sdk-go/service/iam"
+	"github.com/aws/aws-sdk-go/service/iam/iamiface"
 	"github.com/dell/cosi-driver/pkg/config"
 	"github.com/dell/cosi-driver/pkg/transport"
 	"github.com/dell/goobjectscale/pkg/client/api"
 	"github.com/dell/goobjectscale/pkg/client/model"
 	"go.opentelemetry.io/otel"
+	"sigs.k8s.io/container-object-storage-interface-provisioner-sidecar/pkg/consts"
+
+	"github.com/google/uuid"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
 
 const (
 	splitNumber = 2
-	// bucketVersion is used when sending the bucket policy update request
+	// bucketVersion is used when sending the bucket policy update request.
 	bucketVersion = "2012-10-17"
-	// allowEffect is used when updating the bucket policy, in order to grant permissions to user
+	// allowEffect is used when updating the bucket policy, in order to grant permissions to user.
 	allowEffect = "Allow"
 )
 
 // Server is implementation of driver.Driver interface for ObjectScale platform.
 type Server struct {
 	mgmtClient         api.ClientSet
+	iamClient          iamiface.IAMAPI
+	x509Client         http.Client
+	objClient          objectscaleClient.AuthUser
 	backendID          string
 	emptyBucket        bool
 	namespace          string
@@ -62,13 +70,13 @@ type Server struct {
 	objectStoreGateway string
 	objectScaleID      string
 	objectStoreID      string
-	s3Endpont          string
+	s3Endpoint         string
 }
 
 var _ driver.Driver = (*Server)(nil)
 
-// TODO: verify if emptiness verification can be moved to a separate function
 // New initializes server based on the config file.
+// TODO: verify if emptiness verification can be moved to a separate function
 func New(config *config.Objectscale) (*Server, error) {
 	id := config.Id
 	if id == "" {
@@ -142,8 +150,69 @@ func New(config *config.Objectscale) (*Server, error) {
 		},
 	)
 
+	x509Client := *http.DefaultClient
+	objClient := objectscaleClient.AuthUser{
+		Gateway:  objectscaleGateway,
+		Username: username,
+		Password: password,
+	}
+
+	handler := request.NamedHandler{
+		Name: iamObjectscale.SDSHandlerName,
+		Fn: func(r *request.Request) {
+			if !objClient.IsAuthenticated() {
+				err := objClient.Login(&x509Client)
+				if err != nil {
+					r.Error = err // no return intentional
+				}
+			}
+
+			token := objClient.Token()
+			r.HTTPRequest.Header.Add(iamObjectscale.SDSHeaderName, token)
+		},
+	}
+
+	iamSession, err := session.NewSessionWithOptions(
+		session.Options{
+			Config: aws.Config{
+				Endpoint:                      &objectstoreGateway,
+				Region:                        region,
+				CredentialsChainVerboseErrors: aws.Bool(true),
+				HTTPClient:                    &x509Client,
+			},
+		},
+	)
+
+	iamSession.Handlers.Sign.RemoveByName(v4.SignRequestHandler.Name)
+	swapped := iamSession.Handlers.Sign.SwapNamed(handler)
+
+	if !swapped {
+		iamSession.Handlers.Sign.PushFrontNamed(handler)
+	}
+
+	handler2 := request.NamedHandler{
+		Name: iamObjectscale.AccountIDHandlerName,
+		Fn: func(r *request.Request) {
+			r.HTTPRequest.Header.Add(iamObjectscale.AccountIDHeaderName, namespace)
+		},
+	}
+
+	swapped = iamSession.Handlers.Sign.SwapNamed(handler2)
+	if !swapped {
+		iamSession.Handlers.Sign.PushFrontNamed(handler2)
+	}
+
+	if err != nil {
+		return nil, fmt.Errorf("failed to create new IAM session: %w", err)
+	}
+
+	iamClient := iam.New(iamSession)
+
 	return &Server{
 		mgmtClient:         mgmtClient,
+		iamClient:          iamClient,
+		x509Client:         x509Client,
+		objClient:          objClient,
 		backendID:          id,
 		namespace:          namespace,
 		emptyBucket:        config.EmptyBucket,
@@ -152,7 +221,7 @@ func New(config *config.Objectscale) (*Server, error) {
 		region:             *region,
 		objectScaleGateway: objectscaleGateway,
 		objectStoreGateway: objectstoreGateway,
-		s3Endpont:          protocolS3Endpoint,
+		s3Endpoint:         protocolS3Endpoint,
 	}, nil
 }
 
@@ -321,20 +390,6 @@ func (s *Server) DriverDeleteBucket(ctx context.Context,
 	return &cosi.DriverDeleteBucketResponse{}, nil
 }
 
-//{
-//   "Id" : "S3PolicyId1",
-//   "Version" : "2012-10-17",
-//   "Statement" : [ {
-//   "Resource" : [ "arn:aws:s3:osci5b022e718aa7e0ff:osti202e682782ebcbfd:lynxbucket/*" ],
-//   "Sid" : "GetObject_permission",
-//   "Effect" : "Allow",
-//   "Principal" : {
-//      "AWS" : [ "urn:osc:iam::osai07c2ae318ae9d6f2:user/iam_user20230523061025118" ]
-//    },
-//    "Action" : [ "s3:GetObjectVersion" ]
-//} ]
-// }
-
 type principal struct {
 	AWS    []string `json:"AWS"`
 	Action []string `json:"Action"`
@@ -359,8 +414,7 @@ func (s *Server) DriverGrantBucketAccess(
 	ctx context.Context,
 	req *cosi.DriverGrantBucketAccessRequest,
 ) (*cosi.DriverGrantBucketAccessResponse, error) {
-	// TODO: think about more spans' info
-	_, span := otel.Tracer("GrantBucketAccessRequest").Start(ctx, "ObjectscaleDriverGrantBucketAccess")
+	ctx, span := otel.Tracer("GrantBucketAccessRequest").Start(ctx, "ObjectscaleDriverGrantBucketAccess")
 	defer span.End()
 
 	// Check if bucketID is not empty.
@@ -385,7 +439,7 @@ func (s *Server) DriverGrantBucketAccess(
 		return nil, status.Error(codes.InvalidArgument, err.Error())
 	}
 
-	//TODO: after adding IAM the flow here could be if auth type key -> run key, if auth type iam -> run IAM, else error
+	// TODO: after adding IAM the flow here could be if auth type key -> run key, if auth type iam -> run IAM, else error
 	// Check authentication type.
 	if req.GetAuthenticationType() == cosi.AuthenticationType_UnknownAuthenticationType {
 		err := errors.New("invalid authentication type")
@@ -409,26 +463,25 @@ func (s *Server) DriverGrantBucketAccess(
 		"bucket":        bucketName,
 		"bucket_access": req.Name,
 	}).Info("bucket access for bucket is being created")
-	// Display all request parameters.
 
 	parameters := ""
 	parametersCopy := make(map[string]string)
-
 	for key, value := range req.GetParameters() {
 		parameters += key + ":" + value + ";"
 		parametersCopy[key] = value
 	}
-
 	parametersCopy["namespace"] = s.namespace
 
 	log.WithFields(log.Fields{
 		"parameters": parameters,
 	}).Info("parameters of the bucket")
+
 	// Check if bucket for granting access exists.
 	_, err := s.mgmtClient.Buckets().Get(bucketName, parametersCopy)
-	if err != nil && !errors.Is(err, model.Error{Code: model.CodeResourceNotFound}) {
+	if err != nil && !errors.Is(err, model.Error{Code: model.CodeParameterNotFound}) {
 		log.WithFields(log.Fields{
 			"bucket": bucketName,
+			"error":  err,
 		}).Error("failed to check bucket existence")
 
 		span.RecordError(err)
@@ -438,6 +491,7 @@ func (s *Server) DriverGrantBucketAccess(
 	} else if err != nil {
 		log.WithFields(log.Fields{
 			"bucket": bucketName,
+			"error":  err,
 		}).Error("bucket not found")
 
 		span.RecordError(err)
@@ -445,186 +499,165 @@ func (s *Server) DriverGrantBucketAccess(
 
 		return nil, status.Error(codes.NotFound, "bucket not found")
 	}
-	// Create user.
-	x509Client := *http.DefaultClient
-	objClient := objectscaleClient.AuthUser{
-		Gateway:  s.objectScaleGateway,
-		Username: s.username,
-		Password: s.password,
-	}
-	iamSession, err := session.NewSession(&aws.Config{
-		Endpoint:                      &s.objectStoreGateway,
-		Region:                        &s.region,
-		CredentialsChainVerboseErrors: aws.Bool(true),
-		HTTPClient:                    &x509Client,
-	},
-	)
-	if err != nil {
+
+	userName := fmt.Sprintf("%v-user-%v", s.namespace, bucketName)
+
+	userGet, err := s.iamClient.GetUser(&iam.GetUserInput{UserName: &userName})
+	if err != nil && err.Error() != iam.ErrCodeNoSuchEntityException {
+		errMsg := errors.New("failed to check for user existence")
 		log.WithFields(log.Fields{
-			"endpoint": s.objectStoreGateway,
-			"region":   s.region,
-		}).Error("cannot create session")
+			"user":  userName,
+			"error": err,
+		}).Error(errMsg.Error())
 
 		span.RecordError(err)
-		span.SetStatus(otelCodes.Error, "cannot create session")
+		span.SetStatus(otelCodes.Error, errMsg.Error())
 
-		return nil, status.Error(codes.Internal, "cannot create session")
+		return nil, status.Error(codes.Internal, "failed to check for user existence")
 	}
 
-	iamClient := iam.New(iamSession)
-	iamObjectscale.InjectTokenToIAMClient(iamClient, &objClient, x509Client)
-	// TODO: error handling
-	iamObjectscale.InjectAccountIDToIAMClient(iamClient, s.namespace)
-	// TODO: error handling
-	userName := fmt.Sprintf("%v-user-%v", s.namespace, bucketName)
-	user, err := iamClient.CreateUser(&iam.CreateUserInput{
-		UserName: &userName,
-	})
-	// add idempotency case (user exists)
-	if err != nil {
+	if userGet != nil && *userGet.User.UserName == userName {
 		log.WithFields(log.Fields{
 			"user": userName,
-		}).Error("cannot create user")
+		}).Warn("user already exists")
+	} else {
+		user, err := s.iamClient.CreateUserWithContext(ctx, &iam.CreateUserInput{
+			UserName: &userName,
+		})
+		// add idempotency case (user exists)
+		if err != nil {
+			log.WithFields(log.Fields{
+				"user":  userName,
+				"error": err,
+			}).Error("cannot create user")
 
-		span.RecordError(err)
-		span.SetStatus(otelCodes.Error, "cannot create user")
+			span.RecordError(err)
+			span.SetStatus(otelCodes.Error, "cannot create user")
 
-		return nil, status.Error(codes.Internal, fmt.Sprintf("cannot create user %s", userName))
+			return nil, status.Error(codes.Internal, fmt.Sprintf("cannot create user %s", userName))
+		}
+
+		log.WithFields(log.Fields{
+			"user":   userName,
+			"userId": user.User.UserId,
+		}).Info("ObjectScale IAM user was created")
 	}
 
-	log.WithFields(log.Fields{
-		"user":   userName,
-		"userId": user.User.UserId,
-	}).Info("ObjectScale IAM user was created")
-
 	// Check if policy for specific bucket exists.
-	_, err = s.mgmtClient.Buckets().GetPolicy(bucketName, parametersCopy)
+	policy, err := s.mgmtClient.Buckets().GetPolicy(bucketName, parametersCopy)
 	if err != nil && !errors.Is(err, model.Error{Code: model.CodeResourceNotFound}) {
+		errMsg := errors.New("failed to check bucket policy existence")
 		log.WithFields(log.Fields{
 			"bucket": bucketName,
-		}).Error("failed to check bucket policy existence")
+			"error":  err,
+		}).Error(errMsg.Error())
 
 		span.RecordError(err)
-		span.SetStatus(otelCodes.Error, "failed to check bucket policy existence")
+		span.SetStatus(otelCodes.Error, errMsg.Error())
 
-		return nil, status.Error(codes.Internal, "an unexpected error occurred")
-		// Even if we get no error, the policy can be empty, e.g. we get a 200 OK response and empty policy
+		return nil, status.Error(codes.Internal, errMsg.Error())
 	} else if err == nil {
+		// TODO: this block is not necessary
+		// Even if we get no error, the policy can be empty, e.g. we get a 200 OK response and empty policy
 		log.WithFields(log.Fields{
 			"bucket": bucketName,
 		}).Info("bucket policy already exists")
 	}
 
-	policyID, err := uuid.NewUUID()
-	if err != nil {
-		log.WithFields(log.Fields{
-			"bucket": bucketName,
-		}).Error("failed to generate PolicyID UUID")
+	policyRequest := updateBucketPolicyRequest{}
+	if policy != "" {
+		err = json.NewDecoder(strings.NewReader(policy)).Decode(&policyRequest)
+		if err != nil {
+			errMsg := errors.New("failed to decode existing bucket policy")
+			log.WithFields(log.Fields{
+				"bucket": bucketName,
+				"policy": policy,
+				"error":  err,
+			}).Error(errMsg.Error())
 
-		span.RecordError(err)
-		span.SetStatus(otelCodes.Error, "failed to generate PolicyID UUID")
+			span.RecordError(err)
+			span.SetStatus(otelCodes.Error, errMsg.Error())
 
-		return nil, status.Error(codes.Internal, "failed to update bucket policy")
+			return nil, status.Error(codes.Internal, errMsg.Error())
+		}
 	}
 
-	if policyID.String() == "" {
-		errMsg := errors.New("generated PolicyID was empty")
+	// Update policy.
+	awsBucketResourceARN := fmt.Sprintf("arn:aws:s3:%s:%s:%s/*", s.objectScaleID, s.objectStoreID, bucketName)
+	awsPrincipalString := fmt.Sprintf("urn:osc:iam::%s:user/%s", s.namespace, userName)
+	policyRequest.Statement = parsePolicyStatement(
+		ctx, policyRequest.Statement, awsBucketResourceARN, awsPrincipalString,
+	)
+
+	log.WithFields(log.Fields{
+		"awsBucketResourceARN": awsBucketResourceARN,
+		"awsPrincipalString":   awsPrincipalString,
+		"statement":            policyRequest.Statement,
+	}).Info("policy request statement was parsed")
+
+	if policyRequest.PolicyID == "" {
+		policyID, err := generatePolicyID(ctx, bucketName)
+		if err != nil {
+			return nil, status.Error(codes.Internal, err.Error())
+		}
+
+		log.WithFields(log.Fields{
+			"policy": policyRequest,
+		}).Infof("policyID %v was generated", policyID)
+		span.AddEvent("policyID was generated")
+	}
+
+	if policyRequest.Version == "" {
+		policyRequest.Version = bucketVersion
+	}
+
+	// Marshal the struct to JSON to confirm JSON validity
+	updateBucketPolicyJSON, err := json.Marshal(policyRequest)
+	if err != nil {
+		errMsg := errors.New("failed to marshal updateBucketPolicyRequest into JSON")
 		log.WithFields(log.Fields{
 			"bucket":   bucketName,
-			"PolicyID": policyID,
+			"PolicyID": policyRequest.PolicyID,
+			"error":    err,
 		}).Error(errMsg.Error())
 
-		span.RecordError(errMsg)
+		span.RecordError(err)
 		span.SetStatus(otelCodes.Error, errMsg.Error())
 
 		return nil, status.Error(codes.Internal, errMsg.Error())
 	}
 
-	awsBucketResourceARN := fmt.Sprintf("arn:aws:s3:%s:%s:%s/*", s.objectScaleID, s.objectStoreID, bucketName)
-	awsPrincipalString := fmt.Sprintf("urn:osc:iam::%s:user/%s", s.namespace, userName)
-
-	bucketPolicy := updateBucketPolicyRequest{
-		PolicyID: policyID.String(),
-		Version:  bucketVersion,
-		Statement: []updateBucketPolicyStatement{
-			{
-				Resource: []string{awsBucketResourceARN},
-				Effect:   allowEffect,
-				Principal: principal{
-					AWS:    []string{awsPrincipalString},
-					Action: []string{"*"},
-				},
-			},
-		},
-	}
-
-	// Marshal the struct to JSON to confirm JSON validity
-	updateBucketPolicyJson, err := json.Marshal(bucketPolicy)
+	err = s.mgmtClient.Buckets().UpdatePolicy(bucketName, string(updateBucketPolicyJSON), parametersCopy)
 	if err != nil {
-		errMsg := errors.New("failed to marshal updateBucketPolicyRequest into JSON")
+		errMsg := errors.New("failed to update bucket policy")
 		log.WithFields(log.Fields{
-			"bucket":   bucketName,
-			"PolicyID": policyID,
-		}).Error(errMsg)
+			"bucket": bucketName,
+			"policy": updateBucketPolicyJSON,
+			"error":  err,
+		}).Error(errMsg.Error())
 
 		span.RecordError(err)
 		span.SetStatus(otelCodes.Error, errMsg.Error())
 
-		return nil, status.Error(codes.Internal, fmt.Sprintf("%s: %e", errMsg.Error(), err))
+		return nil, status.Error(codes.Internal, errMsg.Error())
 	}
 
-	err = s.mgmtClient.Buckets().UpdatePolicy(bucketName, string(updateBucketPolicyJson), parametersCopy)
+	accessKey, err := s.iamClient.CreateAccessKey(&iam.CreateAccessKeyInput{UserName: &userName})
 	if err != nil {
+		errMsg := errors.New("failed to create access key")
 		log.WithFields(log.Fields{
-			"bucket": bucketName,
-			"policy": updateBucketPolicyJson,
-		}).Error("failed to update policy")
+			"user":  userName,
+			"error": err,
+		}).Error(errMsg.Error())
 
 		span.RecordError(err)
-		span.SetStatus(otelCodes.Error, "failed to update policy")
+		span.SetStatus(otelCodes.Error, errMsg.Error())
 
-		return nil, status.Error(codes.Internal, fmt.Sprintf("failed to update bucket policy: %e", err))
+		return nil, status.Error(codes.Internal, errMsg.Error())
 	}
 
-	// Create access key.
-	requestModel := &model.ObjectUserSecretKeyCreateReq{
-		SecretKey: "",          // ?
-		Namespace: s.namespace, // TODO: variables regarding the namespace should be renamed to smth like AccountID
-	}
-
-	secret, err := s.mgmtClient.ObjectUser().CreateSecret(userName, *requestModel, parametersCopy)
-	if err != nil {
-		log.WithFields(log.Fields{
-			"user":   userName,
-			"secret": requestModel.SecretKey,
-		}).Error("failed to create the secret key")
-
-		span.RecordError(err)
-		span.SetStatus(otelCodes.Error, "failed to create the secret key")
-
-		return nil, status.Error(codes.Internal, "failed to create the secret key")
-	}
-
-	// Assemble credential details and add to credentialRepo
-	secretsMap := make(map[string]string)
-	secretsMap["accessKeyID"] = userName
-	secretsMap["accessSecretKey"] = secret.SecretKey
-	secretsMap["endpoint"] = s.s3Endpont
-
-	log.WithFields(log.Fields{
-		"user":      userName,
-		"secretKey": secret.SecretKey,
-		"endpoint":  s.s3Endpont,
-	}).Info("secret access key for user with endpoint was created")
-
-	credentialDetails := cosi.CredentialDetails{Secrets: secretsMap}
-	credentials := make(map[string]*cosi.CredentialDetails)
-	credentials["s3"] = &credentialDetails // ?
-
-	log.WithFields(log.Fields{
-		"bucket": bucketName,
-		"user":   userName,
-	}).Info("access to the bucket for user successfully granted")
+	// TODO: can credentials have empty values? if no, should we check any specific fields for non-emptiness?
+	credentials := assembleCredentials(ctx, accessKey, s.s3Endpoint, userName, bucketName)
 
 	return &cosi.DriverGrantBucketAccessResponse{AccountId: userName, Credentials: credentials}, nil
 }
@@ -641,4 +674,158 @@ func (s *Server) DriverRevokeBucketAccess(ctx context.Context,
 	span.SetStatus(otelCodes.Error, err.Error())
 
 	return nil, status.Error(codes.Unimplemented, err.Error())
+}
+
+// parsePolicyStatement generates new bucket policy statements array with updated resource and principal.
+func parsePolicyStatement(
+	ctx context.Context,
+	inputStatements []updateBucketPolicyStatement,
+	awsBucketResourceARN,
+	awsPrincipalString string,
+) []updateBucketPolicyStatement {
+	_, span := otel.Tracer("GrantBucketAccessRequest").Start(ctx, "ObjectscaleParsePolicyStatement")
+	defer span.End()
+
+	outputStatements := []updateBucketPolicyStatement{}
+
+	if inputStatements != nil && len(inputStatements) > 0 {
+		outputStatements = inputStatements
+	}
+
+	for _, statement := range outputStatements {
+		foundResource := false
+
+		if statement.Resource == nil {
+			statement.Resource = []string{}
+		}
+
+		for _, r := range statement.Resource {
+			if r == awsBucketResourceARN {
+				foundResource = true
+			}
+		}
+
+		if !foundResource {
+			statement.Resource = append(statement.Resource, awsBucketResourceARN)
+		}
+
+		span.AddEvent("update resource in policy statement")
+
+		if statement.Effect == "" {
+			statement.Effect = allowEffect
+		}
+
+		foundPrincipal := false
+
+		if statement.Principal.AWS == nil {
+			statement.Principal.AWS = []string{}
+		}
+
+		for _, p := range statement.Principal.AWS {
+			if p == awsPrincipalString {
+				foundPrincipal = true
+			}
+		}
+
+		if !foundPrincipal {
+			statement.Principal.AWS = append(statement.Principal.AWS, awsPrincipalString)
+		}
+
+		span.AddEvent("update principal AWS in policy statement")
+
+		// TODO: shouldn't action be validated with params? Maybe we only want to grant read access by default?
+		// if yes, then this should be done later, when we have more info about the params (MVP is to grant all permissions)
+		foundAction := false
+
+		if statement.Principal.Action == nil {
+			statement.Principal.Action = []string{}
+		}
+
+		for _, a := range statement.Principal.Action {
+			if a == "*" {
+				foundAction = true
+			}
+		}
+
+		if !foundAction {
+			statement.Principal.Action = append(statement.Principal.Action, "*")
+		}
+
+		span.AddEvent("update principal action in policy statement")
+	}
+
+	return outputStatements
+}
+
+// generatePolicyID creates new policy for the bucket.
+func generatePolicyID(ctx context.Context, bucketName string) (*uuid.UUID, error) {
+	_, span := otel.Tracer("GrantBucketAccessRequest").Start(ctx, "ObjectscaleGeneratePolicyID")
+	defer span.End()
+
+	policyID, err := uuid.NewUUID()
+	if err != nil {
+		errMsg := errors.New("failed to generate PolicyID UUID")
+		log.WithFields(log.Fields{
+			"bucket": bucketName,
+			"error":  err,
+		}).Error(errMsg.Error())
+
+		span.RecordError(err)
+		span.SetStatus(otelCodes.Error, errMsg.Error())
+
+		return nil, errMsg
+	}
+
+	if policyID.String() == "" {
+		errMsg := errors.New("generated PolicyID was empty")
+		log.WithFields(log.Fields{
+			"bucket":   bucketName,
+			"PolicyID": policyID,
+		}).Error(errMsg.Error())
+
+		span.RecordError(errMsg)
+		span.SetStatus(otelCodes.Error, errMsg.Error())
+
+		return nil, errMsg
+	}
+
+	return &policyID, nil
+}
+
+// assembleCredentials assembles credentials details and adds them to the credentialRepo.
+func assembleCredentials(
+	ctx context.Context,
+	accessKey *iam.CreateAccessKeyOutput,
+	s3Endpoint,
+	userName,
+	bucketName string,
+) map[string]*cosi.CredentialDetails {
+	_, span := otel.Tracer("GrantBucketAccessRequest").Start(ctx, "ObjectscaleAssembeCredentials")
+	defer span.End()
+
+	secretsMap := make(map[string]string)
+	secretsMap[consts.S3SecretAccessKeyID] = *accessKey.AccessKey.AccessKeyId
+	secretsMap[consts.S3SecretAccessSecretKey] = *accessKey.AccessKey.SecretAccessKey
+	secretsMap[consts.S3Endpoint] = s3Endpoint
+
+	log.WithFields(log.Fields{
+		"user":        userName,
+		"secretKeyId": *accessKey.AccessKey.AccessKeyId,
+		"endpoint":    s3Endpoint,
+	}).Info("secret access key for user with endpoint was created")
+
+	span.AddEvent("secret access key for user with endpoint was created")
+
+	credentialDetails := cosi.CredentialDetails{Secrets: secretsMap}
+	credentials := make(map[string]*cosi.CredentialDetails)
+	credentials["s3"] = &credentialDetails // ?
+
+	log.WithFields(log.Fields{
+		"bucket": bucketName,
+		"user":   userName,
+	}).Info("access to the bucket for user successfully granted")
+
+	span.AddEvent("access to the bucket for user successfully granted")
+
+	return credentials
 }
