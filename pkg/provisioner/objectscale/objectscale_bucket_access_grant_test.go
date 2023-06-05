@@ -433,3 +433,124 @@ func TestValidButUserAlreadyExists(t *testing.T) {
 	assert.ErrorIs(t, err, nil, err)
 	assert.NotNil(t, response)
 }
+
+func TestFailToGetExistingPolicy(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*100) // Magic value,... abra kadabra
+	defer cancel()
+
+	// That's how we can mock the objectscale IAM api client
+	IAMClient := iamfaketoo.NewIAMAPI(t)
+	IAMClient.On("CreateUserWithContext", mock.Anything, mock.Anything).Return(
+		&iam.CreateUserOutput{
+			User: &iam.User{
+				UserName: aws.String("namespace-user-valid"), // This mocked response is based on `namesapce` from server and bucketId from request
+			},
+		}, nil).Once()
+	IAMClient.On("GetUser", mock.Anything).Return(nil, nil).Once()
+
+	server := Server{
+		mgmtClient: fake.NewClientSet(&model.Bucket{ // That's how we can mock the objectscale bucket api client
+			Name:      "valid", // This is based on "bucket-valid" BucketId from request
+			Namespace: namespace,
+		}),
+		iamClient:     IAMClient, // Inject mocked IAM client
+		namespace:     namespace,
+		backendID:     testID,
+		objectScaleID: objectScaleID,
+		objectStoreID: objectStoreID,
+	}
+
+	req := &cosi.DriverGrantBucketAccessRequest{
+		BucketId:           "bucket-valid",
+		Name:               "bucket-access-valid",
+		AuthenticationType: cosi.AuthenticationType_Key,
+		Parameters: map[string]string{
+			"X-TEST/Buckets/GetPolicy/force-fail": "true", // This is mocking response from objectscale bucket api client
+		},
+	}
+
+	response, err := server.DriverGrantBucketAccess(ctx, req)
+	assert.ErrorIs(t, err, status.Error(codes.Internal, "failed to check bucket policy existence"), err)
+	assert.Nil(t, response)
+}
+
+func TestInvalidPolicyJSON(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*100) // Magic value,... abra kadabra
+	defer cancel()
+
+	// That's how we can mock the objectscale IAM api client
+	IAMClient := iamfaketoo.NewIAMAPI(t)
+	IAMClient.On("CreateUserWithContext", mock.Anything, mock.Anything).Return(
+		&iam.CreateUserOutput{
+			User: &iam.User{
+				UserName: aws.String("namespace-user-valid"), // This mocked response is based on `namesapce` from server and bucketId from request
+			},
+		}, nil).Once()
+	IAMClient.On("GetUser", mock.Anything).Return(nil, nil).Once()
+
+	server := Server{
+		mgmtClient: fake.NewClientSet(&model.Bucket{ // That's how we can mock the objectscale bucket api client
+			Name:      "valid", // This is based on "bucket-valid" BucketId from request
+			Namespace: namespace,
+		}, &fake.BucketPolicy{
+			BucketName: "valid",
+			Policy:     "}",
+			Namespace:  namespace,
+		}),
+		iamClient:     IAMClient, // Inject mocked IAM client
+		namespace:     namespace,
+		backendID:     testID,
+		objectScaleID: objectScaleID,
+		objectStoreID: objectStoreID,
+	}
+
+	req := &cosi.DriverGrantBucketAccessRequest{
+		BucketId:           "bucket-valid",
+		Name:               "bucket-access-valid",
+		AuthenticationType: cosi.AuthenticationType_Key,
+		Parameters:         map[string]string{},
+	}
+
+	response, err := server.DriverGrantBucketAccess(ctx, req)
+	assert.ErrorIs(t, err, status.Error(codes.Internal, "failed to decode existing bucket policy"), err)
+	assert.Nil(t, response)
+}
+
+// FIXME: This test is not working as expected, it should fail to marshal policy, try different invalid characters in bucket name
+func TestFailToMarshalPolicy(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*100) // Magic value,... abra kadabra
+	defer cancel()
+
+	// That's how we can mock the objectscale IAM api client
+	IAMClient := iamfaketoo.NewIAMAPI(t)
+	IAMClient.On("CreateUserWithContext", mock.Anything, mock.Anything).Return(
+		&iam.CreateUserOutput{
+			User: &iam.User{
+				UserName: aws.String("namespace-user-valid\t"), // This mocked response is based on `namesapce` from server and bucketId from request
+			},
+		}, nil).Once()
+	IAMClient.On("GetUser", mock.Anything).Return(nil, nil).Once()
+
+	server := Server{
+		mgmtClient: fake.NewClientSet(&model.Bucket{ // That's how we can mock the objectscale bucket api client
+			Name:      "valid\u2019", // This is based on "bucket-valid" BucketId from request
+			Namespace: namespace,
+		}),
+		iamClient:     IAMClient, // Inject mocked IAM client
+		namespace:     namespace,
+		backendID:     testID,
+		objectScaleID: objectScaleID,
+		objectStoreID: objectStoreID,
+	}
+
+	req := &cosi.DriverGrantBucketAccessRequest{
+		BucketId:           "bucket-valid\u2019",
+		Name:               "bucket-access-valid",
+		AuthenticationType: cosi.AuthenticationType_Key,
+		Parameters:         map[string]string{},
+	}
+
+	response, err := server.DriverGrantBucketAccess(ctx, req)
+	assert.ErrorIs(t, err, status.Error(codes.Internal, "failed to marshal updateBucketPolicyRequest into JSON"), err)
+	assert.Nil(t, response)
+}
