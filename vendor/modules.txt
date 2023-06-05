@@ -24,7 +24,7 @@ github.com/Masterminds/squirrel
 # github.com/asaskevich/govalidator v0.0.0-20200428143746-21a406dcc535
 ## explicit; go 1.12
 github.com/asaskevich/govalidator
-# github.com/aws/aws-sdk-go v1.44.232
+# github.com/aws/aws-sdk-go v1.44.271
 ## explicit; go 1.11
 github.com/aws/aws-sdk-go/aws
 github.com/aws/aws-sdk-go/aws/awserr
@@ -110,8 +110,8 @@ github.com/cyphar/filepath-securejoin
 # github.com/davecgh/go-spew v1.1.1
 ## explicit
 github.com/davecgh/go-spew/spew
-# github.com/dell/goobjectscale v0.0.0-20230505142708-35973c4161f9
-## explicit; go 1.18
+# github.com/dell/goobjectscale v0.0.0-20230605084317-dc2db160b744
+## explicit; go 1.20
 github.com/dell/goobjectscale/pkg/client/api
 github.com/dell/goobjectscale/pkg/client/fake
 github.com/dell/goobjectscale/pkg/client/model
@@ -121,7 +121,6 @@ github.com/dell/goobjectscale/pkg/client/rest/buckets
 github.com/dell/goobjectscale/pkg/client/rest/client
 github.com/dell/goobjectscale/pkg/client/rest/crr
 github.com/dell/goobjectscale/pkg/client/rest/federatedobjectstores
-github.com/dell/goobjectscale/pkg/client/rest/iam
 github.com/dell/goobjectscale/pkg/client/rest/objectuser
 github.com/dell/goobjectscale/pkg/client/rest/objmt
 github.com/dell/goobjectscale/pkg/client/rest/status
@@ -474,13 +473,9 @@ github.com/spf13/cobra
 # github.com/spf13/pflag v1.0.5
 ## explicit; go 1.12
 github.com/spf13/pflag
-# github.com/stretchr/objx v0.5.0
-## explicit; go 1.12
-github.com/stretchr/objx
-# github.com/stretchr/testify v1.8.2
-## explicit; go 1.13
+# github.com/stretchr/testify v1.8.4
+## explicit; go 1.20
 github.com/stretchr/testify/assert
-github.com/stretchr/testify/mock
 # github.com/xeipuuv/gojsonpointer v0.0.0-20180127040702-4e3ac2762d5f
 ## explicit
 github.com/xeipuuv/gojsonpointer
@@ -1107,9 +1102,6 @@ sigs.k8s.io/container-object-storage-interface-api/apis/objectstorage/v1alpha1
 sigs.k8s.io/container-object-storage-interface-api/client/clientset/versioned
 sigs.k8s.io/container-object-storage-interface-api/client/clientset/versioned/scheme
 sigs.k8s.io/container-object-storage-interface-api/client/clientset/versioned/typed/objectstorage/v1alpha1
-# sigs.k8s.io/container-object-storage-interface-provisioner-sidecar v0.1.1-0.20230130215648-c0cf9951ffc6
-## explicit; go 1.18
-sigs.k8s.io/container-object-storage-interface-provisioner-sidecar/pkg/consts
 # sigs.k8s.io/container-object-storage-interface-spec v0.1.1-0.20221006174327-ec782953b8ac
 ## explicit; go 1.18
 sigs.k8s.io/container-object-storage-interface-spec
