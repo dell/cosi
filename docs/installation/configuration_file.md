@@ -49,41 +49,78 @@ connections:
       password: testpassword
 
     # Namespace associated with the user/tenant that is allowed to access the bucket.
+    # It can be retrieved from the ObjectScale Portal, under the Accounts tab.
     #
     # How to:
-    #   It can be retrieved from the ObjectScale Portal, under the Accounts tab.
-    #   TODO: add more details
+    #   1. Login into ObjectScale Portal;
+    #   2. Select Accounts tab in the panel on the left side of your screen;
+    #   3. You should now see list of accounts. Select one of the values from column called 'Account ID'.
     #
     # REQUIRED
     namespace: osaia3382ab190a7a3df
 
-    # The ID of the Objectscale the driver should communicate with.
+    # The ID of the ObjectScale the driver should communicate with.
+    # It can be retrieved from the ObjectScale Portal, under the ObjectScale tab.
     #
     # How to:
-    #   It can be retrieved from the ObjectScale Portal, under the ObjectStore tab.
-    #   TODO: add more details
+    #   1. Login into ObjectScale Portal;
+    #   2. From the menu on left side of the screen select 'Administration' tab;
+    #   3. After unfolding 'Administration' tab enter 'ObjectScale' page;
+    #   4. Select 'Federation' tab;
+    #   5. In the table you will see value under 'ObjectScale ID' column.
     #
     # REQUIRED
     objectscale-id: osci809ccd51aade874b
 
-    # The ID of the Objectstore under specific Objectscale, with which the driver should communicate.
+    # The ID of the Objectstore under specific ObjectScale, with which the driver should communicate.
+    # It can be retrieved from the ObjectScale Portal, under the ObjectScale tab.
     #
     # How to:
-    #   It can be retrieved from the ObjectScale Portal, under the ObjectScale tab.
-    #   TODO: add more details
+    #   1. Login into ObjectScale Portal;
+    #   2. From the menu on left side of the screen select 'Administration' tab;
+    #   3. After unfolding 'Administration' tab enter 'ObjectScale' page;
+    #   4. Select one of the object stores visible in the table, and click its name;
+    #   5. You should see 'Summary' of that object store.
+    #   6. In the 'General' section, you will see value under 'Object store ID' column.
     #
     # REQUIRED
     objectstore-id: ostibd2054393c389b1a
 
     # Endpoint of the ObjectScale Gateway Internal service.
+    # It can be retrieved from the ObjectScale Portal, under the ObjectScale tab.
+    #
+    # How to:
+    #   1. Login into ObjectScale Portal;
+    #   2. From the menu on left side of the screen select 'Administration' tab;
+    #   3. After unfolding 'Administration' tab enter 'ObjectScale' page;
+    #   4. Select 'Federation' tab;
+    #   5. In the table you will see one or more values, unroll selected one;
+    #   6. In the table, you will now see 'External Endpoint' value associated with 'objectscale-gateway-internal'.
+    #
+    # Valid values:
+    #   - https://<IP-ADDRESS>:443
+    #   - https://<EXTERNAL-HOSTNAME>
     #
     # REQUIRED
-    objectscale-gateway: gateway.objectscale.test
+    objectscale-gateway: https://gateway.objectscale.test:443
 
     # Endpoint of the ObjectScale ObjectStore Management Gateway service.
+    # It can be retrieved from the ObjectScale Portal, under the ObjectScale tab.
+    #
+    # How to:
+    #   1. Login into ObjectScale Portal;
+    #   2. From the menu on left side of the screen select 'Administration' tab;
+    #   3. After unfolding 'Administration' tab enter 'ObjectScale' page;
+    #   4. Select one of the object stores visible in the table, and click its name;
+    #   5. You should see 'Summary' of that object store.
+    #   6. In the 'Management Service details' section, you will see value under 'IP address' column.
+    #
+    # Valid values:
+    #   - https://<IP-ADDRESS>:4443
+    #   - https://<EXTERNAL-HOSTNAME>
     #
     # REQUIRED
-    objectstore-gateway: gateway.objectstore.test
+    objectstore-gateway: https://gateway.objectstore.test:4443
 
     # Identity and Access Management (IAM) API specific field.
     # It points to the region in which object storage provider is installed.
@@ -95,7 +132,7 @@ connections:
     #
     # Possible values:
     # - true            - bucket will be emptied during the deletion.
-    # - false - default - deletion of bucket will fail, if the bucket is not empty. 
+    # - false - default - deletion of bucket will fail, if the bucket is not empty.
     #                     All contents of the bucket must be cleared manually.
     #
     # OPTIONAL
@@ -115,9 +152,24 @@ connections:
       s3:
 
         # Endpoint of the S3 service.
+        # It can be retrieved from the ObjectScale Portal, under the ObjectScale tab.
+        #
+        # How to:
+        #   1. Login into ObjectScale Portal;
+        #   2. From the menu on left side of the screen select 'Administration' tab;
+        #   3. After unfolding 'Administration' tab enter 'ObjectScale' page;
+        #   4. Select one of the object stores visible in the table, and click its name;
+        #   5. You should see 'Summary' of that object store.
+        #   6. In the 'S3 Service details' section, you will see value under 'IP address' column.
+        #
+        # Valid values:
+        #   - https://<IP-ADDRESS>:443
+        #   - https://<EXTERNAL-HOSTNAME>
+        #   - http://<IP-ADDRESS>:80
+        #   - http://<EXTERNAL-HOSTNAME>
         #
         # REQUIRED
-        endpoint: s3.objectstore.test
+        endpoint: https://s3.objectstore.test
 
     # TLS configuration details
     #
