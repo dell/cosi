@@ -40,9 +40,8 @@ import (
 	"net/http"
 
 	"github.com/aws/aws-sdk-go/aws/request"
-	"github.com/aws/aws-sdk-go/service/iam"
-
 	v4 "github.com/aws/aws-sdk-go/aws/signer/v4"
+	"github.com/aws/aws-sdk-go/service/iam"
 
 	"github.com/dell/goobjectscale/pkg/client/rest/client"
 )
