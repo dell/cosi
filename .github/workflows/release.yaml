@@ -2,12 +2,23 @@ name: Release
 on:
   release:
     types: [published]
+env:
+  GOPRIVATE: github.com/dell/*
+  TOKEN: ${{ secrets.GH_DELL_ACCESS }}
 jobs:
   dockerfile-linter:
     name: Run Hadolint Dockerfile lint
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3.2.0
+      - name: Configure git for private modules
+        run: |
+          git config --global url."https://cbartoszDell:$TOKEN@github.com".insteadOf "https://github.com"
+          echo "machine github.com login cbartoszDell password $TOKEN" >> ~/.netrc
+      - name: Checkout the code
+        uses: actions/checkout@v3.2.0
+      - name: "Vendor packages"
+        run: |
+          go mod vendor
       - uses: hadolint/hadolint-action@v3.1.0
 
   build-secure-and-push:
@@ -17,25 +28,33 @@ jobs:
       IMAGENAME: "cosi-driver"
       REGISTRY: "sample_registry"
     steps:
-    - uses: actions/setup-go@v2
-      with:
-        go-version: ^1.20
-        id: go
-    - uses: actions/checkout@v3.2.0
-    - run: |
-        make docker
-    - name: Run trivy action
-      uses: aquasecurity/trivy-action@v0.10.0
-      with:
-        image-ref: ${{ env.IMAGENAME }}:${{ env.IMAGETAG }}
-        exit-code: 1
-    - name: Run dockle action
-      uses: erzz/dockle-action@v1.3.1
-      env:
-        DOCKER_CONTENT_TRUST: 1
-      with:
-        exit-code: 1
-        image: ${{ env.IMAGENAME }}:${{ env.IMAGETAG }}
+      - uses: actions/setup-go@v2
+        with:
+          go-version: ^1.20
+          id: go
+      - name: Configure git for private modules
+        run: |
+          git config --global url."https://cbartoszDell:$TOKEN@github.com".insteadOf "https://github.com"
+          echo "machine github.com login cbartoszDell password $TOKEN" >> ~/.netrc
+      - name: Checkout the code
+        uses: actions/checkout@v3.2.0
+      - name: "Vendor packages"
+        run: |
+          go mod vendor
+      - run: |
+          make docker
+      - name: Run trivy action
+        uses: aquasecurity/trivy-action@v0.10.0
+        with:
+          image-ref: ${{ env.IMAGENAME }}:${{ env.IMAGETAG }}
+          exit-code: 1
+      - name: Run dockle action
+        uses: erzz/dockle-action@v1.3.1
+        env:
+          DOCKER_CONTENT_TRUST: 1
+        with:
+          exit-code: 1
+          image: ${{ env.IMAGENAME }}:${{ env.IMAGETAG }}
     # TODO: There is no registry for now
     # - run: make push
     # if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
