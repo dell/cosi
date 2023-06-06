@@ -7,7 +7,7 @@ import (
 
 var invalidBase64 = `💀`
 
-// TODO: config.Objectscale builder
+// TODO: config.Objectscale builder.
 var (
 	validConfig = &config.Objectscale{
 		Id:                 "valid.id",

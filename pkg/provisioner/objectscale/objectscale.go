@@ -76,7 +76,7 @@ type Server struct {
 var _ driver.Driver = (*Server)(nil)
 
 // New initializes server based on the config file.
-// TODO: verify if emptiness verification can be moved to a separate function
+// TODO: verify if emptiness verification can be moved to a separate function.
 func New(config *config.Objectscale) (*Server, error) {
 	id := config.Id
 	if id == "" {
@@ -422,7 +422,8 @@ type updateBucketPolicyRequest struct {
 
 // DriverGrantBucketAccess provides access to Bucket on specific Object Storage Platform.
 // TODO: how about splitting key and IAM mechanisms into different functions?
-func (s *Server) DriverGrantBucketAccess(
+// TODO: this probably has to be refactored in order to meet the gocognit requirements (complexity < 30).
+func (s *Server) DriverGrantBucketAccess( // nolint:gocognit
 	ctx context.Context,
 	req *cosi.DriverGrantBucketAccessRequest,
 ) (*cosi.DriverGrantBucketAccessResponse, error) {
@@ -478,10 +479,12 @@ func (s *Server) DriverGrantBucketAccess(
 
 	parameters := ""
 	parametersCopy := make(map[string]string)
+
 	for key, value := range req.GetParameters() {
 		parameters += key + ":" + value + ";"
 		parametersCopy[key] = value
 	}
+
 	parametersCopy["namespace"] = s.namespace
 
 	log.WithFields(log.Fields{
@@ -689,7 +692,8 @@ func (s *Server) DriverRevokeBucketAccess(ctx context.Context,
 }
 
 // parsePolicyStatement generates new bucket policy statements array with updated resource and principal.
-func parsePolicyStatement(
+// TODO: this probably has to be refactored in order to meet the gocognit requirements (complexity < 30).
+func parsePolicyStatement( // nolint:gocognit
 	ctx context.Context,
 	inputStatements []updateBucketPolicyStatement,
 	awsBucketResourceARN,
@@ -700,7 +704,8 @@ func parsePolicyStatement(
 
 	outputStatements := []updateBucketPolicyStatement{}
 
-	if inputStatements != nil && len(inputStatements) > 0 {
+	// Omitting a nil check, as the len() is defined as at lest zero.
+	if len(inputStatements) > 0 {
 		outputStatements = inputStatements
 	} else {
 		outputStatements = append(outputStatements, updateBucketPolicyStatement{})
@@ -722,6 +727,7 @@ func parsePolicyStatement(
 		if !foundResource {
 			statement.Resource = append(statement.Resource, awsBucketResourceARN)
 		}
+
 		span.AddEvent("update resource in policy statement")
 
 		if statement.Effect == "" {
@@ -765,6 +771,7 @@ func parsePolicyStatement(
 		}
 
 		span.AddEvent("update principal action in policy statement")
+
 		outputStatements[k] = statement
 	}
 

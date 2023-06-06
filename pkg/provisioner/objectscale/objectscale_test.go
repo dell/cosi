@@ -373,7 +373,6 @@ func testDriverRevokeBucketAccess(t *testing.T) {
 }
 
 func testParsePolicyStatement(t *testing.T) {
-
 	testCases := []struct {
 		description          string
 		inputStatements      []updateBucketPolicyStatement
