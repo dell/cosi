@@ -720,7 +720,6 @@ func parsePolicyStatement(
 		if !foundResource {
 			statement.Resource = append(statement.Resource, awsBucketResourceARN)
 		}
-
 		span.AddEvent("update resource in policy statement")
 
 		if statement.Effect == "" {

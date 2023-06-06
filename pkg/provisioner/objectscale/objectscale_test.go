@@ -371,3 +371,95 @@ func testDriverRevokeBucketAccess(t *testing.T) {
 		t.Error("expected error")
 	}
 }
+
+func testParsePolicyStatement(t *testing.T) {
+
+	testCases := []struct {
+		description          string
+		inputStatements      []updateBucketPolicyStatement
+		awsBucketResourceARN string
+		awsPrincipalString   string
+		expectedOutput       []updateBucketPolicyStatement
+	}{
+		{
+			description: "valid policy statement parsing",
+			inputStatements: []updateBucketPolicyStatement{
+				{
+					Resource: []string{"arn:aws:s3:osci5b022e718aa7e0ff:osti202e682782ebcbfd:lynxbucket/*"},
+					SID:      "GetObject_permission",
+					Effect:   allowEffect,
+					Principal: principal{
+						AWS:    []string{"urn:osc:iam::osai07c2ae318ae9d6f2:user/iam_user20230523061025118"},
+						Action: []string{"s3:GetObjectVersion"},
+					},
+				},
+			},
+			awsBucketResourceARN: "happyAwsBucketResourceARN",
+			awsPrincipalString:   "happyAwsPrincipalString",
+			expectedOutput:       nil,
+		},
+		{
+			description: "valid policy statement parsing",
+			inputStatements: []updateBucketPolicyStatement{
+				{
+					Resource: []string{"arn:aws:s3:osci5b022e718aa7e0ff:osti202e682782ebcbfd:lynxbucket/*"},
+					SID:      "GetObject_permission",
+					Effect:   allowEffect,
+					Principal: principal{
+						AWS:    []string{"urn:osc:iam::osai07c2ae318ae9d6f2:user/iam_user20230523061025118"},
+						Action: []string{"s3:GetObjectVersion"},
+					},
+				},
+			},
+			awsBucketResourceARN: "",
+			awsPrincipalString:   "",
+			expectedError:        nil,
+		},
+	}
+
+	for _, scenario := range testCases {
+		t.Run(scenario.description, func(t *testing.T) {
+			_, cancel := context.WithTimeout(context.Background(), time.Second)
+			defer cancel()
+			// _, err := scenario.server.DriverDeleteBucket(ctx, &cosi.DriverDeleteBucketRequest{BucketId: scenario.inputBucketID})
+			assert.ErrorIs(t, nil, scenario.expectedError, nil)
+		})
+	}
+}
+
+// func testGeneratePolicyID(t *testing.T) {
+// 	const (
+// 		policyID = ""
+// 	)
+
+// 	testCases := []struct {
+// 		description   string
+// 		bucketName    string
+// 		expectedError error
+// 	}{
+// 		{
+// 			description:   "valid policy ID generation",
+// 			bucketName:    "valid-bucket",
+// 			expectedError: nil,
+// 		},
+// 		{
+// 			description:   "invald UUID generation",
+// 			bucketName:    "valid-bucket",
+// 			expectedError: errors.New("failed to generate PolicyID UUID"),
+// 		},
+// 		{
+// 			description:   "generated Policy ID was empty",
+// 			bucketName:    "valid-bucket",
+// 			expectedError: errors.New("generated PolicyID was empty"),
+// 		},
+// 	}
+
+// 	for _, scenario := range testCases {
+// 		t.Run(scenario.description, func(t *testing.T) {
+// 			ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+// 			defer cancel()
+// 			_, err := generatePolicyID(ctx, scenario.bucketName)
+// 			assert.ErrorIs(t, err, scenario.expectedError, err)
+// 		})
+// 	}
+// }
