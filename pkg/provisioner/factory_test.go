@@ -16,6 +16,7 @@ import (
 	"regexp"
 	"testing"
 
+	"github.com/aws/aws-sdk-go/aws"
 	"github.com/dell/cosi-driver/pkg/config"
 	"github.com/stretchr/testify/assert"
 )
@@ -79,7 +80,10 @@ var (
 			Id:                 "valid.id",
 			ObjectscaleGateway: "gateway.objectscale.test",
 			ObjectstoreGateway: "gateway.objectstore.test",
+			ObjectscaleId:      "objectscale123",
+			ObjectstoreId:      "objectstore123",
 			Namespace:          "testnamespace",
+			Region:             aws.String("us-east-1"),
 			Credentials: config.Credentials{
 				Username: "testuser",
 				Password: "testpassword",
