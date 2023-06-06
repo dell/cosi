@@ -702,9 +702,11 @@ func parsePolicyStatement(
 
 	if inputStatements != nil && len(inputStatements) > 0 {
 		outputStatements = inputStatements
+	} else {
+		outputStatements = append(outputStatements, updateBucketPolicyStatement{})
 	}
 
-	for _, statement := range outputStatements {
+	for k, statement := range outputStatements {
 		foundResource := false
 
 		if statement.Resource == nil {
@@ -763,6 +765,7 @@ func parsePolicyStatement(
 		}
 
 		span.AddEvent("update principal action in policy statement")
+		outputStatements[k] = statement
 	}
 
 	return outputStatements

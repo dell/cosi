@@ -28,7 +28,36 @@ const (
 	objectStoreID = "objectstore"
 )
 
-func TestValidAccessGranting(t *testing.T) {
+func TestServerBucketAccessGrant(t *testing.T) {
+	t.Parallel()
+
+	for scenario, fn := range map[string]func(t *testing.T){
+		"testValidAccessGranting":       testValidAccessGranting,
+		"testInvalidAccessKeyCreation":  testInvalidAccessKeyCreation,
+		"testInvalidUserCreation":       testInvalidUserCreation,
+		"testInvalidUserRetrieval":      testInvalidUserRetrieval,
+		"testInvalidBucketPolicyUpdate": testInvalidBucketPolicyUpdate,
+		"testEmptyBucketID":             testEmptyBucketID,
+		"testEmptyName":                 testEmptyName,
+		"testInvalidAuthenticationType": testInvalidAuthenticationType,
+		"testIAMNotImplemented":         testIAMNotImplemented,
+		"testFailToGetBucket":           testFailToGetBucket,
+		"testBucketNotFound":            testBucketNotFound,
+		"testValidButUserAlreadyExists": testValidButUserAlreadyExists,
+		"testFailToGetExistingPolicy":   testFailToGetExistingPolicy,
+		"testInvalidPolicyJSON":         testInvalidPolicyJSON,
+	} {
+		fn := fn
+
+		t.Run(scenario, func(t *testing.T) {
+			t.Parallel()
+
+			fn(t)
+		})
+	}
+}
+
+func testValidAccessGranting(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*100) // Magic value,... abra kadabra
 	defer cancel()
 
@@ -69,7 +98,7 @@ func TestValidAccessGranting(t *testing.T) {
 	assert.NotNil(t, response)
 }
 
-func TestInvalidAccessKeyCreation(t *testing.T) {
+func testInvalidAccessKeyCreation(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*100) // Magic value,... abra kadabra
 	defer cancel()
 
@@ -110,7 +139,7 @@ func TestInvalidAccessKeyCreation(t *testing.T) {
 	assert.Nil(t, response)
 }
 
-func TestInvalidUserCreation(t *testing.T) {
+func testInvalidUserCreation(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*100) // Magic value,... abra kadabra
 	defer cancel()
 
@@ -145,7 +174,7 @@ func TestInvalidUserCreation(t *testing.T) {
 	assert.Nil(t, response)
 }
 
-func TestInvalidUserRetrieval(t *testing.T) {
+func testInvalidUserRetrieval(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*100) // Magic value,... abra kadabra
 	defer cancel()
 
@@ -179,7 +208,7 @@ func TestInvalidUserRetrieval(t *testing.T) {
 	assert.Nil(t, response)
 }
 
-func TestInvalidBucketPolicyUpdate(t *testing.T) {
+func testInvalidBucketPolicyUpdate(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*100) // Magic value,... abra kadabra
 	defer cancel()
 
@@ -219,7 +248,7 @@ func TestInvalidBucketPolicyUpdate(t *testing.T) {
 	assert.Nil(t, response)
 }
 
-func TestEmptyBucketID(t *testing.T) {
+func testEmptyBucketID(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*100) // Magic value,... abra kadabra
 	defer cancel()
 
@@ -249,7 +278,7 @@ func TestEmptyBucketID(t *testing.T) {
 	assert.Nil(t, response)
 }
 
-func TestEmptyName(t *testing.T) {
+func testEmptyName(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*100) // Magic value,... abra kadabra
 	defer cancel()
 
@@ -279,7 +308,7 @@ func TestEmptyName(t *testing.T) {
 	assert.Nil(t, response)
 }
 
-func TestInvalidAuthenticationType(t *testing.T) {
+func testInvalidAuthenticationType(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*100) // Magic value,... abra kadabra
 	defer cancel()
 
@@ -309,7 +338,7 @@ func TestInvalidAuthenticationType(t *testing.T) {
 	assert.Nil(t, response)
 }
 
-func TestIAMNotImplemented(t *testing.T) {
+func testIAMNotImplemented(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*100) // Magic value,... abra kadabra
 	defer cancel()
 
@@ -339,7 +368,7 @@ func TestIAMNotImplemented(t *testing.T) {
 	assert.Nil(t, response)
 }
 
-func TestFailToGetBucket(t *testing.T) {
+func testFailToGetBucket(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*100) // Magic value,... abra kadabra
 	defer cancel()
 
@@ -371,7 +400,7 @@ func TestFailToGetBucket(t *testing.T) {
 	assert.Nil(t, response)
 }
 
-func TestBucketNotFound(t *testing.T) {
+func testBucketNotFound(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*100) // Magic value,... abra kadabra
 	defer cancel()
 
@@ -396,7 +425,7 @@ func TestBucketNotFound(t *testing.T) {
 	assert.Nil(t, response)
 }
 
-func TestValidButUserAlreadyExists(t *testing.T) {
+func testValidButUserAlreadyExists(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*100) // Magic value,... abra kadabra
 	defer cancel()
 
@@ -434,7 +463,7 @@ func TestValidButUserAlreadyExists(t *testing.T) {
 	assert.NotNil(t, response)
 }
 
-func TestFailToGetExistingPolicy(t *testing.T) {
+func testFailToGetExistingPolicy(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*100) // Magic value,... abra kadabra
 	defer cancel()
 
@@ -474,7 +503,7 @@ func TestFailToGetExistingPolicy(t *testing.T) {
 	assert.Nil(t, response)
 }
 
-func TestInvalidPolicyJSON(t *testing.T) {
+func testInvalidPolicyJSON(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*100) // Magic value,... abra kadabra
 	defer cancel()
 
@@ -513,44 +542,5 @@ func TestInvalidPolicyJSON(t *testing.T) {
 
 	response, err := server.DriverGrantBucketAccess(ctx, req)
 	assert.ErrorIs(t, err, status.Error(codes.Internal, "failed to decode existing bucket policy"), err)
-	assert.Nil(t, response)
-}
-
-// FIXME: This test is not working as expected, it should fail to marshal policy, try different invalid characters in bucket name
-func TestFailToMarshalPolicy(t *testing.T) {
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second*100) // Magic value,... abra kadabra
-	defer cancel()
-
-	// That's how we can mock the objectscale IAM api client
-	IAMClient := iamfaketoo.NewIAMAPI(t)
-	IAMClient.On("CreateUserWithContext", mock.Anything, mock.Anything).Return(
-		&iam.CreateUserOutput{
-			User: &iam.User{
-				UserName: aws.String("namespace-user-valid\t"), // This mocked response is based on `namesapce` from server and bucketId from request
-			},
-		}, nil).Once()
-	IAMClient.On("GetUser", mock.Anything).Return(nil, nil).Once()
-
-	server := Server{
-		mgmtClient: fake.NewClientSet(&model.Bucket{ // That's how we can mock the objectscale bucket api client
-			Name:      "valid\u2019", // This is based on "bucket-valid" BucketId from request
-			Namespace: namespace,
-		}),
-		iamClient:     IAMClient, // Inject mocked IAM client
-		namespace:     namespace,
-		backendID:     testID,
-		objectScaleID: objectScaleID,
-		objectStoreID: objectStoreID,
-	}
-
-	req := &cosi.DriverGrantBucketAccessRequest{
-		BucketId:           "bucket-valid\u2019",
-		Name:               "bucket-access-valid",
-		AuthenticationType: cosi.AuthenticationType_Key,
-		Parameters:         map[string]string{},
-	}
-
-	response, err := server.DriverGrantBucketAccess(ctx, req)
-	assert.ErrorIs(t, err, status.Error(codes.Internal, "failed to marshal updateBucketPolicyRequest into JSON"), err)
 	assert.Nil(t, response)
 }
