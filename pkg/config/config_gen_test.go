@@ -85,6 +85,20 @@ func TestObjectscaleUnmarshalJSON(t *testing.T) {
 			errorMessage: missingField,
 		},
 		{
+			name: "invalid missing namespace",
+			data: []byte(
+				`{"id":"testid",
+				"credentials":{"username":"testuser","password":"testpassword"},
+				"objectscale-gateway":"gateway.objectscale.test",
+				"objectstore-gateway":"gateway.objectstore.test",
+				"objectscale-id": "objectscale123",
+				"objectstore-id": "objectstore123",
+				"protocols":{"s3":{"endpoint":"test.endpoint"}},
+				"tls":{"insecure":true}}`),
+			fail:         true,
+			errorMessage: missingField,
+		},
+		{
 			name: "invalid missing objectscale-gateway",
 			data: []byte(
 				`{"credentials":{"username":"testuser","password":"testpassword"},
@@ -107,6 +121,32 @@ func TestObjectscaleUnmarshalJSON(t *testing.T) {
 				"objectscale-gateway":"gateway.objectscale.test",
 				"objectscale-id": "objectscale123",
 				"objectstore-id": "objectstore123",
+				"protocols":{"s3":{"endpoint":"test.endpoint"}},
+				"tls":{"insecure":true}}`),
+			fail:         true,
+			errorMessage: missingField,
+		},
+		{
+			name: "invalid missing objectscale-id",
+			data: []byte(
+				`{"credentials":{"username":"testuser","password":"testpassword"},
+				"id":"testid",
+				"namespace":"testnamespace",
+				"objectscale-gateway":"gateway.objectscale.test",
+				"objectstore-id": "objectstore123",
+				"protocols":{"s3":{"endpoint":"test.endpoint"}},
+				"tls":{"insecure":true}}`),
+			fail:         true,
+			errorMessage: missingField,
+		},
+		{
+			name: "invalid missing objectstore-id",
+			data: []byte(
+				`{"credentials":{"username":"testuser","password":"testpassword"},
+				"id":"testid",
+				"namespace":"testnamespace",
+				"objectscale-gateway":"gateway.objectscale.test",
+				"objectscale-id": "objectscale123",
 				"protocols":{"s3":{"endpoint":"test.endpoint"}},
 				"tls":{"insecure":true}}`),
 			fail:         true,
