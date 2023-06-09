@@ -1,11 +1,14 @@
 name: golangci-lint
 on:
   push:
-    branches: [ main ]
+    branches: [main]
   pull_request:
-    branches: [ '**' ]
+    branches: ["**"]
 permissions:
   contents: read
+env:
+  GOPRIVATE: github.com/dell/*
+  TOKEN: ${{ secrets.GH_DELL_ACCESS }}
 jobs:
   golangci:
     name: GolangCI Linter
@@ -13,9 +16,17 @@ jobs:
     steps:
       - uses: actions/setup-go@v4
         with:
-          go-version: '1.20'
+          go-version: "1.20"
           cache: false
-      - uses: actions/checkout@v3
+      - name: Configure git for private modules
+        run: |
+          git config --global url."https://cbartoszDell:$TOKEN@github.com".insteadOf "https://github.com"
+          echo "machine github.com login cbartoszDell password $TOKEN" >> ~/.netrc
+      - name: Checkout the code
+        uses: actions/checkout@v3.2.0
+      - name: "Vendor packages"
+        run: |
+          go mod vendor
       - name: golangci-lint
         uses: golangci/golangci-lint-action@v3
         with:
