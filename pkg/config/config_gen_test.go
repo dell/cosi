@@ -21,9 +21,10 @@ import (
 )
 
 var (
-	missingField  = regexp.MustCompile(`field (.+) in (.+): required`)
-	invalidObject = regexp.MustCompile(`^json: cannot unmarshal (.+) into Go value of type (.+)$`)
-	invalidField  = regexp.MustCompile(`^json: cannot unmarshal (.+) into Go struct field (.+) of type (.+)$`)
+	missingField      = regexp.MustCompile(`field (.+) in (.+): required`)
+	invalidObject     = regexp.MustCompile(`^json: cannot unmarshal (.+) into Go value of type (.+)$`)
+	invalidObjectYAML = regexp.MustCompile(`cannot unmarshal (.+) (.+) into map`)
+	invalidField      = regexp.MustCompile(`^json: cannot unmarshal (.+) into Go struct field (.+) of type (.+)$`)
 )
 
 func TestObjectscaleUnmarshalJSON(t *testing.T) {
@@ -43,6 +44,8 @@ func TestObjectscaleUnmarshalJSON(t *testing.T) {
 				"namespace":"testnamespace",
 				"objectscale-gateway":"gateway.objectscale.test",
 				"objectstore-gateway":"gateway.objectstore.test",
+				"objectscale-id": "objectscale123",
+				"objectstore-id": "objectstore123",
 				"emptyBucket": false,
 				"protocols":{"s3":{"endpoint":"test.endpoint"}},
 				"tls":{"insecure":true}}`),
@@ -61,6 +64,8 @@ func TestObjectscaleUnmarshalJSON(t *testing.T) {
 				"namespace":"testnamespace",
 				"objectscale-gateway":"gateway.objectscale.test",
 				"objectstore-gateway":"gateway.objectstore.test",
+				"objectscale-id": "objectscale123",
+				"objectstore-id": "objectstore123",
 				"protocols":{"s3":{"endpoint":"test.endpoint"}},
 				"tls":{"insecure":true}}`),
 			fail:         true,
@@ -73,6 +78,22 @@ func TestObjectscaleUnmarshalJSON(t *testing.T) {
 				"namespace":"testnamespace",
 				"objectscale-gateway":"gateway.objectscale.test",
 				"objectstore-gateway":"gateway.objectstore.test",
+				"objectscale-id": "objectscale123",
+				"objectstore-id": "objectstore123",
+				"protocols":{"s3":{"endpoint":"test.endpoint"}},
+				"tls":{"insecure":true}}`),
+			fail:         true,
+			errorMessage: missingField,
+		},
+		{
+			name: "invalid missing namespace",
+			data: []byte(
+				`{"id":"testid",
+				"credentials":{"username":"testuser","password":"testpassword"},
+				"objectscale-gateway":"gateway.objectscale.test",
+				"objectstore-gateway":"gateway.objectstore.test",
+				"objectscale-id": "objectscale123",
+				"objectstore-id": "objectstore123",
 				"protocols":{"s3":{"endpoint":"test.endpoint"}},
 				"tls":{"insecure":true}}`),
 			fail:         true,
@@ -85,6 +106,8 @@ func TestObjectscaleUnmarshalJSON(t *testing.T) {
 				"id":"testid",
 				"namespace":"testnamespace",
 				"objectstore-gateway":"gateway.objectstore.test",
+				"objectscale-id": "objectscale123",
+				"objectstore-id": "objectstore123",
 				"protocols":{"s3":{"endpoint":"test.endpoint"}},
 				"tls":{"insecure":true}}`),
 			fail:         true,
@@ -97,6 +120,36 @@ func TestObjectscaleUnmarshalJSON(t *testing.T) {
 				"id":"testid",
 				"namespace":"testnamespace",
 				"objectscale-gateway":"gateway.objectscale.test",
+				"objectscale-id": "objectscale123",
+				"objectstore-id": "objectstore123",
+				"protocols":{"s3":{"endpoint":"test.endpoint"}},
+				"tls":{"insecure":true}}`),
+			fail:         true,
+			errorMessage: missingField,
+		},
+		{
+			name: "invalid missing objectscale-id",
+			data: []byte(
+				`{"credentials":{"username":"testuser","password":"testpassword"},
+				"id":"testid",
+				"namespace":"testnamespace",
+				"objectscale-gateway":"gateway.objectscale.test",
+				"objectstore-gateway":"gateway.objectstore.test",
+				"objectstore-id": "objectstore123",
+				"protocols":{"s3":{"endpoint":"test.endpoint"}},
+				"tls":{"insecure":true}}`),
+			fail:         true,
+			errorMessage: missingField,
+		},
+		{
+			name: "invalid missing objectstore-id",
+			data: []byte(
+				`{"credentials":{"username":"testuser","password":"testpassword"},
+				"id":"testid",
+				"namespace":"testnamespace",
+				"objectscale-gateway":"gateway.objectscale.test",
+				"objectstore-gateway":"gateway.objectstore.test",
+				"objectscale-id": "objectscale123",
 				"protocols":{"s3":{"endpoint":"test.endpoint"}},
 				"tls":{"insecure":true}}`),
 			fail:         true,
@@ -110,6 +163,8 @@ func TestObjectscaleUnmarshalJSON(t *testing.T) {
 				"namespace":"testnamespace",
 				"objectscale-gateway":"gateway.objectscale.test",
 				"objectstore-gateway":"gateway.objectstore.test",
+				"objectscale-id": "objectscale123",
+				"objectstore-id": "objectstore123",
 				"tls":{"insecure":true}}`),
 			fail:         true,
 			errorMessage: missingField,
@@ -122,6 +177,8 @@ func TestObjectscaleUnmarshalJSON(t *testing.T) {
 				"namespace":"testnamespace",
 				"objectscale-gateway":"gateway.objectscale.test",
 				"objectstore-gateway":"gateway.objectstore.test",
+				"objectscale-id": "objectscale123",
+				"objectstore-id": "objectstore123",
 				"protocols":{"s3":{"endpoint":"test.endpoint"}}}`),
 			fail:         true,
 			errorMessage: missingField,
@@ -142,6 +199,243 @@ func TestObjectscaleUnmarshalJSON(t *testing.T) {
 			var objectscale Objectscale
 
 			err := objectscale.UnmarshalJSON(tc.data)
+			if tc.fail {
+				if assert.Error(t, err) {
+					assert.Regexp(t, tc.errorMessage, err.Error())
+				}
+			} else {
+				assert.NoError(t, err)
+			}
+		})
+	}
+}
+
+func TestObjectscaleUnmarshalYAML(t *testing.T) {
+	t.Parallel()
+
+	testCases := []struct {
+		name         string
+		data         []byte
+		fail         bool
+		errorMessage *regexp.Regexp
+	}{
+		{
+			name: "valid insecure objectscale",
+			data: []byte(`---
+id: testid
+namespace: testnamespace
+objectscale-gateway: gateway.objectscale.test
+objectstore-gateway: gateway.objectstore.test
+objectscale-id: objectscale123
+objectstore-id: objectstore123
+emptyBucket: false
+protocols:
+  s3:
+    endpoint: test.endpoint
+tls:
+  insecure: true
+credentials:
+  username: testuser
+  password: testpassword`),
+			fail: false,
+		},
+		{
+			name:         "empty objectscale",
+			data:         []byte(``),
+			fail:         true,
+			errorMessage: missingField,
+		},
+		{
+			name: "invalid missing credentials",
+			data: []byte(`---
+id: testid
+namespace: testnamespace
+objectscale-gateway: gateway.objectscale.test
+objectstore-gateway: gateway.objectstore.test
+objectscale-id: objectscale123
+objectstore-id: objectstore123
+emptyBucket: false
+protocols:
+  s3:
+    endpoint: test.endpoint
+tls:
+  insecure: true`),
+			fail:         true,
+			errorMessage: missingField,
+		},
+		{
+			name: "invalid missing id",
+			data: []byte(`---
+namespace: testnamespace
+objectscale-gateway: gateway.objectscale.test
+objectstore-gateway: gateway.objectstore.test
+objectscale-id: objectscale123
+objectstore-id: objectstore123
+emptyBucket: false
+protocols:
+  s3:
+    endpoint: test.endpoint
+tls:
+  insecure: true
+credentials:
+  username: testuser
+  password: testpassword`),
+			fail:         true,
+			errorMessage: missingField,
+		},
+		{
+			name: "invalid missing namespace",
+			data: []byte(`---
+id: testid
+objectscale-gateway: gateway.objectscale.test
+objectstore-gateway: gateway.objectstore.test
+objectscale-id: objectscale123
+objectstore-id: objectstore123
+emptyBucket: false
+protocols:
+  s3:
+    endpoint: test.endpoint
+tls:
+  insecure: true
+credentials:
+  username: testuser
+  password: testpassword`),
+			fail:         true,
+			errorMessage: missingField,
+		},
+		{
+			name: "invalid missing objectscale-gateway",
+			data: []byte(`---
+id: testid
+namespace: testnamespace
+objectstore-gateway: gateway.objectstore.test
+objectscale-id: objectscale123
+objectstore-id: objectstore123
+emptyBucket: false
+protocols:
+  s3:
+    endpoint: test.endpoint
+tls:
+  insecure: true
+credentials:
+  username: testuser
+  password: testpassword`),
+			fail:         true,
+			errorMessage: missingField,
+		},
+		{
+			name: "invalid missing objectstore-gateway",
+			data: []byte(`---
+id: testid
+namespace: testnamespace
+objectscale-gateway: gateway.objectscale.test
+objectscale-id: objectscale123
+objectstore-id: objectstore123
+emptyBucket: false
+protocols:
+  s3:
+    endpoint: test.endpoint
+tls:
+  insecure: true
+credentials:
+  username: testuser
+  password: testpassword`),
+			fail:         true,
+			errorMessage: missingField,
+		},
+		{
+			name: "invalid missing objectscale-id",
+			data: []byte(`---
+id: testid
+namespace: testnamespace
+objectscale-gateway: gateway.objectscale.test
+objectstore-gateway: gateway.objectstore.test
+objectstore-id: objectstore123
+emptyBucket: false
+protocols:
+  s3:
+    endpoint: test.endpoint
+tls:
+  insecure: true
+credentials:
+  username: testuser
+  password: testpassword`),
+			fail:         true,
+			errorMessage: missingField,
+		},
+		{
+			name: "invalid missing objectstore-id",
+			data: []byte(`---
+id: testid
+namespace: testnamespace
+objectscale-gateway: gateway.objectscale.test
+objectstore-gateway: gateway.objectstore.test
+objectscale-id: objectscale123
+emptyBucket: false
+protocols:
+  s3:
+    endpoint: test.endpoint
+tls:
+  insecure: true
+credentials:
+  username: testuser
+  password: testpassword`),
+			fail:         true,
+			errorMessage: missingField,
+		},
+		{
+			name: "invalid missing protocols",
+			data: []byte(`---
+id: testid
+namespace: testnamespace
+objectscale-gateway: gateway.objectscale.test
+objectstore-gateway: gateway.objectstore.test
+objectscale-id: objectscale123
+objectstore-id: objectstore123
+emptyBucket: false
+tls:
+  insecure: true
+credentials:
+  username: testuser
+  password: testpassword`),
+			fail:         true,
+			errorMessage: missingField,
+		},
+		{
+			name: "invalid missing tls",
+			data: []byte(`---
+id: testid
+namespace: testnamespace
+objectscale-gateway: gateway.objectscale.test
+objectstore-gateway: gateway.objectstore.test
+objectscale-id: objectscale123
+objectstore-id: objectstore123
+emptyBucket: false
+protocols:
+  s3:
+    endpoint: test.endpoint
+credentials:
+  username: testuser
+  password: testpassword`),
+			fail:         true,
+			errorMessage: missingField,
+		},
+		{
+			name:         "invalid type",
+			data:         []byte(`""`),
+			fail:         true,
+			errorMessage: invalidObjectYAML,
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+
+			var objectscale Objectscale
+
+			err := objectscale.UnmarshalYAML(tc.data)
 			if tc.fail {
 				if assert.Error(t, err) {
 					assert.Regexp(t, tc.errorMessage, err.Error())
@@ -189,6 +483,53 @@ func TestTlsUnmarshalJSON(t *testing.T) {
 			var tls Tls
 
 			err := tls.UnmarshalJSON(tc.data)
+			if tc.fail {
+				if assert.Error(t, err) {
+					assert.Regexp(t, tc.errorMessage, err.Error())
+				}
+			} else {
+				assert.NoError(t, err)
+			}
+		})
+	}
+}
+
+func TestTlsUnmarshalYAML(t *testing.T) {
+	t.Parallel()
+
+	testCases := []struct {
+		name         string
+		data         []byte
+		fail         bool
+		errorMessage *regexp.Regexp
+	}{
+		{
+			name: "valid insecure",
+			data: []byte(`insecure: true`),
+			fail: false,
+		},
+		{
+			name:         "empty value",
+			data:         []byte(`insecure: `),
+			fail:         true,
+			errorMessage: missingField,
+		},
+		{
+			name:         "invalid type",
+			data:         []byte(`""`),
+			fail:         true,
+			errorMessage: invalidObjectYAML,
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+
+			var tls Tls
+
+			err := tls.UnmarshalYAML(tc.data)
 			if tc.fail {
 				if assert.Error(t, err) {
 					assert.Regexp(t, tc.errorMessage, err.Error())
@@ -253,6 +594,53 @@ func TestS3UnmarshalJSON(t *testing.T) {
 	}
 }
 
+func TestS3UnmarshalYAML(t *testing.T) {
+	t.Parallel()
+
+	testCases := []struct {
+		name         string
+		data         []byte
+		fail         bool
+		errorMessage *regexp.Regexp
+	}{
+		{
+			name: "valid S3",
+			data: []byte(`endpoint: test.endpoint`),
+			fail: false,
+		},
+		{
+			name:         "missing endpoint",
+			data:         []byte(``),
+			fail:         true,
+			errorMessage: missingField,
+		},
+		{
+			name:         "unmarshall error",
+			data:         []byte(`""`),
+			fail:         true,
+			errorMessage: invalidObjectYAML,
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+
+			var s3 S3
+
+			err := s3.UnmarshalYAML(tc.data)
+			if tc.fail {
+				if assert.Error(t, err) {
+					assert.Regexp(t, tc.errorMessage, err.Error())
+				}
+			} else {
+				assert.NoError(t, err)
+			}
+		})
+	}
+}
+
 func TestCredentialsUnmarshalJSON(t *testing.T) {
 	t.Parallel()
 
@@ -295,6 +683,60 @@ func TestCredentialsUnmarshalJSON(t *testing.T) {
 			var credentials Credentials
 
 			err := credentials.UnmarshalJSON(tc.data)
+			if tc.fail {
+				if assert.Error(t, err) {
+					assert.Regexp(t, tc.errorMessage, err.Error())
+				}
+			} else {
+				assert.NoError(t, err)
+			}
+		})
+	}
+}
+
+func TestCredentialsUnmarshalYAML(t *testing.T) {
+	t.Parallel()
+
+	testCases := []struct {
+		name         string
+		data         []byte
+		fail         bool
+		errorMessage *regexp.Regexp
+	}{
+		{
+			name: "valid credentials",
+			data: []byte(`username: testuser
+password: testpassword`),
+			fail: false,
+		},
+		{
+			name:         "missing password",
+			data:         []byte(`username: testuser`),
+			fail:         true,
+			errorMessage: missingField,
+		},
+		{
+			name:         "missing username",
+			data:         []byte(`password: testpassword`),
+			fail:         true,
+			errorMessage: missingField,
+		},
+		{
+			name:         "invalid type",
+			data:         []byte(`""`),
+			fail:         true,
+			errorMessage: invalidObjectYAML,
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+
+			var credentials Credentials
+
+			err := credentials.UnmarshalYAML(tc.data)
 			if tc.fail {
 				if assert.Error(t, err) {
 					assert.Regexp(t, tc.errorMessage, err.Error())

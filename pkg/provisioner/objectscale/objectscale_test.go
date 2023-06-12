@@ -27,7 +27,6 @@ import (
 	"github.com/stretchr/testify/assert"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
-
 	cosi "sigs.k8s.io/container-object-storage-interface-spec"
 
 	"github.com/dell/cosi-driver/pkg/config"
@@ -39,87 +38,6 @@ const (
 	ok expected = iota
 	warning
 	fail
-)
-
-var (
-	invalidBase64 = `💀`
-
-	validConfig = &config.Objectscale{
-		Id:                 "valid.id",
-		ObjectscaleGateway: "gateway.objectscale.test",
-		ObjectstoreGateway: "gateway.objectstore.test",
-		Namespace:          "validnamespace",
-		Credentials: config.Credentials{
-			Username: "testuser",
-			Password: "testpassword",
-		},
-		Protocols: config.Protocols{
-			S3: &config.S3{
-				Endpoint: "s3.objectstore.test",
-			},
-		},
-		Tls: config.Tls{
-			Insecure: true,
-		},
-	}
-
-	invalidConfigWithHyphens = &config.Objectscale{
-		Id:                 "id-with-hyphens",
-		ObjectscaleGateway: "gateway.objectscale.test",
-		ObjectstoreGateway: "gateway.objectstore.test",
-		Credentials: config.Credentials{
-			Username: "testuser",
-			Password: "testpassword",
-		},
-		Namespace: "validnamespace",
-		Protocols: config.Protocols{
-			S3: &config.S3{
-				Endpoint: "s3.objectstore.test",
-			},
-		},
-		Tls: config.Tls{
-			Insecure: true,
-		},
-	}
-
-	invalidConfigEmptyID = &config.Objectscale{
-		Id:                 "",
-		ObjectscaleGateway: "gateway.objectscale.test",
-		ObjectstoreGateway: "gateway.objectstore.test",
-		Namespace:          "validnamespace",
-		Credentials: config.Credentials{
-			Username: "testuser",
-			Password: "testpassword",
-		},
-		Protocols: config.Protocols{
-			S3: &config.S3{
-				Endpoint: "s3.objectstore.test",
-			},
-		},
-		Tls: config.Tls{
-			Insecure: true,
-		},
-	}
-
-	invalidConfigTLS = &config.Objectscale{
-		Id:                 "valid.id",
-		ObjectscaleGateway: "gateway.objectscale.test",
-		ObjectstoreGateway: "gateway.objectstore.test",
-		Namespace:          "validnamespace",
-		Credentials: config.Credentials{
-			Username: "testuser",
-			Password: "testpassword",
-		},
-		Protocols: config.Protocols{
-			S3: &config.S3{
-				Endpoint: "s3.objectstore.test",
-			},
-		},
-		Tls: config.Tls{
-			Insecure: false,
-			RootCas:  &invalidBase64,
-		},
-	}
 )
 
 // regex for error messages.
@@ -141,8 +59,8 @@ func TestServer(t *testing.T) {
 		"testID":                       testDriverID,
 		"testDriverCreateBucket":       testDriverCreateBucket,
 		"testDriverDeleteBucket":       testDriverDeleteBucket,
-		"testDriverGrantBucketAccess":  testDriverGrantBucketAccess,
 		"testDriverRevokeBucketAccess": testDriverRevokeBucketAccess,
+		"testParsePolicyStatement":     testParsePolicyStatement,
 	} {
 		fn := fn
 
@@ -183,6 +101,66 @@ func testDriverNew(t *testing.T) {
 			config:       invalidConfigTLS,
 			result:       fail,
 			errorMessage: transportInitFailed,
+		},
+		{
+			name:         "empty namesapce",
+			config:       emptyNamespaceConfig,
+			result:       fail,
+			errorMessage: regexp.MustCompile("empty objectstore id"),
+		},
+		{
+			name:         "empty credentials password",
+			config:       emptyPasswordConfig,
+			result:       fail,
+			errorMessage: regexp.MustCompile("empty password"),
+		},
+		{
+			name:         "empty credentials username",
+			config:       emptyUsernameConfig,
+			result:       fail,
+			errorMessage: regexp.MustCompile("empty username"),
+		},
+		{
+			name:         "empty region",
+			config:       emptyRegionConfig,
+			result:       fail,
+			errorMessage: regexp.MustCompile("empty region"),
+		},
+		{
+			name:         "region not set",
+			config:       regionNotSetConfig,
+			result:       fail,
+			errorMessage: regexp.MustCompile("region was not specified in config"),
+		},
+		{
+			name:         "empty objectscale gateway",
+			config:       emptyObjectscaleGatewayConfig,
+			result:       fail,
+			errorMessage: regexp.MustCompile("empty objectscale gateway"),
+		},
+		{
+			name:         "empty objectstore gateway",
+			config:       emptyObjectstoreGatewayConfig,
+			result:       fail,
+			errorMessage: regexp.MustCompile("empty objectstore gateway"),
+		},
+		{
+			name:         "empty s3 endpoint",
+			config:       emptyS3EndpointConfig,
+			result:       fail,
+			errorMessage: regexp.MustCompile("empty protocol S3 endpoint"),
+		},
+		{
+			name:         "empty objectscale id",
+			config:       emptyObjectscaleIDConfig,
+			result:       fail,
+			errorMessage: regexp.MustCompile("empty objectscaleID"),
+		},
+		{
+			name:         "empty objectstore id",
+			config:       emptyObjectstoreIDConfig,
+			result:       fail,
+			errorMessage: regexp.MustCompile("empty objectstoreID"),
 		},
 	}
 
@@ -385,21 +363,85 @@ func testDriverDeleteBucket(t *testing.T) {
 }
 
 // FIXME: write valid test.
-func testDriverGrantBucketAccess(t *testing.T) {
-	srv := Server{}
-
-	_, err := srv.DriverGrantBucketAccess(context.TODO(), &cosi.DriverGrantBucketAccessRequest{})
-	if err == nil {
-		t.Error("expected error")
-	}
-}
-
-// FIXME: write valid test.
 func testDriverRevokeBucketAccess(t *testing.T) {
 	srv := Server{}
 
 	_, err := srv.DriverRevokeBucketAccess(context.TODO(), &cosi.DriverRevokeBucketAccessRequest{})
 	if err == nil {
 		t.Error("expected error")
+	}
+}
+
+func testParsePolicyStatement(t *testing.T) {
+	testCases := []struct {
+		description          string
+		inputStatements      []updateBucketPolicyStatement
+		awsBucketResourceARN string
+		awsPrincipalString   string
+		expectedOutput       []updateBucketPolicyStatement
+	}{
+		{
+			description: "valid policy statement parsing",
+			inputStatements: []updateBucketPolicyStatement{
+				{
+					Resource: []string{"happyAwsBucketResourceARN"},
+					SID:      "GetObject_permission",
+					Effect:   allowEffect,
+					Principal: principal{
+						AWS:    []string{"happyAwsPrincipalString"},
+						Action: []string{"*"},
+					},
+				},
+			},
+			awsBucketResourceARN: "happyAwsBucketResourceARN",
+			awsPrincipalString:   "happyAwsPrincipalString",
+			expectedOutput: []updateBucketPolicyStatement{
+				{
+					Resource: []string{"happyAwsBucketResourceARN"},
+					SID:      "GetObject_permission",
+					Effect:   allowEffect,
+					Principal: principal{
+						AWS:    []string{"happyAwsPrincipalString"},
+						Action: []string{"*"},
+					},
+				},
+			},
+		},
+		{
+			description: "policy needed update parsing",
+			inputStatements: []updateBucketPolicyStatement{
+				{
+					Resource: nil,
+					SID:      "GetObject_permission",
+					Effect:   "",
+					Principal: principal{
+						AWS:    []string{"urn:osc:iam::osai07c2ae318ae9d6f2:user/iam_user20230523061025118"},
+						Action: []string{"s3:GetObjectVersion"},
+					},
+				},
+			},
+			awsBucketResourceARN: "happyAwsBucketResourceARN",
+			awsPrincipalString:   "happyAwsPrincipalString",
+			expectedOutput: []updateBucketPolicyStatement{
+				{
+					Resource: []string{"happyAwsBucketResourceARN"},
+					SID:      "GetObject_permission",
+					Effect:   allowEffect,
+					Principal: principal{
+						AWS:    []string{"urn:osc:iam::osai07c2ae318ae9d6f2:user/iam_user20230523061025118", "happyAwsPrincipalString"},
+						Action: []string{"s3:GetObjectVersion", "*"},
+					},
+				},
+			},
+		},
+	}
+
+	for _, scenario := range testCases {
+		t.Run(scenario.description, func(t *testing.T) {
+			ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+			defer cancel()
+			updatedPolicy := parsePolicyStatement(ctx, scenario.inputStatements, scenario.awsBucketResourceARN, scenario.awsPrincipalString)
+			assert.Equalf(t, scenario.expectedOutput, updatedPolicy, "not equal")
+		})
 	}
 }

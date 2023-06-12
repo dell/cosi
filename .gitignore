@@ -27,4 +27,5 @@ go.work.sum
 core/core.gen.go
 semver.mk
 
+# vscode config dir
 .vscode/
