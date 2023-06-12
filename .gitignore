@@ -27,8 +27,5 @@ go.work.sum
 core/core.gen.go
 semver.mk
 
-<<<<<<< HEAD
-=======
 # vscode config dir
->>>>>>> 1341304 (update gitignore)
 .vscode/
