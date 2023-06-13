@@ -14,8 +14,8 @@ jobs:
     steps:
       - name: Configure git for private modules
         run: |
-          git config --global url."https://cbartoszDell:$TOKEN@github.com".insteadOf "https://github.com"
-          echo "machine github.com login cbartoszDell password $TOKEN" >> ~/.netrc
+          git config --global url."https://csmbot:$TOKEN@github.com".insteadOf "https://github.com"
+          echo "machine github.com login csmbot password $TOKEN" >> ~/.netrc
       - name: Checkout the code
         uses: actions/checkout@v3.2.0
       - name: "Vendor packages"
@@ -32,8 +32,8 @@ jobs:
     steps:
       - name: Configure git for private modules
         run: |
-          git config --global url."https://cbartoszDell:$TOKEN@github.com".insteadOf "https://github.com"
-          echo "machine github.com login cbartoszDell password $TOKEN" >> ~/.netrc
+          git config --global url."https://csmbot:$TOKEN@github.com".insteadOf "https://github.com"
+          echo "machine github.com login csmbot password $TOKEN" >> ~/.netrc
       - name: Checkout the code
         uses: actions/checkout@v3.2.0
       - name: "Vendor packages"
@@ -82,8 +82,8 @@ jobs:
     steps:
       - name: Configure git for private modules
         run: |
-          git config --global url."https://cbartoszDell:$TOKEN@github.com".insteadOf "https://github.com"
-          echo "machine github.com login cbartoszDell password $TOKEN" >> ~/.netrc
+          git config --global url."https://csmbot:$TOKEN@github.com".insteadOf "https://github.com"
+          echo "machine github.com login csmbot password $TOKEN" >> ~/.netrc
       - name: Checkout the code
         uses: actions/checkout@v3.2.0
       - name: "Vendor packages"
@@ -109,8 +109,8 @@ jobs:
           id: go
       - name: Configure git for private modules
         run: |
-          git config --global url."https://cbartoszDell:$TOKEN@github.com".insteadOf "https://github.com"
-          echo "machine github.com login cbartoszDell password $TOKEN" >> ~/.netrc
+          git config --global url."https://csmbot:$TOKEN@github.com".insteadOf "https://github.com"
+          echo "machine github.com login csmbot password $TOKEN" >> ~/.netrc
       - name: Checkout the code
         uses: actions/checkout@v3.2.0
       - name: "Vendor packages"
