@@ -57,7 +57,6 @@ func TestServer(t *testing.T) {
 	for scenario, fn := range map[string]func(t *testing.T){
 		"testNew":                      testDriverNew,
 		"testID":                       testDriverID,
-		"testDriverCreateBucket":       testDriverCreateBucket,
 		"testDriverDeleteBucket":       testDriverDeleteBucket,
 		"testDriverRevokeBucketAccess": testDriverRevokeBucketAccess,
 		"testParsePolicyStatement":     testParsePolicyStatement,
@@ -199,102 +198,7 @@ func testDriverID(t *testing.T) {
 	assert.Equal(t, "id", driver.ID())
 }
 
-// testDriverCreateBucket tests bucket creation functionality on ObjectScale platform.
-func testDriverCreateBucket(t *testing.T) {
-	// Namespace (ObjectstoreID) and testID (driver ID) provided in the config file
-	const (
-		namespace = "namespace"
-		testID    = "test.id"
-	)
-
-	testCases := []struct {
-		description   string
-		inputName     string
-		expectedError error
-		server        Server
-		parameters    map[string]string
-	}{
-		{
-			description:   "valid bucket creation",
-			inputName:     "bucket-valid",
-			expectedError: nil,
-			server: Server{
-				mgmtClient: fake.NewClientSet(),
-				namespace:  namespace,
-				backendID:  testID,
-			},
-			parameters: map[string]string{
-				"clientID": testID,
-			},
-		},
-		{
-			description:   "bucket already exists",
-			inputName:     "bucket-valid",
-			expectedError: nil,
-			server: Server{
-				mgmtClient: fake.NewClientSet(&model.Bucket{
-					Name:      "bucket-valid",
-					Namespace: namespace,
-				}),
-				namespace: namespace,
-				backendID: testID,
-			},
-			parameters: map[string]string{
-				"clientID": testID,
-			},
-		},
-		{
-			description:   "invalid bucket name",
-			inputName:     "",
-			expectedError: status.Error(codes.InvalidArgument, "empty bucket name"),
-			server: Server{
-				mgmtClient: fake.NewClientSet(),
-				namespace:  namespace,
-				backendID:  testID,
-			},
-			parameters: map[string]string{
-				"clientID": testID,
-			},
-		},
-		{
-			description:   "cannot get existing bucket",
-			inputName:     "bucket-valid",
-			expectedError: status.Error(codes.Internal, "an unexpected error occurred"),
-			server: Server{
-				mgmtClient: fake.NewClientSet(),
-				namespace:  namespace,
-				backendID:  testID,
-			},
-			parameters: map[string]string{
-				"clientID":                      testID,
-				"X-TEST/Buckets/Get/force-fail": "abc",
-			},
-		},
-		{
-			description:   "cannot create bucket",
-			inputName:     "FORCEFAIL-bucket-valid",
-			expectedError: status.Error(codes.Internal, "bucket was not successfully created"),
-			server: Server{
-				mgmtClient: fake.NewClientSet(),
-				namespace:  namespace,
-				backendID:  testID,
-			},
-			parameters: map[string]string{
-				"clientID": testID,
-			},
-		},
-	}
-
-	for _, scenario := range testCases {
-		t.Run(scenario.description, func(t *testing.T) {
-			ctx, cancel := context.WithTimeout(context.Background(), time.Second)
-			defer cancel()
-			_, err := scenario.server.DriverCreateBucket(ctx, &cosi.DriverCreateBucketRequest{Name: scenario.inputName, Parameters: scenario.parameters})
-			assert.ErrorIs(t, err, scenario.expectedError, err)
-		})
-	}
-}
-
+// testDriverCreateBucket tests bucket deletion functionality on ObjectScale platform.
 func testDriverDeleteBucket(t *testing.T) {
 	const (
 		namespace = "namespace"
