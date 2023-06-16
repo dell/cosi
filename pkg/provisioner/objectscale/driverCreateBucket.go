@@ -97,14 +97,31 @@ func (s *Server) DriverCreateBucket(
 	}, nil
 }
 
-// getBucket
+// getBucket is used to obtain bucket info from the Provisioner.
 func (s *Server) getBucket(ctx context.Context, bucketName string, parameters map[string]string) (*model.Bucket, error) {
-	// Check if bucket with specific name and parameters already exists.
 	_, span := otel.Tracer("CreateBucketRequest").Start(ctx, "ObjectscaleGetBucket")
 	defer span.End()
 
-	retievedBucket, err := s.mgmtClient.Buckets().Get(bucketName, parameters)
-	if err != nil && !errors.Is(err, model.Error{Code: model.CodeParameterNotFound}) {
+	// Check if bucket with specific name and parameters already exists.
+	retrievedBucket, err := s.mgmtClient.Buckets().Get(bucketName, parameters)
+
+	switch {
+	// First, we don't found the bucket on the Provider.
+	case errors.Is(err, model.Error{Code: model.CodeParameterNotFound}):
+		return nil, nil
+
+	// Second case is the error is nil, which means we actually found a bucket.
+	case err == nil:
+		log.WithFields(log.Fields{
+			"bucket": bucketName,
+		}).Warn("bucket already exists")
+
+		span.AddEvent("bucket already exists")
+
+		return retrievedBucket, nil
+
+	// Final case, when we receive an unknown error.
+	default:
 		errMsg := errors.New("failed to check bucket existence")
 		log.WithFields(log.Fields{
 			"bucket": bucketName,
@@ -115,19 +132,10 @@ func (s *Server) getBucket(ctx context.Context, bucketName string, parameters ma
 		span.SetStatus(otelCodes.Error, errMsg.Error())
 
 		return nil, err
-	} else if err == nil {
-		log.WithFields(log.Fields{
-			"bucket": bucketName,
-		}).Warn("bucket already exists")
-
-		span.AddEvent("bucket already exists")
-		return retievedBucket, nil
-	} else {
-		return nil, nil
 	}
 }
 
-// createBucket
+// createBucket is used to create bucket on the Provisioner.
 func (s *Server) createBucket(ctx context.Context, bucket *model.Bucket) error {
 	_, span := otel.Tracer("CreateBucketRequest").Start(ctx, "ObjectscaleCreateBucket")
 	defer span.End()

@@ -27,6 +27,8 @@ import (
 
 // testDriverCreateBucket tests bucket creation functionality on ObjectScale platform.
 func TestDriverCreateBucket(t *testing.T) {
+	t.Parallel()
+
 	// Namespace (ObjectstoreID) and testID (driver ID) provided in the config file
 	const (
 		namespace = "namespace"
@@ -112,7 +114,11 @@ func TestDriverCreateBucket(t *testing.T) {
 	}
 
 	for _, scenario := range testCases {
+		scenario := scenario
+
 		t.Run(scenario.description, func(t *testing.T) {
+			t.Parallel()
+
 			ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 			defer cancel()
 			_, err := scenario.server.DriverCreateBucket(ctx, &cosi.DriverCreateBucketRequest{Name: scenario.inputName, Parameters: scenario.parameters})
