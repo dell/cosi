@@ -47,8 +47,13 @@ generate:	##regenerate files
 build:	##build project
 	GOOS=linux CGO_ENABLED=0 go build -ldflags="-s -w" -o ${COSI_BUILD_DIR}/cosi-driver ${COSI_BUILD_PATH}
 
+# FIXME: remove this target after we remove dependency on private goobjectscale.
+.PHONY: vendor
+vendor:	##generate the vendor directory
+	go mod vendor
+
 # Builds dockerfile
-docker:	##generate the docker container
+docker: vendor	##generate the docker container
 	@echo "Base Images is set to: $(BASEIMAGE)"
 	@echo "Building: $(IMAGENAME):$(IMAGETAG)"
 	docker build -t "$(IMAGENAME):$(IMAGETAG)" --build-arg BASEIMAGE=$(BASEIMAGE) --build-arg GOVERSION=$(GOVERSION) --build-arg DIGEST=$(DIGEST) .
