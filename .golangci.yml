@@ -19,7 +19,7 @@ run:
   skip-dirs-use-default: true
 
   # Default empty, allowed options are readonly, vendor and mod.
-  modules-download-mode: vendor
+  modules-download-mode: readonly
 
   # Define the Go version limit.
   # Mainly related to generics support since go1.18.
@@ -123,7 +123,7 @@ linters:
     - govet
     # Detect ineffectual assignments.
     - ineffassign
-    # Correct commonly misspelled English words in source files/
+    # Correct commonly misspelled English words in source files.
     - misspell
     # Find incorrect usages of t.Parallel().
     - paralleltest

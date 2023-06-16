@@ -129,7 +129,6 @@ func (s *Server) getBucket(ctx context.Context, bucketName string, parameters ma
 
 // createBucket
 func (s *Server) createBucket(ctx context.Context, bucket *model.Bucket) error {
-
 	_, span := otel.Tracer("CreateBucketRequest").Start(ctx, "ObjectscaleCreateBucket")
 	defer span.End()
 
