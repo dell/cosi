@@ -137,7 +137,7 @@ var _ = Describe("Bucket Creation", Ordered, Label("create", "objectscale"), fun
 		validBucket = steps.GetBucketResource(ctx, bucketClient, validBucketClaim)
 		// STEP: Bucket resource referencing BucketClaim resource "bucket-claim-valid" is created in ObjectStore "${objectstoreName}""
 		By("checking if Bucket resource referencing BucketClaim resource 'bucket-claim-valid' is created in ObjectStore '${objectstoreName}'")
-		steps.CheckBucketResourceInObjectStore(objectscale, namespace, validBucket)
+		steps.CheckBucketResourceInObjectStore(ctx, objectscale, namespace, validBucket)
 
 		// STEP: BucketClaim resource "bucket-claim-valid" in namespace "namespace-1" status "bucketReady" is "true"
 		By("checking if the status 'bucketReady' of BucketClaim resource 'bucket-claim-valid' in namespace 'namespace-1' is 'true'")
@@ -168,7 +168,7 @@ var _ = Describe("Bucket Creation", Ordered, Label("create", "objectscale"), fun
 
 		// STEP: Bucket resource referencing BucketClaim resource "bucket-claim-invalid" is not created in ObjectStore "${objectstoreName}"
 		By("checking if Bucket resource referencing BucketClaim resource 'bucket-claim-invalid' is not created in ObjectStore '${objectstoreName}'")
-		steps.CheckBucketNotInObjectStore(objectscale, invalidBucketClaim)
+		steps.CheckBucketNotInObjectStore(ctx, objectscale, invalidBucketClaim)
 
 		// STEP: BucketClaim resource "bucket-claim-invalid" in namespace "namespace-1" status "bucketReady" is "false"
 		By("checking if the status 'bucketReady' of BucketClaim resource 'bucket-claim-invalid' in namespace 'namespace-1' is 'false'")

@@ -148,7 +148,7 @@ var _ = Describe("Bucket Access KEY", Ordered, Label("key-flow", "objectscale"),
 
 		// STEP: Bucket resource referencing BucketClaim resource "my-bucket-claim" is created in ObjectStore "${objectstoreName}"
 		By("Checking if bucket referencing 'my-bucket-claim' is created in ObjectStore '${objectstoreName}'")
-		steps.CheckBucketResourceInObjectStore(objectscale, namespace, myBucket)
+		steps.CheckBucketResourceInObjectStore(ctx, objectscale, namespace, myBucket)
 
 		// STEP: BucketClaim resource "my-bucket-claim" in namespace "namespace-1" status "bucketReady" is "true"
 		By("Checking if BucketClaim resource 'my-bucket-claim' status 'bucketReady' is 'true'")
@@ -187,7 +187,7 @@ var _ = Describe("Bucket Access KEY", Ordered, Label("key-flow", "objectscale"),
 
 		// STEP: Policy "${policy}" for Bucket resource referencing BucketClaim resource "my-bucket-claim" on ObjectScale platform is created
 		By("Checking if Policy '${policy}' for Bucket resource referencing BucketClaim resource 'my-bucket-claim' is created")
-		steps.CheckPolicy(objectscale, "${policy}", myBucket)
+		steps.CheckPolicy(ctx, objectscale, "${policy}", myBucket)
 
 		// STEP: BucketAccess resource "my-bucket-access" in namespace "namespace-1" status "accountID" is "${accountID}"
 		By("Checking if BucketAccess resource 'my-bucket-access' in namespace 'namespace-1' status 'accountID' is '${accountID}'")
@@ -203,7 +203,7 @@ var _ = Describe("Bucket Access KEY", Ordered, Label("key-flow", "objectscale"),
 
 		DeferCleanup(func() {
 			steps.DeleteBucketAccessResource(ctx, bucketClient, myBucketAccess)
-			steps.DeletePolicy(objectscale, myBucket)
+			steps.DeletePolicy(ctx, objectscale, myBucket)
 			steps.DeleteUser(ctx, iamClient, "${user}")
 			steps.DeleteBucketAccessClassResource(ctx, bucketClient, myBucketAccessClass)
 		})

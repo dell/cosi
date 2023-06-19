@@ -16,6 +16,7 @@ import (
 	"context"
 	"errors"
 	"strings"
+	"time"
 
 	log "github.com/sirupsen/logrus"
 	otelCodes "go.opentelemetry.io/otel/codes"
@@ -23,10 +24,11 @@ import (
 
 	"github.com/dell/goobjectscale/pkg/client/model"
 	"go.opentelemetry.io/otel"
-
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
+
+var defaultTimeout = time.Second * 20
 
 // DriverCreateBucket creates Bucket on specific Object Storage Platform.
 func (s *Server) DriverCreateBucket(
@@ -35,6 +37,9 @@ func (s *Server) DriverCreateBucket(
 ) (*cosi.DriverCreateBucketResponse, error) {
 	_, span := otel.Tracer("CreateBucketRequest").Start(ctx, "ObjectscaleDriverCreateBucket")
 	defer span.End()
+
+	ctx, cancel := context.WithTimeout(ctx, defaultTimeout)
+	defer cancel()
 
 	log.WithFields(log.Fields{
 		"bucket": req.GetName(),
@@ -57,27 +62,17 @@ func (s *Server) DriverCreateBucket(
 
 		return nil, status.Error(codes.InvalidArgument, err.Error())
 	}
-	// Display all request parameters.
-	parameters := ""
-	parametersCopy := make(map[string]string)
 
-	for key, value := range req.GetParameters() {
-		parameters += key + ":" + value + ";"
-		parametersCopy[key] = value
-	}
+	parameters := make(map[string]string)
 
-	// TODO: is this good way of doing this?
-	parametersCopy["namespace"] = s.namespace
+	parameters["namespace"] = s.namespace
 
 	log.WithFields(log.Fields{
 		"parameters": parameters,
 	}).Info("parameters of the bucket")
 
-	// Remove backendID, as this is not valid parameter for bucket creation in ObjectScale.
-	delete(parametersCopy, "backendID")
-
 	// Get bucket.
-	existingBucket, err := s.getBucket(ctx, bucket.Name, parametersCopy)
+	existingBucket, err := s.getBucket(ctx, bucket.Name, parameters)
 	if err != nil && !errors.Is(err, model.Error{Code: model.CodeParameterNotFound}) {
 		return nil, status.Error(codes.Internal, err.Error())
 	} else if err == nil && existingBucket != nil {
@@ -103,7 +98,7 @@ func (s *Server) getBucket(ctx context.Context, bucketName string, parameters ma
 	defer span.End()
 
 	// Check if bucket with specific name and parameters already exists.
-	retrievedBucket, err := s.mgmtClient.Buckets().Get(bucketName, parameters)
+	retrievedBucket, err := s.mgmtClient.Buckets().Get(ctx, bucketName, parameters)
 
 	switch {
 	// First, we don't found the bucket on the Provider.
@@ -140,7 +135,7 @@ func (s *Server) createBucket(ctx context.Context, bucket *model.Bucket) error {
 	_, span := otel.Tracer("CreateBucketRequest").Start(ctx, "ObjectscaleCreateBucket")
 	defer span.End()
 
-	_, err := s.mgmtClient.Buckets().Create(*bucket)
+	_, err := s.mgmtClient.Buckets().Create(ctx, *bucket)
 	if err != nil {
 		errMsg := errors.New("failed to create bucket")
 		log.WithFields(log.Fields{

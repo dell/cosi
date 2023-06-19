@@ -148,7 +148,7 @@ var _ = Describe("Bucket Access Revoke", Ordered, Label("revoke", "objectscale")
 
 		// STEP: Bucket resource referencing BucketClaim resource "my-bucket-claim" is created in ObjectStore "${objectstoreName}"
 		By("Checking if the Bucket referencing 'my-bucket-claim' is created in ObjectStore '${objectstoreName}'")
-		steps.CheckBucketResourceInObjectStore(objectscale, namespace, myBucket)
+		steps.CheckBucketResourceInObjectStore(ctx, objectscale, namespace, myBucket)
 
 		// STEP: BucketClaim resource "my-bucket-claim" in namespace "namespace-1" status "bucketReady" is "true"
 		By("Checking if the BucketClaim 'my-bucket-claim' in namespace 'namespace-1' status 'bucketReady' is 'true'")
@@ -180,7 +180,7 @@ var _ = Describe("Bucket Access Revoke", Ordered, Label("revoke", "objectscale")
 
 		// STEP: Policy "${policy}" on ObjectScale platform is created
 		By("Creating Policy '${policy}' on ObjectScale platform")
-		steps.CreatePolicy(objectscale, "${policy}", myBucket)
+		steps.CreatePolicy(ctx, objectscale, "${policy}", myBucket)
 
 		// STEP: BucketAccess resource "my-bucket-access" in namespace "namespace-1" status "accountID" is "${accountID}"
 		By("Checking if BucketAccess resource 'my-bucket-access' in namespace 'namespace-1' status 'accountID' is '${accountID}'")
@@ -203,7 +203,7 @@ var _ = Describe("Bucket Access Revoke", Ordered, Label("revoke", "objectscale")
 
 		// STEP: Policy "${policy}" for Bucket resource referencing BucketClaim resource "my-bucket-claim" on ObjectScale platform is deleted
 		By("Deleting Policy for Bucket referencing BucketClaim 'my-bucket-claim' on ObjectScale platform")
-		steps.DeletePolicy(objectscale, myBucket)
+		steps.DeletePolicy(ctx, objectscale, myBucket)
 
 		// STEP: User "${user}" in account on ObjectScale platform is deleted
 		By("Deleting User '${user}' in account on ObjectScale platform")

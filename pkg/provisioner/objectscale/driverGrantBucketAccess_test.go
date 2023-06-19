@@ -18,17 +18,19 @@ import (
 	"testing"
 	"time"
 
+	cosi "sigs.k8s.io/container-object-storage-interface-spec"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/iam"
 	"github.com/aws/aws-sdk-go/service/iam/iamiface"
-	"github.com/dell/cosi-driver/pkg/iamfaketoo"
 	"github.com/dell/goobjectscale/pkg/client/fake"
 	"github.com/dell/goobjectscale/pkg/client/model"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
-	cosi "sigs.k8s.io/container-object-storage-interface-spec"
+
+	"github.com/dell/cosi-driver/pkg/iamfaketoo"
 )
 
 var _ iamiface.IAMAPI = (*iamfaketoo.IAMAPI)(nil)

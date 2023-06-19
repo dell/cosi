@@ -2,6 +2,7 @@ package objectscale
 
 import (
 	"github.com/aws/aws-sdk-go/aws"
+
 	"github.com/dell/cosi-driver/pkg/config"
 )
 

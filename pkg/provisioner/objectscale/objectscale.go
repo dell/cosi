@@ -171,7 +171,7 @@ func New(config *config.Objectscale) (*Server, error) {
 		Name: iamObjectscale.SDSHandlerName,
 		Fn: func(r *request.Request) {
 			if !objClient.IsAuthenticated() {
-				err := objClient.Login(&x509Client)
+				err := objClient.Login(context.TODO(), &x509Client) // TODO: this needs to be a proper context
 				if err != nil {
 					r.Error = err // no return intentional
 				}
@@ -270,7 +270,7 @@ func (s *Server) DriverDeleteBucket(ctx context.Context,
 	bucketName := strings.SplitN(req.BucketId, "-", splitNumber)[1]
 
 	// Delete bucket.
-	err := s.mgmtClient.Buckets().Delete(bucketName, s.namespace, s.emptyBucket)
+	err := s.mgmtClient.Buckets().Delete(ctx, bucketName, s.namespace, s.emptyBucket)
 
 	if errors.Is(err, model.Error{Code: model.CodeResourceNotFound}) {
 		log.WithFields(log.Fields{
@@ -393,7 +393,7 @@ func (s *Server) DriverGrantBucketAccess( // nolint:gocognit
 	}).Info("parameters of the bucket")
 
 	// Check if bucket for granting access exists.
-	_, err := s.mgmtClient.Buckets().Get(bucketName, parametersCopy)
+	_, err := s.mgmtClient.Buckets().Get(ctx, bucketName, parametersCopy)
 	if err != nil && !errors.Is(err, model.Error{Code: model.CodeParameterNotFound}) {
 		log.WithFields(log.Fields{
 			"bucket": bucketName,
@@ -460,7 +460,7 @@ func (s *Server) DriverGrantBucketAccess( // nolint:gocognit
 	}
 
 	// Check if policy for specific bucket exists.
-	policy, err := s.mgmtClient.Buckets().GetPolicy(bucketName, parametersCopy)
+	policy, err := s.mgmtClient.Buckets().GetPolicy(ctx, bucketName, parametersCopy)
 	if err != nil && !errors.Is(err, model.Error{Code: model.CodeResourceNotFound}) {
 		errMsg := errors.New("failed to check bucket policy existence")
 		log.WithFields(log.Fields{
@@ -543,7 +543,7 @@ func (s *Server) DriverGrantBucketAccess( // nolint:gocognit
 		return nil, status.Error(codes.Internal, errMsg.Error())
 	}
 
-	err = s.mgmtClient.Buckets().UpdatePolicy(bucketName, string(updateBucketPolicyJSON), parametersCopy)
+	err = s.mgmtClient.Buckets().UpdatePolicy(ctx, bucketName, string(updateBucketPolicyJSON), parametersCopy)
 	if err != nil {
 		errMsg := errors.New("failed to update bucket policy")
 		log.WithFields(log.Fields{
@@ -740,7 +740,7 @@ func assembleCredentials(
 
 	credentialDetails := cosi.CredentialDetails{Secrets: secretsMap}
 	credentials := make(map[string]*cosi.CredentialDetails)
-	credentials["s3"] = &credentialDetails // ?
+	credentials[consts.S3Key] = &credentialDetails
 
 	log.WithFields(log.Fields{
 		"bucket": bucketName,

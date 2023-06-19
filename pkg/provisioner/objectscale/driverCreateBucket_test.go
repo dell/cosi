@@ -17,15 +17,16 @@ import (
 	"testing"
 	"time"
 
+	cosi "sigs.k8s.io/container-object-storage-interface-spec"
+
 	"github.com/dell/goobjectscale/pkg/client/fake"
 	"github.com/dell/goobjectscale/pkg/client/model"
 	"github.com/stretchr/testify/assert"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
-	cosi "sigs.k8s.io/container-object-storage-interface-spec"
 )
 
-// testDriverCreateBucket tests bucket creation functionality on ObjectScale platform.
+// TestDriverCreateBucket tests bucket creation functionality on ObjectScale platform using mock.
 func TestDriverCreateBucket(t *testing.T) {
 	t.Parallel()
 
