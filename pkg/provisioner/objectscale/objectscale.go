@@ -21,6 +21,20 @@ import (
 	"strings"
 	"time"
 
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/request"
+	"github.com/aws/aws-sdk-go/aws/session"
+	v4 "github.com/aws/aws-sdk-go/aws/signer/v4"
+	"github.com/aws/aws-sdk-go/service/iam"
+	"github.com/aws/aws-sdk-go/service/iam/iamiface"
+	"github.com/dell/goobjectscale/pkg/client/api"
+	"github.com/dell/goobjectscale/pkg/client/model"
+	"github.com/google/uuid"
+	"go.opentelemetry.io/otel"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
+	"sigs.k8s.io/container-object-storage-interface-provisioner-sidecar/pkg/consts"
+
 	driver "github.com/dell/cosi-driver/pkg/provisioner/virtualdriver"
 	objectscaleRest "github.com/dell/goobjectscale/pkg/client/rest"
 	objectscaleClient "github.com/dell/goobjectscale/pkg/client/rest/client"
@@ -29,22 +43,8 @@ import (
 	otelCodes "go.opentelemetry.io/otel/codes"
 	cosi "sigs.k8s.io/container-object-storage-interface-spec"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/request"
-	"github.com/aws/aws-sdk-go/aws/session"
-	v4 "github.com/aws/aws-sdk-go/aws/signer/v4"
-	"github.com/aws/aws-sdk-go/service/iam"
-	"github.com/aws/aws-sdk-go/service/iam/iamiface"
 	"github.com/dell/cosi-driver/pkg/config"
 	"github.com/dell/cosi-driver/pkg/transport"
-	"github.com/dell/goobjectscale/pkg/client/api"
-	"github.com/dell/goobjectscale/pkg/client/model"
-	"go.opentelemetry.io/otel"
-	"sigs.k8s.io/container-object-storage-interface-provisioner-sidecar/pkg/consts"
-
-	"github.com/google/uuid"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 )
 
 const (

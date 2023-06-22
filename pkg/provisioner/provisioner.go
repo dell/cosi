@@ -16,13 +16,13 @@ import (
 	"context"
 	"strings"
 
-	log "github.com/sirupsen/logrus"
-	otelCodes "go.opentelemetry.io/otel/codes"
-	cosi "sigs.k8s.io/container-object-storage-interface-spec"
-
 	"go.opentelemetry.io/otel"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+
+	log "github.com/sirupsen/logrus"
+	otelCodes "go.opentelemetry.io/otel/codes"
+	cosi "sigs.k8s.io/container-object-storage-interface-spec"
 )
 
 // Server is an implementation of a provisioner server.

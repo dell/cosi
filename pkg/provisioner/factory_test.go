@@ -18,8 +18,9 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/dell/cosi-driver/pkg/config"
 	"github.com/stretchr/testify/assert"
+
+	"github.com/dell/cosi-driver/pkg/config"
 )
 
 // TestExactlyOne tests the exactlyOne function

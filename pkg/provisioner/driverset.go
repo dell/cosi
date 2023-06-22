@@ -5,9 +5,8 @@ import (
 	"fmt"
 	"sync"
 
-	log "github.com/sirupsen/logrus"
-
 	driver "github.com/dell/cosi-driver/pkg/provisioner/virtualdriver"
+	log "github.com/sirupsen/logrus"
 )
 
 // Driverset is a structure holding list of Drivers, that can be added or extracted based on the ID.

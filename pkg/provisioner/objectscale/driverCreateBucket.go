@@ -18,14 +18,14 @@ import (
 	"fmt"
 	"strings"
 
-	log "github.com/sirupsen/logrus"
-	otelCodes "go.opentelemetry.io/otel/codes"
-	cosi "sigs.k8s.io/container-object-storage-interface-spec"
-
 	"github.com/dell/goobjectscale/pkg/client/model"
 	"go.opentelemetry.io/otel"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+
+	log "github.com/sirupsen/logrus"
+	otelCodes "go.opentelemetry.io/otel/codes"
+	cosi "sigs.k8s.io/container-object-storage-interface-spec"
 )
 
 // DriverCreateBucket creates Bucket on specific Object Storage Platform.

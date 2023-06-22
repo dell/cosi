@@ -16,19 +16,16 @@ import (
 	"fmt"
 	"os"
 
-	log "github.com/sirupsen/logrus"
-
-	ginkgo "github.com/onsi/ginkgo/v2"
-	gomega "github.com/onsi/gomega"
-
-	v1 "k8s.io/api/apps/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/client-go/kubernetes"
-
 	"helm.sh/helm/v3/pkg/action"
 	"helm.sh/helm/v3/pkg/chart/loader"
 	"helm.sh/helm/v3/pkg/cli"
-	// TODO: use https://pkg.go.dev/helm.sh/helm/v3 for helm operations if needed.
+	"k8s.io/client-go/kubernetes"
+
+	ginkgo "github.com/onsi/ginkgo/v2"
+	gomega "github.com/onsi/gomega"
+	log "github.com/sirupsen/logrus"
+	v1 "k8s.io/api/apps/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 // CheckCOSIControllerInstallation Ensure that COSI controller objectstorage-controller is installed in particular namespace.

@@ -15,12 +15,12 @@ package steps
 import (
 	"strings"
 
-	"github.com/aws/aws-sdk-go/service/iam"
 	objectscaleRest "github.com/dell/goobjectscale/pkg/client/rest"
-	"sigs.k8s.io/container-object-storage-interface-api/apis/objectstorage/v1alpha1"
-
 	ginkgo "github.com/onsi/ginkgo/v2"
 	gomega "github.com/onsi/gomega"
+
+	"github.com/aws/aws-sdk-go/service/iam"
+	"sigs.k8s.io/container-object-storage-interface-api/apis/objectstorage/v1alpha1"
 )
 
 // CheckObjectScaleInstallation Ensure that ObjectScale platform is installed on the cluster.

@@ -16,8 +16,6 @@ import (
 	"errors"
 	"testing"
 
-	cosi "sigs.k8s.io/container-object-storage-interface-spec"
-
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/iam"
 	"github.com/aws/aws-sdk-go/service/iam/iamiface"
@@ -27,6 +25,8 @@ import (
 	"github.com/stretchr/testify/mock"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+
+	cosi "sigs.k8s.io/container-object-storage-interface-spec"
 
 	"github.com/dell/cosi-driver/pkg/iamfaketoo"
 )

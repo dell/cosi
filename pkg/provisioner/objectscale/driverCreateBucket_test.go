@@ -16,15 +16,15 @@ import (
 	"strings"
 	"testing"
 
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
-	cosi "sigs.k8s.io/container-object-storage-interface-spec"
-
 	"github.com/dell/goobjectscale/pkg/client/api/mocks"
 	"github.com/dell/goobjectscale/pkg/client/model"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
+
+	cosi "sigs.k8s.io/container-object-storage-interface-spec"
 )
 
 // TestGetBucket contains table tests for (*Server).DriverCreateBucket method.

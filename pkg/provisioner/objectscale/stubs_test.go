@@ -16,8 +16,9 @@ import (
 	"context"
 	"testing"
 
-	"github.com/dell/goobjectscale/pkg/client/model"
 	cosi "sigs.k8s.io/container-object-storage-interface-spec"
+
+	"github.com/dell/goobjectscale/pkg/client/model"
 )
 
 const (

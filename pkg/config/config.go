@@ -20,8 +20,9 @@ import (
 	"os"
 	"path"
 
-	log "github.com/sirupsen/logrus"
 	"gopkg.in/yaml.v3"
+
+	log "github.com/sirupsen/logrus"
 )
 
 //go:generate go run github.com/atombender/go-jsonschema/cmd/gojsonschema@main --package=config --output=config.gen.go config.schema.json --extra-imports

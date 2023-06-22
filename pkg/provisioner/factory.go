@@ -16,9 +16,8 @@ import (
 	"context"
 	"errors"
 
-	log "github.com/sirupsen/logrus"
-
 	driver "github.com/dell/cosi-driver/pkg/provisioner/virtualdriver"
+	log "github.com/sirupsen/logrus"
 
 	"github.com/dell/cosi-driver/pkg/config"
 	"github.com/dell/cosi-driver/pkg/provisioner/objectscale"

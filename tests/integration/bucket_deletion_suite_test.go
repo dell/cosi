@@ -15,11 +15,12 @@
 package main_test
 
 import (
+	"sigs.k8s.io/container-object-storage-interface-api/apis/objectstorage/v1alpha1"
+
 	. "github.com/onsi/ginkgo/v2"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/dell/cosi-driver/tests/integration/steps"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"sigs.k8s.io/container-object-storage-interface-api/apis/objectstorage/v1alpha1"
 )
 
 var _ = Describe("Bucket Deletion", Ordered, Label("delete", "objectscale"), func() {

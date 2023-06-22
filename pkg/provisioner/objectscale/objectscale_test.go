@@ -23,10 +23,11 @@ import (
 
 	"github.com/dell/goobjectscale/pkg/client/fake"
 	"github.com/dell/goobjectscale/pkg/client/model"
-	log "github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+
+	log "github.com/sirupsen/logrus"
 	cosi "sigs.k8s.io/container-object-storage-interface-spec"
 
 	"github.com/dell/cosi-driver/pkg/config"
