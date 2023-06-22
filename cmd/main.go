@@ -129,7 +129,7 @@ func runMain() error {
 
 	log.Info("COSI driver is starting")
 	// Run the driver.
-	return driver.RunBlocking(ctx, cfg, driver.COSISocket, "cosi-driver")
+	return driver.RunBlocking(ctx, cfg, driver.COSISocket, tracedServiceName)
 }
 
 // tracerProvider creates new tracerProvider and connects it to Jaeger running under provided URL.
