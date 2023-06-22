@@ -19,6 +19,7 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
+	"time"
 
 	driver "github.com/dell/cosi-driver/pkg/provisioner/virtualdriver"
 	objectscaleRest "github.com/dell/goobjectscale/pkg/client/rest"
@@ -53,6 +54,9 @@ const (
 	// allowEffect is used when updating the bucket policy, in order to grant permissions to user.
 	allowEffect = "Allow"
 )
+
+// defaultTimeout is default call length before context is getting canceled.
+var defaultTimeout = time.Second * 20
 
 // Server is implementation of driver.Driver interface for ObjectScale platform.
 type Server struct {

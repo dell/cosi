@@ -17,7 +17,6 @@ import (
 	"errors"
 	"fmt"
 	"strings"
-	"time"
 
 	log "github.com/sirupsen/logrus"
 	otelCodes "go.opentelemetry.io/otel/codes"
@@ -28,8 +27,6 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
-
-var defaultTimeout = time.Second * 20
 
 // DriverCreateBucket creates Bucket on specific Object Storage Platform.
 func (s *Server) DriverCreateBucket(
@@ -121,7 +118,7 @@ func (s *Server) getBucket(ctx context.Context, bucketName string, parameters ma
 	retrievedBucket, err := s.mgmtClient.Buckets().Get(ctx, bucketName, parameters)
 
 	switch {
-	// First, we don't found the bucket on the Provider.
+	// First, we don't find the bucket on the Provider.
 	case errors.Is(err, model.Error{Code: model.CodeParameterNotFound}):
 		return nil, nil
 

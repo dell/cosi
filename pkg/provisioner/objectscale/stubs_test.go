@@ -12,17 +12,41 @@
 
 package objectscale
 
-import "github.com/dell/goobjectscale/pkg/client/model"
+import (
+	"context"
+	"testing"
 
-const (
-	bucketName    = "test_bucket"
-	namespace     = "namespace"
-	testID        = "test.id"
-	objectScaleID = "gateway.objectscale.test"
-	objectStoreID = "objectstore"
+	"github.com/dell/goobjectscale/pkg/client/model"
+	cosi "sigs.k8s.io/container-object-storage-interface-spec"
 )
 
-var bucket = &model.Bucket{
-	Namespace: namespace,
-	Name:      bucketName,
+const (
+	testBucketName = "test_bucket"
+	testNamespace  = "namespace"
+	testID         = "test.id"
+	objectScaleID  = "gateway.objectscale.test"
+	objectStoreID  = "objectstore"
+)
+
+var (
+	testBucket = &model.Bucket{
+		Namespace: testNamespace,
+		Name:      testBucketName,
+	}
+
+	testRequest = &cosi.DriverCreateBucketRequest{
+		Name: testBucketName,
+	}
+)
+
+// testContext creates new context with deadline equal to test deadline, or (if the deadline is empty),
+// with a timeout equal to the default timeout.
+func testContext(t *testing.T) (context.Context, context.CancelFunc) {
+	deadline, ok := t.Deadline()
+
+	if ok {
+		return context.WithDeadline(context.Background(), deadline)
+	}
+
+	return context.WithTimeout(context.Background(), defaultTimeout)
 }
