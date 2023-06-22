@@ -33,12 +33,12 @@ func TestDriverCreateBucket(t *testing.T) {
 
 	for scenario, fn := range map[string]func(t *testing.T){
 		// happy path
-		"testDriverCreateBucket_BucketCreated": testDriverCreateBucket_BucketCreated,
-		"testDriverCreateBucket_BucketExists":  testDriverCreateBucket_BucketExists,
+		"BucketCreated": testDriverCreateBucketBucketCreated,
+		"BucketExists":  testDriverCreateBucketBucketExists,
 		// testing errors
-		"testDriverCreateBucket_EmptyBucketName":      testDriverCreateBucket_EmptyBucketName,
-		"testDriverCreateBucket_CheckBucketFailed":    testDriverCreateBucket_CheckBucketFailed,
-		"testDriverCreateBucket_BucketCreationFailed": testDriverCreateBucket_BucketCreationFailed,
+		"EmptyBucketName":      testDriverCreateBucketEmptyBucketName,
+		"CheckBucketFailed":    testDriverCreateBucketCheckBucketFailed,
+		"BucketCreationFailed": testDriverCreateBucketBucketCreationFailed,
 	} {
 		fn := fn
 
@@ -50,9 +50,9 @@ func TestDriverCreateBucket(t *testing.T) {
 	}
 }
 
-// testDriverCreateBucket_BucketCreated tests the happy path of the (*Server).DriverCreateBucket method.
+// testDriverCreateBucketBucketCreated tests the happy path of the (*Server).DriverCreateBucket method.
 // It assumes that the driver does not exist on the backend.
-func testDriverCreateBucket_BucketCreated(t *testing.T) {
+func testDriverCreateBucketBucketCreated(t *testing.T) {
 	ctx, cancel := testContext(t)
 	defer cancel()
 
@@ -78,9 +78,9 @@ func testDriverCreateBucket_BucketCreated(t *testing.T) {
 	assert.Equal(t, res.BucketId, strings.Join([]string{server.backendID, testBucket.Name}, "-"))
 }
 
-// testDriverCreateBucket_BucketExists tests the happy path of the (*Server).DriverCreateBucket method.
+// testDriverCreateBucketBucketExists tests the happy path of the (*Server).DriverCreateBucket method.
 // It assumes that the driver already exists on the backend.
-func testDriverCreateBucket_BucketExists(t *testing.T) {
+func testDriverCreateBucketBucketExists(t *testing.T) {
 	ctx, cancel := testContext(t)
 	defer cancel()
 
@@ -105,9 +105,9 @@ func testDriverCreateBucket_BucketExists(t *testing.T) {
 	assert.Equal(t, res.BucketId, strings.Join([]string{server.backendID, testBucket.Name}, "-"))
 }
 
-// testDriverCreateBucket_EmptyBucketName tests if missing bucket name is handled correctly
+// testDriverCreateBucketEmptyBucketName tests if missing bucket name is handled correctly
 // in the (*Server).DriverCreateBucket method.
-func testDriverCreateBucket_EmptyBucketName(t *testing.T) {
+func testDriverCreateBucketEmptyBucketName(t *testing.T) {
 	ctx, cancel := testContext(t)
 	defer cancel()
 
@@ -129,9 +129,9 @@ func testDriverCreateBucket_EmptyBucketName(t *testing.T) {
 	assert.ErrorIs(t, err, status.Error(codes.InvalidArgument, "empty bucket name"))
 }
 
-// testDriverCreateBucket_CheckBucketFailed tests if error during checking bucket existence is handled correctly
+// testDriverCreateBucketCheckBucketFailed tests if error during checking bucket existence is handled correctly
 // in the (*Server).DriverCreateBucket method.
-func testDriverCreateBucket_CheckBucketFailed(t *testing.T) {
+func testDriverCreateBucketCheckBucketFailed(t *testing.T) {
 	ctx, cancel := testContext(t)
 	defer cancel()
 
@@ -154,9 +154,9 @@ func testDriverCreateBucket_CheckBucketFailed(t *testing.T) {
 	assert.ErrorIs(t, err, status.Error(codes.Internal, "failed to check if bucket exists"))
 }
 
-// testDriverCreateBucket_BucketCreationFailed tests if error during creation of bucket is handled correctly
+// testDriverCreateBucketBucketCreationFailed tests if error during creation of bucket is handled correctly
 // in the (*Server).DriverCreateBucket method.
-func testDriverCreateBucket_BucketCreationFailed(t *testing.T) {
+func testDriverCreateBucketBucketCreationFailed(t *testing.T) {
 	ctx, cancel := testContext(t)
 	defer cancel()
 
@@ -186,10 +186,10 @@ func TestGetBucket(t *testing.T) {
 
 	for scenario, fn := range map[string]func(t *testing.T){
 		// happy path
-		"testGetBucket_Valid": testGetBucket_Valid,
+		"Valid": testGetBucketValid,
 		// testing errors
-		"testGetBucket_NoBucket":     testGetBucket_NoBucket,
-		"testGetBucket_UnknownError": testGetBucket_UnknownError,
+		"NoBucket":     testGetBucketNoBucket,
+		"UnknownError": testGetBucketUnknownError,
 	} {
 		fn := fn
 
@@ -201,8 +201,8 @@ func TestGetBucket(t *testing.T) {
 	}
 }
 
-// testGetBucket_Valid tests the happy path of the (*Server).getBucket method.
-func testGetBucket_Valid(t *testing.T) {
+// testGetBucketValid tests the happy path of the (*Server).getBucket method.
+func testGetBucketValid(t *testing.T) {
 	ctx, cancel := testContext(t)
 	defer cancel()
 
@@ -230,9 +230,9 @@ func testGetBucket_Valid(t *testing.T) {
 	assert.EqualValues(t, modelBucket, bucket)
 }
 
-// testGetBucket_NoBucket tests if the error indicating that no bucket was found returned from the mocked API,
+// testGetBucketNoBucket tests if the error indicating that no bucket was found returned from the mocked API,
 // is handled correctly in the (*Server).getBucket method.
-func testGetBucket_NoBucket(t *testing.T) {
+func testGetBucketNoBucket(t *testing.T) {
 	ctx, cancel := testContext(t)
 	defer cancel()
 
@@ -259,9 +259,9 @@ func testGetBucket_NoBucket(t *testing.T) {
 	assert.Nil(t, bucket)
 }
 
-// testGetBucket_UnknownError tests if the unexpected error returned from mocked API,
+// testGetBucketUnknownError tests if the unexpected error returned from mocked API,
 // is handled correctly in the (*Server).getBucket method.
-func testGetBucket_UnknownError(t *testing.T) {
+func testGetBucketUnknownError(t *testing.T) {
 	ctx, cancel := testContext(t)
 	defer cancel()
 
@@ -294,9 +294,9 @@ func TestCreateBucket(t *testing.T) {
 
 	for scenario, fn := range map[string]func(t *testing.T){
 		// happy path
-		"testCreateBucket_Valid": testCreateBucket_Valid,
+		"Valid": testCreateBucketValid,
 		// testing errors
-		"testCreateBucket_Failed": testCreateBucket_Failed,
+		"Failed": testCreateBucketFailed,
 	} {
 		fn := fn
 
@@ -308,8 +308,8 @@ func TestCreateBucket(t *testing.T) {
 	}
 }
 
-// testCreateBucket_Valid tests the happy path of the (*Server).createBucket method.
-func testCreateBucket_Valid(t *testing.T) {
+// testCreateBucketValid tests the happy path of the (*Server).createBucket method.
+func testCreateBucketValid(t *testing.T) {
 	ctx, cancel := testContext(t)
 	defer cancel()
 
@@ -333,9 +333,9 @@ func testCreateBucket_Valid(t *testing.T) {
 	assert.NoError(t, err)
 }
 
-// testCreateBucket_Valid tests if the error returned from the mocked API is handled correctly
+// testCreateBucketValid tests if the error returned from the mocked API is handled correctly
 // in the (*Server).createBucket method.
-func testCreateBucket_Failed(t *testing.T) {
+func testCreateBucketFailed(t *testing.T) {
 	ctx, cancel := testContext(t)
 	defer cancel()
 
