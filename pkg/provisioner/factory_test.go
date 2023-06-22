@@ -13,6 +13,7 @@
 package provisioner
 
 import (
+	"context"
 	"regexp"
 	"testing"
 
@@ -121,14 +122,14 @@ func TestNewVirtualDriver(t *testing.T) {
 }
 
 func testValidConfig(t *testing.T) {
-	vd, err := NewVirtualDriver(validConfig)
+	vd, err := NewVirtualDriver(context.TODO(), validConfig)
 	assert.NotNil(t, vd)
 	assert.NoError(t, err)
 	assert.Equal(t, validConfig.Objectscale.Id, vd.ID())
 }
 
 func testInvalidConfig(t *testing.T) {
-	vd, err := NewVirtualDriver(invalidConfig)
+	vd, err := NewVirtualDriver(context.TODO(), invalidConfig)
 	assert.Nil(t, vd)
 	assert.Error(t, err)
 	assert.Regexp(t, expectedOne, err.Error())

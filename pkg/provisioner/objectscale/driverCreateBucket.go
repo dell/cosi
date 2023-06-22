@@ -81,7 +81,6 @@ func (s *Server) DriverCreateBucket(
 		span.SetStatus(otelCodes.Error, msg)
 
 		return nil, status.Error(codes.Internal, msg)
-
 	} else if err == nil && existingBucket != nil {
 		return &cosi.DriverCreateBucketResponse{
 			BucketId: strings.Join([]string{s.backendID, bucket.Name}, "-"),

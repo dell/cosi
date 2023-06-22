@@ -81,7 +81,7 @@ var _ driver.Driver = (*Server)(nil)
 
 // New initializes server based on the config file.
 // TODO: verify if emptiness verification can be moved to a separate function.
-func New(config *config.Objectscale) (*Server, error) {
+func New(ctx context.Context, config *config.Objectscale) (*Server, error) {
 	id := config.Id
 	if id == "" {
 		return nil, errors.New("empty driver id")
@@ -175,7 +175,10 @@ func New(config *config.Objectscale) (*Server, error) {
 		Name: iamObjectscale.SDSHandlerName,
 		Fn: func(r *request.Request) {
 			if !objClient.IsAuthenticated() {
-				err := objClient.Login(context.TODO(), &x509Client) // TODO: this needs to be a proper context
+				ctx, cancel := context.WithTimeout(ctx, defaultTimeout)
+				defer cancel()
+
+				err := objClient.Login(ctx, &x509Client)
 				if err != nil {
 					r.Error = err // no return intentional
 				}
