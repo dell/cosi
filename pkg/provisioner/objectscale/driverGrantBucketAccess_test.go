@@ -35,13 +35,6 @@ import (
 
 var _ iamiface.IAMAPI = (*iamfaketoo.IAMAPI)(nil)
 
-const (
-	namespace     = "namespace"
-	testID        = "test.id"
-	objectScaleID = "objectscale"
-	objectStoreID = "objectstore"
-)
-
 func TestServerBucketAccessGrant(t *testing.T) {
 	t.Parallel()
 

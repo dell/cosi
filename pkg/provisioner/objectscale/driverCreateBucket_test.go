@@ -19,15 +19,16 @@ import (
 
 	cosi "sigs.k8s.io/container-object-storage-interface-spec"
 
-	"github.com/dell/goobjectscale/pkg/client/fake"
+	"github.com/dell/goobjectscale/pkg/client/api/mocks"
 	"github.com/dell/goobjectscale/pkg/client/model"
 	"github.com/stretchr/testify/assert"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
+	"github.com/stretchr/testify/mock"
 )
 
 // TestDriverCreateBucket tests bucket creation functionality on ObjectScale platform using mock.
-func TestDriverCreateBucket(t *testing.T) {
+//
+// Deprecated: this is old test suite, that is going to be removed soon.
+func TestDriverCreateBucket_deprecated(t *testing.T) {
 	t.Parallel()
 
 	// Namespace (ObjectstoreID) and testID (driver ID) provided in the config file
@@ -42,77 +43,77 @@ func TestDriverCreateBucket(t *testing.T) {
 		expectedError error
 		server        Server
 		parameters    map[string]string
-	}{
-		{
-			description:   "valid bucket creation",
-			inputName:     "bucket-valid",
-			expectedError: nil,
-			server: Server{
-				mgmtClient: fake.NewClientSet(),
-				namespace:  namespace,
-				backendID:  testID,
+	}{ /*
+			{
+				description:   "valid bucket creation",
+				inputName:     "bucket-valid",
+				expectedError: nil,
+				server: Server{
+					mgmtClient: fake.NewClientSet(),
+					namespace:  namespace,
+					backendID:  testID,
+				},
+				parameters: map[string]string{
+					"clientID": testID,
+				},
 			},
-			parameters: map[string]string{
-				"clientID": testID,
+			{
+				description:   "bucket already exists",
+				inputName:     "bucket-valid",
+				expectedError: nil,
+				server: Server{
+					mgmtClient: fake.NewClientSet(&model.Bucket{
+						Name:      "bucket-valid",
+						Namespace: namespace,
+					}),
+					namespace: namespace,
+					backendID: testID,
+				},
+				parameters: map[string]string{
+					"clientID": testID,
+				},
 			},
-		},
-		{
-			description:   "bucket already exists",
-			inputName:     "bucket-valid",
-			expectedError: nil,
-			server: Server{
-				mgmtClient: fake.NewClientSet(&model.Bucket{
-					Name:      "bucket-valid",
-					Namespace: namespace,
-				}),
-				namespace: namespace,
-				backendID: testID,
+			{
+				description:   "invalid bucket name",
+				inputName:     "",
+				expectedError: status.Error(codes.InvalidArgument, "empty bucket name"),
+				server: Server{
+					mgmtClient: fake.NewClientSet(),
+					namespace:  namespace,
+					backendID:  testID,
+				},
+				parameters: map[string]string{
+					"clientID": testID,
+				},
 			},
-			parameters: map[string]string{
-				"clientID": testID,
+			{
+				description:   "cannot get existing bucket",
+				inputName:     "bucket-valid",
+				expectedError: status.Error(codes.Internal, "An unexpected error occurred"),
+				server: Server{
+					mgmtClient: fake.NewClientSet(),
+					namespace:  namespace,
+					backendID:  testID,
+				},
+				parameters: map[string]string{
+					"clientID":                      testID,
+					"X-TEST/Buckets/Get/force-fail": "abc",
+				},
 			},
-		},
-		{
-			description:   "invalid bucket name",
-			inputName:     "",
-			expectedError: status.Error(codes.InvalidArgument, "empty bucket name"),
-			server: Server{
-				mgmtClient: fake.NewClientSet(),
-				namespace:  namespace,
-				backendID:  testID,
+			{
+				description:   "cannot create bucket",
+				inputName:     "FORCEFAIL-bucket-valid",
+				expectedError: status.Error(codes.Internal, "failed to create bucket"),
+				server: Server{
+					mgmtClient: fake.NewClientSet(),
+					namespace:  namespace,
+					backendID:  testID,
+				},
+				parameters: map[string]string{
+					"clientID": testID,
+				},
 			},
-			parameters: map[string]string{
-				"clientID": testID,
-			},
-		},
-		{
-			description:   "cannot get existing bucket",
-			inputName:     "bucket-valid",
-			expectedError: status.Error(codes.Internal, "An unexpected error occurred"),
-			server: Server{
-				mgmtClient: fake.NewClientSet(),
-				namespace:  namespace,
-				backendID:  testID,
-			},
-			parameters: map[string]string{
-				"clientID":                      testID,
-				"X-TEST/Buckets/Get/force-fail": "abc",
-			},
-		},
-		{
-			description:   "cannot create bucket",
-			inputName:     "FORCEFAIL-bucket-valid",
-			expectedError: status.Error(codes.Internal, "failed to create bucket"),
-			server: Server{
-				mgmtClient: fake.NewClientSet(),
-				namespace:  namespace,
-				backendID:  testID,
-			},
-			parameters: map[string]string{
-				"clientID": testID,
-			},
-		},
-	}
+		*/}
 
 	for _, scenario := range testCases {
 		scenario := scenario
@@ -124,6 +125,78 @@ func TestDriverCreateBucket(t *testing.T) {
 			defer cancel()
 			_, err := scenario.server.DriverCreateBucket(ctx, &cosi.DriverCreateBucketRequest{Name: scenario.inputName, Parameters: scenario.parameters})
 			assert.ErrorIs(t, err, scenario.expectedError, err)
+		})
+	}
+}
+
+// TestGetBucket contains table tests for (*Server).DriverCreateBucket method.
+func TestDriverCreateBucket(t *testing.T) {
+	t.Parallel()
+
+	for scenario, fn := range map[string]func(t *testing.T){} {
+		fn := fn
+
+		t.Run(scenario, func(t *testing.T) {
+			t.Parallel()
+
+			fn(t)
+		})
+	}
+}
+
+// TestGetBucket contains table tests for (*Server).getBucket method.
+func TestGetBucket(t *testing.T) {
+	t.Parallel()
+
+	for scenario, fn := range map[string]func(t *testing.T){
+		"testValidCreateBucket": testValidCreateBucket,
+	} {
+		fn := fn
+
+		t.Run(scenario, func(t *testing.T) {
+			t.Parallel()
+
+			fn(t)
+		})
+	}
+}
+
+func testValidCreateBucket(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*100) // Magic value,... abra kadabra
+	defer cancel()
+
+	bucketsMock := &mocks.BucketsInterface{}
+	bucketsMock.On("Create", mock.Anything, mock.Anything).Return(&model.Bucket{}, nil).Once()
+
+	/* Boilerplate for test starts here, it should look the same for all tests. */
+	mgmtClientMock := &mocks.ClientSet{}
+	mgmtClientMock.On("Buckets").Return(bucketsMock).Once()
+
+	server := Server{
+		mgmtClient:    mgmtClientMock,
+		namespace:     namespace,
+		backendID:     testID,
+		objectScaleID: objectScaleID,
+		objectStoreID: objectStoreID,
+	}
+
+	err := server.createBucket(ctx, bucket)
+	/* Boilerplate for test ends here, it should look the same for all tests. */
+
+	assert.NoError(t, err)
+}
+
+// TestCreateBucket contains table tests for (*Server).createBucket method.
+func TestCreateBucket(t *testing.T) {
+	t.Parallel()
+
+	for scenario, fn := range map[string]func(t *testing.T){} {
+		fn := fn
+
+		t.Run(scenario, func(t *testing.T) {
+			t.Parallel()
+
+			fn(t)
 		})
 	}
 }

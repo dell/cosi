@@ -15,6 +15,7 @@ package objectscale
 import (
 	"context"
 	"errors"
+	"fmt"
 	"strings"
 	"time"
 
@@ -64,7 +65,6 @@ func (s *Server) DriverCreateBucket(
 	}
 
 	parameters := make(map[string]string)
-
 	parameters["namespace"] = s.namespace
 
 	log.WithFields(log.Fields{
@@ -74,16 +74,36 @@ func (s *Server) DriverCreateBucket(
 	// Get bucket.
 	existingBucket, err := s.getBucket(ctx, bucket.Name, parameters)
 	if err != nil && !errors.Is(err, model.Error{Code: model.CodeParameterNotFound}) {
-		return nil, status.Error(codes.Internal, err.Error())
+		msg := "failed to check if bucket exists"
+
+		log.WithFields(log.Fields{
+			"error": err,
+		}).Error(msg)
+
+		span.RecordError(err)
+		span.SetStatus(otelCodes.Error, msg)
+
+		return nil, status.Error(codes.Internal, msg)
+
 	} else if err == nil && existingBucket != nil {
 		return &cosi.DriverCreateBucketResponse{
 			BucketId: strings.Join([]string{s.backendID, bucket.Name}, "-"),
 		}, nil
 	}
+
 	// Create bucket.
 	err = s.createBucket(ctx, bucket)
 	if err != nil {
-		return nil, status.Error(codes.Internal, err.Error())
+		msg := "failed to create bucket"
+
+		log.WithFields(log.Fields{
+			"error": err,
+		}).Error(msg)
+
+		span.RecordError(err)
+		span.SetStatus(otelCodes.Error, msg)
+
+		return nil, status.Error(codes.Internal, msg)
 	}
 
 	// Return response.
@@ -109,7 +129,7 @@ func (s *Server) getBucket(ctx context.Context, bucketName string, parameters ma
 	case err == nil:
 		log.WithFields(log.Fields{
 			"bucket": bucketName,
-		}).Warn("bucket already exists")
+		}).Info("bucket already exists")
 
 		span.AddEvent("bucket already exists")
 
@@ -117,16 +137,10 @@ func (s *Server) getBucket(ctx context.Context, bucketName string, parameters ma
 
 	// Final case, when we receive an unknown error.
 	default:
-		errMsg := errors.New("failed to check bucket existence")
-		log.WithFields(log.Fields{
-			"bucket": bucketName,
-			"error":  err,
-		}).Error(errMsg.Error())
-
 		span.RecordError(err)
-		span.SetStatus(otelCodes.Error, errMsg.Error())
+		span.SetStatus(otelCodes.Error, "failed to check bucket existence")
 
-		return nil, err
+		return nil, fmt.Errorf("failed to check bucket existence: %w", err)
 	}
 }
 
@@ -137,16 +151,10 @@ func (s *Server) createBucket(ctx context.Context, bucket *model.Bucket) error {
 
 	_, err := s.mgmtClient.Buckets().Create(ctx, *bucket)
 	if err != nil {
-		errMsg := errors.New("failed to create bucket")
-		log.WithFields(log.Fields{
-			"bucket": bucket.Name,
-			"error":  err,
-		}).Error(errMsg.Error())
-
 		span.RecordError(err)
-		span.SetStatus(otelCodes.Error, errMsg.Error())
+		span.SetStatus(otelCodes.Error, "failed to create bucket")
 
-		return errMsg
+		return fmt.Errorf("failed to create bucket: %w", err)
 	}
 
 	log.WithFields(log.Fields{
