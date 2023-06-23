@@ -20,8 +20,9 @@ import (
 	"testing"
 	"time"
 
-	log "github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
+
+	log "github.com/sirupsen/logrus"
 
 	"github.com/dell/cosi-driver/pkg/config"
 )

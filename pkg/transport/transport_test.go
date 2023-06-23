@@ -18,10 +18,11 @@ import (
 	"regexp"
 	"testing"
 
+	"github.com/stretchr/testify/assert"
+
 	log "github.com/sirupsen/logrus"
 
 	"github.com/dell/cosi-driver/pkg/config"
-	"github.com/stretchr/testify/assert"
 )
 
 var (

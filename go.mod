@@ -5,7 +5,7 @@ go 1.20
 require (
 	github.com/aws/aws-sdk-go v1.44.271
 	github.com/bombsimon/logrusr/v4 v4.0.0
-	github.com/dell/goobjectscale v0.0.0-20230605102711-e304aba506eb
+	github.com/dell/goobjectscale v0.0.0-20230619105951-cc61d3eb8196
 	github.com/google/uuid v1.3.0
 	github.com/onsi/ginkgo/v2 v2.9.2
 	github.com/onsi/gomega v1.27.5

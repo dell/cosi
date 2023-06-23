@@ -13,7 +13,6 @@
 package provisioner
 
 import (
-	"context"
 	"fmt"
 	"io"
 	"log"
@@ -27,6 +26,7 @@ import (
 
 	cosi "sigs.k8s.io/container-object-storage-interface-spec"
 
+	"github.com/dell/cosi-driver/pkg/internal/testcontext"
 	"github.com/dell/cosi-driver/pkg/provisioner/virtualdriver/fake"
 )
 
@@ -125,7 +125,11 @@ func testServerDriverCreateBucket(t *testing.T, fakeServer Server) {
 		tc := tc
 		t.Run(tc.description, func(t *testing.T) {
 			t.Parallel()
-			_, err := tc.server.DriverCreateBucket(context.TODO(), &cosi.DriverCreateBucketRequest{
+
+			ctx, cancel := testcontext.New(t)
+			defer cancel()
+
+			_, err := tc.server.DriverCreateBucket(ctx, &cosi.DriverCreateBucketRequest{
 				Name:       tc.req.Name,
 				Parameters: tc.req.Parameters,
 			})
@@ -172,7 +176,11 @@ func testServerDriverDeleteBucket(t *testing.T, fakeServer Server) {
 		tc := tc
 		t.Run(tc.description, func(t *testing.T) {
 			t.Parallel()
-			_, err := tc.server.DriverDeleteBucket(context.TODO(), &cosi.DriverDeleteBucketRequest{
+
+			ctx, cancel := testcontext.New(t)
+			defer cancel()
+
+			_, err := tc.server.DriverDeleteBucket(ctx, &cosi.DriverDeleteBucketRequest{
 				BucketId: tc.req.BucketId,
 			})
 			assert.ErrorIs(t, err, tc.expectedError, err)
@@ -229,7 +237,11 @@ func testServerDriverGrantBucketAccess(t *testing.T, fakeServer Server) {
 		tc := tc
 		t.Run(tc.description, func(t *testing.T) {
 			t.Parallel()
-			_, err := tc.server.DriverGrantBucketAccess(context.TODO(), &cosi.DriverGrantBucketAccessRequest{
+
+			ctx, cancel := testcontext.New(t)
+			defer cancel()
+
+			_, err := tc.server.DriverGrantBucketAccess(ctx, &cosi.DriverGrantBucketAccessRequest{
 				BucketId:   tc.req.BucketId,
 				Parameters: tc.req.Parameters,
 			})
@@ -277,7 +289,11 @@ func testServerDriverRevokeBucketAccess(t *testing.T, fakeServer Server) {
 		tc := tc
 		t.Run(tc.description, func(t *testing.T) {
 			t.Parallel()
-			_, err := tc.server.DriverRevokeBucketAccess(context.TODO(), &cosi.DriverRevokeBucketAccessRequest{
+
+			ctx, cancel := testcontext.New(t)
+			defer cancel()
+
+			_, err := tc.server.DriverRevokeBucketAccess(ctx, &cosi.DriverRevokeBucketAccessRequest{
 				BucketId: tc.req.BucketId,
 			})
 			assert.ErrorIs(t, err, tc.expectedError, err)

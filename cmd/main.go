@@ -26,14 +26,15 @@ import (
 	semconv "go.opentelemetry.io/otel/semconv/v1.17.0"
 
 	"github.com/bombsimon/logrusr/v4"
-	"github.com/dell/cosi-driver/pkg/config"
-	"github.com/dell/cosi-driver/pkg/driver"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc"
 	"go.opentelemetry.io/otel/propagation"
 	"go.opentelemetry.io/otel/sdk/resource"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
+
+	"github.com/dell/cosi-driver/pkg/config"
+	"github.com/dell/cosi-driver/pkg/driver"
 )
 
 var (
@@ -128,7 +129,7 @@ func runMain() error {
 
 	log.Info("COSI driver is starting")
 	// Run the driver.
-	return driver.RunBlocking(ctx, cfg, driver.COSISocket, "cosi-driver")
+	return driver.RunBlocking(ctx, cfg, driver.COSISocket, tracedServiceName)
 }
 
 // tracerProvider creates new tracerProvider and connects it to Jaeger running under provided URL.

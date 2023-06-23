@@ -1,32 +1,38 @@
+// Copyright © 2023 Dell Inc. or its subsidiaries. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//      http://www.apache.org/licenses/LICENSE-2.0
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 package objectscale
 
 import (
-	"context"
 	"errors"
 	"testing"
-	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/iam"
 	"github.com/aws/aws-sdk-go/service/iam/iamiface"
-	"github.com/dell/cosi-driver/pkg/iamfaketoo"
 	"github.com/dell/goobjectscale/pkg/client/fake"
 	"github.com/dell/goobjectscale/pkg/client/model"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+
 	cosi "sigs.k8s.io/container-object-storage-interface-spec"
+
+	"github.com/dell/cosi-driver/pkg/iamfaketoo"
+	"github.com/dell/cosi-driver/pkg/internal/testcontext"
 )
 
 var _ iamiface.IAMAPI = (*iamfaketoo.IAMAPI)(nil)
-
-const (
-	namespace     = "namespace"
-	testID        = "test.id"
-	objectScaleID = "objectscale"
-	objectStoreID = "objectstore"
-)
 
 func TestServerBucketAccessGrant(t *testing.T) {
 	t.Parallel()
@@ -58,7 +64,7 @@ func TestServerBucketAccessGrant(t *testing.T) {
 }
 
 func testValidAccessGranting(t *testing.T) {
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second*100) // Magic value,... abra kadabra
+	ctx, cancel := testcontext.New(t)
 	defer cancel()
 
 	// That's how we can mock the objectscale IAM api client
@@ -75,10 +81,10 @@ func testValidAccessGranting(t *testing.T) {
 	server := Server{
 		mgmtClient: fake.NewClientSet(&model.Bucket{ // That's how we can mock the objectscale bucket api client
 			Name:      "valid", // This is based on "bucket-valid" BucketId from request
-			Namespace: namespace,
+			Namespace: testNamespace,
 		}),
 		iamClient:     IAMClient, // Inject mocked IAM client
-		namespace:     namespace,
+		namespace:     testNamespace,
 		backendID:     testID,
 		objectScaleID: objectScaleID,
 		objectStoreID: objectStoreID,
@@ -99,7 +105,7 @@ func testValidAccessGranting(t *testing.T) {
 }
 
 func testInvalidAccessKeyCreation(t *testing.T) {
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second*100) // Magic value,... abra kadabra
+	ctx, cancel := testcontext.New(t)
 	defer cancel()
 
 	// That's how we can mock the objectscale IAM api client
@@ -116,10 +122,10 @@ func testInvalidAccessKeyCreation(t *testing.T) {
 	server := Server{
 		mgmtClient: fake.NewClientSet(&model.Bucket{ // That's how we can mock the objectscale bucket api client
 			Name:      "valid", // This is based on "bucket-valid" BucketId from request
-			Namespace: namespace,
+			Namespace: testNamespace,
 		}),
 		iamClient:     IAMClient, // Inject mocked IAM client
-		namespace:     namespace,
+		namespace:     testNamespace,
 		backendID:     testID,
 		objectScaleID: objectScaleID,
 		objectStoreID: objectStoreID,
@@ -140,7 +146,7 @@ func testInvalidAccessKeyCreation(t *testing.T) {
 }
 
 func testInvalidUserCreation(t *testing.T) {
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second*100) // Magic value,... abra kadabra
+	ctx, cancel := testcontext.New(t)
 	defer cancel()
 
 	// That's how we can mock the objectscale IAM api client
@@ -151,10 +157,10 @@ func testInvalidUserCreation(t *testing.T) {
 	server := Server{
 		mgmtClient: fake.NewClientSet(&model.Bucket{ // That's how we can mock the objectscale bucket api client
 			Name:      "valid", // This is based on "bucket-valid" BucketId from request
-			Namespace: namespace,
+			Namespace: testNamespace,
 		}),
 		iamClient:     IAMClient, // Inject mocked IAM client
-		namespace:     namespace,
+		namespace:     testNamespace,
 		backendID:     testID,
 		objectScaleID: objectScaleID,
 		objectStoreID: objectStoreID,
@@ -175,7 +181,7 @@ func testInvalidUserCreation(t *testing.T) {
 }
 
 func testInvalidUserRetrieval(t *testing.T) {
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second*100) // Magic value,... abra kadabra
+	ctx, cancel := testcontext.New(t)
 	defer cancel()
 
 	// That's how we can mock the objectscale IAM api client
@@ -185,10 +191,10 @@ func testInvalidUserRetrieval(t *testing.T) {
 	server := Server{
 		mgmtClient: fake.NewClientSet(&model.Bucket{ // That's how we can mock the objectscale bucket api client
 			Name:      "valid", // This is based on "bucket-valid" BucketId from request
-			Namespace: namespace,
+			Namespace: testNamespace,
 		}),
 		iamClient:     IAMClient, // Inject mocked IAM client
-		namespace:     namespace,
+		namespace:     testNamespace,
 		backendID:     testID,
 		objectScaleID: objectScaleID,
 		objectStoreID: objectStoreID,
@@ -209,7 +215,7 @@ func testInvalidUserRetrieval(t *testing.T) {
 }
 
 func testInvalidBucketPolicyUpdate(t *testing.T) {
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second*100) // Magic value,... abra kadabra
+	ctx, cancel := testcontext.New(t)
 	defer cancel()
 
 	// That's how we can mock the objectscale IAM api client
@@ -225,10 +231,10 @@ func testInvalidBucketPolicyUpdate(t *testing.T) {
 	server := Server{
 		mgmtClient: fake.NewClientSet(&model.Bucket{ // That's how we can mock the objectscale bucket api client
 			Name:      "valid", // This is based on "bucket-valid" BucketId from request
-			Namespace: namespace,
+			Namespace: testNamespace,
 		}),
 		iamClient:     IAMClient, // Inject mocked IAM client
-		namespace:     namespace,
+		namespace:     testNamespace,
 		backendID:     testID,
 		objectScaleID: objectScaleID,
 		objectStoreID: objectStoreID,
@@ -249,16 +255,16 @@ func testInvalidBucketPolicyUpdate(t *testing.T) {
 }
 
 func testEmptyBucketID(t *testing.T) {
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second*100) // Magic value,... abra kadabra
+	ctx, cancel := testcontext.New(t)
 	defer cancel()
 
 	server := Server{
 		mgmtClient: fake.NewClientSet(&model.Bucket{ // That's how we can mock the objectscale bucket api client
 			Name:      "valid", // This is based on "bucket-valid" BucketId from request
-			Namespace: namespace,
+			Namespace: testNamespace,
 		}),
 		iamClient:     iamfaketoo.NewIAMAPI(t), // Inject mocked IAM client
-		namespace:     namespace,
+		namespace:     testNamespace,
 		backendID:     testID,
 		objectScaleID: objectScaleID,
 		objectStoreID: objectStoreID,
@@ -279,16 +285,16 @@ func testEmptyBucketID(t *testing.T) {
 }
 
 func testEmptyName(t *testing.T) {
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second*100) // Magic value,... abra kadabra
+	ctx, cancel := testcontext.New(t)
 	defer cancel()
 
 	server := Server{
 		mgmtClient: fake.NewClientSet(&model.Bucket{ // That's how we can mock the objectscale bucket api client
 			Name:      "valid", // This is based on "bucket-valid" BucketId from request
-			Namespace: namespace,
+			Namespace: testNamespace,
 		}),
 		iamClient:     iamfaketoo.NewIAMAPI(t), // Inject mocked IAM client
-		namespace:     namespace,
+		namespace:     testNamespace,
 		backendID:     testID,
 		objectScaleID: objectScaleID,
 		objectStoreID: objectStoreID,
@@ -309,16 +315,16 @@ func testEmptyName(t *testing.T) {
 }
 
 func testInvalidAuthenticationType(t *testing.T) {
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second*100) // Magic value,... abra kadabra
+	ctx, cancel := testcontext.New(t)
 	defer cancel()
 
 	server := Server{
 		mgmtClient: fake.NewClientSet(&model.Bucket{ // That's how we can mock the objectscale bucket api client
 			Name:      "valid", // This is based on "bucket-valid" BucketId from request
-			Namespace: namespace,
+			Namespace: testNamespace,
 		}),
 		iamClient:     iamfaketoo.NewIAMAPI(t), // Inject mocked IAM client
-		namespace:     namespace,
+		namespace:     testNamespace,
 		backendID:     testID,
 		objectScaleID: objectScaleID,
 		objectStoreID: objectStoreID,
@@ -339,16 +345,16 @@ func testInvalidAuthenticationType(t *testing.T) {
 }
 
 func testIAMNotImplemented(t *testing.T) {
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second*100) // Magic value,... abra kadabra
+	ctx, cancel := testcontext.New(t)
 	defer cancel()
 
 	server := Server{
 		mgmtClient: fake.NewClientSet(&model.Bucket{ // That's how we can mock the objectscale bucket api client
 			Name:      "valid", // This is based on "bucket-valid" BucketId from request
-			Namespace: namespace,
+			Namespace: testNamespace,
 		}),
 		iamClient:     iamfaketoo.NewIAMAPI(t), // Inject mocked IAM client
-		namespace:     namespace,
+		namespace:     testNamespace,
 		backendID:     testID,
 		objectScaleID: objectScaleID,
 		objectStoreID: objectStoreID,
@@ -369,18 +375,18 @@ func testIAMNotImplemented(t *testing.T) {
 }
 
 func testFailToGetBucket(t *testing.T) {
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second*100) // Magic value,... abra kadabra
+	ctx, cancel := testcontext.New(t)
 	defer cancel()
 
 	server := Server{
 		mgmtClient: fake.NewClientSet(
 			&model.Bucket{ // That's how we can mock the objectscale bucket api client
 				Name:      "valid", // This is based on "bucket-valid" BucketId from request
-				Namespace: namespace,
+				Namespace: testNamespace,
 			},
 		),
 		iamClient:     iamfaketoo.NewIAMAPI(t), // Inject mocked IAM client
-		namespace:     namespace,
+		namespace:     testNamespace,
 		backendID:     testID,
 		objectScaleID: objectScaleID,
 		objectStoreID: objectStoreID,
@@ -401,13 +407,13 @@ func testFailToGetBucket(t *testing.T) {
 }
 
 func testBucketNotFound(t *testing.T) {
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second*100) // Magic value,... abra kadabra
+	ctx, cancel := testcontext.New(t)
 	defer cancel()
 
 	server := Server{
 		mgmtClient:    fake.NewClientSet(),     // That's how we can mock the objectscale bucket api client
 		iamClient:     iamfaketoo.NewIAMAPI(t), // Inject mocked IAM client
-		namespace:     namespace,
+		namespace:     testNamespace,
 		backendID:     testID,
 		objectScaleID: objectScaleID,
 		objectStoreID: objectStoreID,
@@ -426,7 +432,7 @@ func testBucketNotFound(t *testing.T) {
 }
 
 func testValidButUserAlreadyExists(t *testing.T) {
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second*100) // Magic value,... abra kadabra
+	ctx, cancel := testcontext.New(t)
 	defer cancel()
 
 	IAMClient := iamfaketoo.NewIAMAPI(t)
@@ -440,10 +446,10 @@ func testValidButUserAlreadyExists(t *testing.T) {
 	server := Server{
 		mgmtClient: fake.NewClientSet(&model.Bucket{ // That's how we can mock the objectscale bucket api client
 			Name:      "valid", // This is based on "bucket-valid" BucketId from request
-			Namespace: namespace,
+			Namespace: testNamespace,
 		}),
 		iamClient:     IAMClient, // Inject mocked IAM client
-		namespace:     namespace,
+		namespace:     testNamespace,
 		backendID:     testID,
 		objectScaleID: objectScaleID,
 		objectStoreID: objectStoreID,
@@ -464,7 +470,7 @@ func testValidButUserAlreadyExists(t *testing.T) {
 }
 
 func testFailToGetExistingPolicy(t *testing.T) {
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second*100) // Magic value,... abra kadabra
+	ctx, cancel := testcontext.New(t)
 	defer cancel()
 
 	// That's how we can mock the objectscale IAM api client
@@ -480,10 +486,10 @@ func testFailToGetExistingPolicy(t *testing.T) {
 	server := Server{
 		mgmtClient: fake.NewClientSet(&model.Bucket{ // That's how we can mock the objectscale bucket api client
 			Name:      "valid", // This is based on "bucket-valid" BucketId from request
-			Namespace: namespace,
+			Namespace: testNamespace,
 		}),
 		iamClient:     IAMClient, // Inject mocked IAM client
-		namespace:     namespace,
+		namespace:     testNamespace,
 		backendID:     testID,
 		objectScaleID: objectScaleID,
 		objectStoreID: objectStoreID,
@@ -504,7 +510,7 @@ func testFailToGetExistingPolicy(t *testing.T) {
 }
 
 func testInvalidPolicyJSON(t *testing.T) {
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second*100) // Magic value,... abra kadabra
+	ctx, cancel := testcontext.New(t)
 	defer cancel()
 
 	// That's how we can mock the objectscale IAM api client
@@ -520,14 +526,14 @@ func testInvalidPolicyJSON(t *testing.T) {
 	server := Server{
 		mgmtClient: fake.NewClientSet(&model.Bucket{ // That's how we can mock the objectscale bucket api client
 			Name:      "valid", // This is based on "bucket-valid" BucketId from request
-			Namespace: namespace,
+			Namespace: testNamespace,
 		}, &fake.BucketPolicy{
 			BucketName: "valid",
 			Policy:     "}",
-			Namespace:  namespace,
+			Namespace:  testNamespace,
 		}),
 		iamClient:     IAMClient, // Inject mocked IAM client
-		namespace:     namespace,
+		namespace:     testNamespace,
 		backendID:     testID,
 		objectScaleID: objectScaleID,
 		objectStoreID: objectStoreID,

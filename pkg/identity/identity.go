@@ -10,6 +10,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+// Package identity ...
+// TODO: write documentation comment for identity package
 package identity
 
 import (

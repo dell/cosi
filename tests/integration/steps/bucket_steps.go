@@ -15,12 +15,12 @@ package steps
 import (
 	"fmt"
 
+	"sigs.k8s.io/container-object-storage-interface-api/apis/objectstorage/v1alpha1"
+
 	ginkgo "github.com/onsi/ginkgo/v2"
 	gomega "github.com/onsi/gomega"
-
 	errors "k8s.io/apimachinery/pkg/api/errors"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"sigs.k8s.io/container-object-storage-interface-api/apis/objectstorage/v1alpha1"
 	bucketclientset "sigs.k8s.io/container-object-storage-interface-api/client/clientset/versioned"
 )
 
@@ -174,6 +174,7 @@ func GetBucketResource(ctx ginkgo.SpecContext, bucketClient *bucketclientset.Cli
 	return bucket
 }
 
+// CheckBucketStatusEmpty function for checking if Bucket status is empty.
 func CheckBucketStatusEmpty(ctx ginkgo.SpecContext, bucketClient *bucketclientset.Clientset, bucketClaim *v1alpha1.BucketClaim) {
 	var myBucketClaim *v1alpha1.BucketClaim
 

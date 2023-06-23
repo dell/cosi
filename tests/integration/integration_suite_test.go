@@ -20,17 +20,17 @@ import (
 	"os"
 	"testing"
 
-	objectscaleRest "github.com/dell/goobjectscale/pkg/client/rest"
-	objectscaleClient "github.com/dell/goobjectscale/pkg/client/rest/client"
-	. "github.com/onsi/ginkgo/v2"
-	. "github.com/onsi/gomega"
-	bucketclientset "sigs.k8s.io/container-object-storage-interface-api/client/clientset/versioned"
-
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/iam"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/clientcmd"
+
+	objectscaleRest "github.com/dell/goobjectscale/pkg/client/rest"
+	objectscaleClient "github.com/dell/goobjectscale/pkg/client/rest/client"
+	. "github.com/onsi/ginkgo/v2"
+	. "github.com/onsi/gomega"
+	bucketclientset "sigs.k8s.io/container-object-storage-interface-api/client/clientset/versioned"
 )
 
 // place for storing global variables like specs

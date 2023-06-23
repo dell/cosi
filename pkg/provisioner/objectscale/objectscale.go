@@ -10,6 +10,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+// Package objectscale ...
+// TODO: write documentation comment for objectscale package
 package objectscale
 
 import (
@@ -19,6 +21,21 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
+	"time"
+
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/request"
+	"github.com/aws/aws-sdk-go/aws/session"
+	v4 "github.com/aws/aws-sdk-go/aws/signer/v4"
+	"github.com/aws/aws-sdk-go/service/iam"
+	"github.com/aws/aws-sdk-go/service/iam/iamiface"
+	"github.com/dell/goobjectscale/pkg/client/api"
+	"github.com/dell/goobjectscale/pkg/client/model"
+	"github.com/google/uuid"
+	"go.opentelemetry.io/otel"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
+	"sigs.k8s.io/container-object-storage-interface-provisioner-sidecar/pkg/consts"
 
 	driver "github.com/dell/cosi-driver/pkg/provisioner/virtualdriver"
 	objectscaleRest "github.com/dell/goobjectscale/pkg/client/rest"
@@ -28,22 +45,8 @@ import (
 	otelCodes "go.opentelemetry.io/otel/codes"
 	cosi "sigs.k8s.io/container-object-storage-interface-spec"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/request"
-	"github.com/aws/aws-sdk-go/aws/session"
-	v4 "github.com/aws/aws-sdk-go/aws/signer/v4"
-	"github.com/aws/aws-sdk-go/service/iam"
-	"github.com/aws/aws-sdk-go/service/iam/iamiface"
 	"github.com/dell/cosi-driver/pkg/config"
 	"github.com/dell/cosi-driver/pkg/transport"
-	"github.com/dell/goobjectscale/pkg/client/api"
-	"github.com/dell/goobjectscale/pkg/client/model"
-	"go.opentelemetry.io/otel"
-	"sigs.k8s.io/container-object-storage-interface-provisioner-sidecar/pkg/consts"
-
-	"github.com/google/uuid"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 )
 
 const (
@@ -53,6 +56,9 @@ const (
 	// allowEffect is used when updating the bucket policy, in order to grant permissions to user.
 	allowEffect = "Allow"
 )
+
+// defaultTimeout is default call length before context is getting canceled.
+var defaultTimeout = time.Second * 20
 
 // Server is implementation of driver.Driver interface for ObjectScale platform.
 type Server struct {
@@ -77,7 +83,7 @@ var _ driver.Driver = (*Server)(nil)
 
 // New initializes server based on the config file.
 // TODO: verify if emptiness verification can be moved to a separate function.
-func New(config *config.Objectscale) (*Server, error) {
+func New(ctx context.Context, config *config.Objectscale) (*Server, error) {
 	id := config.Id
 	if id == "" {
 		return nil, errors.New("empty driver id")
@@ -171,7 +177,10 @@ func New(config *config.Objectscale) (*Server, error) {
 		Name: iamObjectscale.SDSHandlerName,
 		Fn: func(r *request.Request) {
 			if !objClient.IsAuthenticated() {
-				err := objClient.Login(&x509Client)
+				ctx, cancel := context.WithTimeout(ctx, defaultTimeout)
+				defer cancel()
+
+				err := objClient.Login(ctx, &x509Client)
 				if err != nil {
 					r.Error = err // no return intentional
 				}
@@ -242,105 +251,6 @@ func (s *Server) ID() string {
 	return s.backendID
 }
 
-// DriverCreateBucket creates Bucket on specific Object Storage Platform.
-func (s *Server) DriverCreateBucket(
-	ctx context.Context,
-	req *cosi.DriverCreateBucketRequest,
-) (*cosi.DriverCreateBucketResponse, error) {
-	_, span := otel.Tracer("CreateBucketRequest").Start(ctx, "ObjectscaleDriverCreateBucket")
-	defer span.End()
-
-	log.WithFields(log.Fields{
-		"bucket": req.GetName(),
-	}).Info("bucket is being created")
-
-	span.AddEvent("bucket is being created")
-
-	// Create bucket model.
-	bucket := &model.Bucket{}
-	bucket.Name = req.GetName()
-	bucket.Namespace = s.namespace
-
-	// Check if bucket name is not empty.
-	if bucket.Name == "" {
-		err := errors.New("empty bucket name")
-		log.Error(err.Error())
-
-		span.RecordError(err)
-		span.SetStatus(otelCodes.Error, err.Error())
-
-		return nil, status.Error(codes.InvalidArgument, err.Error())
-	}
-
-	// Display all request parameters.
-	parameters := ""
-	parametersCopy := make(map[string]string)
-
-	for key, value := range req.GetParameters() {
-		parameters += key + ":" + value + ";"
-		parametersCopy[key] = value
-	}
-
-	// TODO: is this good way of doing this?
-	parametersCopy["namespace"] = s.namespace
-
-	log.WithFields(log.Fields{
-		"parameters": parameters,
-	}).Info("parameters of the bucket")
-
-	// Remove backendID, as this is not valid parameter for bucket creation in ObjectScale.
-	delete(parametersCopy, "backendID")
-
-	// Check if bucket with specific name and parameters already exists.
-	_, err := s.mgmtClient.Buckets().Get(bucket.Name, parametersCopy)
-	if err != nil && !errors.Is(err, model.Error{Code: model.CodeParameterNotFound}) {
-		log.WithFields(log.Fields{
-			"bucket": bucket.Name,
-			"error":  err,
-		}).Error("failed to check bucket existence")
-
-		span.RecordError(err)
-		span.SetStatus(otelCodes.Error, "failed to check bucket existence")
-
-		return nil, status.Error(codes.Internal, "an unexpected error occurred")
-	} else if err == nil {
-		log.WithFields(log.Fields{
-			"bucket": bucket.Name,
-		}).Warn("bucket already exists")
-
-		span.AddEvent("bucket already exists")
-
-		return &cosi.DriverCreateBucketResponse{
-			BucketId: strings.Join([]string{s.backendID, bucket.Name}, "-"),
-		}, nil
-	}
-
-	// Create bucket.
-	bucket, err = s.mgmtClient.Buckets().Create(*bucket)
-	if err != nil {
-		log.WithFields(log.Fields{
-			"bucket": bucket.Name,
-			"error":  err,
-		}).Error("failed to create bucket")
-
-		span.RecordError(err)
-		span.SetStatus(otelCodes.Error, "failed to create bucket")
-
-		return nil, status.Error(codes.Internal, "bucket was not successfully created")
-	}
-
-	log.WithFields(log.Fields{
-		"bucket": bucket.Name,
-	}).Info("bucket successfully created")
-
-	span.AddEvent("bucket successfully created")
-
-	// Return response.
-	return &cosi.DriverCreateBucketResponse{
-		BucketId: strings.Join([]string{s.backendID, bucket.Name}, "-"),
-	}, nil
-}
-
 // DriverDeleteBucket deletes Bucket on specific Object Storage Platform.
 func (s *Server) DriverDeleteBucket(ctx context.Context,
 	req *cosi.DriverDeleteBucketRequest,
@@ -369,7 +279,7 @@ func (s *Server) DriverDeleteBucket(ctx context.Context,
 	bucketName := strings.SplitN(req.BucketId, "-", splitNumber)[1]
 
 	// Delete bucket.
-	err := s.mgmtClient.Buckets().Delete(bucketName, s.namespace, s.emptyBucket)
+	err := s.mgmtClient.Buckets().Delete(ctx, bucketName, s.namespace, s.emptyBucket)
 
 	if errors.Is(err, model.Error{Code: model.CodeResourceNotFound}) {
 		log.WithFields(log.Fields{
@@ -492,8 +402,8 @@ func (s *Server) DriverGrantBucketAccess( // nolint:gocognit
 	}).Info("parameters of the bucket")
 
 	// Check if bucket for granting access exists.
-	_, err := s.mgmtClient.Buckets().Get(bucketName, parametersCopy)
-	if err != nil && !errors.Is(err, model.Error{Code: model.CodeParameterNotFound}) {
+	_, err := s.mgmtClient.Buckets().Get(ctx, bucketName, parametersCopy)
+	if err != nil && !errors.Is(err, ErrParameterNotFound) {
 		log.WithFields(log.Fields{
 			"bucket": bucketName,
 			"error":  err,
@@ -559,7 +469,7 @@ func (s *Server) DriverGrantBucketAccess( // nolint:gocognit
 	}
 
 	// Check if policy for specific bucket exists.
-	policy, err := s.mgmtClient.Buckets().GetPolicy(bucketName, parametersCopy)
+	policy, err := s.mgmtClient.Buckets().GetPolicy(ctx, bucketName, parametersCopy)
 	if err != nil && !errors.Is(err, model.Error{Code: model.CodeResourceNotFound}) {
 		errMsg := errors.New("failed to check bucket policy existence")
 		log.WithFields(log.Fields{
@@ -642,7 +552,7 @@ func (s *Server) DriverGrantBucketAccess( // nolint:gocognit
 		return nil, status.Error(codes.Internal, errMsg.Error())
 	}
 
-	err = s.mgmtClient.Buckets().UpdatePolicy(bucketName, string(updateBucketPolicyJSON), parametersCopy)
+	err = s.mgmtClient.Buckets().UpdatePolicy(ctx, bucketName, string(updateBucketPolicyJSON), parametersCopy)
 	if err != nil {
 		errMsg := errors.New("failed to update bucket policy")
 		log.WithFields(log.Fields{
@@ -839,7 +749,7 @@ func assembleCredentials(
 
 	credentialDetails := cosi.CredentialDetails{Secrets: secretsMap}
 	credentials := make(map[string]*cosi.CredentialDetails)
-	credentials["s3"] = &credentialDetails // ?
+	credentials[consts.S3Key] = &credentialDetails
 
 	log.WithFields(log.Fields{
 		"bucket": bucketName,

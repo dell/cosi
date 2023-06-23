@@ -17,11 +17,11 @@ import (
 	"fmt"
 	"strings"
 
-	driver "github.com/dell/cosi-driver/pkg/provisioner/virtualdriver"
-	cosi "sigs.k8s.io/container-object-storage-interface-spec"
-
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+
+	driver "github.com/dell/cosi-driver/pkg/provisioner/virtualdriver"
+	cosi "sigs.k8s.io/container-object-storage-interface-spec"
 )
 
 // Driver is a mock implementation of virtualdriver.Driver interface.
