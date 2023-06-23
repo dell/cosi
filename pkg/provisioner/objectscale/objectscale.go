@@ -10,6 +10,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+// Package objectscale ...
 // TODO: write documentation comment for objectscale package
 package objectscale
 

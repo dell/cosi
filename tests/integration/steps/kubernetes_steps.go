@@ -56,7 +56,7 @@ func CheckBucketClassSpec(clientset *kubernetes.Clientset, bucketClassSpec v1alp
 	ginkgo.Fail("UNIMPLEMENTED")
 }
 
-// Check if secret exists.
+// CheckSecret is used to check if secret exists.
 func CheckSecret(ctx ginkgo.SpecContext, clientset *kubernetes.Clientset, secret *v1.Secret) {
 	sec, err := clientset.CoreV1().Secrets(secret.Namespace).Get(ctx, secret.Name, metav1.GetOptions{})
 	gomega.Expect(err).ToNot(gomega.HaveOccurred())

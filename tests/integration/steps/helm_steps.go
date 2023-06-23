@@ -46,7 +46,7 @@ func checkAppIsInstalled(ctx ginkgo.SpecContext, clientset *kubernetes.Clientset
 	gomega.Expect(deployment.Status.Conditions).To(gomega.ContainElement(gomega.HaveField("Type", gomega.Equal(v1.DeploymentAvailable))))
 }
 
-// InstallChart Install particular release from k8s chart.
+// InstallChartInNamespace install particular release from k8s chart.
 func InstallChartInNamespace(releaseName, namespace, repo, chartName, version string) {
 	settings := cli.New()
 	actionConfig := new(action.Configuration)

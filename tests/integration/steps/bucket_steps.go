@@ -174,6 +174,7 @@ func GetBucketResource(ctx ginkgo.SpecContext, bucketClient *bucketclientset.Cli
 	return bucket
 }
 
+// CheckBucketStatusEmpty function for checking if Bucket status is empty.
 func CheckBucketStatusEmpty(ctx ginkgo.SpecContext, bucketClient *bucketclientset.Clientset, bucketClaim *v1alpha1.BucketClaim) {
 	var myBucketClaim *v1alpha1.BucketClaim
 

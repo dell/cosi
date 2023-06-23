@@ -77,7 +77,7 @@ func CreatePolicy(ctx ginkgo.SpecContext, objectscale *objectscaleRest.ClientSet
 	gomega.Expect(err).ToNot(gomega.HaveOccurred())
 }
 
-// Function for checking if policy exists in ObjectScale.
+// CheckPolicy checks  if policy exists in ObjectScale.
 func CheckPolicy(ctx ginkgo.SpecContext, objectscale *objectscaleRest.ClientSet, policy string, myBucket *v1alpha1.Bucket) {
 	actualPolicy, err := objectscale.Buckets().GetPolicy(ctx, myBucket.Name, nil)
 	gomega.Expect(err).ToNot(gomega.HaveOccurred())
@@ -95,7 +95,7 @@ func DeletePolicy(ctx ginkgo.SpecContext, objectscale *objectscaleRest.ClientSet
 	gomega.Expect(err).ToNot(gomega.HaveOccurred())
 }
 
-// Function for creating user in ObjectScale.
+// CreateUser creates user in ObjectScale.
 func CreateUser(ctx ginkgo.SpecContext, iamClient *iam.IAM, user, arn string) {
 	// TODO: verify it's working correctly once all the steps are integrated
 	userOut, err := iamClient.CreateUserWithContext(ctx, &iam.CreateUserInput{
@@ -106,7 +106,7 @@ func CreateUser(ctx ginkgo.SpecContext, iamClient *iam.IAM, user, arn string) {
 	gomega.Expect(userOut.User).NotTo(gomega.BeNil())
 }
 
-// Function for checking if user exists in ObjectScale.
+// CheckUser checks if user exists in ObjectScale.
 func CheckUser(ctx ginkgo.SpecContext, iamClient *iam.IAM, user string) {
 	// TODO: verify it's working correctly once all the steps are integrated
 	userOut, err := iamClient.GetUserWithContext(ctx, &iam.GetUserInput{UserName: &user})

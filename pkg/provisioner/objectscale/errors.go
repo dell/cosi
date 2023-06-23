@@ -19,7 +19,7 @@ var (
 	// It indicates that request parameter cannot be found - e.g. requested bucket does not exist.
 	ErrParameterNotFound = model.Error{Code: model.CodeParameterNotFound}
 
-	// ErrParameterNotFound is general instance of the model.Error with the CodeInternalException.
+	// ErrInternalException is general instance of the model.Error with the CodeInternalException.
 	// It indicates that internal exception occurred, and user should look at ObjectScale logs to find the cause.
 	ErrInternalException = model.Error{Code: model.CodeInternalException}
 )
