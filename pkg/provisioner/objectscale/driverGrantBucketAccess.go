@@ -11,3 +11,4 @@
 // limitations under the License.
 
 package objectscale
+// TODO: Move DriverGrantBucketAccess implementation code here.
