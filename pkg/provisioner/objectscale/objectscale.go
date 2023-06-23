@@ -10,6 +10,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+// TODO: write documentation comment for objectscale package
 package objectscale
 
 import (
@@ -401,7 +402,7 @@ func (s *Server) DriverGrantBucketAccess( // nolint:gocognit
 
 	// Check if bucket for granting access exists.
 	_, err := s.mgmtClient.Buckets().Get(ctx, bucketName, parametersCopy)
-	if err != nil && !errors.Is(err, model.Error{Code: model.CodeParameterNotFound}) {
+	if err != nil && !errors.Is(err, ErrParameterNotFound) {
 		log.WithFields(log.Fields{
 			"bucket": bucketName,
 			"error":  err,

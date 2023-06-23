@@ -59,7 +59,7 @@ func testDriverCreateBucketBucketCreated(t *testing.T) {
 
 	bucketsMock := &mocks.BucketsInterface{}
 	bucketsMock.On("Create", mock.Anything, mock.Anything).Return(testBucket, nil).Once()
-	bucketsMock.On("Get", mock.Anything, mock.Anything, mock.Anything).Return(nil, model.Error{Code: model.CodeParameterNotFound}).Once()
+	bucketsMock.On("Get", mock.Anything, mock.Anything, mock.Anything).Return(nil, ErrParameterNotFound).Once()
 
 	mgmtClientMock := &mocks.ClientSet{}
 	mgmtClientMock.On("Buckets").Return(bucketsMock).Twice()
@@ -141,7 +141,7 @@ func testDriverCreateBucketCheckBucketFailed(t *testing.T) {
 	defer cancel()
 
 	bucketsMock := &mocks.BucketsInterface{}
-	bucketsMock.On("Get", mock.Anything, mock.Anything, mock.Anything).Return(nil, model.Error{Code: model.CodeInternalException}).Once()
+	bucketsMock.On("Get", mock.Anything, mock.Anything, mock.Anything).Return(nil, ErrInternalException).Once()
 
 	mgmtClientMock := &mocks.ClientSet{}
 	mgmtClientMock.On("Buckets").Return(bucketsMock).Once()
@@ -166,8 +166,8 @@ func testDriverCreateBucketBucketCreationFailed(t *testing.T) {
 	defer cancel()
 
 	bucketsMock := &mocks.BucketsInterface{}
-	bucketsMock.On("Create", mock.Anything, mock.Anything).Return(nil, model.Error{Code: model.CodeInternalException}).Once()
-	bucketsMock.On("Get", mock.Anything, mock.Anything, mock.Anything).Return(nil, model.Error{Code: model.CodeParameterNotFound}).Once()
+	bucketsMock.On("Create", mock.Anything, mock.Anything).Return(nil, ErrInternalException).Once()
+	bucketsMock.On("Get", mock.Anything, mock.Anything, mock.Anything).Return(nil, ErrParameterNotFound).Once()
 
 	mgmtClientMock := &mocks.ClientSet{}
 	mgmtClientMock.On("Buckets").Return(bucketsMock).Twice()
@@ -242,7 +242,7 @@ func testGetBucketNoBucket(t *testing.T) {
 	defer cancel()
 
 	bucketsMock := &mocks.BucketsInterface{}
-	bucketsMock.On("Get", mock.Anything, mock.Anything, mock.Anything).Return(nil, model.Error{Code: model.CodeParameterNotFound}).Once()
+	bucketsMock.On("Get", mock.Anything, mock.Anything, mock.Anything).Return(nil, ErrParameterNotFound).Once()
 
 	// Generic mock for the ClientSet interface, we care only about returning Buckets from it.
 	mgmtClientMock := &mocks.ClientSet{}
@@ -271,7 +271,7 @@ func testGetBucketUnknownError(t *testing.T) {
 	defer cancel()
 
 	bucketsMock := &mocks.BucketsInterface{}
-	bucketsMock.On("Get", mock.Anything, mock.Anything, mock.Anything).Return(nil, model.Error{Code: model.CodeInternalException}).Once()
+	bucketsMock.On("Get", mock.Anything, mock.Anything, mock.Anything).Return(nil, ErrInternalException).Once()
 
 	// Generic mock for the ClientSet interface, we care only about returning Buckets from it.
 	mgmtClientMock := &mocks.ClientSet{}
@@ -289,7 +289,7 @@ func testGetBucketUnknownError(t *testing.T) {
 
 	bucket, err := server.getBucket(ctx, testBucketName, params)
 
-	assert.ErrorIs(t, err, model.Error{Code: model.CodeInternalException})
+	assert.ErrorIs(t, err, ErrInternalException)
 	assert.Nil(t, bucket)
 }
 
@@ -345,7 +345,7 @@ func testCreateBucketFailed(t *testing.T) {
 	defer cancel()
 
 	bucketsMock := &mocks.BucketsInterface{}
-	bucketsMock.On("Create", mock.Anything, mock.Anything).Return(nil, model.Error{Code: model.CodeInternalException}).Once()
+	bucketsMock.On("Create", mock.Anything, mock.Anything).Return(nil, ErrInternalException).Once()
 
 	// Generic mock for the ClientSet interface, we care only about returning Buckets from it.
 	mgmtClientMock := &mocks.ClientSet{}
@@ -361,5 +361,5 @@ func testCreateBucketFailed(t *testing.T) {
 
 	err := server.createBucket(ctx, testBucket)
 
-	assert.ErrorIs(t, err, model.Error{Code: model.CodeInternalException})
+	assert.ErrorIs(t, err, ErrInternalException)
 }

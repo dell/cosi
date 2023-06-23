@@ -10,24 +10,16 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package testcontext
+package objectscale
 
-import (
-	"context"
-	"testing"
-	"time"
+import "github.com/dell/goobjectscale/pkg/client/model"
+
+var (
+	// ErrParameterNotFound is general instance of the model.Error with the CodeParameterNotFound.
+	// It indicates that request parameter cannot be found - e.g. requested bucket does not exist.
+	ErrParameterNotFound = model.Error{Code: model.CodeParameterNotFound}
+
+	// ErrParameterNotFound is general instance of the model.Error with the CodeInternalException.
+	// It indicates that internal exception occurred, and user should look at ObjectScale logs to find the cause.
+	ErrInternalException = model.Error{Code: model.CodeInternalException}
 )
-
-const defaultTimeout = 20 * time.Second
-
-// New creates new context with deadline equal to test deadline, or (if the deadline is empty),
-// with a timeout equal to the default timeout.
-func New(t *testing.T) (context.Context, context.CancelFunc) {
-	deadline, ok := t.Deadline()
-
-	if ok {
-		return context.WithDeadline(context.Background(), deadline)
-	}
-
-	return context.WithTimeout(context.Background(), defaultTimeout)
-}

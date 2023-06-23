@@ -70,7 +70,7 @@ func (s *Server) DriverCreateBucket(
 
 	// Get bucket.
 	existingBucket, err := s.getBucket(ctx, bucket.Name, parameters)
-	if err != nil && !errors.Is(err, model.Error{Code: model.CodeParameterNotFound}) {
+	if err != nil && !errors.Is(err, ErrParameterNotFound) {
 		msg := "failed to check if bucket exists"
 
 		log.WithFields(log.Fields{
@@ -118,7 +118,7 @@ func (s *Server) getBucket(ctx context.Context, bucketName string, parameters ma
 
 	switch {
 	// First, we don't find the bucket on the Provider.
-	case errors.Is(err, model.Error{Code: model.CodeParameterNotFound}):
+	case errors.Is(err, ErrParameterNotFound):
 		return nil, nil
 
 	// Second case is the error is nil, which means we actually found a bucket.
