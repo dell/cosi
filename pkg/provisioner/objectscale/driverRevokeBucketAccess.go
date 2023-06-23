@@ -11,4 +11,5 @@
 // limitations under the License.
 
 package objectscale
+
 // TODO: Move RevokeBucketAccess implementation code here.

@@ -36,4 +36,3 @@ var (
 		Name: testBucketName,
 	}
 )
-
