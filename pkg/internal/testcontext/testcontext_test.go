@@ -10,30 +10,16 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package objectscale
+package testcontext
 
 import (
-	cosi "sigs.k8s.io/container-object-storage-interface-spec"
+	"testing"
 
-	"github.com/dell/goobjectscale/pkg/client/model"
+	"github.com/stretchr/testify/assert"
 )
 
-const (
-	testBucketName = "test_bucket"
-	testNamespace  = "namespace"
-	testID         = "test.id"
-	objectScaleID  = "gateway.objectscale.test"
-	objectStoreID  = "objectstore"
-)
-
-var (
-	testBucket = &model.Bucket{
-		Namespace: testNamespace,
-		Name:      testBucketName,
-	}
-
-	testRequest = &cosi.DriverCreateBucketRequest{
-		Name: testBucketName,
-	}
-)
-
+func TestNew(t *testing.T) {
+	ctx, cancel := New(t)
+	assert.NotNil(t, ctx)
+	assert.NotNil(t, cancel)
+}

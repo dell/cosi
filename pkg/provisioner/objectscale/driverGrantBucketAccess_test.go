@@ -29,6 +29,7 @@ import (
 	cosi "sigs.k8s.io/container-object-storage-interface-spec"
 
 	"github.com/dell/cosi-driver/pkg/iamfaketoo"
+	"github.com/dell/cosi-driver/pkg/internal/testcontext"
 )
 
 var _ iamiface.IAMAPI = (*iamfaketoo.IAMAPI)(nil)
@@ -63,7 +64,7 @@ func TestServerBucketAccessGrant(t *testing.T) {
 }
 
 func testValidAccessGranting(t *testing.T) {
-	ctx, cancel := testContext(t)
+	ctx, cancel := testcontext.New(t)
 	defer cancel()
 
 	// That's how we can mock the objectscale IAM api client
@@ -104,7 +105,7 @@ func testValidAccessGranting(t *testing.T) {
 }
 
 func testInvalidAccessKeyCreation(t *testing.T) {
-	ctx, cancel := testContext(t)
+	ctx, cancel := testcontext.New(t)
 	defer cancel()
 
 	// That's how we can mock the objectscale IAM api client
@@ -145,7 +146,7 @@ func testInvalidAccessKeyCreation(t *testing.T) {
 }
 
 func testInvalidUserCreation(t *testing.T) {
-	ctx, cancel := testContext(t)
+	ctx, cancel := testcontext.New(t)
 	defer cancel()
 
 	// That's how we can mock the objectscale IAM api client
@@ -180,7 +181,7 @@ func testInvalidUserCreation(t *testing.T) {
 }
 
 func testInvalidUserRetrieval(t *testing.T) {
-	ctx, cancel := testContext(t)
+	ctx, cancel := testcontext.New(t)
 	defer cancel()
 
 	// That's how we can mock the objectscale IAM api client
@@ -214,7 +215,7 @@ func testInvalidUserRetrieval(t *testing.T) {
 }
 
 func testInvalidBucketPolicyUpdate(t *testing.T) {
-	ctx, cancel := testContext(t)
+	ctx, cancel := testcontext.New(t)
 	defer cancel()
 
 	// That's how we can mock the objectscale IAM api client
@@ -254,7 +255,7 @@ func testInvalidBucketPolicyUpdate(t *testing.T) {
 }
 
 func testEmptyBucketID(t *testing.T) {
-	ctx, cancel := testContext(t)
+	ctx, cancel := testcontext.New(t)
 	defer cancel()
 
 	server := Server{
@@ -284,7 +285,7 @@ func testEmptyBucketID(t *testing.T) {
 }
 
 func testEmptyName(t *testing.T) {
-	ctx, cancel := testContext(t)
+	ctx, cancel := testcontext.New(t)
 	defer cancel()
 
 	server := Server{
@@ -314,7 +315,7 @@ func testEmptyName(t *testing.T) {
 }
 
 func testInvalidAuthenticationType(t *testing.T) {
-	ctx, cancel := testContext(t)
+	ctx, cancel := testcontext.New(t)
 	defer cancel()
 
 	server := Server{
@@ -344,7 +345,7 @@ func testInvalidAuthenticationType(t *testing.T) {
 }
 
 func testIAMNotImplemented(t *testing.T) {
-	ctx, cancel := testContext(t)
+	ctx, cancel := testcontext.New(t)
 	defer cancel()
 
 	server := Server{
@@ -374,7 +375,7 @@ func testIAMNotImplemented(t *testing.T) {
 }
 
 func testFailToGetBucket(t *testing.T) {
-	ctx, cancel := testContext(t)
+	ctx, cancel := testcontext.New(t)
 	defer cancel()
 
 	server := Server{
@@ -406,7 +407,7 @@ func testFailToGetBucket(t *testing.T) {
 }
 
 func testBucketNotFound(t *testing.T) {
-	ctx, cancel := testContext(t)
+	ctx, cancel := testcontext.New(t)
 	defer cancel()
 
 	server := Server{
@@ -431,7 +432,7 @@ func testBucketNotFound(t *testing.T) {
 }
 
 func testValidButUserAlreadyExists(t *testing.T) {
-	ctx, cancel := testContext(t)
+	ctx, cancel := testcontext.New(t)
 	defer cancel()
 
 	IAMClient := iamfaketoo.NewIAMAPI(t)
@@ -469,7 +470,7 @@ func testValidButUserAlreadyExists(t *testing.T) {
 }
 
 func testFailToGetExistingPolicy(t *testing.T) {
-	ctx, cancel := testContext(t)
+	ctx, cancel := testcontext.New(t)
 	defer cancel()
 
 	// That's how we can mock the objectscale IAM api client
@@ -509,7 +510,7 @@ func testFailToGetExistingPolicy(t *testing.T) {
 }
 
 func testInvalidPolicyJSON(t *testing.T) {
-	ctx, cancel := testContext(t)
+	ctx, cancel := testcontext.New(t)
 	defer cancel()
 
 	// That's how we can mock the objectscale IAM api client

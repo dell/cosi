@@ -13,11 +13,11 @@
 package identity
 
 import (
-	"context"
 	"io"
 	"os"
 	"testing"
 
+	"github.com/dell/cosi-driver/pkg/internal/testcontext"
 	log "github.com/sirupsen/logrus"
 	cosi "sigs.k8s.io/container-object-storage-interface-spec"
 )
@@ -51,7 +51,10 @@ func TestDriverGetInfo(t *testing.T) {
 func testValidServer(t *testing.T) {
 	srv := New(provisioner)
 
-	res, err := srv.DriverGetInfo(context.TODO(), &cosi.DriverGetInfoRequest{})
+	ctx, cancel := testcontext.New(t)
+	defer cancel()
+
+	res, err := srv.DriverGetInfo(ctx, &cosi.DriverGetInfoRequest{})
 	if err != nil {
 		t.Errorf("got unexpected error: %s", err.Error())
 	}
@@ -64,7 +67,10 @@ func testValidServer(t *testing.T) {
 func testMissingProvisionerName(t *testing.T) {
 	srv := &Server{}
 
-	_, err := srv.DriverGetInfo(context.TODO(), &cosi.DriverGetInfoRequest{})
+	ctx, cancel := testcontext.New(t)
+	defer cancel()
+
+	_, err := srv.DriverGetInfo(ctx, &cosi.DriverGetInfoRequest{})
 	if err == nil {
 		t.Errorf("expected error, got nil")
 	}

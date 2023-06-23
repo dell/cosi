@@ -31,6 +31,7 @@ import (
 	cosi "sigs.k8s.io/container-object-storage-interface-spec"
 
 	"github.com/dell/cosi-driver/pkg/config"
+	"github.com/dell/cosi-driver/pkg/internal/testcontext"
 )
 
 type expected int
@@ -166,7 +167,10 @@ func testDriverNew(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			driver, err := New(context.TODO(), tc.config)
+			ctx, cancel := testcontext.New(t)
+			defer cancel()
+
+			driver, err := New(ctx, tc.config)
 			switch tc.result {
 			case ok:
 				assert.NoError(t, err)
@@ -271,7 +275,10 @@ func testDriverDeleteBucket(t *testing.T) {
 func testDriverRevokeBucketAccess(t *testing.T) {
 	srv := Server{}
 
-	_, err := srv.DriverRevokeBucketAccess(context.TODO(), &cosi.DriverRevokeBucketAccessRequest{})
+	ctx, cancel := testcontext.New(t)
+	defer cancel()
+
+	_, err := srv.DriverRevokeBucketAccess(ctx, &cosi.DriverRevokeBucketAccessRequest{})
 	if err == nil {
 		t.Error("expected error")
 	}

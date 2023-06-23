@@ -16,6 +16,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/dell/cosi-driver/pkg/internal/testcontext"
 	"github.com/dell/goobjectscale/pkg/client/api/mocks"
 	"github.com/dell/goobjectscale/pkg/client/model"
 	"github.com/stretchr/testify/assert"
@@ -53,7 +54,7 @@ func TestDriverCreateBucket(t *testing.T) {
 // testDriverCreateBucketBucketCreated tests the happy path of the (*Server).DriverCreateBucket method.
 // It assumes that the driver does not exist on the backend.
 func testDriverCreateBucketBucketCreated(t *testing.T) {
-	ctx, cancel := testContext(t)
+	ctx, cancel := testcontext.New(t)
 	defer cancel()
 
 	bucketsMock := &mocks.BucketsInterface{}
@@ -71,17 +72,19 @@ func testDriverCreateBucketBucketCreated(t *testing.T) {
 		objectStoreID: objectStoreID,
 	}
 
+	expectedBucketID := strings.Join([]string{server.backendID, testBucket.Name}, "-")
+
 	res, err := server.DriverCreateBucket(ctx, testRequest)
 
 	assert.NoError(t, err)
 	require.NotNil(t, res)
-	assert.Equal(t, res.BucketId, strings.Join([]string{server.backendID, testBucket.Name}, "-"))
+	assert.Equal(t, res.BucketId, expectedBucketID)
 }
 
 // testDriverCreateBucketBucketExists tests the happy path of the (*Server).DriverCreateBucket method.
 // It assumes that the driver already exists on the backend.
 func testDriverCreateBucketBucketExists(t *testing.T) {
-	ctx, cancel := testContext(t)
+	ctx, cancel := testcontext.New(t)
 	defer cancel()
 
 	bucketsMock := &mocks.BucketsInterface{}
@@ -98,17 +101,19 @@ func testDriverCreateBucketBucketExists(t *testing.T) {
 		objectStoreID: objectStoreID,
 	}
 
+	expectedBucketID := strings.Join([]string{server.backendID, testBucket.Name}, "-")
+
 	res, err := server.DriverCreateBucket(ctx, testRequest)
 
 	assert.NoError(t, err)
 	require.NotNil(t, res)
-	assert.Equal(t, res.BucketId, strings.Join([]string{server.backendID, testBucket.Name}, "-"))
+	assert.Equal(t, res.BucketId, expectedBucketID)
 }
 
 // testDriverCreateBucketEmptyBucketName tests if missing bucket name is handled correctly
 // in the (*Server).DriverCreateBucket method.
 func testDriverCreateBucketEmptyBucketName(t *testing.T) {
-	ctx, cancel := testContext(t)
+	ctx, cancel := testcontext.New(t)
 	defer cancel()
 
 	bucketsMock := &mocks.BucketsInterface{}
@@ -132,7 +137,7 @@ func testDriverCreateBucketEmptyBucketName(t *testing.T) {
 // testDriverCreateBucketCheckBucketFailed tests if error during checking bucket existence is handled correctly
 // in the (*Server).DriverCreateBucket method.
 func testDriverCreateBucketCheckBucketFailed(t *testing.T) {
-	ctx, cancel := testContext(t)
+	ctx, cancel := testcontext.New(t)
 	defer cancel()
 
 	bucketsMock := &mocks.BucketsInterface{}
@@ -157,7 +162,7 @@ func testDriverCreateBucketCheckBucketFailed(t *testing.T) {
 // testDriverCreateBucketBucketCreationFailed tests if error during creation of bucket is handled correctly
 // in the (*Server).DriverCreateBucket method.
 func testDriverCreateBucketBucketCreationFailed(t *testing.T) {
-	ctx, cancel := testContext(t)
+	ctx, cancel := testcontext.New(t)
 	defer cancel()
 
 	bucketsMock := &mocks.BucketsInterface{}
@@ -203,7 +208,7 @@ func TestGetBucket(t *testing.T) {
 
 // testGetBucketValid tests the happy path of the (*Server).getBucket method.
 func testGetBucketValid(t *testing.T) {
-	ctx, cancel := testContext(t)
+	ctx, cancel := testcontext.New(t)
 	defer cancel()
 
 	modelBucket := &model.Bucket{Name: "valid"}
@@ -233,7 +238,7 @@ func testGetBucketValid(t *testing.T) {
 // testGetBucketNoBucket tests if the error indicating that no bucket was found returned from the mocked API,
 // is handled correctly in the (*Server).getBucket method.
 func testGetBucketNoBucket(t *testing.T) {
-	ctx, cancel := testContext(t)
+	ctx, cancel := testcontext.New(t)
 	defer cancel()
 
 	bucketsMock := &mocks.BucketsInterface{}
@@ -262,7 +267,7 @@ func testGetBucketNoBucket(t *testing.T) {
 // testGetBucketUnknownError tests if the unexpected error returned from mocked API,
 // is handled correctly in the (*Server).getBucket method.
 func testGetBucketUnknownError(t *testing.T) {
-	ctx, cancel := testContext(t)
+	ctx, cancel := testcontext.New(t)
 	defer cancel()
 
 	bucketsMock := &mocks.BucketsInterface{}
@@ -310,7 +315,7 @@ func TestCreateBucket(t *testing.T) {
 
 // testCreateBucketValid tests the happy path of the (*Server).createBucket method.
 func testCreateBucketValid(t *testing.T) {
-	ctx, cancel := testContext(t)
+	ctx, cancel := testcontext.New(t)
 	defer cancel()
 
 	bucketsMock := &mocks.BucketsInterface{}
@@ -336,7 +341,7 @@ func testCreateBucketValid(t *testing.T) {
 // testCreateBucketValid tests if the error returned from the mocked API is handled correctly
 // in the (*Server).createBucket method.
 func testCreateBucketFailed(t *testing.T) {
-	ctx, cancel := testContext(t)
+	ctx, cancel := testcontext.New(t)
 	defer cancel()
 
 	bucketsMock := &mocks.BucketsInterface{}
