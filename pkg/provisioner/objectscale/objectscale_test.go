@@ -287,19 +287,19 @@ func testDriverRevokeBucketAccess(t *testing.T) {
 func testParsePolicyStatement(t *testing.T) {
 	testCases := []struct {
 		description          string
-		inputStatements      []updateBucketPolicyStatement
+		inputStatements      []UpdateBucketPolicyStatement
 		awsBucketResourceARN string
 		awsPrincipalString   string
-		expectedOutput       []updateBucketPolicyStatement
+		expectedOutput       []UpdateBucketPolicyStatement
 	}{
 		{
 			description: "valid policy statement parsing",
-			inputStatements: []updateBucketPolicyStatement{
+			inputStatements: []UpdateBucketPolicyStatement{
 				{
 					Resource: []string{"happyAwsBucketResourceARN"},
 					SID:      "GetObject_permission",
 					Effect:   allowEffect,
-					Principal: principal{
+					Principal: Principal{
 						AWS:    []string{"happyAwsPrincipalString"},
 						Action: []string{"*"},
 					},
@@ -307,12 +307,12 @@ func testParsePolicyStatement(t *testing.T) {
 			},
 			awsBucketResourceARN: "happyAwsBucketResourceARN",
 			awsPrincipalString:   "happyAwsPrincipalString",
-			expectedOutput: []updateBucketPolicyStatement{
+			expectedOutput: []UpdateBucketPolicyStatement{
 				{
 					Resource: []string{"happyAwsBucketResourceARN"},
 					SID:      "GetObject_permission",
 					Effect:   allowEffect,
-					Principal: principal{
+					Principal: Principal{
 						AWS:    []string{"happyAwsPrincipalString"},
 						Action: []string{"*"},
 					},
@@ -321,12 +321,12 @@ func testParsePolicyStatement(t *testing.T) {
 		},
 		{
 			description: "policy needed update parsing",
-			inputStatements: []updateBucketPolicyStatement{
+			inputStatements: []UpdateBucketPolicyStatement{
 				{
 					Resource: nil,
 					SID:      "GetObject_permission",
 					Effect:   "",
-					Principal: principal{
+					Principal: Principal{
 						AWS:    []string{"urn:osc:iam::osai07c2ae318ae9d6f2:user/iam_user20230523061025118"},
 						Action: []string{"s3:GetObjectVersion"},
 					},
@@ -334,12 +334,12 @@ func testParsePolicyStatement(t *testing.T) {
 			},
 			awsBucketResourceARN: "happyAwsBucketResourceARN",
 			awsPrincipalString:   "happyAwsPrincipalString",
-			expectedOutput: []updateBucketPolicyStatement{
+			expectedOutput: []UpdateBucketPolicyStatement{
 				{
 					Resource: []string{"happyAwsBucketResourceARN"},
 					SID:      "GetObject_permission",
 					Effect:   allowEffect,
-					Principal: principal{
+					Principal: Principal{
 						AWS:    []string{"urn:osc:iam::osai07c2ae318ae9d6f2:user/iam_user20230523061025118", "happyAwsPrincipalString"},
 						Action: []string{"s3:GetObjectVersion", "*"},
 					},

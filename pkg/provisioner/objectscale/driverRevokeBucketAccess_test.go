@@ -15,8 +15,19 @@ package objectscale
 import (
 	"testing"
 
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/iam"
+	"github.com/aws/aws-sdk-go/service/iam/iamiface"
+	"github.com/dell/cosi-driver/pkg/iamfaketoo"
 	"github.com/dell/cosi-driver/pkg/internal/testcontext"
+	"github.com/dell/goobjectscale/pkg/client/fake"
+	"github.com/dell/goobjectscale/pkg/client/model"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
+	cosi "sigs.k8s.io/container-object-storage-interface-spec"
 )
+
+var _ iamiface.IAMAPI = (*iamfaketoo.IAMAPI)(nil)
 
 func TestServerBucketAccessRevoke(t *testing.T) {
 	t.Parallel()
@@ -35,6 +46,38 @@ func TestServerBucketAccessRevoke(t *testing.T) {
 }
 
 func testValidAccessRevoking(t *testing.T) {
-	_, cancel := testcontext.New(t)
+	ctx, cancel := testcontext.New(t)
 	defer cancel()
+
+	// That's how we can mock the objectscale IAM api client
+	IAMClient := iamfaketoo.NewIAMAPI(t)
+	IAMClient.On("CreateUserWithContext", mock.Anything, mock.Anything).Return(
+		&iam.CreateUserOutput{
+			User: &iam.User{
+				UserName: aws.String("namespace-user-valid"), // This mocked response is based on `namesapce` from server and bucketId from request
+			},
+		}, nil).Once()
+	IAMClient.On("GetUser", mock.Anything).Return(nil, nil).Once()
+	IAMClient.On("CreateAccessKey", mock.Anything).Return(&iam.CreateAccessKeyOutput{AccessKey: &iam.AccessKey{AccessKeyId: aws.String("acc"), SecretAccessKey: aws.String("sec")}}, nil).Once()
+
+	server := Server{
+		mgmtClient: fake.NewClientSet(&model.Bucket{ // That's how we can mock the objectscale bucket api client
+			Name:      "valid", // This is based on "bucket-valid" BucketId from request
+			Namespace: testNamespace,
+		}),
+		iamClient:     IAMClient, // Inject mocked IAM client
+		namespace:     testNamespace,
+		backendID:     testID,
+		objectScaleID: objectScaleID,
+		objectStoreID: objectStoreID,
+	}
+
+	req := &cosi.DriverRevokeBucketAccessRequest{
+		BucketId:  "valid-bucket",
+		AccountId: "namespace-user-valid",
+	}
+
+	response, err := server.DriverRevokeBucketAccess(ctx, req)
+	assert.ErrorIs(t, err, nil, err)
+	assert.NotNil(t, response)
 }

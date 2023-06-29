@@ -14,7 +14,9 @@ package objectscale
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
+	"fmt"
 	"strings"
 
 	"go.opentelemetry.io/otel"
@@ -22,6 +24,7 @@ import (
 	"google.golang.org/grpc/status"
 
 	"github.com/aws/aws-sdk-go/service/iam"
+	"github.com/dell/goobjectscale/pkg/client/model"
 	log "github.com/sirupsen/logrus"
 	otelCodes "go.opentelemetry.io/otel/codes"
 	cosi "sigs.k8s.io/container-object-storage-interface-spec"
@@ -70,7 +73,7 @@ func (s *Server) DriverRevokeBucketAccess(ctx context.Context,
 		"parameters": parameters,
 	}).Info("parameters of the bucket")
 
-	// Check if bucket for granting access exists.
+	// Check if bucket for revoking access exists.
 	_, err := s.mgmtClient.Buckets().Get(ctx, bucketName, parameters)
 	if err != nil && !errors.Is(err, ErrParameterNotFound) {
 		log.WithFields(log.Fields{
@@ -155,7 +158,103 @@ func (s *Server) DriverRevokeBucketAccess(ctx context.Context,
 
 	// delete/update policy
 	// awsBucketResourceARN := fmt.Sprintf("arn:aws:s3:%s:%s:%s/*", s.objectScaleID, s.objectStoreID, bucketName)
-	// awsPrincipalString := fmt.Sprintf("urn:osc:iam::%s:user/%s", s.namespace, req.AccountId)
+
+	policy, err := s.mgmtClient.Buckets().GetPolicy(ctx, bucketName, parameters)
+	if err != nil && !errors.Is(err, model.Error{Code: model.CodeResourceNotFound}) {
+		errMsg := errors.New("failed to check bucket policy existence")
+		log.WithFields(log.Fields{
+			"bucket": bucketName,
+		}).Error(errMsg.Error())
+
+		span.RecordError(err)
+		span.SetStatus(otelCodes.Error, errMsg.Error())
+
+		return nil, status.Error(codes.Internal, errMsg.Error())
+	} else if err == nil && policy == "" {
+		errMsg := errors.New("policy is empty")
+		log.WithFields(log.Fields{
+			"bucket": bucketName,
+		}).Error(errMsg.Error())
+	}
+	//{
+	//   "Id" : "S3PolicyId1",
+	//   "Version" : "2012-10-17",
+	//   "Statement" : [ {
+	// ::: objScID:objStoreID:bucketName/*
+	//   "Resource" : [ "arn:aws:s3:osci5b022e718aa7e0ff:osti202e682782ebcbfd:lynxbucket/*" ],
+	//   "Sid" : "GetObject_permission",
+	//   "Effect" : "Allow",
+	//   "Principal" : {
+	//      "AWS" : [ "urn:osc:iam::osai07c2ae318ae9d6f2:user/iam_user20230523061025118" ]
+	// ":::: %namespace/user/%username
+	//    },
+	//    "Action" : [ "s3:GetObjectVersion" ]
+	// "s3:*"
+	//} ]
+	// }
+	awsBucketResourceARN := fmt.Sprintf("arn:aws:s3:%s:%s:%s/*", s.objectScaleID, s.objectStoreID, bucketName)
+	awsPrincipalString := fmt.Sprintf("urn:osc:iam::%s:user/%s", s.namespace, req.AccountId)
+	jsonPolicy := UpdateBucketPolicyRequest{}
+	err = json.Unmarshal([]byte(policy), &jsonPolicy)
+	if err != nil {
+		log.WithFields(log.Fields{
+			"bucket":   bucketName,
+			"PolicyID": jsonPolicy.PolicyID,
+			"error":    err,
+		}).Error("failed to marshall policy")
+
+		span.RecordError(err)
+		span.SetStatus(otelCodes.Error, "failed to marshall policy")
+		return nil, status.Error(codes.Internal, "an unexpected error occurred")
+	}
+
+	for k, statement := range jsonPolicy.Statement {
+		isPrincipal := false
+		isResource := false
+		for _, p := range statement.Principal.AWS {
+			if p == awsPrincipalString {
+				isPrincipal = true
+			}
+		}
+		for _, r := range statement.Resource {
+			if r == awsBucketResourceARN {
+				isResource = true
+			}
+		}
+		if isPrincipal && isResource {
+			jsonPolicy.Statement = append(jsonPolicy.Statement[:k], jsonPolicy.Statement[k+1:]...)
+		}
+	}
+
+	updatedPolicy, err := json.Marshal(jsonPolicy)
+	if err != nil {
+		errMsg := errors.New("failed to marshal updatePolicy into JSON")
+		log.WithFields(log.Fields{
+			"bucket":   bucketName,
+			"PolicyID": jsonPolicy.PolicyID,
+			"error":    err,
+		}).Error(errMsg.Error())
+
+		span.RecordError(err)
+		span.SetStatus(otelCodes.Error, errMsg.Error())
+
+		return nil, status.Error(codes.Internal, errMsg.Error())
+	}
+
+	err = s.mgmtClient.Buckets().UpdatePolicy(ctx, bucketName, string(updatedPolicy), parameters)
+	if err != nil {
+		errMsg := errors.New("failed to update bucket policy")
+		log.WithFields(log.Fields{
+			"bucket": bucketName,
+			"policy": updatedPolicy,
+			"error":  err,
+		}).Error(errMsg.Error())
+
+		span.RecordError(err)
+		span.SetStatus(otelCodes.Error, errMsg.Error())
+
+		return nil, status.Error(codes.Internal, errMsg.Error())
+	}
 
 	// Delete user.
 	_, err = s.iamClient.DeleteUser(&iam.DeleteUserInput{UserName: &req.AccountId})

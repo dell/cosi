@@ -312,22 +312,22 @@ func (s *Server) DriverDeleteBucket(ctx context.Context,
 	return &cosi.DriverDeleteBucketResponse{}, nil
 }
 
-type principal struct {
+type Principal struct {
 	AWS    []string `json:"AWS"`
 	Action []string `json:"Action"`
 }
 
-type updateBucketPolicyStatement struct {
+type UpdateBucketPolicyStatement struct {
 	Resource  []string  `json:"Resource"`
 	SID       string    `json:"Sid"`
 	Effect    string    `json:"Effect"`
-	Principal principal `json:"Principal"`
+	Principal Principal `json:"Principal"`
 }
 
-type updateBucketPolicyRequest struct {
+type UpdateBucketPolicyRequest struct {
 	PolicyID  string                        `json:"Id"`
 	Version   string                        `json:"Version"`
-	Statement []updateBucketPolicyStatement `json:"Statement"`
+	Statement []UpdateBucketPolicyStatement `json:"Statement"`
 }
 
 // DriverGrantBucketAccess provides access to Bucket on specific Object Storage Platform.
@@ -489,7 +489,7 @@ func (s *Server) DriverGrantBucketAccess( // nolint:gocognit
 		}).Info("bucket policy already exists")
 	}
 
-	policyRequest := updateBucketPolicyRequest{}
+	policyRequest := UpdateBucketPolicyRequest{}
 	if policy != "" {
 		err = json.NewDecoder(strings.NewReader(policy)).Decode(&policyRequest)
 		if err != nil {
@@ -587,38 +587,24 @@ func (s *Server) DriverGrantBucketAccess( // nolint:gocognit
 	return &cosi.DriverGrantBucketAccessResponse{AccountId: userName, Credentials: credentials}, nil
 }
 
-// DriverRevokeBucketAccess revokes access from Bucket on specific Object Storage Platform.
-func (s *Server) DriverRevokeBucketAccess(ctx context.Context,
-	req *cosi.DriverRevokeBucketAccessRequest,
-) (*cosi.DriverRevokeBucketAccessResponse, error) {
-	_, span := otel.Tracer("RevokeBucketAccessRequest").Start(ctx, "ObjectscaleDriverRevokeBucketAccess")
-	defer span.End()
-
-	err := errors.New("not implemented")
-	span.RecordError(err)
-	span.SetStatus(otelCodes.Error, err.Error())
-
-	return nil, status.Error(codes.Unimplemented, err.Error())
-}
-
 // parsePolicyStatement generates new bucket policy statements array with updated resource and principal.
 // TODO: this probably has to be refactored in order to meet the gocognit requirements (complexity < 30).
 func parsePolicyStatement( // nolint:gocognit
 	ctx context.Context,
-	inputStatements []updateBucketPolicyStatement,
+	inputStatements []UpdateBucketPolicyStatement,
 	awsBucketResourceARN,
 	awsPrincipalString string,
-) []updateBucketPolicyStatement {
+) []UpdateBucketPolicyStatement {
 	_, span := otel.Tracer("GrantBucketAccessRequest").Start(ctx, "ObjectscaleParsePolicyStatement")
 	defer span.End()
 
-	outputStatements := []updateBucketPolicyStatement{}
+	outputStatements := []UpdateBucketPolicyStatement{}
 
 	// Omitting a nil check, as the len() is defined as at lest zero.
 	if len(inputStatements) > 0 {
 		outputStatements = inputStatements
 	} else {
-		outputStatements = append(outputStatements, updateBucketPolicyStatement{})
+		outputStatements = append(outputStatements, UpdateBucketPolicyStatement{})
 	}
 
 	for k, statement := range outputStatements {
