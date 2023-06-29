@@ -12,4 +12,29 @@
 
 package objectscale
 
-// TODO: Move DriverRevokeBucketAccess unit tests here.
+import (
+	"testing"
+
+	"github.com/dell/cosi-driver/pkg/internal/testcontext"
+)
+
+func TestServerBucketAccessRevoke(t *testing.T) {
+	t.Parallel()
+
+	for scenario, fn := range map[string]func(t *testing.T){
+		"testValidAccessRevoking": testValidAccessRevoking,
+	} {
+		fn := fn
+
+		t.Run(scenario, func(t *testing.T) {
+			t.Parallel()
+
+			fn(t)
+		})
+	}
+}
+
+func testValidAccessRevoking(t *testing.T) {
+	_, cancel := testcontext.New(t)
+	defer cancel()
+}
