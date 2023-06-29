@@ -51,14 +51,22 @@ func testValidAccessRevoking(t *testing.T) {
 
 	// That's how we can mock the objectscale IAM api client
 	IAMClient := iamfaketoo.NewIAMAPI(t)
-	IAMClient.On("CreateUserWithContext", mock.Anything, mock.Anything).Return(
-		&iam.CreateUserOutput{
-			User: &iam.User{
-				UserName: aws.String("namespace-user-valid"), // This mocked response is based on `namesapce` from server and bucketId from request
-			},
-		}, nil).Once()
-	IAMClient.On("GetUser", mock.Anything).Return(nil, nil).Once()
-	IAMClient.On("CreateAccessKey", mock.Anything).Return(&iam.CreateAccessKeyOutput{AccessKey: &iam.AccessKey{AccessKeyId: aws.String("acc"), SecretAccessKey: aws.String("sec")}}, nil).Once()
+
+	accessKeyList := make([]*iam.AccessKeyMetadata, 1)
+	accessKeyList[0] = &iam.AccessKeyMetadata{
+		AccessKeyId: aws.String("abc"),
+		UserName:    aws.String("namespace-user-valid"),
+	}
+
+	IAMClient.On("ListAccessKeys", mock.Anything).Return(&iam.ListAccessKeysOutput{
+		AccessKeyMetadata: accessKeyList}, nil).Once()
+	IAMClient.On("DeleteAccessKey", mock.Anything).Return(nil, nil).Once()
+	IAMClient.On("DeleteUser", mock.Anything).Return(nil, nil).Once()
+	IAMClient.On("GetUser", mock.Anything).Return(&iam.GetUserOutput{
+		User: &iam.User{
+			UserName: aws.String("namespace-user-valid"),
+		},
+	}, nil).Once()
 
 	server := Server{
 		mgmtClient: fake.NewClientSet(&model.Bucket{ // That's how we can mock the objectscale bucket api client
@@ -73,7 +81,7 @@ func testValidAccessRevoking(t *testing.T) {
 	}
 
 	req := &cosi.DriverRevokeBucketAccessRequest{
-		BucketId:  "valid-bucket",
+		BucketId:  "bucket-valid",
 		AccountId: "namespace-user-valid",
 	}
 
