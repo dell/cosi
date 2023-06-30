@@ -14,6 +14,7 @@ package objectscale
 
 import (
 	"testing"
+	"errors"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/iam"
@@ -36,8 +37,12 @@ func TestServerBucketAccessRevoke(t *testing.T) {
 	t.Parallel()
 
 	for scenario, fn := range map[string]func(t *testing.T){
-		"testValidAccessRevoking": testValidAccessRevoking,
-		"testEmptyAccountID":      testEmptyAccountID,
+		"testValidAccessRevoking":      testValidAccessRevoking,
+		"testEmptyAccountID":           testEmptyAccountID,
+		"testGetBucketUnexpectedError": testGetBucketUnexpectedError,
+		"testGetBucketDontExist":       testGetBucketDontExist,
+		"testGetBucketFailToCheckUser": testGetBucketFailToCheckUser,
+		"testGetBucketUserNotFound":    testGetBucketUserNotFound,
 	} {
 		fn := fn
 
@@ -156,11 +161,136 @@ func testEmptyAccountID(t *testing.T) {
 	assert.ErrorIs(t, err, status.Error(codes.InvalidArgument, "empty accountID"))
 }
 
-// 1. empty accountID
-// 2. empty bucketID
-// 3. failed to check bucket existence
-// 4. bucket not found
-// 5. failed to check for user existence
+func testGetBucketDontExist(t *testing.T) {
+	ctx, cancel := testcontext.New(t)
+	defer cancel()
+
+	bucketsMock := &mocks.BucketsInterface{}
+	bucketsMock.On("Get", mock.Anything, mock.Anything, mock.Anything).Return(nil, ErrParameterNotFound).Once()
+
+	// Generic mock for the ClientSet interface, we care only about returning Buckets from it.
+	mgmtClientMock := &mocks.ClientSet{}
+	mgmtClientMock.On("Buckets").Return(bucketsMock).Once()
+
+	server := Server{
+		mgmtClient:    mgmtClientMock,
+		namespace:     testNamespace,
+		backendID:     testID,
+		objectScaleID: objectScaleID,
+		objectStoreID: objectStoreID,
+	}
+
+	req := &cosi.DriverRevokeBucketAccessRequest{
+		BucketId:  "bucket-valid",
+		AccountId: testUserName,
+	}
+
+	_, err := server.DriverRevokeBucketAccess(ctx, req)
+
+	assert.ErrorIs(t, err, status.Error(codes.NotFound, "bucket not found"))
+}
+
+// testGetBucketUnknownError tests if the unexpected error returned from mocked API,
+// is handled correctly in the (*Server).getBucket method.
+func testGetBucketUnexpectedError(t *testing.T) {
+	ctx, cancel := testcontext.New(t)
+	defer cancel()
+
+	bucketsMock := &mocks.BucketsInterface{}
+	bucketsMock.On("Get", mock.Anything, mock.Anything, mock.Anything).Return(nil, ErrInternalException).Once()
+
+	// Generic mock for the ClientSet interface, we care only about returning Buckets from it.
+	mgmtClientMock := &mocks.ClientSet{}
+	mgmtClientMock.On("Buckets").Return(bucketsMock).Once()
+
+	server := Server{
+		mgmtClient:    mgmtClientMock,
+		namespace:     testNamespace,
+		backendID:     testID,
+		objectScaleID: objectScaleID,
+		objectStoreID: objectStoreID,
+	}
+
+	req := &cosi.DriverRevokeBucketAccessRequest{
+		BucketId:  "bucket-valid",
+		AccountId: testUserName,
+	}
+
+	_, err := server.DriverRevokeBucketAccess(ctx, req)
+
+	assert.ErrorIs(t, err, status.Error(codes.Internal, "failed to check bucket existence"))
+}
+
+func testGetBucketFailToCheckUser(t *testing.T) {
+	ctx, cancel := testcontext.New(t)
+	defer cancel()
+	bucketsMock := &mocks.BucketsInterface{}
+
+	bucketsMock.On("Get", mock.Anything, mock.Anything, mock.Anything).Return(&model.Bucket{
+		Name:      "valid",
+		Namespace: testNamespace,
+	}, nil).Once()
+
+	IAMClient := iamfaketoo.NewIAMAPI(t)
+	IAMClient.On("GetUser", mock.Anything).Return(nil, ErrInternalException).Once()
+
+	mgmtClientMock := &mocks.ClientSet{}
+	mgmtClientMock.On("Buckets").Return(bucketsMock).Once()
+
+	server := Server{
+		mgmtClient:    mgmtClientMock,
+		iamClient:     IAMClient,
+		namespace:     testNamespace,
+		backendID:     testID,
+		objectScaleID: objectScaleID,
+		objectStoreID: objectStoreID,
+	}
+
+	req := &cosi.DriverRevokeBucketAccessRequest{
+		BucketId:  "bucket-valid",
+		AccountId: testUserName,
+	}
+
+	_, err := server.DriverRevokeBucketAccess(ctx, req)
+
+	assert.ErrorIs(t, err, status.Error(codes.Internal, "failed to check for user existence"))
+}
+
+func testGetBucketUserNotFound(t *testing.T) {
+	ctx, cancel := testcontext.New(t)
+	defer cancel()
+	bucketsMock := &mocks.BucketsInterface{}
+
+	bucketsMock.On("Get", mock.Anything, mock.Anything, mock.Anything).Return(&model.Bucket{
+		Name:      "valid",
+		Namespace: testNamespace,
+	}, nil).Once()
+
+	IAMClient := iamfaketoo.NewIAMAPI(t)
+	IAMClient.On("GetUser", mock.Anything).Return(nil, errors.New("NoSuchEntity")).Once()
+
+	mgmtClientMock := &mocks.ClientSet{}
+	mgmtClientMock.On("Buckets").Return(bucketsMock).Once()
+
+	server := Server{
+		mgmtClient:    mgmtClientMock,
+		iamClient:     IAMClient,
+		namespace:     testNamespace,
+		backendID:     testID,
+		objectScaleID: objectScaleID,
+		objectStoreID: objectStoreID,
+	}
+
+	req := &cosi.DriverRevokeBucketAccessRequest{
+		BucketId:  "bucket-valid",
+		AccountId: testUserName,
+	}
+
+	_, err := server.DriverRevokeBucketAccess(ctx, req)
+
+	assert.ErrorIs(t, err, status.Error(codes.Internal, "failed to get user"))
+}
+
 // 6. failed to get user
 // 7. failed to get access key list
 // 8. failed to delete access key
