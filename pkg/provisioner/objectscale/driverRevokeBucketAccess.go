@@ -84,7 +84,7 @@ func (s *Server) DriverRevokeBucketAccess(ctx context.Context,
 		span.RecordError(err)
 		span.SetStatus(otelCodes.Error, "failed to check bucket existence")
 
-		return nil, status.Error(codes.Internal, "an unexpected error occurred")
+		return nil, status.Error(codes.Internal, "failed to check bucket existence")
 	} else if err != nil {
 		log.WithFields(log.Fields{
 			"bucket": bucketName,
@@ -205,7 +205,7 @@ func (s *Server) DriverRevokeBucketAccess(ctx context.Context,
 
 		span.RecordError(err)
 		span.SetStatus(otelCodes.Error, "failed to marshall policy")
-		return nil, status.Error(codes.Internal, "an unexpected error occurred")
+		return nil, status.Error(codes.Internal, "failed to marshall policy")
 	}
 
 	for k, statement := range jsonPolicy.Statement {
@@ -253,7 +253,7 @@ func (s *Server) DriverRevokeBucketAccess(ctx context.Context,
 		span.RecordError(err)
 		span.SetStatus(otelCodes.Error, errMsg.Error())
 
-		return nil, status.Error(codes.Internal, errMsg.Error())
+		return nil, status.Error(codes.Internal, err.Error())
 	}
 
 	// Delete user.

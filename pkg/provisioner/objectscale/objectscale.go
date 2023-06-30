@@ -313,8 +313,7 @@ func (s *Server) DriverDeleteBucket(ctx context.Context,
 }
 
 type Principal struct {
-	AWS    []string `json:"AWS"`
-	Action []string `json:"Action"`
+	AWS []string `json:"AWS"`
 }
 
 type UpdateBucketPolicyStatement struct {
@@ -322,6 +321,7 @@ type UpdateBucketPolicyStatement struct {
 	SID       string    `json:"Sid"`
 	Effect    string    `json:"Effect"`
 	Principal Principal `json:"Principal"`
+	Action    []string  `json:"Action"`
 }
 
 type UpdateBucketPolicyRequest struct {
@@ -652,18 +652,18 @@ func parsePolicyStatement( // nolint:gocognit
 		// if yes, then this should be done later, when we have more info about the params (MVP is to grant all permissions)
 		foundAction := false
 
-		if statement.Principal.Action == nil {
-			statement.Principal.Action = []string{}
+		if statement.Action == nil {
+			statement.Action = []string{}
 		}
 
-		for _, a := range statement.Principal.Action {
+		for _, a := range statement.Action {
 			if a == "*" {
 				foundAction = true
 			}
 		}
 
 		if !foundAction {
-			statement.Principal.Action = append(statement.Principal.Action, "*")
+			statement.Action = append(statement.Action, "*")
 		}
 
 		span.AddEvent("update principal action in policy statement")

@@ -20,10 +20,11 @@ import (
 	"github.com/aws/aws-sdk-go/service/iam/iamiface"
 	"github.com/dell/cosi-driver/pkg/iamfaketoo"
 	"github.com/dell/cosi-driver/pkg/internal/testcontext"
-	"github.com/dell/goobjectscale/pkg/client/fake"
 	"github.com/dell/goobjectscale/pkg/client/model"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
+
+	"github.com/dell/goobjectscale/pkg/client/api/mocks"
 	cosi "sigs.k8s.io/container-object-storage-interface-spec"
 )
 
@@ -68,12 +69,20 @@ func testValidAccessRevoking(t *testing.T) {
 		},
 	}, nil).Once()
 
+	bucketsMock := &mocks.BucketsInterface{}
+	bucketsMock.On("Get", mock.Anything, mock.Anything, mock.Anything).Return(&model.Bucket{
+		Name:      "valid",
+		Namespace: testNamespace,
+	}, nil).Once()
+	bucketsMock.On("GetPolicy", mock.Anything, mock.Anything, mock.Anything).Return(`{"Id":"S3PolicyId1","Version":"2012-10-17","Statement":[{"Resource":["arn:aws:s3:osci5b022e718aa7e0ff:osti202e682782ebcbfd:lynxbucket/*"],"Sid":"GetObject_permission","Effect":"Allow","Principal":{"AWS":["urn:osc:iam::osai07c2ae318ae9d6f2:user/iam_user20230523061025118"]},"Action":["s3:GetObjectVersion"]}]}`, nil).Once()
+	bucketsMock.On("UpdatePolicy", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil).Once()
+
+	mgmtClientMock := &mocks.ClientSet{}
+	mgmtClientMock.On("Buckets").Return(bucketsMock)
+
 	server := Server{
-		mgmtClient: fake.NewClientSet(&model.Bucket{ // That's how we can mock the objectscale bucket api client
-			Name:      "valid", // This is based on "bucket-valid" BucketId from request
-			Namespace: testNamespace,
-		}),
-		iamClient:     IAMClient, // Inject mocked IAM client
+		mgmtClient:    mgmtClientMock,
+		iamClient:     IAMClient,
 		namespace:     testNamespace,
 		backendID:     testID,
 		objectScaleID: objectScaleID,
@@ -89,3 +98,39 @@ func testValidAccessRevoking(t *testing.T) {
 	assert.ErrorIs(t, err, nil, err)
 	assert.NotNil(t, response)
 }
+
+// func testEmptyBucketID(t *testing.T) {
+
+// }
+
+func testEmptyAccountID(t *testing.T) {
+
+}
+
+// 1. empty accountID
+// 2. empty bucketID
+// 3. failed to check bucket existence
+// 4. bucket not found
+// 5. failed to check for user existence
+// 6. failed to get user
+// 7. failed to get access key list
+// 8. failed to delete access key
+// 9. failed to check bucket policy existence
+// 10. empty policy
+// 11. failed to marshal updatePolicy into JSON
+// 12. failed to update bucket policy
+// 13. failed to delete user
+
+// &UpdateBucketPolicyRequest{
+// 	PolicyID: "policy1",
+// 	Version: "v1",
+// 	Statement: &UpdateBucketPolicyStatement{
+// 		Resource: []string{"arn:aws:s3:osci5b022e718aa7e0ff:osti202e682782ebcbfd:valid/*"},
+// 		SID: "sid",
+// 		Effect: "effect",
+// 		Principal: &Principal{
+// 			AWS: []string{"urn:osc:iam::osai07c2ae318ae9d6f2:user/iam_user20230523061025118"},
+// 			Action: []string{"s3:GetObjectVersion"},
+// 		},
+// 	},
+// },
