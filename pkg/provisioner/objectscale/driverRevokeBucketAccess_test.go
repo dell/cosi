@@ -20,11 +20,13 @@ import (
 	"github.com/aws/aws-sdk-go/service/iam/iamiface"
 	"github.com/dell/cosi-driver/pkg/iamfaketoo"
 	"github.com/dell/cosi-driver/pkg/internal/testcontext"
-	"github.com/dell/goobjectscale/pkg/client/model"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 
 	"github.com/dell/goobjectscale/pkg/client/api/mocks"
+	"github.com/dell/goobjectscale/pkg/client/model"
 	cosi "sigs.k8s.io/container-object-storage-interface-spec"
 )
 
@@ -35,6 +37,7 @@ func TestServerBucketAccessRevoke(t *testing.T) {
 
 	for scenario, fn := range map[string]func(t *testing.T){
 		"testValidAccessRevoking": testValidAccessRevoking,
+		"testEmptyAccountID":      testEmptyAccountID,
 	} {
 		fn := fn
 
@@ -56,7 +59,7 @@ func testValidAccessRevoking(t *testing.T) {
 	accessKeyList := make([]*iam.AccessKeyMetadata, 1)
 	accessKeyList[0] = &iam.AccessKeyMetadata{
 		AccessKeyId: aws.String("abc"),
-		UserName:    aws.String("namespace-user-valid"),
+		UserName:    aws.String(testUserName),
 	}
 
 	IAMClient.On("ListAccessKeys", mock.Anything).Return(&iam.ListAccessKeysOutput{
@@ -65,7 +68,7 @@ func testValidAccessRevoking(t *testing.T) {
 	IAMClient.On("DeleteUser", mock.Anything).Return(nil, nil).Once()
 	IAMClient.On("GetUser", mock.Anything).Return(&iam.GetUserOutput{
 		User: &iam.User{
-			UserName: aws.String("namespace-user-valid"),
+			UserName: aws.String(testUserName),
 		},
 	}, nil).Once()
 
@@ -74,7 +77,7 @@ func testValidAccessRevoking(t *testing.T) {
 		Name:      "valid",
 		Namespace: testNamespace,
 	}, nil).Once()
-	bucketsMock.On("GetPolicy", mock.Anything, mock.Anything, mock.Anything).Return(`{"Id":"S3PolicyId1","Version":"2012-10-17","Statement":[{"Resource":["arn:aws:s3:osci5b022e718aa7e0ff:osti202e682782ebcbfd:lynxbucket/*"],"Sid":"GetObject_permission","Effect":"Allow","Principal":{"AWS":["urn:osc:iam::osai07c2ae318ae9d6f2:user/iam_user20230523061025118"]},"Action":["s3:GetObjectVersion"]}]}`, nil).Once()
+	bucketsMock.On("GetPolicy", mock.Anything, mock.Anything, mock.Anything).Return(testPolicy, nil).Once()
 	bucketsMock.On("UpdatePolicy", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil).Once()
 
 	mgmtClientMock := &mocks.ClientSet{}
@@ -91,7 +94,7 @@ func testValidAccessRevoking(t *testing.T) {
 
 	req := &cosi.DriverRevokeBucketAccessRequest{
 		BucketId:  "bucket-valid",
-		AccountId: "namespace-user-valid",
+		AccountId: testUserName,
 	}
 
 	response, err := server.DriverRevokeBucketAccess(ctx, req)
@@ -99,12 +102,58 @@ func testValidAccessRevoking(t *testing.T) {
 	assert.NotNil(t, response)
 }
 
-// func testEmptyBucketID(t *testing.T) {
+func testEmptyBucketIDRevoke(t *testing.T) {
+	ctx, cancel := testcontext.New(t)
+	defer cancel()
 
-// }
+	bucketsMock := &mocks.BucketsInterface{}
+
+	mgmtClientMock := &mocks.ClientSet{}
+	mgmtClientMock.On("Buckets").Return(bucketsMock).Once()
+
+	server := Server{
+		mgmtClient:    mgmtClientMock,
+		namespace:     testNamespace,
+		backendID:     testID,
+		objectScaleID: objectScaleID,
+		objectStoreID: objectStoreID,
+	}
+
+	req := &cosi.DriverRevokeBucketAccessRequest{
+		BucketId:  "",
+		AccountId: testUserName,
+	}
+
+	_, err := server.DriverRevokeBucketAccess(ctx, req)
+
+	assert.ErrorIs(t, err, status.Error(codes.InvalidArgument, "empty accountID"))
+}
 
 func testEmptyAccountID(t *testing.T) {
+	ctx, cancel := testcontext.New(t)
+	defer cancel()
 
+	bucketsMock := &mocks.BucketsInterface{}
+
+	mgmtClientMock := &mocks.ClientSet{}
+	mgmtClientMock.On("Buckets").Return(bucketsMock).Once()
+
+	server := Server{
+		mgmtClient:    mgmtClientMock,
+		namespace:     testNamespace,
+		backendID:     testID,
+		objectScaleID: objectScaleID,
+		objectStoreID: objectStoreID,
+	}
+
+	req := &cosi.DriverRevokeBucketAccessRequest{
+		BucketId:  "bucket-valid",
+		AccountId: "",
+	}
+
+	_, err := server.DriverRevokeBucketAccess(ctx, req)
+
+	assert.ErrorIs(t, err, status.Error(codes.InvalidArgument, "empty accountID"))
 }
 
 // 1. empty accountID
