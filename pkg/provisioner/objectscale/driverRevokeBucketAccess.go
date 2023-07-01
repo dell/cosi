@@ -175,6 +175,11 @@ func (s *Server) DriverRevokeBucketAccess(ctx context.Context,
 		log.WithFields(log.Fields{
 			"bucket": bucketName,
 		}).Error(errMsg.Error())
+
+		span.RecordError(err)
+		span.SetStatus(otelCodes.Error, errMsg.Error())
+
+		return nil, status.Error(codes.Internal, errMsg.Error())
 	}
 	//{
 	//   "Id" : "S3PolicyId1",

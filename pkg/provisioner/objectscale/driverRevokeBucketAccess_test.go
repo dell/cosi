@@ -13,8 +13,8 @@
 package objectscale
 
 import (
-	"testing"
 	"errors"
+	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/iam"
@@ -37,12 +37,17 @@ func TestServerBucketAccessRevoke(t *testing.T) {
 	t.Parallel()
 
 	for scenario, fn := range map[string]func(t *testing.T){
-		"testValidAccessRevoking":      testValidAccessRevoking,
-		"testEmptyAccountID":           testEmptyAccountID,
-		"testGetBucketUnexpectedError": testGetBucketUnexpectedError,
-		"testGetBucketDontExist":       testGetBucketDontExist,
-		"testGetBucketFailToCheckUser": testGetBucketFailToCheckUser,
-		"testGetBucketUserNotFound":    testGetBucketUserNotFound,
+		"testValidAccessRevoking":              testValidAccessRevoking,
+		"testEmptyAccountID":                   testEmptyAccountID,
+		"testGetBucketUnexpectedError":         testGetBucketUnexpectedError,
+		"testGetBucketDontExist":               testGetBucketDontExist,
+		"testGetBucketFailToCheckUser":         testGetBucketFailToCheckUser,
+		"testGetBucketUserNotFound":            testGetBucketUserNotFound,
+		"testFailToGetAccessKeysList":          testFailToGetAccessKeysList,
+		"testFailToDeleteAccessKey":            testFailToDeleteAccessKey,
+		"testFailToCheckBucketPolicyExistence": testFailToCheckBucketPolicyExistence,
+		"testEmptyPolicy":                      testEmptyPolicy,
+		"testFailedToDeleteUser":               testFailedToDeleteUser,
 	} {
 		fn := fn
 
@@ -291,14 +296,247 @@ func testGetBucketUserNotFound(t *testing.T) {
 	assert.ErrorIs(t, err, status.Error(codes.Internal, "failed to get user"))
 }
 
-// 6. failed to get user
-// 7. failed to get access key list
-// 8. failed to delete access key
-// 9. failed to check bucket policy existence
-// 10. empty policy
+func testFailToGetAccessKeysList(t *testing.T) {
+	ctx, cancel := testcontext.New(t)
+	defer cancel()
+	bucketsMock := &mocks.BucketsInterface{}
+
+	bucketsMock.On("Get", mock.Anything, mock.Anything, mock.Anything).Return(&model.Bucket{
+		Name:      "valid",
+		Namespace: testNamespace,
+	}, nil).Once()
+
+	IAMClient := iamfaketoo.NewIAMAPI(t)
+	IAMClient.On("GetUser", mock.Anything).Return(&iam.GetUserOutput{
+		User: &iam.User{
+			UserName: aws.String(testUserName),
+		},
+	}, nil).Once()
+	IAMClient.On("ListAccessKeys", mock.Anything).Return(nil, ErrInternalException).Once()
+
+	mgmtClientMock := &mocks.ClientSet{}
+	mgmtClientMock.On("Buckets").Return(bucketsMock).Once()
+
+	server := Server{
+		mgmtClient:    mgmtClientMock,
+		iamClient:     IAMClient,
+		namespace:     testNamespace,
+		backendID:     testID,
+		objectScaleID: objectScaleID,
+		objectStoreID: objectStoreID,
+	}
+
+	req := &cosi.DriverRevokeBucketAccessRequest{
+		BucketId:  "bucket-valid",
+		AccountId: testUserName,
+	}
+
+	_, err := server.DriverRevokeBucketAccess(ctx, req)
+
+	assert.ErrorIs(t, err, status.Error(codes.Internal, "failed to get access key list"))
+}
+
+func testFailToDeleteAccessKey(t *testing.T) {
+	ctx, cancel := testcontext.New(t)
+	defer cancel()
+	bucketsMock := &mocks.BucketsInterface{}
+
+	bucketsMock.On("Get", mock.Anything, mock.Anything, mock.Anything).Return(&model.Bucket{
+		Name:      "valid",
+		Namespace: testNamespace,
+	}, nil).Once()
+
+	IAMClient := iamfaketoo.NewIAMAPI(t)
+	IAMClient.On("GetUser", mock.Anything).Return(&iam.GetUserOutput{
+		User: &iam.User{
+			UserName: aws.String(testUserName),
+		},
+	}, nil).Once()
+
+	accessKeyList := make([]*iam.AccessKeyMetadata, 1)
+	accessKeyList[0] = &iam.AccessKeyMetadata{
+		AccessKeyId: aws.String("abc"),
+		UserName:    aws.String(testUserName),
+	}
+	IAMClient.On("ListAccessKeys", mock.Anything).Return(&iam.ListAccessKeysOutput{
+		AccessKeyMetadata: accessKeyList}, nil).Once()
+	IAMClient.On("DeleteAccessKey", mock.Anything).Return(nil, ErrInternalException).Once()
+
+	mgmtClientMock := &mocks.ClientSet{}
+	mgmtClientMock.On("Buckets").Return(bucketsMock).Once()
+
+	server := Server{
+		mgmtClient:    mgmtClientMock,
+		iamClient:     IAMClient,
+		namespace:     testNamespace,
+		backendID:     testID,
+		objectScaleID: objectScaleID,
+		objectStoreID: objectStoreID,
+	}
+
+	req := &cosi.DriverRevokeBucketAccessRequest{
+		BucketId:  "bucket-valid",
+		AccountId: testUserName,
+	}
+
+	_, err := server.DriverRevokeBucketAccess(ctx, req)
+
+	assert.ErrorIs(t, err, status.Error(codes.Internal, "failed to delete access key"))
+}
+
+func testFailToCheckBucketPolicyExistence(t *testing.T) {
+	ctx, cancel := testcontext.New(t)
+	defer cancel()
+	bucketsMock := &mocks.BucketsInterface{}
+
+	bucketsMock.On("Get", mock.Anything, mock.Anything, mock.Anything).Return(&model.Bucket{
+		Name:      "valid",
+		Namespace: testNamespace,
+	}, nil).Once()
+	bucketsMock.On("GetPolicy", mock.Anything, mock.Anything, mock.Anything).Return("", ErrInternalException).Once()
+
+	IAMClient := iamfaketoo.NewIAMAPI(t)
+	IAMClient.On("GetUser", mock.Anything).Return(&iam.GetUserOutput{
+		User: &iam.User{
+			UserName: aws.String(testUserName),
+		},
+	}, nil).Once()
+
+	accessKeyList := make([]*iam.AccessKeyMetadata, 1)
+	accessKeyList[0] = &iam.AccessKeyMetadata{
+		AccessKeyId: aws.String("abc"),
+		UserName:    aws.String(testUserName),
+	}
+	IAMClient.On("ListAccessKeys", mock.Anything).Return(&iam.ListAccessKeysOutput{
+		AccessKeyMetadata: accessKeyList}, nil).Once()
+	IAMClient.On("DeleteAccessKey", mock.Anything).Return(nil, nil).Once()
+
+	mgmtClientMock := &mocks.ClientSet{}
+	mgmtClientMock.On("Buckets").Return(bucketsMock).Twice()
+
+	server := Server{
+		mgmtClient:    mgmtClientMock,
+		iamClient:     IAMClient,
+		namespace:     testNamespace,
+		backendID:     testID,
+		objectScaleID: objectScaleID,
+		objectStoreID: objectStoreID,
+	}
+
+	req := &cosi.DriverRevokeBucketAccessRequest{
+		BucketId:  "bucket-valid",
+		AccountId: testUserName,
+	}
+
+	_, err := server.DriverRevokeBucketAccess(ctx, req)
+
+	assert.ErrorIs(t, err, status.Error(codes.Internal, "failed to check bucket policy existence"))
+}
+
+func testEmptyPolicy(t *testing.T) {
+	ctx, cancel := testcontext.New(t)
+	defer cancel()
+	bucketsMock := &mocks.BucketsInterface{}
+
+	bucketsMock.On("Get", mock.Anything, mock.Anything, mock.Anything).Return(&model.Bucket{
+		Name:      "valid",
+		Namespace: testNamespace,
+	}, nil).Once()
+	bucketsMock.On("GetPolicy", mock.Anything, mock.Anything, mock.Anything).Return("", nil).Once()
+
+	IAMClient := iamfaketoo.NewIAMAPI(t)
+	IAMClient.On("GetUser", mock.Anything).Return(&iam.GetUserOutput{
+		User: &iam.User{
+			UserName: aws.String(testUserName),
+		},
+	}, nil).Once()
+
+	accessKeyList := make([]*iam.AccessKeyMetadata, 1)
+	accessKeyList[0] = &iam.AccessKeyMetadata{
+		AccessKeyId: aws.String("abc"),
+		UserName:    aws.String(testUserName),
+	}
+	IAMClient.On("ListAccessKeys", mock.Anything).Return(&iam.ListAccessKeysOutput{
+		AccessKeyMetadata: accessKeyList}, nil).Once()
+	IAMClient.On("DeleteAccessKey", mock.Anything).Return(nil, nil).Once()
+
+	mgmtClientMock := &mocks.ClientSet{}
+	mgmtClientMock.On("Buckets").Return(bucketsMock).Twice()
+
+	server := Server{
+		mgmtClient:    mgmtClientMock,
+		iamClient:     IAMClient,
+		namespace:     testNamespace,
+		backendID:     testID,
+		objectScaleID: objectScaleID,
+		objectStoreID: objectStoreID,
+	}
+
+	req := &cosi.DriverRevokeBucketAccessRequest{
+		BucketId:  "bucket-valid",
+		AccountId: testUserName,
+	}
+
+	_, err := server.DriverRevokeBucketAccess(ctx, req)
+
+	assert.ErrorIs(t, err, status.Error(codes.Internal, "policy is empty"))
+}
+
+func testFailedToDeleteUser(t *testing.T) {
+	ctx, cancel := testcontext.New(t)
+	defer cancel()
+
+	// That's how we can mock the objectscale IAM api client
+	IAMClient := iamfaketoo.NewIAMAPI(t)
+
+	accessKeyList := make([]*iam.AccessKeyMetadata, 1)
+	accessKeyList[0] = &iam.AccessKeyMetadata{
+		AccessKeyId: aws.String("abc"),
+		UserName:    aws.String(testUserName),
+	}
+
+	IAMClient.On("ListAccessKeys", mock.Anything).Return(&iam.ListAccessKeysOutput{
+		AccessKeyMetadata: accessKeyList}, nil).Once()
+	IAMClient.On("DeleteAccessKey", mock.Anything).Return(nil, nil).Once()
+	IAMClient.On("DeleteUser", mock.Anything).Return(nil, ErrInternalException).Once()
+	IAMClient.On("GetUser", mock.Anything).Return(&iam.GetUserOutput{
+		User: &iam.User{
+			UserName: aws.String(testUserName),
+		},
+	}, nil).Once()
+
+	bucketsMock := &mocks.BucketsInterface{}
+	bucketsMock.On("Get", mock.Anything, mock.Anything, mock.Anything).Return(&model.Bucket{
+		Name:      "valid",
+		Namespace: testNamespace,
+	}, nil).Once()
+	bucketsMock.On("GetPolicy", mock.Anything, mock.Anything, mock.Anything).Return(testPolicy, nil).Once()
+	bucketsMock.On("UpdatePolicy", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil).Once()
+
+	mgmtClientMock := &mocks.ClientSet{}
+	mgmtClientMock.On("Buckets").Return(bucketsMock)
+
+	server := Server{
+		mgmtClient:    mgmtClientMock,
+		iamClient:     IAMClient,
+		namespace:     testNamespace,
+		backendID:     testID,
+		objectScaleID: objectScaleID,
+		objectStoreID: objectStoreID,
+	}
+
+	req := &cosi.DriverRevokeBucketAccessRequest{
+		BucketId:  "bucket-valid",
+		AccountId: testUserName,
+	}
+
+	_, err := server.DriverRevokeBucketAccess(ctx, req)
+
+	assert.ErrorIs(t, err, status.Error(codes.Internal, "failed to delete user"))
+}
+
 // 11. failed to marshal updatePolicy into JSON
 // 12. failed to update bucket policy
-// 13. failed to delete user
 
 // &UpdateBucketPolicyRequest{
 // 	PolicyID: "policy1",
