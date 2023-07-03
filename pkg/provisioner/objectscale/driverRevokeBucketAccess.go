@@ -31,7 +31,8 @@ import (
 )
 
 // DriverRevokeBucketAccess revokes access from Bucket on specific Object Storage Platform.
-func (s *Server) DriverRevokeBucketAccess(ctx context.Context,
+// TODO: this probably has to be refactored in order to meet the gocognit requirements (complexity < 30).
+func (s *Server) DriverRevokeBucketAccess(ctx context.Context, // nolint:gocognit
 	req *cosi.DriverRevokeBucketAccessRequest,
 ) (*cosi.DriverRevokeBucketAccessResponse, error) {
 	ctx, span := otel.Tracer("RevokeBucketAccessRequest").Start(ctx, "ObjectscaleDriverRevokeBucketAccess")
@@ -183,6 +184,7 @@ func (s *Server) DriverRevokeBucketAccess(ctx context.Context,
 	awsBucketResourceARN := fmt.Sprintf("arn:aws:s3:%s:%s:%s/*", s.objectScaleID, s.objectStoreID, bucketName)
 	awsPrincipalString := fmt.Sprintf("urn:osc:iam::%s:user/%s", s.namespace, req.AccountId)
 	jsonPolicy := UpdateBucketPolicyRequest{}
+
 	err = json.Unmarshal([]byte(policy), &jsonPolicy)
 	if err != nil {
 		log.WithFields(log.Fields{
@@ -193,22 +195,26 @@ func (s *Server) DriverRevokeBucketAccess(ctx context.Context,
 
 		span.RecordError(err)
 		span.SetStatus(otelCodes.Error, "failed to marshall policy")
+
 		return nil, status.Error(codes.Internal, "failed to marshall policy")
 	}
 
 	for k, statement := range jsonPolicy.Statement {
 		isPrincipal := false
 		isResource := false
+
 		for _, p := range statement.Principal.AWS {
 			if p == awsPrincipalString {
 				isPrincipal = true
 			}
 		}
+
 		for _, r := range statement.Resource {
 			if r == awsBucketResourceARN {
 				isResource = true
 			}
 		}
+
 		if isPrincipal && isResource {
 			jsonPolicy.Statement = append(jsonPolicy.Statement[:k], jsonPolicy.Statement[k+1:]...)
 		}

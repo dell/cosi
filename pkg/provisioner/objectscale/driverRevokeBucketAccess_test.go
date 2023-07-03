@@ -76,7 +76,8 @@ func testValidAccessRevoking(t *testing.T) {
 	}
 
 	IAMClient.On("ListAccessKeys", mock.Anything).Return(&iam.ListAccessKeysOutput{
-		AccessKeyMetadata: accessKeyList}, nil).Once()
+		AccessKeyMetadata: accessKeyList,
+	}, nil).Once()
 	IAMClient.On("DeleteAccessKey", mock.Anything).Return(nil, nil).Once()
 	IAMClient.On("DeleteUser", mock.Anything).Return(nil, nil).Once()
 	IAMClient.On("GetUser", mock.Anything).Return(&iam.GetUserOutput{
@@ -237,6 +238,7 @@ func testGetBucketUnexpectedError(t *testing.T) {
 func testGetBucketFailToCheckUser(t *testing.T) {
 	ctx, cancel := testcontext.New(t)
 	defer cancel()
+
 	bucketsMock := &mocks.BucketsInterface{}
 
 	bucketsMock.On("Get", mock.Anything, mock.Anything, mock.Anything).Return(&model.Bucket{
@@ -272,6 +274,7 @@ func testGetBucketFailToCheckUser(t *testing.T) {
 func testGetBucketUserNotFound(t *testing.T) {
 	ctx, cancel := testcontext.New(t)
 	defer cancel()
+
 	bucketsMock := &mocks.BucketsInterface{}
 
 	bucketsMock.On("Get", mock.Anything, mock.Anything, mock.Anything).Return(&model.Bucket{
@@ -309,6 +312,7 @@ func testGetBucketUserNotFound(t *testing.T) {
 func testFailToGetAccessKeysList(t *testing.T) {
 	ctx, cancel := testcontext.New(t)
 	defer cancel()
+
 	bucketsMock := &mocks.BucketsInterface{}
 
 	bucketsMock.On("Get", mock.Anything, mock.Anything, mock.Anything).Return(&model.Bucket{
@@ -351,6 +355,7 @@ func testFailToGetAccessKeysList(t *testing.T) {
 func testFailToDeleteAccessKey(t *testing.T) {
 	ctx, cancel := testcontext.New(t)
 	defer cancel()
+
 	bucketsMock := &mocks.BucketsInterface{}
 
 	bucketsMock.On("Get", mock.Anything, mock.Anything, mock.Anything).Return(&model.Bucket{
@@ -371,7 +376,8 @@ func testFailToDeleteAccessKey(t *testing.T) {
 		UserName:    aws.String(testUserName),
 	}
 	IAMClient.On("ListAccessKeys", mock.Anything).Return(&iam.ListAccessKeysOutput{
-		AccessKeyMetadata: accessKeyList}, nil).Once()
+		AccessKeyMetadata: accessKeyList,
+	}, nil).Once()
 	IAMClient.On("DeleteAccessKey", mock.Anything).Return(nil, ErrInternalException).Once()
 
 	mgmtClientMock := &mocks.ClientSet{}
@@ -401,6 +407,7 @@ func testFailToDeleteAccessKey(t *testing.T) {
 func testFailToCheckBucketPolicyExistence(t *testing.T) {
 	ctx, cancel := testcontext.New(t)
 	defer cancel()
+
 	bucketsMock := &mocks.BucketsInterface{}
 
 	bucketsMock.On("Get", mock.Anything, mock.Anything, mock.Anything).Return(&model.Bucket{
@@ -422,7 +429,8 @@ func testFailToCheckBucketPolicyExistence(t *testing.T) {
 		UserName:    aws.String(testUserName),
 	}
 	IAMClient.On("ListAccessKeys", mock.Anything).Return(&iam.ListAccessKeysOutput{
-		AccessKeyMetadata: accessKeyList}, nil).Once()
+		AccessKeyMetadata: accessKeyList,
+	}, nil).Once()
 	IAMClient.On("DeleteAccessKey", mock.Anything).Return(nil, nil).Once()
 
 	mgmtClientMock := &mocks.ClientSet{}
@@ -452,6 +460,7 @@ func testFailToCheckBucketPolicyExistence(t *testing.T) {
 func testEmptyPolicy(t *testing.T) {
 	ctx, cancel := testcontext.New(t)
 	defer cancel()
+
 	bucketsMock := &mocks.BucketsInterface{}
 
 	bucketsMock.On("Get", mock.Anything, mock.Anything, mock.Anything).Return(&model.Bucket{
@@ -473,7 +482,8 @@ func testEmptyPolicy(t *testing.T) {
 		UserName:    aws.String(testUserName),
 	}
 	IAMClient.On("ListAccessKeys", mock.Anything).Return(&iam.ListAccessKeysOutput{
-		AccessKeyMetadata: accessKeyList}, nil).Once()
+		AccessKeyMetadata: accessKeyList,
+	}, nil).Once()
 	IAMClient.On("DeleteAccessKey", mock.Anything).Return(nil, nil).Once()
 
 	mgmtClientMock := &mocks.ClientSet{}
@@ -513,7 +523,8 @@ func testFailedToDeleteUser(t *testing.T) {
 	}
 
 	IAMClient.On("ListAccessKeys", mock.Anything).Return(&iam.ListAccessKeysOutput{
-		AccessKeyMetadata: accessKeyList}, nil).Once()
+		AccessKeyMetadata: accessKeyList,
+	}, nil).Once()
 	IAMClient.On("DeleteAccessKey", mock.Anything).Return(nil, nil).Once()
 	IAMClient.On("DeleteUser", mock.Anything).Return(nil, ErrInternalException).Once()
 	IAMClient.On("GetUser", mock.Anything).Return(&iam.GetUserOutput{
@@ -557,8 +568,8 @@ func testFailedToDeleteUser(t *testing.T) {
 func testFailedToUpdateBucketPolicy(t *testing.T) {
 	ctx, cancel := testcontext.New(t)
 	defer cancel()
-	IAMClient := iamfaketoo.NewIAMAPI(t)
 
+	IAMClient := iamfaketoo.NewIAMAPI(t)
 	accessKeyList := make([]*iam.AccessKeyMetadata, 1)
 	accessKeyList[0] = &iam.AccessKeyMetadata{
 		AccessKeyId: aws.String("abc"),
@@ -566,7 +577,8 @@ func testFailedToUpdateBucketPolicy(t *testing.T) {
 	}
 
 	IAMClient.On("ListAccessKeys", mock.Anything).Return(&iam.ListAccessKeysOutput{
-		AccessKeyMetadata: accessKeyList}, nil).Once()
+		AccessKeyMetadata: accessKeyList,
+	}, nil).Once()
 	IAMClient.On("DeleteAccessKey", mock.Anything).Return(nil, nil).Once()
 	IAMClient.On("GetUser", mock.Anything).Return(&iam.GetUserOutput{
 		User: &iam.User{
