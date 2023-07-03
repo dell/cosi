@@ -447,6 +447,8 @@ func testFailToCheckBucketPolicyExistence(t *testing.T) {
 	assert.ErrorIs(t, err, status.Error(codes.Internal, "failed to check bucket policy existence"))
 }
 
+// testEmptyPolicy tests if policy emptiness during revoking access is handled correctly
+// in the (*Server).DriverRevokeAccess method.
 func testEmptyPolicy(t *testing.T) {
 	ctx, cancel := testcontext.New(t)
 	defer cancel()
@@ -496,6 +498,8 @@ func testEmptyPolicy(t *testing.T) {
 	assert.ErrorIs(t, err, status.Error(codes.Internal, "policy is empty"))
 }
 
+// testFailedToDeleteUser tests if failing to delete user during revoking access is handled correctly
+// in the (*Server).DriverRevokeAccess method.
 func testFailedToDeleteUser(t *testing.T) {
 	ctx, cancel := testcontext.New(t)
 	defer cancel()
@@ -548,6 +552,8 @@ func testFailedToDeleteUser(t *testing.T) {
 	assert.ErrorIs(t, err, status.Error(codes.Internal, "failed to delete user"))
 }
 
+// testFailedToUpdateBucketPolicy tests if failing to update policy during revoking access is handled correctly
+// in the (*Server).DriverRevokeAccess method.
 func testFailedToUpdateBucketPolicy(t *testing.T) {
 	ctx, cancel := testcontext.New(t)
 	defer cancel()
