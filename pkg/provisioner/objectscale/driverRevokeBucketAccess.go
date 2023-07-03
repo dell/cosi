@@ -156,9 +156,7 @@ func (s *Server) DriverRevokeBucketAccess(ctx context.Context,
 		}
 	}
 
-	// delete/update policy
-	// awsBucketResourceARN := fmt.Sprintf("arn:aws:s3:%s:%s:%s/*", s.objectScaleID, s.objectStoreID, bucketName)
-
+	// Get existing policy.
 	policy, err := s.mgmtClient.Buckets().GetPolicy(ctx, bucketName, parameters)
 	if err != nil && !errors.Is(err, model.Error{Code: model.CodeResourceNotFound}) {
 		errMsg := errors.New("failed to check bucket policy existence")
@@ -181,22 +179,7 @@ func (s *Server) DriverRevokeBucketAccess(ctx context.Context,
 
 		return nil, status.Error(codes.Internal, errMsg.Error())
 	}
-	//{
-	//   "Id" : "S3PolicyId1",
-	//   "Version" : "2012-10-17",
-	//   "Statement" : [ {
-	// ::: objScID:objStoreID:bucketName/*
-	//   "Resource" : [ "arn:aws:s3:osci5b022e718aa7e0ff:osti202e682782ebcbfd:lynxbucket/*" ],
-	//   "Sid" : "GetObject_permission",
-	//   "Effect" : "Allow",
-	//   "Principal" : {
-	//      "AWS" : [ "urn:osc:iam::osai07c2ae318ae9d6f2:user/iam_user20230523061025118" ]
-	// ":::: %namespace/user/%username
-	//    },
-	//    "Action" : [ "s3:GetObjectVersion" ]
-	// "s3:*"
-	//} ]
-	// }
+
 	awsBucketResourceARN := fmt.Sprintf("arn:aws:s3:%s:%s:%s/*", s.objectScaleID, s.objectStoreID, bucketName)
 	awsPrincipalString := fmt.Sprintf("urn:osc:iam::%s:user/%s", s.namespace, req.AccountId)
 	jsonPolicy := UpdateBucketPolicyRequest{}
@@ -246,6 +229,7 @@ func (s *Server) DriverRevokeBucketAccess(ctx context.Context,
 		return nil, status.Error(codes.Internal, errMsg.Error())
 	}
 
+	// Update policy.
 	err = s.mgmtClient.Buckets().UpdatePolicy(ctx, bucketName, string(updatedPolicy), parameters)
 	if err != nil {
 		errMsg := errors.New("failed to update bucket policy")
@@ -258,7 +242,7 @@ func (s *Server) DriverRevokeBucketAccess(ctx context.Context,
 		span.RecordError(err)
 		span.SetStatus(otelCodes.Error, errMsg.Error())
 
-		return nil, status.Error(codes.Internal, err.Error())
+		return nil, status.Error(codes.Internal, errMsg.Error())
 	}
 
 	// Delete user.

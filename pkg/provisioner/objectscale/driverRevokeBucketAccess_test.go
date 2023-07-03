@@ -38,6 +38,7 @@ func TestServerBucketAccessRevoke(t *testing.T) {
 
 	for scenario, fn := range map[string]func(t *testing.T){
 		"testValidAccessRevoking":              testValidAccessRevoking,
+		"testEmptyBucketIDRevoke":              testEmptyBucketIDRevoke,
 		"testEmptyAccountID":                   testEmptyAccountID,
 		"testGetBucketUnexpectedError":         testGetBucketUnexpectedError,
 		"testGetBucketDontExist":               testGetBucketDontExist,
@@ -48,6 +49,7 @@ func TestServerBucketAccessRevoke(t *testing.T) {
 		"testFailToCheckBucketPolicyExistence": testFailToCheckBucketPolicyExistence,
 		"testEmptyPolicy":                      testEmptyPolicy,
 		"testFailedToDeleteUser":               testFailedToDeleteUser,
+		"testFailedToUpdateBucketPolicy":       testFailedToUpdateBucketPolicy,
 	} {
 		fn := fn
 
@@ -59,6 +61,7 @@ func TestServerBucketAccessRevoke(t *testing.T) {
 	}
 }
 
+// testValidAccessRevoking tests the happy path of the (*Server).DriverRevokeBucketAccess method.
 func testValidAccessRevoking(t *testing.T) {
 	ctx, cancel := testcontext.New(t)
 	defer cancel()
@@ -90,6 +93,7 @@ func testValidAccessRevoking(t *testing.T) {
 	bucketsMock.On("GetPolicy", mock.Anything, mock.Anything, mock.Anything).Return(testPolicy, nil).Once()
 	bucketsMock.On("UpdatePolicy", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil).Once()
 
+	// Generic mock for the ClientSet interface, we care only about returning Buckets from it.
 	mgmtClientMock := &mocks.ClientSet{}
 	mgmtClientMock.On("Buckets").Return(bucketsMock)
 
@@ -112,6 +116,7 @@ func testValidAccessRevoking(t *testing.T) {
 	assert.NotNil(t, response)
 }
 
+// testEmptyBucketIDRevoke tests if error handling for empty BucketID in the (*Server).DriverRevokeBucketAccess method.
 func testEmptyBucketIDRevoke(t *testing.T) {
 	ctx, cancel := testcontext.New(t)
 	defer cancel()
@@ -136,9 +141,10 @@ func testEmptyBucketIDRevoke(t *testing.T) {
 
 	_, err := server.DriverRevokeBucketAccess(ctx, req)
 
-	assert.ErrorIs(t, err, status.Error(codes.InvalidArgument, "empty accountID"))
+	assert.ErrorIs(t, err, status.Error(codes.InvalidArgument, "empty bucketID"))
 }
 
+// testEmptyAccountID tests if error handling for empty AccountID in the (*Server).DriverRevokeBucketAccess method.
 func testEmptyAccountID(t *testing.T) {
 	ctx, cancel := testcontext.New(t)
 	defer cancel()
@@ -166,6 +172,8 @@ func testEmptyAccountID(t *testing.T) {
 	assert.ErrorIs(t, err, status.Error(codes.InvalidArgument, "empty accountID"))
 }
 
+// testGetBucketDontExist tests if non-existence of a bucket during revoking access is handled correctly
+// in the (*Server).DriverRevokeAccess method.
 func testGetBucketDontExist(t *testing.T) {
 	ctx, cancel := testcontext.New(t)
 	defer cancel()
@@ -173,7 +181,6 @@ func testGetBucketDontExist(t *testing.T) {
 	bucketsMock := &mocks.BucketsInterface{}
 	bucketsMock.On("Get", mock.Anything, mock.Anything, mock.Anything).Return(nil, ErrParameterNotFound).Once()
 
-	// Generic mock for the ClientSet interface, we care only about returning Buckets from it.
 	mgmtClientMock := &mocks.ClientSet{}
 	mgmtClientMock.On("Buckets").Return(bucketsMock).Once()
 
@@ -204,7 +211,6 @@ func testGetBucketUnexpectedError(t *testing.T) {
 	bucketsMock := &mocks.BucketsInterface{}
 	bucketsMock.On("Get", mock.Anything, mock.Anything, mock.Anything).Return(nil, ErrInternalException).Once()
 
-	// Generic mock for the ClientSet interface, we care only about returning Buckets from it.
 	mgmtClientMock := &mocks.ClientSet{}
 	mgmtClientMock.On("Buckets").Return(bucketsMock).Once()
 
@@ -226,6 +232,8 @@ func testGetBucketUnexpectedError(t *testing.T) {
 	assert.ErrorIs(t, err, status.Error(codes.Internal, "failed to check bucket existence"))
 }
 
+// testGetBucketFailToCheckUser tests if user non-existence during revoking access is handled correctly
+// in the (*Server).DriverRevokeAccess method.
 func testGetBucketFailToCheckUser(t *testing.T) {
 	ctx, cancel := testcontext.New(t)
 	defer cancel()
@@ -296,6 +304,8 @@ func testGetBucketUserNotFound(t *testing.T) {
 	assert.ErrorIs(t, err, status.Error(codes.Internal, "failed to get user"))
 }
 
+// testFailToGetAccessKeysList tests if failing to get access keys for a user during revoking access is handled correctly
+// in the (*Server).DriverRevokeAccess method.
 func testFailToGetAccessKeysList(t *testing.T) {
 	ctx, cancel := testcontext.New(t)
 	defer cancel()
@@ -336,6 +346,8 @@ func testFailToGetAccessKeysList(t *testing.T) {
 	assert.ErrorIs(t, err, status.Error(codes.Internal, "failed to get access key list"))
 }
 
+// testFailToDeleteAccessKey tests if failing to delete access keys for a user during revoking access is handled correctly
+// in the (*Server).DriverRevokeAccess method.
 func testFailToDeleteAccessKey(t *testing.T) {
 	ctx, cancel := testcontext.New(t)
 	defer cancel()
@@ -384,6 +396,8 @@ func testFailToDeleteAccessKey(t *testing.T) {
 	assert.ErrorIs(t, err, status.Error(codes.Internal, "failed to delete access key"))
 }
 
+// testFailToCheckBucketPolicyExistence tests if failing to check for policy existence during revoking access is handled correctly
+// in the (*Server).DriverRevokeAccess method.
 func testFailToCheckBucketPolicyExistence(t *testing.T) {
 	ctx, cancel := testcontext.New(t)
 	defer cancel()
@@ -486,7 +500,6 @@ func testFailedToDeleteUser(t *testing.T) {
 	ctx, cancel := testcontext.New(t)
 	defer cancel()
 
-	// That's how we can mock the objectscale IAM api client
 	IAMClient := iamfaketoo.NewIAMAPI(t)
 
 	accessKeyList := make([]*iam.AccessKeyMetadata, 1)
@@ -535,19 +548,52 @@ func testFailedToDeleteUser(t *testing.T) {
 	assert.ErrorIs(t, err, status.Error(codes.Internal, "failed to delete user"))
 }
 
-// 11. failed to marshal updatePolicy into JSON
-// 12. failed to update bucket policy
+func testFailedToUpdateBucketPolicy(t *testing.T) {
+	ctx, cancel := testcontext.New(t)
+	defer cancel()
+	IAMClient := iamfaketoo.NewIAMAPI(t)
 
-// &UpdateBucketPolicyRequest{
-// 	PolicyID: "policy1",
-// 	Version: "v1",
-// 	Statement: &UpdateBucketPolicyStatement{
-// 		Resource: []string{"arn:aws:s3:osci5b022e718aa7e0ff:osti202e682782ebcbfd:valid/*"},
-// 		SID: "sid",
-// 		Effect: "effect",
-// 		Principal: &Principal{
-// 			AWS: []string{"urn:osc:iam::osai07c2ae318ae9d6f2:user/iam_user20230523061025118"},
-// 			Action: []string{"s3:GetObjectVersion"},
-// 		},
-// 	},
-// },
+	accessKeyList := make([]*iam.AccessKeyMetadata, 1)
+	accessKeyList[0] = &iam.AccessKeyMetadata{
+		AccessKeyId: aws.String("abc"),
+		UserName:    aws.String(testUserName),
+	}
+
+	IAMClient.On("ListAccessKeys", mock.Anything).Return(&iam.ListAccessKeysOutput{
+		AccessKeyMetadata: accessKeyList}, nil).Once()
+	IAMClient.On("DeleteAccessKey", mock.Anything).Return(nil, nil).Once()
+	IAMClient.On("GetUser", mock.Anything).Return(&iam.GetUserOutput{
+		User: &iam.User{
+			UserName: aws.String(testUserName),
+		},
+	}, nil).Once()
+
+	bucketsMock := &mocks.BucketsInterface{}
+	bucketsMock.On("Get", mock.Anything, mock.Anything, mock.Anything).Return(&model.Bucket{
+		Name:      "valid",
+		Namespace: testNamespace,
+	}, nil).Once()
+	bucketsMock.On("GetPolicy", mock.Anything, mock.Anything, mock.Anything).Return(testPolicy, nil).Once()
+	bucketsMock.On("UpdatePolicy", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(ErrInternalException).Once()
+
+	mgmtClientMock := &mocks.ClientSet{}
+	mgmtClientMock.On("Buckets").Return(bucketsMock)
+
+	server := Server{
+		mgmtClient:    mgmtClientMock,
+		iamClient:     IAMClient,
+		namespace:     testNamespace,
+		backendID:     testID,
+		objectScaleID: objectScaleID,
+		objectStoreID: objectStoreID,
+	}
+
+	req := &cosi.DriverRevokeBucketAccessRequest{
+		BucketId:  "bucket-valid",
+		AccountId: testUserName,
+	}
+
+	_, err := server.DriverRevokeBucketAccess(ctx, req)
+
+	assert.ErrorIs(t, err, status.Error(codes.Internal, "failed to update bucket policy"))
+}
