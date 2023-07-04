@@ -10,7 +10,7 @@ Feature: BucketAccess creation in IAM flow on ObjectScale platform
     Background:
         Given Kubernetes cluster is up and running
         And ObjectScale platform is installed on the cluster
-        And ObjectStore "${objectstoreName}" is created
+        And ObjectStore "${objectstoreId}" is created
         And Kubernetes namespace "cosi-driver" is created
         And Kubernetes namespace "namespace-1" is created
         And COSI controller "objectstorage-controller" is installed in namespace "default"
@@ -40,7 +40,7 @@ Feature: BucketAccess creation in IAM flow on ObjectScale platform
         And BucketClass resource is created from specification "my-bucket-class"
         And BucketClaim resource is created from specification "my-bucket-claim"
         And Bucket resource referencing BucketClaim resource "my-bucket-claim" is created
-        And Bucket resource referencing BucketClaim resource "my-bucket-claim" is created in ObjectStore "${objectstoreName}"
+        And Bucket resource referencing BucketClaim resource "my-bucket-claim" is created in ObjectStore "${objectstoreId}"
         And BucketClaim resource "my-bucket-claim" in namespace "namespace-1" status "bucketReady" is "true"
         And Bucket resource referencing BucketClaim resource "my-bucket-claim" status "bucketReady" is "true"
         And Bucket resource referencing BucketClaim resource "my-bucket-claim" bucketID is not empty
