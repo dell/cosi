@@ -62,7 +62,6 @@ func (s *Server) DriverRevokeBucketAccess(ctx context.Context, // nolint:gocogni
 
 	// Extract bucket name from bucketID.
 	bucketName, err := GetBucketName(req.BucketId)
-
 	if err != nil {
 		log.WithFields(log.Fields{
 			"bucketID": req.BucketId,
@@ -294,11 +293,12 @@ func (s *Server) DriverRevokeBucketAccess(ctx context.Context, // nolint:gocogni
 }
 
 // GetBucketName splits BucketID by -, the first element is backendID, the second element is bucketName.
-func GetBucketName(bucketId string) (string, error) {
-	list := strings.Split(bucketId, "-")
-	if len(list) != 2 {
+func GetBucketName(bucketID string) (string, error) {
+	list := strings.Split(bucketID, "-")
+
+	if len(list) != 2 { // nolint:gomnd
 		return "", errors.New("improper bucketId")
 	}
-	return list[1], nil
 
+	return list[1], nil
 }
