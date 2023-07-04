@@ -14,7 +14,7 @@ description: Description of COSI Driver features
 |                   | _Delete Bucket_        | Minimum Viable Product |     ✅ Done      | Bucket is deleted.                                                                          |
 | Access Management | _Grant Bucket Access_  | Minimum Viable Product |    🚧 Doing     | Full access is granted for given bucket.                                                    |
 |                   |                        |  Advanced permissions  | 📝 Design draft | More control over permission is done through BucketAccessClass.                             |
-|                   | _Revoke Bucket Access_ | Minimum Viable Product |     ⌛ Todo      | Access is revoked.                                                                          |
+|                   | _Revoke Bucket Access_ | Minimum Viable Product |     🚧 Doing      | Access is revoked.                                                                          |
 
 ## ECS
 
