@@ -106,9 +106,9 @@ var _ = Describe("Bucket Deletion", Ordered, Label("delete", "objectscale"), fun
 		By("Checking if the ObjectScale platform is ready")
 		steps.CheckObjectScaleInstallation(ctx, objectscale)
 
-		// STEP: ObjectStore "${objectstoreName}" is created
-		By("Checking if the ObjectStore '${objectstoreName}' is created")
-		steps.CheckObjectStoreExists(ctx, objectscale, objectstoreName)
+		// STEP: ObjectStore "${objectstoreId}" is created
+		By("Checking if the ObjectStore '${objectstoreId}' is created")
+		steps.CheckObjectStoreExists(ctx, objectscale, objectstoreID)
 
 		// STEP: Kubernetes namespace "cosi-driver" is created
 		By("Checking if namespace 'cosi-driver' is created")
@@ -208,16 +208,16 @@ var _ = Describe("Bucket Deletion", Ordered, Label("delete", "objectscale"), fun
 		By("checking the ID of Bucket resource referencing BucketClaim resource 'bucket-claim-retain' is not empty")
 		steps.CheckBucketID(ctx, bucketClient, retainBucket)
 
-		// STEP: Bucket referencing BucketClaim resource "my-bucket-claim-retain" is available in ObjectStore "${objectstoreName}"
-		By("checking if Bucket referencing BucketClaim resource 'my-bucket-claim-retain' is available in ObjectStore '${objectstoreName}'")
+		// STEP: Bucket referencing BucketClaim resource "my-bucket-claim-retain" is available in ObjectStore "${objectstoreId}"
+		By("checking if Bucket referencing BucketClaim resource 'my-bucket-claim-retain' is available in ObjectStore '${objectstoreId}'")
 		steps.CheckBucketResourceInObjectStore(ctx, objectscale, namespace, retainBucket)
 
 		// STEP: BucketClaim resource "my-bucket-claim-retain" is deleted in namespace "namespace-1"
 		By("deleting BucketClaim resource 'my-bucket-claim-retain' in namespace 'namespace-1'")
 		steps.DeleteBucketClaimResource(ctx, bucketClient, bucketClaimRetain)
 
-		// STEP: Bucket referencing BucketClaim resource "my-bucket-claim-retain" is available in ObjectStore "${objectstoreName}"
-		By("checking if Bucket referencing BucketClaim resource 'my-bucket-claim-retain' is available in ObjectStore '${objectstoreName}'")
+		// STEP: Bucket referencing BucketClaim resource "my-bucket-claim-retain" is available in ObjectStore "${objectstoreId}"
+		By("checking if Bucket referencing BucketClaim resource 'my-bucket-claim-retain' is available in ObjectStore '${objectstoreId}'")
 		steps.CheckBucketResourceInObjectStore(ctx, objectscale, namespace, retainBucket)
 	})
 	AfterAll(func() {

@@ -29,11 +29,11 @@ func CheckObjectScaleInstallation(ctx ginkgo.SpecContext, objectscale *objectsca
 	gomega.Expect(err).ToNot(gomega.HaveOccurred())
 }
 
-// CheckObjectStoreExists Ensure that ObjectStore "${objectstoreName}" is created.
+// CheckObjectStoreExists Ensure that ObjectStore "${objectstoreId}" is created.
 func CheckObjectStoreExists(ctx ginkgo.SpecContext, objectscale *objectscaleRest.ClientSet, objectstore string) {
 	objectstores, err := objectscale.FederatedObjectStores().List(ctx, make(map[string]string))
 	gomega.Expect(err).ToNot(gomega.HaveOccurred())
-	gomega.Expect(objectstores.Items).To(gomega.ContainElement(gomega.HaveField("ObjectStoreName", objectstore)))
+	gomega.Expect(objectstores.Items).To(gomega.ContainElement(gomega.HaveField("ObjectStoreID", objectstore)))
 }
 
 // CheckBucketResourceInObjectStore Function checking if Bucket resource is in objectstore.
