@@ -175,7 +175,7 @@ spec:
 - `spec.protocol=...` - Protocols are the set of data API this bucket is required to support. From protocols specified by COSI (`v1alpha1`), Dell ObjectScale platform only supports the `S3` protocol. Protocols `Azure` and `GCS` MUST NOT be used.
 
 ## Bucket Access Revoking Feature
-This feature revokes previously granted access to user for particular bucket.
+This feature revokes a user's previously granted access to a particular bucket.
 When resource of `BucketAccess` kind is removed from Kubernetes it triggers the process:
 
 - access key is removed from ObjectScale,
