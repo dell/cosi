@@ -179,5 +179,5 @@ This feature revokes previously granted access to user for particular bucket.
 When resource of `BucketAccess` kind is removed from Kubernetes it triggers the process:
 
 - access key is removed from ObjectScale,
-- bucket policy is modifed to reflect user losing permissions for a bucket,
+- bucket policy is modifed to reflect that user has lost permissions for a bucket,
 - user is removed from ObjectScale.
