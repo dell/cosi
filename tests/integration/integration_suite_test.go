@@ -35,16 +35,16 @@ import (
 
 // place for storing global variables like specs
 var (
-	clientset    *kubernetes.Clientset
-	bucketClient *bucketclientset.Clientset
-	objectscale  *objectscaleRest.ClientSet
-	iamClient    *iam.IAM
-	namespace    string
+	clientset     *kubernetes.Clientset
+	bucketClient  *bucketclientset.Clientset
+	objectscale   *objectscaleRest.ClientSet
+	iamClient     *iam.IAM
+	namespace     string
+	objectstoreID string
 )
 
 const (
-	objectstoreName = "objectstore"
-	driverID        = "e2e.test.objectscale"
+	driverID = "e2e.test.objectscale"
 )
 
 func TestIntegration(t *testing.T) {
@@ -75,6 +75,9 @@ var _ = BeforeSuite(func() {
 	Expect(exists).To(BeTrue())
 
 	objectscalePassword, exists := os.LookupEnv("OBJECTSCALE_PASSWORD")
+	Expect(exists).To(BeTrue())
+
+	objectstoreID, exists = os.LookupEnv("OBJECTSCALE_OBJECTSTORE_ID")
 	Expect(exists).To(BeTrue())
 
 	// k8s clientset
