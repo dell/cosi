@@ -39,6 +39,7 @@ func TestServerBucketAccessRevoke(t *testing.T) {
 	for scenario, fn := range map[string]func(t *testing.T){
 		"testValidAccessRevoking":              testValidAccessRevoking,
 		"testEmptyBucketIDRevoke":              testEmptyBucketIDRevoke,
+		"testInvalidBucketID":                  testInvalidBucketID,
 		"testEmptyAccountID":                   testEmptyAccountID,
 		"testGetBucketUnexpectedError":         testGetBucketUnexpectedError,
 		"testGetBucketDontExist":               testGetBucketDontExist,
@@ -143,6 +144,33 @@ func testEmptyBucketIDRevoke(t *testing.T) {
 	_, err := server.DriverRevokeBucketAccess(ctx, req)
 
 	assert.ErrorIs(t, err, status.Error(codes.InvalidArgument, "empty bucketID"))
+}
+
+func testInvalidBucketID(t *testing.T) {
+	ctx, cancel := testcontext.New(t)
+	defer cancel()
+
+	bucketsMock := &mocks.BucketsInterface{}
+
+	mgmtClientMock := &mocks.ClientSet{}
+	mgmtClientMock.On("Buckets").Return(bucketsMock).Once()
+
+	server := Server{
+		mgmtClient:    mgmtClientMock,
+		namespace:     testNamespace,
+		backendID:     testID,
+		objectScaleID: objectScaleID,
+		objectStoreID: objectStoreID,
+	}
+
+	req := &cosi.DriverRevokeBucketAccessRequest{
+		BucketId:  "bucket-invalid-too-much-dashes",
+		AccountId: testUserName,
+	}
+
+	_, err := server.DriverRevokeBucketAccess(ctx, req)
+
+	assert.ErrorIs(t, err, status.Error(codes.InvalidArgument, "improper bucketId"))
 }
 
 // testEmptyAccountID tests if error handling for empty AccountID in the (*Server).DriverRevokeBucketAccess method.

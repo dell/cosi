@@ -19,12 +19,12 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/aws/aws-sdk-go/service/iam"
+	"github.com/dell/goobjectscale/pkg/client/model"
 	"go.opentelemetry.io/otel"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	"github.com/aws/aws-sdk-go/service/iam"
-	"github.com/dell/goobjectscale/pkg/client/model"
 	log "github.com/sirupsen/logrus"
 	otelCodes "go.opentelemetry.io/otel/codes"
 	cosi "sigs.k8s.io/container-object-storage-interface-spec"
@@ -61,7 +61,19 @@ func (s *Server) DriverRevokeBucketAccess(ctx context.Context, // nolint:gocogni
 	}
 
 	// Extract bucket name from bucketID.
-	bucketName := strings.SplitN(req.BucketId, "-", splitNumber)[1]
+	bucketName, err := GetBucketName(req.BucketId)
+
+	if err != nil {
+		log.WithFields(log.Fields{
+			"bucketID": req.BucketId,
+			"error":    err,
+		}).Error(err.Error())
+
+		span.RecordError(err)
+		span.SetStatus(otelCodes.Error, err.Error())
+
+		return nil, status.Error(codes.InvalidArgument, err.Error())
+	}
 
 	log.WithFields(log.Fields{
 		"bucket": bucketName,
@@ -75,27 +87,29 @@ func (s *Server) DriverRevokeBucketAccess(ctx context.Context, // nolint:gocogni
 	}).Info("parameters of the bucket")
 
 	// Check if bucket for revoking access exists.
-	_, err := s.mgmtClient.Buckets().Get(ctx, bucketName, parameters)
+	_, err = s.mgmtClient.Buckets().Get(ctx, bucketName, parameters)
 	if err != nil && !errors.Is(err, ErrParameterNotFound) {
+		errMsg := errors.New("failed to check bucket existence")
 		log.WithFields(log.Fields{
 			"bucket": bucketName,
 			"error":  err,
-		}).Error("failed to check bucket existence")
+		}).Error(errMsg.Error())
 
 		span.RecordError(err)
-		span.SetStatus(otelCodes.Error, "failed to check bucket existence")
+		span.SetStatus(otelCodes.Error, errMsg.Error())
 
-		return nil, status.Error(codes.Internal, "failed to check bucket existence")
+		return nil, status.Error(codes.Internal, errMsg.Error())
 	} else if err != nil {
+		errMsg := errors.New("bucket not found")
 		log.WithFields(log.Fields{
 			"bucket": bucketName,
 			"error":  err,
-		}).Error("bucket not found")
+		}).Error(errMsg.Error())
 
 		span.RecordError(err)
-		span.SetStatus(otelCodes.Error, "bucket not found")
+		span.SetStatus(otelCodes.Error, errMsg.Error())
 
-		return nil, status.Error(codes.NotFound, "bucket not found")
+		return nil, status.Error(codes.NotFound, errMsg.Error())
 	}
 
 	// Check user existence.
@@ -181,22 +195,27 @@ func (s *Server) DriverRevokeBucketAccess(ctx context.Context, // nolint:gocogni
 		return nil, status.Error(codes.Internal, errMsg.Error())
 	}
 
+	// Amazon Resource Name, format: arn:aws:s3:<objectScaleID>:<objectStoreID>:<bucketName>/*.
+	// To see more: https://docs.aws.amazon.com/IAM/latest/UserGuide/reference-arns.html.
 	awsBucketResourceARN := fmt.Sprintf("arn:aws:s3:%s:%s:%s/*", s.objectScaleID, s.objectStoreID, bucketName)
+	// Unique ID, format: urn:osc:iam::<namespace>:user/<userName>.
 	awsPrincipalString := fmt.Sprintf("urn:osc:iam::%s:user/%s", s.namespace, req.AccountId)
+
 	jsonPolicy := UpdateBucketPolicyRequest{}
 
 	err = json.Unmarshal([]byte(policy), &jsonPolicy)
 	if err != nil {
+		errMsg := errors.New("failed to marshall policy")
 		log.WithFields(log.Fields{
 			"bucket":   bucketName,
 			"PolicyID": jsonPolicy.PolicyID,
 			"error":    err,
-		}).Error("failed to marshall policy")
+		}).Error(errMsg.Error())
 
 		span.RecordError(err)
-		span.SetStatus(otelCodes.Error, "failed to marshall policy")
+		span.SetStatus(otelCodes.Error, errMsg.Error())
 
-		return nil, status.Error(codes.Internal, "failed to marshall policy")
+		return nil, status.Error(codes.Internal, errMsg.Error())
 	}
 
 	for k, statement := range jsonPolicy.Statement {
@@ -272,4 +291,14 @@ func (s *Server) DriverRevokeBucketAccess(ctx context.Context, // nolint:gocogni
 	}).Info("bucket access for bucket is revoked")
 
 	return &cosi.DriverRevokeBucketAccessResponse{}, nil
+}
+
+// GetBucketName splits BucketID by -, the first element is backendID, the second element is bucketName.
+func GetBucketName(bucketId string) (string, error) {
+	list := strings.Split(bucketId, "-")
+	if len(list) != 2 {
+		return "", errors.New("improper bucketId")
+	}
+	return list[1], nil
+
 }
