@@ -176,7 +176,7 @@ spec:
 
 ## Bucket Access Revoking Feature
 This feature revokes previously granted access to user for particular bucket.
-When Bucket Access is removed from K8s it triggers the process:
+When resource of `BucketAccess` kind is removed from Kubernetes it triggers the process:
 
 - access key is removed from ObjectScale,
 - bucket policy is modifed to reflect user losing permissions for a bucket,
