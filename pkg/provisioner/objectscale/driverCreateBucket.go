@@ -32,8 +32,7 @@ type virtualInterface interface {
 	ID() string
 }
 
-type vInterfaceI struct {
-}
+type vInterfaceI struct{}
 
 func (v *vInterfaceI) ID() string {
 	return "2137"
@@ -44,17 +43,12 @@ func (s *Server) DriverCreateBucket(
 	ctx context.Context,
 	req *cosi.DriverCreateBucketRequest,
 ) (*cosi.DriverCreateBucketResponse, error) {
-	_, span := otel.Tracer("CreateBucketRequest").Start(ctx, "ObjectscaleDriverCreateBucket")
-	defer span.End()
-
 	ctx, cancel := context.WithTimeout(ctx, defaultTimeout)
 	defer cancel()
 
 	log.WithFields(log.Fields{
 		"bucket": req.GetName(),
 	}).Info("bucket is being created")
-
-	span.AddEvent("bucket is being created")
 
 	// Create bucket model.
 	bucket := &model.Bucket{}
@@ -65,9 +59,6 @@ func (s *Server) DriverCreateBucket(
 	if bucket.Name == "" {
 		err := errors.New("empty bucket name")
 		log.Error(err.Error())
-
-		span.RecordError(err)
-		span.SetStatus(otelCodes.Error, err.Error())
 
 		return nil, status.Error(codes.InvalidArgument, err.Error())
 	}
@@ -88,9 +79,6 @@ func (s *Server) DriverCreateBucket(
 			"error": err,
 		}).Error(msg)
 
-		span.RecordError(err)
-		span.SetStatus(otelCodes.Error, msg)
-
 		return nil, status.Error(codes.Internal, msg)
 	} else if err == nil && existingBucket != nil {
 		return &cosi.DriverCreateBucketResponse{
@@ -106,9 +94,6 @@ func (s *Server) DriverCreateBucket(
 		log.WithFields(log.Fields{
 			"error": err,
 		}).Error(msg)
-
-		span.RecordError(err)
-		span.SetStatus(otelCodes.Error, msg)
 
 		return nil, status.Error(codes.Internal, msg)
 	}
