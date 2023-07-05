@@ -4,7 +4,7 @@
 
 package objectscale
 
-//go:generate gowrap gen -p github.com/dell/cosi-driver/pkg/provisioner/virtualdriver -i Driver -t https://raw.githubusercontent.com/hexdigest/gowrap/6c8f05695fec23df85903a8da0af66ac414e2a63/templates/opentelemetry -o virtualdriver_metrics.go -l ""
+//go:generate gowrap gen -p github.com/dell/cosi-driver/pkg/provisioner/virtualdriver -i Driver -t https://raw.githubusercontent.com/hexdigest/gowrap/6c8f05695fec23df85903a8da0af66ac414e2a63/templates/opentelemetry -o objectscale_otel.go -l ""
 
 import (
 	"context"
