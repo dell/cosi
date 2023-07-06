@@ -92,5 +92,5 @@ example-config:	##generate the example configuration file
 
 .PHONY: decorate-otel
 decorate-otel: ## generate decorators for automatically adding tracing to main COSI features functions
-	gowrap gen -p github.com/dell/cosi-driver/pkg/provisioner/virtualdriver/ -i Driver -t opentelemetry \
-		-o pkg/provisioner/objectscale/objectscale_otel.gen.go
+	gowrap gen -p github.com/dell/cosi-driver/pkg/provisioner/virtualdriver/ -i Driver \
+		-t ./gowrapTemplates/opentelemetry -o pkg/internal/generated/objectscale_otel.gen.go

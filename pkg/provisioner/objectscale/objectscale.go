@@ -46,6 +46,7 @@ import (
 	cosi "sigs.k8s.io/container-object-storage-interface-spec"
 
 	"github.com/dell/cosi-driver/pkg/config"
+	"github.com/dell/cosi-driver/pkg/internal/generated"
 	"github.com/dell/cosi-driver/pkg/transport"
 )
 
@@ -245,7 +246,7 @@ func New(ctx context.Context, config *config.Objectscale) (driver.Driver, error)
 		s3Endpoint:         protocolS3Endpoint,
 	}
 
-	return NewDriverWithTracing(s, "objectscale", nil), nil
+	return generated.NewDriverWithTracing(s, "objectscale", nil), nil
 }
 
 // ID extends COSI interface by adding ID method.
