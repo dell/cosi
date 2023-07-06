@@ -83,7 +83,7 @@ var _ driver.Driver = (*Server)(nil)
 
 // New initializes server based on the config file.
 // TODO: verify if emptiness verification can be moved to a separate function.
-func New(ctx context.Context, config *config.Objectscale) (*Server, error) {
+func New(ctx context.Context, config *config.Objectscale) (driver.Driver, error) {
 	id := config.Id
 	if id == "" {
 		return nil, errors.New("empty driver id")
@@ -227,7 +227,7 @@ func New(ctx context.Context, config *config.Objectscale) (*Server, error) {
 
 	iamClient := iam.New(iamSession)
 
-	return &Server{
+	s := &Server{
 		mgmtClient:         mgmtClient,
 		iamClient:          iamClient,
 		x509Client:         x509Client,
@@ -243,7 +243,9 @@ func New(ctx context.Context, config *config.Objectscale) (*Server, error) {
 		objectScaleID:      objectscaleID,
 		objectStoreID:      objectstoreID,
 		s3Endpoint:         protocolS3Endpoint,
-	}, nil
+	}
+
+	return NewDriverWithTracing(s, "objectscale", nil), nil
 }
 
 // ID extends COSI interface by adding ID method.

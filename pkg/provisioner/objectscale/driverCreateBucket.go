@@ -28,16 +28,6 @@ import (
 	cosi "sigs.k8s.io/container-object-storage-interface-spec"
 )
 
-type virtualInterface interface {
-	ID() string
-}
-
-type vInterfaceI struct{}
-
-func (v *vInterfaceI) ID() string {
-	return "2137"
-}
-
 // DriverCreateBucket creates Bucket on specific Object Storage Platform.
 func (s *Server) DriverCreateBucket(
 	ctx context.Context,
