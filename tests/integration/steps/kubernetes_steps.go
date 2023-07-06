@@ -13,16 +13,36 @@
 package steps
 
 import (
+	"encoding/json"
+	"strings"
+
 	ginkgo "github.com/onsi/ginkgo/v2"
 	gomega "github.com/onsi/gomega"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	cosiapi "sigs.k8s.io/container-object-storage-interface-api/apis"
 
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/credentials"
+	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/aws/aws-sdk-go/service/s3"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/meta"
 	"k8s.io/apimachinery/pkg/fields"
 	"k8s.io/client-go/kubernetes"
 	"sigs.k8s.io/container-object-storage-interface-api/apis/objectstorage/v1alpha1"
+)
+
+const (
+	// bucketInfo indicates name of data entry in secret, where the all information
+	// created by COSI driver is stored.
+	bucketInfo = "BucketInfo"
+
+	// testObjectKey is a key of an object that is put and deleted from bucket.
+	testObjectKey = "cosi-test.txt"
+
+	// testObjectData is a data of an object that is put and deleted from bucket.
+	testObjectData = "COSI test data 💀"
 )
 
 // CheckClusterAvailability Ensure that Kubernetes cluster is available.
@@ -110,4 +130,45 @@ func CheckBucketClaimEvents(ctx ginkgo.SpecContext, clientset *kubernetes.Client
 	}
 
 	gomega.Expect(found).To(gomega.BeTrue())
+}
+
+// CheckBucketAccessFromSecret Check if Bucket can be accessed with data from specified secret.
+func CheckBucketAccessFromSecret(ctx ginkgo.SpecContext, clientset *kubernetes.Clientset, bucket *v1alpha1.Bucket, validSecret *v1.Secret) {
+	secret, err := clientset.CoreV1().Secrets(validSecret.Namespace).Get(ctx, validSecret.Name, metav1.GetOptions{})
+	gomega.Expect(err).ToNot(gomega.HaveOccurred())
+
+	var secretData cosiapi.BucketInfo
+
+	err = json.Unmarshal(secret.Data[bucketInfo], &secretData)
+	gomega.Expect(err).ToNot(gomega.HaveOccurred())
+
+	accessKey := secretData.Spec.S3.AccessKeyID
+	secretKey := secretData.Spec.S3.AccessSecretKey
+	s3Endpoint := secretData.Spec.S3.Endpoint
+	bucketName := secretData.Spec.BucketName
+
+	s3Config := &aws.Config{
+		Credentials:      credentials.NewStaticCredentials(accessKey, secretKey, ""),
+		Endpoint:         aws.String(s3Endpoint),
+		DisableSSL:       aws.Bool(false),
+		S3ForcePathStyle: aws.Bool(true),
+	}
+
+	session, err := session.NewSession(s3Config)
+	gomega.Expect(err).ToNot(gomega.HaveOccurred())
+
+	s3Client := s3.New(session)
+
+	_, err = s3Client.PutObject(&s3.PutObjectInput{
+		Body:   strings.NewReader(testObjectData),
+		Bucket: aws.String(bucketName),
+		Key:    aws.String(testObjectKey),
+	})
+	gomega.Expect(err).ToNot(gomega.HaveOccurred())
+
+	_, err = s3Client.DeleteObject(&s3.DeleteObjectInput{
+		Bucket: aws.String(bucketName),
+		Key:    aws.String(testObjectKey),
+	})
+	gomega.Expect(err).ToNot(gomega.HaveOccurred())
 }

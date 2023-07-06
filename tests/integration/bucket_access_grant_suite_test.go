@@ -24,7 +24,7 @@ import (
 	"github.com/dell/cosi-driver/tests/integration/steps"
 )
 
-var _ = Describe("Bucket Access KEY", Ordered, Label("key-flow", "objectscale"), func() {
+var _ = Describe("Bucket Access Grant", Ordered, Label("grant", "objectscale"), func() {
 	// Resources for scenarios
 	var (
 		myBucketClass       *v1alpha1.BucketClass
@@ -200,7 +200,7 @@ var _ = Describe("Bucket Access KEY", Ordered, Label("key-flow", "objectscale"),
 
 		// STEP: Bucket resource referencing BucketClaim resource "bucket-claim-delete" is accessible from Secret "bucket-credentials-1"
 		By("Checking if Bucket resource referencing BucketClaim resource 'my-bucket-claim' is accessible from Secret 'bucket-credentials-1'")
-		steps.CheckBucketAccessFromSecret(objectscale, myBucket, "bucket-credentials-1")
+		steps.CheckBucketAccessFromSecret(ctx, clientset, myBucket, validSecret)
 
 		DeferCleanup(func() {
 			steps.DeleteBucketAccessResource(ctx, bucketClient, myBucketAccess)
