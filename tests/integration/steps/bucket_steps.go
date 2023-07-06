@@ -118,14 +118,6 @@ func DeleteBucketAccessResource(ctx ginkgo.SpecContext, bucketClient *bucketclie
 
 // CheckBucketAccessStatus Function for checking BucketAccess status.
 func CheckBucketAccessStatus(ctx ginkgo.SpecContext, bucketClient *bucketclientset.Clientset, bucketAccess *v1alpha1.BucketAccess, status bool) {
-	myBucketAccess, err := bucketClient.ObjectstorageV1alpha1().BucketAccesses(bucketAccess.Namespace).Get(ctx, bucketAccess.Name, v1.GetOptions{})
-	gomega.Expect(err).ToNot(gomega.HaveOccurred())
-	gomega.Expect(myBucketAccess).NotTo(gomega.BeNil())
-	gomega.Expect(myBucketAccess.Status.AccessGranted).To(gomega.Equal(status))
-}
-
-// CheckBucketAccessAccountID Function for checking BucketAccess accountID.
-func CheckBucketAccessAccountID(ctx ginkgo.SpecContext, bucketClient *bucketclientset.Clientset, bucketAccess *v1alpha1.BucketAccess, accountID string) {
 	var myBucketAccess *v1alpha1.BucketAccess
 
 	err := retry(ctx, attempts, sleep, func() error {
@@ -141,6 +133,14 @@ func CheckBucketAccessAccountID(ctx ginkgo.SpecContext, bucketClient *bucketclie
 		return nil
 	})
 
+	gomega.Expect(err).ToNot(gomega.HaveOccurred())
+	gomega.Expect(myBucketAccess).NotTo(gomega.BeNil())
+	gomega.Expect(myBucketAccess.Status.AccessGranted).To(gomega.Equal(status))
+}
+
+// CheckBucketAccessAccountID Function for checking BucketAccess accountID.
+func CheckBucketAccessAccountID(ctx ginkgo.SpecContext, bucketClient *bucketclientset.Clientset, bucketAccess *v1alpha1.BucketAccess, accountID string) {
+	myBucketAccess, err := bucketClient.ObjectstorageV1alpha1().BucketAccesses(bucketAccess.Namespace).Get(ctx, bucketAccess.Name, v1.GetOptions{})
 	gomega.Expect(err).ToNot(gomega.HaveOccurred())
 	gomega.Expect(myBucketAccess).NotTo(gomega.BeNil())
 	gomega.Expect(myBucketAccess.Status.AccountID).To(gomega.Equal(accountID))
