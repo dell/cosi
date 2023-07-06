@@ -147,6 +147,8 @@ func CheckBucketAccessFromSecret(ctx ginkgo.SpecContext, clientset *kubernetes.C
 	s3Endpoint := secretData.Spec.S3.Endpoint
 	bucketName := secretData.Spec.BucketName
 
+	gomega.Expect(bucketName).To(gomega.Equal(bucket.Status.BucketID))
+
 	s3Config := &aws.Config{
 		Credentials:      credentials.NewStaticCredentials(accessKey, secretKey, ""),
 		Endpoint:         aws.String(s3Endpoint),
