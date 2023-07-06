@@ -21,12 +21,10 @@ import (
 
 	"github.com/aws/aws-sdk-go/service/iam"
 	"github.com/dell/goobjectscale/pkg/client/model"
-	"go.opentelemetry.io/otel"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
 	log "github.com/sirupsen/logrus"
-	otelCodes "go.opentelemetry.io/otel/codes"
 	cosi "sigs.k8s.io/container-object-storage-interface-spec"
 )
 
@@ -35,16 +33,10 @@ import (
 func (s *Server) DriverRevokeBucketAccess(ctx context.Context, // nolint:gocognit
 	req *cosi.DriverRevokeBucketAccessRequest,
 ) (*cosi.DriverRevokeBucketAccessResponse, error) {
-	ctx, span := otel.Tracer("RevokeBucketAccessRequest").Start(ctx, "ObjectscaleDriverRevokeBucketAccess")
-	defer span.End()
-
 	// Check if bucketID is not empty.
 	if req.GetBucketId() == "" {
 		err := errors.New("empty bucketID")
 		log.Error(err.Error())
-
-		span.RecordError(err)
-		span.SetStatus(otelCodes.Error, err.Error())
 
 		return nil, status.Error(codes.InvalidArgument, err.Error())
 	}
@@ -53,9 +45,6 @@ func (s *Server) DriverRevokeBucketAccess(ctx context.Context, // nolint:gocogni
 	if req.GetAccountId() == "" {
 		err := errors.New("empty accountID")
 		log.Error(err.Error())
-
-		span.RecordError(err)
-		span.SetStatus(otelCodes.Error, err.Error())
 
 		return nil, status.Error(codes.InvalidArgument, err.Error())
 	}
@@ -67,9 +56,6 @@ func (s *Server) DriverRevokeBucketAccess(ctx context.Context, // nolint:gocogni
 			"bucketID": req.BucketId,
 			"error":    err,
 		}).Error(err.Error())
-
-		span.RecordError(err)
-		span.SetStatus(otelCodes.Error, err.Error())
 
 		return nil, status.Error(codes.InvalidArgument, err.Error())
 	}
@@ -94,9 +80,6 @@ func (s *Server) DriverRevokeBucketAccess(ctx context.Context, // nolint:gocogni
 			"error":  err,
 		}).Error(errMsg.Error())
 
-		span.RecordError(err)
-		span.SetStatus(otelCodes.Error, errMsg.Error())
-
 		return nil, status.Error(codes.Internal, errMsg.Error())
 	} else if err != nil {
 		errMsg := errors.New("bucket not found")
@@ -104,9 +87,6 @@ func (s *Server) DriverRevokeBucketAccess(ctx context.Context, // nolint:gocogni
 			"bucket": bucketName,
 			"error":  err,
 		}).Error(errMsg.Error())
-
-		span.RecordError(err)
-		span.SetStatus(otelCodes.Error, errMsg.Error())
 
 		return nil, status.Error(codes.NotFound, errMsg.Error())
 	}
@@ -120,9 +100,6 @@ func (s *Server) DriverRevokeBucketAccess(ctx context.Context, // nolint:gocogni
 			"error": err,
 		}).Error(errMsg.Error())
 
-		span.RecordError(err)
-		span.SetStatus(otelCodes.Error, errMsg.Error())
-
 		return nil, status.Error(codes.Internal, errMsg.Error())
 	} else if err != nil {
 		errMsg := errors.New("failed to get user")
@@ -130,9 +107,6 @@ func (s *Server) DriverRevokeBucketAccess(ctx context.Context, // nolint:gocogni
 			"user":  req.AccountId,
 			"error": err,
 		}).Error(errMsg.Error())
-
-		span.RecordError(err)
-		span.SetStatus(otelCodes.Error, errMsg.Error())
 
 		return nil, status.Error(codes.Internal, errMsg.Error())
 	}
@@ -145,9 +119,6 @@ func (s *Server) DriverRevokeBucketAccess(ctx context.Context, // nolint:gocogni
 			"userName": req.AccountId,
 			"error":    err,
 		}).Error(errMsg.Error())
-
-		span.RecordError(err)
-		span.SetStatus(otelCodes.Error, errMsg.Error())
 
 		return nil, status.Error(codes.Internal, errMsg.Error())
 	}
@@ -163,9 +134,6 @@ func (s *Server) DriverRevokeBucketAccess(ctx context.Context, // nolint:gocogni
 				"error":     err,
 			}).Error(errMsg.Error())
 
-			span.RecordError(err)
-			span.SetStatus(otelCodes.Error, errMsg.Error())
-
 			return nil, status.Error(codes.Internal, errMsg.Error())
 		}
 	}
@@ -178,18 +146,12 @@ func (s *Server) DriverRevokeBucketAccess(ctx context.Context, // nolint:gocogni
 			"bucket": bucketName,
 		}).Error(errMsg.Error())
 
-		span.RecordError(err)
-		span.SetStatus(otelCodes.Error, errMsg.Error())
-
 		return nil, status.Error(codes.Internal, errMsg.Error())
 	} else if err == nil && policy == "" {
 		errMsg := errors.New("policy is empty")
 		log.WithFields(log.Fields{
 			"bucket": bucketName,
 		}).Error(errMsg.Error())
-
-		span.RecordError(err)
-		span.SetStatus(otelCodes.Error, errMsg.Error())
 
 		return nil, status.Error(codes.Internal, errMsg.Error())
 	}
@@ -210,9 +172,6 @@ func (s *Server) DriverRevokeBucketAccess(ctx context.Context, // nolint:gocogni
 			"PolicyID": jsonPolicy.PolicyID,
 			"error":    err,
 		}).Error(errMsg.Error())
-
-		span.RecordError(err)
-		span.SetStatus(otelCodes.Error, errMsg.Error())
 
 		return nil, status.Error(codes.Internal, errMsg.Error())
 	}
@@ -247,9 +206,6 @@ func (s *Server) DriverRevokeBucketAccess(ctx context.Context, // nolint:gocogni
 			"error":    err,
 		}).Error(errMsg.Error())
 
-		span.RecordError(err)
-		span.SetStatus(otelCodes.Error, errMsg.Error())
-
 		return nil, status.Error(codes.Internal, errMsg.Error())
 	}
 
@@ -263,9 +219,6 @@ func (s *Server) DriverRevokeBucketAccess(ctx context.Context, // nolint:gocogni
 			"error":  err,
 		}).Error(errMsg.Error())
 
-		span.RecordError(err)
-		span.SetStatus(otelCodes.Error, errMsg.Error())
-
 		return nil, status.Error(codes.Internal, errMsg.Error())
 	}
 
@@ -277,9 +230,6 @@ func (s *Server) DriverRevokeBucketAccess(ctx context.Context, // nolint:gocogni
 			"userName": req.AccountId,
 			"error":    err,
 		}).Error(errMsg.Error())
-
-		span.RecordError(err)
-		span.SetStatus(otelCodes.Error, errMsg.Error())
 
 		return nil, status.Error(codes.Internal, errMsg.Error())
 	}

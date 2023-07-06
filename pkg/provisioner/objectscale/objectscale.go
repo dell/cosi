@@ -257,22 +257,14 @@ func (s *Server) ID() string {
 func (s *Server) DriverDeleteBucket(ctx context.Context,
 	req *cosi.DriverDeleteBucketRequest,
 ) (*cosi.DriverDeleteBucketResponse, error) {
-	_, span := otel.Tracer("DeleteBucketRequest").Start(ctx, "ObjectscaleDriverDeleteBucket")
-	defer span.End()
-
 	log.WithFields(log.Fields{
 		"bucketID": req.BucketId,
 	}).Info("bucket is being deleted")
-
-	span.AddEvent("bucket is being deleted")
 
 	// Check if bucketID is not empty.
 	if req.GetBucketId() == "" {
 		err := errors.New("empty bucketID")
 		log.Error(err.Error())
-
-		span.RecordError(err)
-		span.SetStatus(otelCodes.Error, err.Error())
 
 		return nil, status.Error(codes.InvalidArgument, err.Error())
 	}
@@ -288,8 +280,6 @@ func (s *Server) DriverDeleteBucket(ctx context.Context,
 			"bucket": bucketName,
 		}).Warn("bucket does not exist")
 
-		span.AddEvent("bucket does not exist")
-
 		return &cosi.DriverDeleteBucketResponse{}, nil
 	}
 
@@ -299,17 +289,12 @@ func (s *Server) DriverDeleteBucket(ctx context.Context,
 			"error":  err,
 		}).Error("failed to delete bucket")
 
-		span.RecordError(err)
-		span.SetStatus(otelCodes.Error, "failed to delete bucket")
-
 		return nil, status.Error(codes.Internal, "bucket was not successfully deleted")
 	}
 
 	log.WithFields(log.Fields{
 		"bucket": bucketName,
 	}).Info("bucket successfully deleted")
-
-	span.AddEvent("bucket successfully deleted")
 
 	return &cosi.DriverDeleteBucketResponse{}, nil
 }
@@ -342,16 +327,10 @@ func (s *Server) DriverGrantBucketAccess( // nolint:gocognit
 	ctx context.Context,
 	req *cosi.DriverGrantBucketAccessRequest,
 ) (*cosi.DriverGrantBucketAccessResponse, error) {
-	ctx, span := otel.Tracer("GrantBucketAccessRequest").Start(ctx, "ObjectscaleDriverGrantBucketAccess")
-	defer span.End()
-
 	// Check if bucketID is not empty.
 	if req.GetBucketId() == "" {
 		err := errors.New("empty bucketID")
 		log.Error(err.Error())
-
-		span.RecordError(err)
-		span.SetStatus(otelCodes.Error, err.Error())
 
 		return nil, status.Error(codes.InvalidArgument, err.Error())
 	}
@@ -361,9 +340,6 @@ func (s *Server) DriverGrantBucketAccess( // nolint:gocognit
 		err := errors.New("empty bucket access name")
 		log.Error(err.Error())
 
-		span.RecordError(err)
-		span.SetStatus(otelCodes.Error, err.Error())
-
 		return nil, status.Error(codes.InvalidArgument, err.Error())
 	}
 
@@ -372,9 +348,6 @@ func (s *Server) DriverGrantBucketAccess( // nolint:gocognit
 	if req.GetAuthenticationType() == cosi.AuthenticationType_UnknownAuthenticationType {
 		err := errors.New("invalid authentication type")
 		log.Error(err.Error())
-
-		span.RecordError(err)
-		span.SetStatus(otelCodes.Error, err.Error())
 
 		return nil, status.Error(codes.InvalidArgument, err.Error())
 	}
@@ -414,18 +387,12 @@ func (s *Server) DriverGrantBucketAccess( // nolint:gocognit
 			"error":  err,
 		}).Error("failed to check bucket existence")
 
-		span.RecordError(err)
-		span.SetStatus(otelCodes.Error, "failed to check bucket existence")
-
 		return nil, status.Error(codes.Internal, "an unexpected error occurred")
 	} else if err != nil {
 		log.WithFields(log.Fields{
 			"bucket": bucketName,
 			"error":  err,
 		}).Error("bucket not found")
-
-		span.RecordError(err)
-		span.SetStatus(otelCodes.Error, "bucket not found")
 
 		return nil, status.Error(codes.NotFound, "bucket not found")
 	}
@@ -439,9 +406,6 @@ func (s *Server) DriverGrantBucketAccess( // nolint:gocognit
 			"user":  userName,
 			"error": err,
 		}).Error(errMsg.Error())
-
-		span.RecordError(err)
-		span.SetStatus(otelCodes.Error, errMsg.Error())
 
 		return nil, status.Error(codes.Internal, "failed to check for user existence")
 	}
@@ -461,9 +425,6 @@ func (s *Server) DriverGrantBucketAccess( // nolint:gocognit
 				"error": err,
 			}).Error("cannot create user")
 
-			span.RecordError(err)
-			span.SetStatus(otelCodes.Error, "cannot create user")
-
 			return nil, status.Error(codes.Internal, fmt.Sprintf("cannot create user %s", userName))
 		}
 
@@ -481,9 +442,6 @@ func (s *Server) DriverGrantBucketAccess( // nolint:gocognit
 			"bucket": bucketName,
 			"error":  err,
 		}).Error(errMsg.Error())
-
-		span.RecordError(err)
-		span.SetStatus(otelCodes.Error, errMsg.Error())
 
 		return nil, status.Error(codes.Internal, errMsg.Error())
 	} else if err == nil {
@@ -504,9 +462,6 @@ func (s *Server) DriverGrantBucketAccess( // nolint:gocognit
 				"policy": policy,
 				"error":  err,
 			}).Error(errMsg.Error())
-
-			span.RecordError(err)
-			span.SetStatus(otelCodes.Error, errMsg.Error())
 
 			return nil, status.Error(codes.Internal, errMsg.Error())
 		}
@@ -534,7 +489,6 @@ func (s *Server) DriverGrantBucketAccess( // nolint:gocognit
 		log.WithFields(log.Fields{
 			"policy": policyRequest,
 		}).Infof("policyID %v was generated", policyID)
-		span.AddEvent("policyID was generated")
 	}
 
 	if policyRequest.Version == "" {
@@ -551,9 +505,6 @@ func (s *Server) DriverGrantBucketAccess( // nolint:gocognit
 			"error":    err,
 		}).Error(errMsg.Error())
 
-		span.RecordError(err)
-		span.SetStatus(otelCodes.Error, errMsg.Error())
-
 		return nil, status.Error(codes.Internal, errMsg.Error())
 	}
 
@@ -566,9 +517,6 @@ func (s *Server) DriverGrantBucketAccess( // nolint:gocognit
 			"error":  err,
 		}).Error(errMsg.Error())
 
-		span.RecordError(err)
-		span.SetStatus(otelCodes.Error, errMsg.Error())
-
 		return nil, status.Error(codes.Internal, errMsg.Error())
 	}
 
@@ -579,9 +527,6 @@ func (s *Server) DriverGrantBucketAccess( // nolint:gocognit
 			"user":  userName,
 			"error": err,
 		}).Error(errMsg.Error())
-
-		span.RecordError(err)
-		span.SetStatus(otelCodes.Error, errMsg.Error())
 
 		return nil, status.Error(codes.Internal, errMsg.Error())
 	}
