@@ -10,26 +10,34 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// Package testcontext ...
-// TODO: write documentation comment for testcontext package
-package testcontext
+// Package logger ...
+// TODO: write documentation comment for logger package
+package logger
 
 import (
-	"context"
-	"testing"
-	"time"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/go-logr/logr"
 )
 
-const defaultTimeout = 20 * time.Second
+const (
+	traceLevel = 2
+)
 
-// New creates new context with deadline equal to test deadline, or (if the deadline is empty),
-// with a timeout equal to the default timeout.
-func New(t *testing.T) (context.Context, context.CancelFunc) {
-	deadline, ok := t.Deadline()
+// Logger implements aws.Logger interface.
+type Logger struct {
+	impl logr.Logger
+}
 
-	if ok {
-		return context.WithDeadline(context.Background(), deadline)
+var _ aws.Logger = (*Logger)(nil) // interface guard
+
+// New returns new instance of Logger, with logger as implementation.
+func New(logger logr.Logger) Logger {
+	return Logger{
+		impl: logger,
 	}
+}
 
-	return context.WithTimeout(context.Background(), defaultTimeout)
+// Log is a method that implements aws.Logger interface.
+func (l Logger) Log(args ...interface{}) {
+	l.impl.V(traceLevel).Info("internal logger message", args...)
 }

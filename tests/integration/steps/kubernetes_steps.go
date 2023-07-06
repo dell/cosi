@@ -31,6 +31,7 @@ import (
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	cosiapi "sigs.k8s.io/container-object-storage-interface-api/apis"
+	bucketclientset "sigs.k8s.io/container-object-storage-interface-api/client/clientset/versioned"
 )
 
 const (
@@ -133,9 +134,13 @@ func CheckBucketClaimEvents(ctx ginkgo.SpecContext, clientset *kubernetes.Client
 }
 
 // CheckBucketAccessFromSecret Check if Bucket can be accessed with data from specified secret.
-func CheckBucketAccessFromSecret(ctx ginkgo.SpecContext, clientset *kubernetes.Clientset, bucket *v1alpha1.Bucket, validSecret *v1.Secret) {
+func CheckBucketAccessFromSecret(ctx ginkgo.SpecContext, clientset *kubernetes.Clientset, bucketClient *bucketclientset.Clientset, bucket *v1alpha1.Bucket, validSecret *v1.Secret) {
 	secret, err := clientset.CoreV1().Secrets(validSecret.Namespace).Get(ctx, validSecret.Name, metav1.GetOptions{})
 	gomega.Expect(err).ToNot(gomega.HaveOccurred())
+
+	bucket, err = bucketClient.ObjectstorageV1alpha1().Buckets().Get(ctx, bucket.Name, metav1.GetOptions{})
+	gomega.Expect(err).ToNot(gomega.HaveOccurred())
+	gomega.Expect(bucket.Status.BucketID).ToNot(gomega.BeEmpty())
 
 	var secretData cosiapi.BucketInfo
 

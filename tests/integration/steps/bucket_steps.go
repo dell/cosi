@@ -126,7 +126,21 @@ func CheckBucketAccessStatus(ctx ginkgo.SpecContext, bucketClient *bucketclients
 
 // CheckBucketAccessAccountID Function for checking BucketAccess accountID.
 func CheckBucketAccessAccountID(ctx ginkgo.SpecContext, bucketClient *bucketclientset.Clientset, bucketAccess *v1alpha1.BucketAccess, accountID string) {
-	myBucketAccess, err := bucketClient.ObjectstorageV1alpha1().BucketAccesses(bucketAccess.Namespace).Get(ctx, bucketAccess.Name, v1.GetOptions{})
+	var myBucketAccess *v1alpha1.BucketAccess
+
+	err := retry(ctx, attempts, sleep, func() error {
+		var err error
+		myBucketAccess, err = bucketClient.ObjectstorageV1alpha1().BucketAccesses(bucketAccess.Namespace).Get(ctx, bucketAccess.Name, v1.GetOptions{})
+		if err != nil {
+			return err
+		}
+
+		if !myBucketAccess.Status.AccessGranted {
+			return fmt.Errorf("AccessGranted is false")
+		}
+		return nil
+	})
+
 	gomega.Expect(err).ToNot(gomega.HaveOccurred())
 	gomega.Expect(myBucketAccess).NotTo(gomega.BeNil())
 	gomega.Expect(myBucketAccess.Status.AccountID).To(gomega.Equal(accountID))

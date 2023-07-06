@@ -200,7 +200,7 @@ var _ = Describe("Bucket Access Grant", Ordered, Label("grant", "objectscale"), 
 
 		// STEP: Bucket resource referencing BucketClaim resource "bucket-claim-delete" is accessible from Secret "bucket-credentials-1"
 		By("Checking if Bucket resource referencing BucketClaim resource 'my-bucket-claim' is accessible from Secret 'bucket-credentials-1'")
-		steps.CheckBucketAccessFromSecret(ctx, clientset, myBucket, validSecret)
+		steps.CheckBucketAccessFromSecret(ctx, clientset, bucketClient, myBucket, validSecret)
 
 		DeferCleanup(func() {
 			steps.DeleteBucketAccessResource(ctx, bucketClient, myBucketAccess)

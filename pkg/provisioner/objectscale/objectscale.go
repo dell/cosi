@@ -24,11 +24,13 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/awserr"
+	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/request"
 	"github.com/aws/aws-sdk-go/aws/session"
-	v4 "github.com/aws/aws-sdk-go/aws/signer/v4"
 	"github.com/aws/aws-sdk-go/service/iam"
 	"github.com/aws/aws-sdk-go/service/iam/iamiface"
+	"github.com/bombsimon/logrusr/v4"
 	"github.com/dell/goobjectscale/pkg/client/api"
 	"github.com/dell/goobjectscale/pkg/client/model"
 	"github.com/google/uuid"
@@ -37,6 +39,8 @@ import (
 	"google.golang.org/grpc/status"
 	"sigs.k8s.io/container-object-storage-interface-provisioner-sidecar/pkg/consts"
 
+	v4 "github.com/aws/aws-sdk-go/aws/signer/v4"
+	internalLogger "github.com/dell/cosi-driver/pkg/internal/logger"
 	driver "github.com/dell/cosi-driver/pkg/provisioner/virtualdriver"
 	objectscaleRest "github.com/dell/goobjectscale/pkg/client/rest"
 	objectscaleClient "github.com/dell/goobjectscale/pkg/client/rest/client"
@@ -55,6 +59,8 @@ const (
 	bucketVersion = "2012-10-17"
 	// allowEffect is used when updating the bucket policy, in order to grant permissions to user.
 	allowEffect = "Allow"
+
+	maxUsernameLength = 64
 )
 
 // defaultTimeout is default call length before context is getting canceled.
@@ -152,6 +158,8 @@ func New(ctx context.Context, config *config.Objectscale) (*Server, error) {
 		return nil, fmt.Errorf("initialization of transport failed: %w", err)
 	}
 
+	x509Client := http.Client{Transport: transport}
+
 	objectscaleAuthUser := objectscaleClient.AuthUser{
 		Gateway:  objectscaleGateway,
 		Username: username,
@@ -161,12 +169,11 @@ func New(ctx context.Context, config *config.Objectscale) (*Server, error) {
 		&objectscaleClient.Simple{
 			Endpoint:       objectstoreGateway,
 			Authenticator:  &objectscaleAuthUser,
-			HTTPClient:     &http.Client{Transport: transport},
+			HTTPClient:     &x509Client,
 			OverrideHeader: false,
 		},
 	)
 
-	x509Client := *http.DefaultClient
 	objClient := objectscaleClient.AuthUser{
 		Gateway:  objectscaleGateway,
 		Username: username,
@@ -194,13 +201,18 @@ func New(ctx context.Context, config *config.Objectscale) (*Server, error) {
 	iamSession, err := session.NewSessionWithOptions(
 		session.Options{
 			Config: aws.Config{
-				Endpoint:                      &objectstoreGateway,
-				Region:                        region,
 				CredentialsChainVerboseErrors: aws.Bool(true),
+				Credentials:                   credentials.AnonymousCredentials,
+				Endpoint:                      aws.String(objectscaleGateway + "/iam"),
+				Region:                        region,
 				HTTPClient:                    &x509Client,
+				Logger:                        internalLogger.New(logrusr.New(log.StandardLogger())),
 			},
 		},
 	)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create new IAM session: %w", err)
+	}
 
 	iamSession.Handlers.Sign.RemoveByName(v4.SignRequestHandler.Name)
 	swapped := iamSession.Handlers.Sign.SwapNamed(handler)
@@ -219,10 +231,6 @@ func New(ctx context.Context, config *config.Objectscale) (*Server, error) {
 	swapped = iamSession.Handlers.Sign.SwapNamed(handler2)
 	if !swapped {
 		iamSession.Handlers.Sign.PushFrontNamed(handler2)
-	}
-
-	if err != nil {
-		return nil, fmt.Errorf("failed to create new IAM session: %w", err)
 	}
 
 	iamClient := iam.New(iamSession)
@@ -428,20 +436,35 @@ func (s *Server) DriverGrantBucketAccess( // nolint:gocognit
 		return nil, status.Error(codes.NotFound, "bucket not found")
 	}
 
-	userName := fmt.Sprintf("%v-user-%v", s.namespace, bucketName)
+	userName := buildUsername(s.namespace, bucketName)
 
 	userGet, err := s.iamClient.GetUser(&iam.GetUserInput{UserName: &userName})
-	if err != nil && err.Error() != iam.ErrCodeNoSuchEntityException {
-		errMsg := errors.New("failed to check for user existence")
-		log.WithFields(log.Fields{
-			"user":  userName,
-			"error": err,
-		}).Error(errMsg.Error())
+	if err != nil {
+		if myAwsErr, ok := err.(awserr.Error); ok {
+			if myAwsErr.Code() != iam.ErrCodeNoSuchEntityException {
+				errMsg := errors.New("failed to check for user existence")
+				log.WithFields(log.Fields{
+					"user":  userName,
+					"error": myAwsErr,
+				}).Error(errMsg.Error())
 
-		span.RecordError(err)
-		span.SetStatus(otelCodes.Error, errMsg.Error())
+				span.RecordError(myAwsErr)
+				span.SetStatus(otelCodes.Error, errMsg.Error())
 
-		return nil, status.Error(codes.Internal, "failed to check for user existence")
+				return nil, status.Error(codes.Internal, errMsg.Error())
+			}
+		} else {
+			errMsg := errors.New("failed to check for user existence")
+			log.WithFields(log.Fields{
+				"user":  userName,
+				"error": err,
+			}).Error(errMsg.Error())
+
+			span.RecordError(err)
+			span.SetStatus(otelCodes.Error, errMsg.Error())
+
+			return nil, status.Error(codes.Internal, errMsg.Error())
+		}
 	}
 
 	if userGet != nil && *userGet.User.UserName == userName {
@@ -748,4 +771,8 @@ func assembleCredentials(
 	span.AddEvent("access to the bucket for user successfully granted")
 
 	return credentials
+}
+
+func buildUsername(namespace, bucketName string) string {
+	return fmt.Sprintf("%v-user-%v", namespace, bucketName)[:maxUsernameLength]
 }
