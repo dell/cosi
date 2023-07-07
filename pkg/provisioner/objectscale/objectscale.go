@@ -10,6 +10,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+//go:generate go run github.com/hexdigest/gowrap/cmd/gowrap@v1.3.2 gen -g -p github.com/dell/cosi-driver/pkg/provisioner/virtualdriver/ -i Driver -t ../../../templates/gowrap/opentelemetry -o ../../../pkg/generated/otelDecorators/objectscale_otel.gen.go
+
 // Package objectscale ...
 // TODO: write documentation comment for objectscale package
 package objectscale
@@ -37,6 +39,7 @@ import (
 	"google.golang.org/grpc/status"
 	"sigs.k8s.io/container-object-storage-interface-provisioner-sidecar/pkg/consts"
 
+	generated "github.com/dell/cosi-driver/pkg/generated/otelDecorators"
 	driver "github.com/dell/cosi-driver/pkg/provisioner/virtualdriver"
 	objectscaleRest "github.com/dell/goobjectscale/pkg/client/rest"
 	objectscaleClient "github.com/dell/goobjectscale/pkg/client/rest/client"
@@ -46,7 +49,6 @@ import (
 	cosi "sigs.k8s.io/container-object-storage-interface-spec"
 
 	"github.com/dell/cosi-driver/pkg/config"
-	"github.com/dell/cosi-driver/pkg/internal/generated"
 	"github.com/dell/cosi-driver/pkg/transport"
 )
 

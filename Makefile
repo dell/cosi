@@ -39,7 +39,6 @@ clean:	##clean directory
 	go clean
 
 .PHONY: generate
-
 generate:	##regenerate files
 	go generate ./...
 
