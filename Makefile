@@ -10,7 +10,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-all: clean generate decorate-otel format build
+all: clean generate format build
 
 COSI_BUILD_DIR   := build
 COSI_BUILD_PATH  := ./cmd/
@@ -88,8 +88,3 @@ example-config:	##generate the example configuration file
 	./scripts/example-config.pl \
 		--filename $(CONFIGURATION_DOCS) \
 		--output ./sample-config.generated.yaml
-
-.PHONY: decorate-otel
-decorate-otel: ## generate decorators for automatically adding tracing to main COSI features functions
-	gowrap gen -p github.com/dell/cosi-driver/pkg/provisioner/virtualdriver/ -i Driver \
-		-t ./gowrapTemplates/opentelemetry -o pkg/internal/generated/objectscale_otel.gen.go
