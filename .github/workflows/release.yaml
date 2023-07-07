@@ -2,9 +2,7 @@ name: Draft Release
 on:
   release:
     types: [unpublished]
-env:
-  GOPRIVATE: github.com/dell/*
-  TOKEN: ${{ secrets.GH_DELL_ACCESS }}
+
 jobs:
   tests-workflow:
     uses: ./.github/workflows/dev.yml
@@ -17,31 +15,16 @@ jobs:
     - name: Git AV Scan
       uses: djdefi/gitavscan@main
 
-  build-secure-and-push:
+  image-scans:
     env:
       IMAGETAG: "${{ env.GITHUB_REF }}"
       IMAGENAME: "cosi-driver"
       REGISTRY: "sample_registry" # TODO: There is no registry for now
     steps:
-      - uses: actions/setup-go@v2
-        with:
-          go-version: ^1.20
-          id: go
-      - name: Configure git for private modules
-        run: |
-          git config --global url."https://csmbot:$TOKEN@github.com".insteadOf "https://github.com"
-          echo "machine github.com login csmbot password $TOKEN" >> ~/.netrc
-      - name: Checkout the code
-        uses: actions/checkout@v3.2.0
-      - name: "Vendor packages"
-        run: |
-          go mod vendor
-      - run: |
-          make docker
       - name: Run trivy action
         uses: aquasecurity/trivy-action@v0.10.0
         with:
-          image-ref: ${{ env.IMAGENAME }}:${{ env.IMAGETAG }}
+          image-ref: ${{ env.REGISTRY }}/${{ env.IMAGENAME }}:${{ env.IMAGETAG }}
           exit-code: 1
       - name: Run dockle action
         uses: erzz/dockle-action@v1.3.1
@@ -49,6 +32,4 @@ jobs:
           DOCKER_CONTENT_TRUST: 1
         with:
           exit-code: 1
-          image: ${{ env.IMAGENAME }}:${{ env.IMAGETAG }}
-    # TODO: There is no registry for now
-    # - run: make push
+          image: ${{ env.REGISTRY }}/${{ env.IMAGENAME }}:${{ env.IMAGETAG }}
