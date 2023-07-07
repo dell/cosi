@@ -1,7 +1,7 @@
-name: Draft Release
+name: Release
 on:
   release:
-    types: [unpublished]
+    types: [created]
 
 jobs:
   tests-workflow:
@@ -16,6 +16,7 @@ jobs:
       uses: djdefi/gitavscan@main
 
   image-scans:
+    runs-on: ubuntu-latest
     env:
       IMAGETAG: "${{ env.GITHUB_REF }}"
       IMAGENAME: "cosi-driver"
