@@ -4,6 +4,7 @@ on:
     branches: [main]
   pull_request:
     branches: ["**"]
+  workflow_call:
 env:
   GOPRIVATE: github.com/dell/*
   TOKEN: ${{ secrets.GH_DELL_ACCESS }}
