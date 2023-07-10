@@ -19,7 +19,7 @@ jobs:
   image-scans:
     runs-on: ubuntu-latest
     env:
-      IMAGETAG: "${{ env.GITHUB_REF }}"
+      IMAGETAG: "${{ github.ref_name }}"
       IMAGENAME: "cosi-driver"
       REGISTRY: "sample_registry" # TODO: There is no registry for now
     steps:
