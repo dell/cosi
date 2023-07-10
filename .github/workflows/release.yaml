@@ -3,8 +3,6 @@ on:
   push:
     tags:
       - 'v*.*.*'
-    branches:
-      - release*
 
 jobs:
   tests-workflow:
