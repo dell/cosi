@@ -6,7 +6,7 @@ on:
 
 jobs:
   tests-workflow:
-    uses: ./.github/workflows/dev.yml
+    uses: ./.github/workflows/dev.yaml
 
   gitavscan:
     runs-on: ubuntu-latest
