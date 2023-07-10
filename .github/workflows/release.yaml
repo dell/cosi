@@ -3,10 +3,14 @@ on:
   push:
     tags:
       - 'v*.*.*'
+    branches:
+      - release*
 
 jobs:
   tests-workflow:
     uses: ./.github/workflows/dev.yaml
+    secrets:
+      GH_DELL_ACCESS: ${{ secrets.GH_DELL_ACCESS }}
 
   gitavscan:
     runs-on: ubuntu-latest
