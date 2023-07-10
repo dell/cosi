@@ -28,7 +28,7 @@ jobs:
       REGISTRY: "sample_registry" # TODO: There is no registry for now
     steps:
       - name: Run trivy action
-        uses: aquasecurity/trivy-action@v0.10.0
+        uses: aquasecurity/trivy-action@master
         with:
           image-ref: ${{ env.REGISTRY }}/${{ env.IMAGENAME }}:${{ env.IMAGETAG }}
           exit-code: 1
