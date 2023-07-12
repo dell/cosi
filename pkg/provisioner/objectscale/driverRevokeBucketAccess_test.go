@@ -13,7 +13,6 @@
 package objectscale
 
 import (
-	"errors"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -42,9 +41,7 @@ func TestServerBucketAccessRevoke(t *testing.T) {
 		"testInvalidBucketID":                  testInvalidBucketID,
 		"testEmptyAccountID":                   testEmptyAccountID,
 		"testGetBucketUnexpectedError":         testGetBucketUnexpectedError,
-		"testGetBucketDontExist":               testGetBucketDontExist,
 		"testGetBucketFailToCheckUser":         testGetBucketFailToCheckUser,
-		"testGetBucketUserNotFound":            testGetBucketUserNotFound,
 		"testFailToGetAccessKeysList":          testFailToGetAccessKeysList,
 		"testFailToDeleteAccessKey":            testFailToDeleteAccessKey,
 		"testFailToCheckBucketPolicyExistence": testFailToCheckBucketPolicyExistence,
@@ -201,36 +198,6 @@ func testEmptyAccountID(t *testing.T) {
 	assert.ErrorIs(t, err, status.Error(codes.InvalidArgument, "empty accountID"))
 }
 
-// testGetBucketDontExist tests if non-existence of a bucket during revoking access is handled correctly
-// in the (*Server).DriverRevokeAccess method.
-func testGetBucketDontExist(t *testing.T) {
-	ctx, cancel := testcontext.New(t)
-	defer cancel()
-
-	bucketsMock := &mocks.BucketsInterface{}
-	bucketsMock.On("Get", mock.Anything, mock.Anything, mock.Anything).Return(nil, ErrParameterNotFound).Once()
-
-	mgmtClientMock := &mocks.ClientSet{}
-	mgmtClientMock.On("Buckets").Return(bucketsMock).Once()
-
-	server := Server{
-		mgmtClient:    mgmtClientMock,
-		namespace:     testNamespace,
-		backendID:     testID,
-		objectScaleID: objectScaleID,
-		objectStoreID: objectStoreID,
-	}
-
-	req := &cosi.DriverRevokeBucketAccessRequest{
-		BucketId:  "bucket-valid",
-		AccountId: testUserName,
-	}
-
-	_, err := server.DriverRevokeBucketAccess(ctx, req)
-
-	assert.ErrorIs(t, err, status.Error(codes.NotFound, "bucket not found"))
-}
-
 // testGetBucketUnknownError tests if the unexpected error returned from mocked API,
 // is handled correctly in the (*Server).getBucket method.
 func testGetBucketUnexpectedError(t *testing.T) {
@@ -299,42 +266,6 @@ func testGetBucketFailToCheckUser(t *testing.T) {
 	assert.ErrorIs(t, err, status.Error(codes.Internal, "failed to check for user existence"))
 }
 
-func testGetBucketUserNotFound(t *testing.T) {
-	ctx, cancel := testcontext.New(t)
-	defer cancel()
-
-	bucketsMock := &mocks.BucketsInterface{}
-
-	bucketsMock.On("Get", mock.Anything, mock.Anything, mock.Anything).Return(&model.Bucket{
-		Name:      "valid",
-		Namespace: testNamespace,
-	}, nil).Once()
-
-	IAMClient := iamfaketoo.NewIAMAPI(t)
-	IAMClient.On("GetUser", mock.Anything).Return(nil, errors.New("NoSuchEntity")).Once()
-
-	mgmtClientMock := &mocks.ClientSet{}
-	mgmtClientMock.On("Buckets").Return(bucketsMock).Once()
-
-	server := Server{
-		mgmtClient:    mgmtClientMock,
-		iamClient:     IAMClient,
-		namespace:     testNamespace,
-		backendID:     testID,
-		objectScaleID: objectScaleID,
-		objectStoreID: objectStoreID,
-	}
-
-	req := &cosi.DriverRevokeBucketAccessRequest{
-		BucketId:  "bucket-valid",
-		AccountId: testUserName,
-	}
-
-	_, err := server.DriverRevokeBucketAccess(ctx, req)
-
-	assert.ErrorIs(t, err, status.Error(codes.Internal, "failed to get user"))
-}
-
 // testFailToGetAccessKeysList tests if failing to get access keys for a user during revoking access is handled correctly
 // in the (*Server).DriverRevokeAccess method.
 func testFailToGetAccessKeysList(t *testing.T) {
@@ -347,7 +278,8 @@ func testFailToGetAccessKeysList(t *testing.T) {
 		Name:      "valid",
 		Namespace: testNamespace,
 	}, nil).Once()
-
+	bucketsMock.On("GetPolicy", mock.Anything, mock.Anything, mock.Anything).Return(testPolicy, nil).Once()
+	bucketsMock.On("UpdatePolicy", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil).Once()
 	IAMClient := iamfaketoo.NewIAMAPI(t)
 	IAMClient.On("GetUser", mock.Anything).Return(&iam.GetUserOutput{
 		User: &iam.User{
@@ -357,7 +289,7 @@ func testFailToGetAccessKeysList(t *testing.T) {
 	IAMClient.On("ListAccessKeys", mock.Anything).Return(nil, ErrInternalException).Once()
 
 	mgmtClientMock := &mocks.ClientSet{}
-	mgmtClientMock.On("Buckets").Return(bucketsMock).Once()
+	mgmtClientMock.On("Buckets").Return(bucketsMock).Times(3)
 
 	server := Server{
 		mgmtClient:    mgmtClientMock,
@@ -390,6 +322,8 @@ func testFailToDeleteAccessKey(t *testing.T) {
 		Name:      "valid",
 		Namespace: testNamespace,
 	}, nil).Once()
+	bucketsMock.On("GetPolicy", mock.Anything, mock.Anything, mock.Anything).Return(testPolicy, nil).Once()
+	bucketsMock.On("UpdatePolicy", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil).Once()
 
 	IAMClient := iamfaketoo.NewIAMAPI(t)
 	IAMClient.On("GetUser", mock.Anything).Return(&iam.GetUserOutput{
@@ -409,7 +343,7 @@ func testFailToDeleteAccessKey(t *testing.T) {
 	IAMClient.On("DeleteAccessKey", mock.Anything).Return(nil, ErrInternalException).Once()
 
 	mgmtClientMock := &mocks.ClientSet{}
-	mgmtClientMock.On("Buckets").Return(bucketsMock).Once()
+	mgmtClientMock.On("Buckets").Return(bucketsMock).Times(3)
 
 	server := Server{
 		mgmtClient:    mgmtClientMock,
@@ -456,11 +390,6 @@ func testFailToCheckBucketPolicyExistence(t *testing.T) {
 		AccessKeyId: aws.String("abc"),
 		UserName:    aws.String(testUserName),
 	}
-	IAMClient.On("ListAccessKeys", mock.Anything).Return(&iam.ListAccessKeysOutput{
-		AccessKeyMetadata: accessKeyList,
-	}, nil).Once()
-	IAMClient.On("DeleteAccessKey", mock.Anything).Return(nil, nil).Once()
-
 	mgmtClientMock := &mocks.ClientSet{}
 	mgmtClientMock.On("Buckets").Return(bucketsMock).Twice()
 
@@ -509,10 +438,6 @@ func testEmptyPolicy(t *testing.T) {
 		AccessKeyId: aws.String("abc"),
 		UserName:    aws.String(testUserName),
 	}
-	IAMClient.On("ListAccessKeys", mock.Anything).Return(&iam.ListAccessKeysOutput{
-		AccessKeyMetadata: accessKeyList,
-	}, nil).Once()
-	IAMClient.On("DeleteAccessKey", mock.Anything).Return(nil, nil).Once()
 
 	mgmtClientMock := &mocks.ClientSet{}
 	mgmtClientMock.On("Buckets").Return(bucketsMock).Twice()
@@ -603,11 +528,6 @@ func testFailedToUpdateBucketPolicy(t *testing.T) {
 		AccessKeyId: aws.String("abc"),
 		UserName:    aws.String(testUserName),
 	}
-
-	IAMClient.On("ListAccessKeys", mock.Anything).Return(&iam.ListAccessKeysOutput{
-		AccessKeyMetadata: accessKeyList,
-	}, nil).Once()
-	IAMClient.On("DeleteAccessKey", mock.Anything).Return(nil, nil).Once()
 	IAMClient.On("GetUser", mock.Anything).Return(&iam.GetUserOutput{
 		User: &iam.User{
 			UserName: aws.String(testUserName),
