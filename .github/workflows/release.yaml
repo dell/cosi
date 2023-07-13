@@ -1,24 +1,40 @@
-name: Release
+name: Release Draft
+
 on:
   push:
     tags:
       - 'v*.*.*'
 
+permissions: write-all
+
 jobs:
   tests-workflow:
-    uses: ./.github/workflows/dev.yaml
+    uses: ./.github/workflows/development.yaml
     secrets:
       GH_DELL_ACCESS: ${{ secrets.GH_DELL_ACCESS }}
 
   gitavscan:
+    name: AV Repository scan
     runs-on: ubuntu-latest
-    name: AV scan
+    env:
+      SCAN_FILE: scan-results.txt
     steps:
-    - uses: actions/checkout@v3
-    - name: Git AV Scan
-      uses: djdefi/gitavscan@main
+      - uses: actions/checkout@v3
+      - name: Malware Scanner
+        uses: dell/common-github-actions/malware-scanner@main
+        with:
+          directories: .
+          options: "--recursive --infected --log=${{ env.SCAN_FILE }}"
+      - name: Upload scan result to Release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        # NOTE: `chmod` is used because `scan.txt` has invalid permissions to be uploaded.
+        run: |
+          sudo chmod 644 scan.txt
+          gh release upload --clobber ${{ github.ref_name }} ${{ env.SCAN_FILE }}
 
   image-scans:
+    name: Image scan
     runs-on: ubuntu-latest
     env:
       IMAGETAG: "${{ github.ref_name }}"

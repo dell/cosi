@@ -1,12 +1,15 @@
 name: Helm Chart
+
 on:
   push:
     branches: [main]
   pull_request:
     branches: ["**"]
+
 env:
   GOPRIVATE: github.com/dell/*
   TOKEN: ${{ secrets.GH_DELL_ACCESS }}
+
 jobs:
   kube-linter:
     name: Kube Linter
