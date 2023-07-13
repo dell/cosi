@@ -21,6 +21,7 @@ import (
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
+	"github.com/dell/cosi-driver/pkg/provisioner/policy"
 	"github.com/dell/cosi-driver/tests/integration/steps"
 )
 
@@ -49,7 +50,7 @@ var _ = Describe("Bucket Access Revoke", Ordered, Label("revoke", "objectscale")
 			DeletionPolicy: v1alpha1.DeletionPolicyDelete,
 			DriverName:     "cosi.dellemc.com",
 			Parameters: map[string]string{
-				"id": driverID,
+				"id": DriverID,
 			},
 		}
 		myBucketClaim = &v1alpha1.BucketClaim{
@@ -79,7 +80,7 @@ var _ = Describe("Bucket Access Revoke", Ordered, Label("revoke", "objectscale")
 			DriverName:         "cosi.dellemc.com",
 			AuthenticationType: v1alpha1.AuthenticationTypeKey,
 			Parameters: map[string]string{
-				"id": driverID,
+				"id": DriverID,
 			},
 		}
 		myBucketAccess = &v1alpha1.BucketAccess{
@@ -181,7 +182,7 @@ var _ = Describe("Bucket Access Revoke", Ordered, Label("revoke", "objectscale")
 
 		// STEP: Policy "${policy}" on ObjectScale platform is created
 		By("Creating Policy '${policy}' on ObjectScale platform")
-		steps.CreatePolicy(ctx, objectscale, "${policy}", myBucket)
+		steps.CreatePolicy(ctx, objectscale, policy.PolicyDocument{}, myBucket)
 
 		// STEP: BucketAccess resource "my-bucket-access" in namespace "namespace-1" status "accountID" is "${accountID}"
 		By("Checking if BucketAccess resource 'my-bucket-access' in namespace 'namespace-1' status 'accountID' is '${accountID}'")
@@ -204,7 +205,7 @@ var _ = Describe("Bucket Access Revoke", Ordered, Label("revoke", "objectscale")
 
 		// STEP: Policy "${policy}" for Bucket resource referencing BucketClaim resource "my-bucket-claim" on ObjectScale platform is deleted
 		By("Deleting Policy for Bucket referencing BucketClaim 'my-bucket-claim' on ObjectScale platform")
-		steps.DeletePolicy(ctx, objectscale, myBucket)
+		steps.DeletePolicy(ctx, objectscale, myBucket, Namespace)
 
 		// STEP: User "${user}" in account on ObjectScale platform is deleted
 		By("Deleting User '${user}' in account on ObjectScale platform")

@@ -82,7 +82,7 @@ func CheckSecret(ctx ginkgo.SpecContext, clientset *kubernetes.Clientset, secret
 	sec, err := clientset.CoreV1().Secrets(secret.Namespace).Get(ctx, secret.Name, metav1.GetOptions{})
 	gomega.Expect(err).ToNot(gomega.HaveOccurred())
 	gomega.Expect(sec).NotTo(gomega.BeNil())
-	gomega.Expect(sec.Name).To(gomega.Equal(secret.Namespace))
+	gomega.Expect(sec.Name).To(gomega.Equal(secret.Name))
 	gomega.Expect(sec.Namespace).To(gomega.Equal(secret.Namespace))
 	gomega.Expect(sec.Data).NotTo(gomega.Or(gomega.BeNil(), gomega.BeEmpty()))
 }
@@ -134,7 +134,7 @@ func CheckBucketClaimEvents(ctx ginkgo.SpecContext, clientset *kubernetes.Client
 }
 
 // CheckBucketAccessFromSecret Check if Bucket can be accessed with data from specified secret.
-func CheckBucketAccessFromSecret(ctx ginkgo.SpecContext, clientset *kubernetes.Clientset, bucketClient *bucketclientset.Clientset, bucket *v1alpha1.Bucket, validSecret *v1.Secret) {
+func CheckBucketAccessFromSecret(ctx ginkgo.SpecContext, clientset *kubernetes.Clientset, bucketClient *bucketclientset.Clientset, bucket *v1alpha1.Bucket, validSecret *v1.Secret, driverID string) {
 	secret, err := clientset.CoreV1().Secrets(validSecret.Namespace).Get(ctx, validSecret.Name, metav1.GetOptions{})
 	gomega.Expect(err).ToNot(gomega.HaveOccurred())
 
@@ -152,7 +152,9 @@ func CheckBucketAccessFromSecret(ctx ginkgo.SpecContext, clientset *kubernetes.C
 	s3Endpoint := secretData.Spec.S3.Endpoint
 	bucketName := secretData.Spec.BucketName
 
-	gomega.Expect(bucketName).To(gomega.Equal(bucket.Status.BucketID))
+	expectedBucketID := driverID + "-" + bucketName
+
+	gomega.Expect(expectedBucketID).To(gomega.Equal(bucket.Status.BucketID))
 
 	s3Config := &aws.Config{
 		Credentials:      credentials.NewStaticCredentials(accessKey, secretKey, ""),

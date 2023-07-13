@@ -40,10 +40,11 @@ var (
 	IAMClient     *iam.IAM
 	Namespace     string
 	ObjectstoreID string
+	ObjectscaleID string
 )
 
 const (
-	driverID = "e2e.test.objectscale"
+	DriverID = "e2e.test.objectscale"
 )
 
 func TestIntegration(t *testing.T) {
@@ -77,6 +78,9 @@ var _ = BeforeSuite(func() {
 	Expect(exists).To(BeTrue())
 
 	ObjectstoreID, exists = os.LookupEnv("OBJECTSCALE_OBJECTSTORE_ID")
+	Expect(exists).To(BeTrue())
+
+	ObjectscaleID, exists = os.LookupEnv("OBJECTSCALE_ID")
 	Expect(exists).To(BeTrue())
 
 	// k8s clientset

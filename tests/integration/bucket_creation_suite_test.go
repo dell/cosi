@@ -48,7 +48,7 @@ var _ = Describe("Bucket Creation", Ordered, Label("create", "objectscale"), fun
 			DeletionPolicy: v1alpha1.DeletionPolicyDelete,
 			DriverName:     "cosi.dellemc.com",
 			Parameters: map[string]string{
-				"id": driverID,
+				"id": DriverID,
 			},
 		}
 		validBucketClaim = &v1alpha1.BucketClaim{

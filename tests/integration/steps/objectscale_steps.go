@@ -16,6 +16,7 @@ import (
 	"strings"
 
 	objscl "github.com/dell/cosi-driver/pkg/provisioner/objectscale"
+	"github.com/dell/cosi-driver/pkg/provisioner/policy"
 	objectscaleRest "github.com/dell/goobjectscale/pkg/client/rest"
 	ginkgo "github.com/onsi/ginkgo/v2"
 	gomega "github.com/onsi/gomega"
@@ -73,21 +74,29 @@ func CheckBucketAccessFromSecret(_ *objectscaleRest.ClientSet, _ *v1alpha1.Bucke
 }
 
 // CreatePolicy Function for creating policy in ObjectScale.
-func CreatePolicy(ctx ginkgo.SpecContext, objectscale *objectscaleRest.ClientSet, policy string, myBucket *v1alpha1.Bucket) {
-	err := objectscale.Buckets().UpdatePolicy(ctx, myBucket.Name, policy, nil)
+func CreatePolicy(ctx ginkgo.SpecContext, objectscale *objectscaleRest.ClientSet, policy policy.PolicyDocument, myBucket *v1alpha1.Bucket) {
+	policyString, err := policy.ToJSON()
+	gomega.Expect(err).ToNot(gomega.HaveOccurred())
+	err = objectscale.Buckets().UpdatePolicy(ctx, myBucket.Name, policyString, nil)
 	gomega.Expect(err).ToNot(gomega.HaveOccurred())
 }
 
 // CheckPolicy checks  if policy exists in ObjectScale.
-func CheckPolicy(ctx ginkgo.SpecContext, objectscale *objectscaleRest.ClientSet, policy string, myBucket *v1alpha1.Bucket) {
-	actualPolicy, err := objectscale.Buckets().GetPolicy(ctx, myBucket.Name, nil)
+func CheckPolicy(ctx ginkgo.SpecContext, objectscale *objectscaleRest.ClientSet, expectedPolicyDocument policy.PolicyDocument, myBucket *v1alpha1.Bucket, namespace string) {
+	param := make(map[string]string)
+	param["namespace"] = namespace
+	actualPolicy, err := objectscale.Buckets().GetPolicy(ctx, myBucket.Name, param)
 	gomega.Expect(err).ToNot(gomega.HaveOccurred())
-	gomega.Expect(actualPolicy).To(gomega.BeIdenticalTo(policy))
+	actualPolicyDocument, err := policy.NewFromJSON(actualPolicy)
+	gomega.Expect(err).ToNot(gomega.HaveOccurred())
+	gomega.Expect(actualPolicyDocument).To(gomega.BeEquivalentTo(expectedPolicyDocument))
 }
 
 // DeletePolicy is a function deleting a policy from the ObjectStore.
-func DeletePolicy(ctx ginkgo.SpecContext, objectscale *objectscaleRest.ClientSet, bucket *v1alpha1.Bucket) {
-	existing, err := objectscale.Buckets().GetPolicy(ctx, bucket.Name, nil)
+func DeletePolicy(ctx ginkgo.SpecContext, objectscale *objectscaleRest.ClientSet, bucket *v1alpha1.Bucket, namespace string) {
+	param := make(map[string]string)
+	param["namespace"] = namespace
+	existing, err := objectscale.Buckets().GetPolicy(ctx, bucket.Name, param)
 	gomega.Expect(err).ToNot(gomega.HaveOccurred())
 	gomega.Expect(existing).NotTo(gomega.BeNil())
 
@@ -97,7 +106,7 @@ func DeletePolicy(ctx ginkgo.SpecContext, objectscale *objectscaleRest.ClientSet
 }
 
 // CreateUser creates user in ObjectScale.
-func CreateUser(ctx ginkgo.SpecContext, iamClient *iam.IAM, user, arn string) {
+func CreateUser(ctx ginkgo.SpecContext, iamClient *iam.IAM, user string, arn string) {
 	// TODO: verify it's working correctly once all the steps are integrated
 	userOut, err := iamClient.CreateUserWithContext(ctx, &iam.CreateUserInput{
 		UserName:            &user,

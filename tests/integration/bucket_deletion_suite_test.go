@@ -48,7 +48,7 @@ var _ = Describe("Bucket Deletion", Ordered, Label("delete", "objectscale"), fun
 			DeletionPolicy: v1alpha1.DeletionPolicyDelete,
 			DriverName:     "cosi.dellemc.com",
 			Parameters: map[string]string{
-				"id": driverID,
+				"id": DriverID,
 			},
 		}
 		bucketClassRetain = &v1alpha1.BucketClass{
@@ -62,7 +62,7 @@ var _ = Describe("Bucket Deletion", Ordered, Label("delete", "objectscale"), fun
 			DeletionPolicy: v1alpha1.DeletionPolicyRetain,
 			DriverName:     "cosi.dellemc.com",
 			Parameters: map[string]string{
-				"id": driverID,
+				"id": DriverID,
 			},
 		}
 		bucketClaimDelete = &v1alpha1.BucketClaim{
