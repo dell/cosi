@@ -87,6 +87,7 @@ func (s *Server) DriverRevokeBucketAccess(ctx context.Context, // nolint:gocogni
 
 	// Check if bucket for revoking access exists.
 	isBucketExist := true
+
 	_, err = s.mgmtClient.Buckets().Get(ctx, bucketName, parameters)
 	if err != nil && !errors.Is(err, ErrParameterNotFound) {
 		errMsg := errors.New("failed to check bucket existence")
@@ -109,8 +110,9 @@ func (s *Server) DriverRevokeBucketAccess(ctx context.Context, // nolint:gocogni
 	}
 
 	// Check user existence.
-	_, err = s.iamClient.GetUser(&iam.GetUserInput{UserName: &req.AccountId})
 	isUserExist := true
+
+	_, err = s.iamClient.GetUser(&iam.GetUserInput{UserName: &req.AccountId})
 	if err != nil && err.Error() != iam.ErrCodeNoSuchEntityException {
 		errMsg := errors.New("failed to check for user existence")
 		log.WithFields(log.Fields{

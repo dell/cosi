@@ -280,6 +280,7 @@ func testFailToGetAccessKeysList(t *testing.T) {
 	}, nil).Once()
 	bucketsMock.On("GetPolicy", mock.Anything, mock.Anything, mock.Anything).Return(testPolicy, nil).Once()
 	bucketsMock.On("UpdatePolicy", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil).Once()
+
 	IAMClient := iamfaketoo.NewIAMAPI(t)
 	IAMClient.On("GetUser", mock.Anything).Return(&iam.GetUserOutput{
 		User: &iam.User{
@@ -528,6 +529,7 @@ func testFailedToUpdateBucketPolicy(t *testing.T) {
 		AccessKeyId: aws.String("abc"),
 		UserName:    aws.String(testUserName),
 	}
+
 	IAMClient.On("GetUser", mock.Anything).Return(&iam.GetUserOutput{
 		User: &iam.User{
 			UserName: aws.String(testUserName),
