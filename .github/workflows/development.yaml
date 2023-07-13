@@ -23,14 +23,14 @@ jobs:
     name: golangci-lint
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/setup-go@v4
-        with:
-          go-version: "1.20"
-          cache: false
       - name: Configure git for private modules
         run: |
           git config --global url."https://csmbot:$TOKEN@github.com".insteadOf "https://github.com"
           echo "machine github.com login csmbot password $TOKEN" >> ~/.netrc
+      - uses: actions/setup-go@v4
+        with:
+          go-version: "1.20"
+          cache: false
       - name: Checkout the code
         uses: actions/checkout@v3.2.0
       - name: "Vendor packages"
@@ -60,26 +60,6 @@ jobs:
         uses: dell/common-github-actions/go-code-formatter-linter-vetter@main
         with:
           directories: ./pkg/...
-
-  gosec:
-    name: Run Gosec (deprecated by golangci-lint)
-    runs-on: ubuntu-latest
-    env:
-      GO111MODULE: on
-    steps:
-      - name: Configure git for private modules
-        run: |
-          git config --global url."https://csmbot:$TOKEN@github.com".insteadOf "https://github.com"
-          echo "machine github.com login csmbot password $TOKEN" >> ~/.netrc
-      - name: Checkout the code
-        uses: actions/checkout@v3.2.0
-      - name: "Vendor packages"
-        run: |
-          go mod vendor
-      - name: Run Gosec Security Scanner
-        uses: securego/gosec@master
-        with:
-          args: -exclude-dir=core -exclude-dir=tests ./...
 
   malware-security-scan:
     name: Malware Scanner
@@ -114,7 +94,7 @@ jobs:
         uses: hadolint/hadolint-action@v3.1.0
 
   tests:
-    name: Run Go unit tests and check package coverage
+    name: Run unit tests and check package coverage
     runs-on: ubuntu-latest
     steps:
       - name: Configure git for private modules
@@ -133,22 +113,22 @@ jobs:
           test-folder: "."
           skip-list: "github.com/dell/cosi-driver/core,github.com/dell/cosi-driver/tests/integration/main_test"
 
-  build-secure-and-push:
-    name: Build, Scan and Push Docker image
+  build-and-secure:
+    name: Build and Scan Docker image
     runs-on: ubuntu-latest
     env:
       IMAGETAG: "${{ github.sha }}"
       IMAGENAME: "cosi-driver"
       REGISTRY: "sample_registry"
     steps:
-      - uses: actions/setup-go@v2
-        with:
-          go-version: ^1.20
-          id: go
       - name: Configure git for private modules
         run: |
           git config --global url."https://csmbot:$TOKEN@github.com".insteadOf "https://github.com"
           echo "machine github.com login csmbot password $TOKEN" >> ~/.netrc
+      - uses: actions/setup-go@v2
+        with:
+          go-version: ^1.20
+          id: go
       - name: Checkout the code
         uses: actions/checkout@v3.2.0
       - name: "Vendor packages"

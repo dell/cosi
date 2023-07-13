@@ -1,7 +1,4 @@
 run:
-  # The default concurrency value is the number of available CPU.
-  concurrency: 4
-
   # Timeout for analysis, e.g. 30s, 5m.
   timeout: 5m
 
@@ -127,6 +124,8 @@ linters:
     - misspell
     # Find incorrect usages of t.Parallel().
     - paralleltest
+    # Drop-in replacement of golint.
+    # - revive TODO: enable and fix issues.
     # Find bugs and performance issues statically.
     - staticcheck
     # Parse and type-check Go code.
