@@ -7,49 +7,72 @@ on:
 
 permissions: write-all
 
-jobs:
-  tests-workflow:
-    uses: ./.github/workflows/development.yaml
-    secrets:
-      GH_DELL_ACCESS: ${{ secrets.GH_DELL_ACCESS }}
+env:
+  REGISTRY: "sample_registry" # TODO: There is no registry for now
+  IMAGETAG: "${{ github.ref_name }}"
+  IMAGENAME: "cosi-driver"
 
-  gitavscan:
+  CLAMAV_SCAN_FILE: clamav-scan-results.txt
+  TRIVY_SCAN_FILE: trivy-scan-results.sarif
+  DOCKLE_SCAN_FILE: dockle-scan-results # NOTE: no extension here, it will be automatically added by Dockle
+
+jobs:
+  av-scan:
     name: AV Repository scan
     runs-on: ubuntu-latest
-    env:
-      SCAN_FILE: scan-results.txt
     steps:
       - uses: actions/checkout@v3
       - name: Malware Scanner
         uses: dell/common-github-actions/malware-scanner@main
         with:
           directories: .
-          options: "--recursive --infected --log=${{ env.SCAN_FILE }}"
+          options: "--recursive --infected --log=${{ env.CLAMAV_SCAN_FILE }}"
       - name: Upload scan result to Release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        # NOTE: `chmod` is used because `scan.txt` has invalid permissions to be uploaded.
+        # NOTE: `chmod` is used because `${{ env.CLAMAV_SCAN_FILE }}` has invalid permissions to be uploaded.
         run: |
-          sudo chmod 644 scan.txt
-          gh release upload --clobber ${{ github.ref_name }} ${{ env.SCAN_FILE }}
+          sudo chmod 644 ${{ env.CLAMAV_SCAN_FILE }}
+          gh release upload --clobber ${{ github.ref_name }} ${{ env.CLAMAV_SCAN_FILE }}
 
-  image-scans:
-    name: Image scan
+  trivy-scan:
+    name: Trivy image scan
     runs-on: ubuntu-latest
-    env:
-      IMAGETAG: "${{ github.ref_name }}"
-      IMAGENAME: "cosi-driver"
-      REGISTRY: "sample_registry" # TODO: There is no registry for now
     steps:
+      - uses: actions/checkout@v3
       - name: Run trivy action
         uses: aquasecurity/trivy-action@master
         with:
           image-ref: ${{ env.REGISTRY }}/${{ env.IMAGENAME }}:${{ env.IMAGETAG }}
-          exit-code: 1
+          exit-code: 0
+          output: ${{ env.TRIVY_SCAN_FILE }}
+          format: sarif
+      - name: Upload scan result to Release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        # NOTE: `chmod` is used because `${{ env.TRIVY_SCAN_FILE }}` can have invalid permissions to be uploaded.
+        run: |
+          sudo chmod 644 ${{ env.TRIVY_SCAN_FILE }}
+          gh release upload --clobber ${{ github.ref_name }} ${{ env.TRIVY_SCAN_FILE }}
+
+  dockle-scan:
+    name: Dockle image scan
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
       - name: Run dockle action
         uses: erzz/dockle-action@v1.3.1
         env:
           DOCKER_CONTENT_TRUST: 1
         with:
-          exit-code: 1
           image: ${{ env.REGISTRY }}/${{ env.IMAGENAME }}:${{ env.IMAGETAG }}
+          exit-code: 0
+          report-format: sarif
+          report-name: ${{ env.DOCKLE_SCAN_FILE }}
+      - name: Upload scan result to Release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        # NOTE: `chmod` is used because `${{ env.DOCKLE_SCAN_FILE }}.sarif` can have invalid permissions to be uploaded.
+        run: |
+          sudo chmod 644 ${{ env.DOCKLE_SCAN_FILE }}.sarif
+          gh release upload --clobber ${{ github.ref_name }} ${{ env.DOCKLE_SCAN_FILE }}.sarif
