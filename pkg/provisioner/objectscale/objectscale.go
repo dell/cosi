@@ -436,7 +436,7 @@ func (s *Server) DriverGrantBucketAccess( // nolint:gocognit
 		return nil, status.Error(codes.NotFound, "bucket not found")
 	}
 
-	userName := buildUsername(s.namespace, bucketName)
+	userName := BuildUsername(s.namespace, bucketName)
 
 	userGet, err := s.iamClient.GetUser(&iam.GetUserInput{UserName: &userName})
 	if err != nil {
@@ -773,6 +773,6 @@ func assembleCredentials(
 	return credentials
 }
 
-func buildUsername(namespace, bucketName string) string {
+func BuildUsername(namespace, bucketName string) string {
 	return fmt.Sprintf("%v-user-%v", namespace, bucketName)[:maxUsernameLength]
 }

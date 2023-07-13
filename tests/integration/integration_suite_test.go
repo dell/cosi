@@ -10,8 +10,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-//go:build integration
-
 package main_test
 
 import (
@@ -28,19 +26,20 @@ import (
 
 	objectscaleRest "github.com/dell/goobjectscale/pkg/client/rest"
 	objectscaleClient "github.com/dell/goobjectscale/pkg/client/rest/client"
+	objectscaleIAM "github.com/dell/goobjectscale/pkg/client/rest/iam"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	bucketclientset "sigs.k8s.io/container-object-storage-interface-api/client/clientset/versioned"
 )
 
-// place for storing global variables like specs
+// place for storing global variables like specs.
 var (
 	clientset     *kubernetes.Clientset
 	bucketClient  *bucketclientset.Clientset
 	objectscale   *objectscaleRest.ClientSet
-	iamClient     *iam.IAM
-	namespace     string
-	objectstoreID string
+	IAMClient     *iam.IAM
+	Namespace     string
+	ObjectstoreID string
 )
 
 const (
@@ -57,7 +56,7 @@ var _ = BeforeSuite(func() {
 	// Load environment variables
 
 	exists := false
-	namespace, exists = os.LookupEnv("OBJECTSCALE_NAMESPACE")
+	Namespace, exists = os.LookupEnv("OBJECTSCALE_NAMESPACE")
 	Expect(exists).To(BeTrue())
 
 	kubeConfig, exists := os.LookupEnv("KUBECONFIG")
@@ -77,7 +76,7 @@ var _ = BeforeSuite(func() {
 	objectscalePassword, exists := os.LookupEnv("OBJECTSCALE_PASSWORD")
 	Expect(exists).To(BeTrue())
 
-	objectstoreID, exists = os.LookupEnv("OBJECTSCALE_OBJECTSTORE_ID")
+	ObjectstoreID, exists = os.LookupEnv("OBJECTSCALE_OBJECTSTORE_ID")
 	Expect(exists).To(BeTrue())
 
 	// k8s clientset
@@ -110,7 +109,7 @@ var _ = BeforeSuite(func() {
 
 	// IAM clientset
 	var (
-		endpoint = objectscaleGateway
+		endpoint = objectscaleGateway + "/iam"
 		region   = "us-west-2"
 	)
 	iamSession, err := session.NewSession(&aws.Config{
@@ -122,8 +121,12 @@ var _ = BeforeSuite(func() {
 			},
 		},
 	})
-	Expect(err).To(BeNil())
-	iamClient = iam.New(iamSession)
+
+	Expect(err).ToNot(HaveOccurred())
+
+	IAMClient = iam.New(iamSession)
+	objectscaleIAM.InjectTokenToIAMClient(IAMClient, &objectscaleAuthUser, *unsafeClient)
+	objectscaleIAM.InjectAccountIDToIAMClient(IAMClient, Namespace)
 })
 
 var _ = AfterSuite(func() {

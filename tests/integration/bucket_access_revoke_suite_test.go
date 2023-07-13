@@ -117,7 +117,7 @@ var _ = Describe("Bucket Access Revoke", Ordered, Label("revoke", "objectscale")
 
 		// STEP: ObjectStore "${objectstoreId}" is created
 		By("Checking if the ObjectStore '${objectstoreId}' is created")
-		steps.CheckObjectStoreExists(ctx, objectscale, objectstoreID)
+		steps.CheckObjectStoreExists(ctx, objectscale, ObjectstoreID)
 
 		// STEP: Kubernetes namespace "cosi-driver" is created
 		By("Checking if namespace 'cosi-driver' is created")
@@ -149,7 +149,7 @@ var _ = Describe("Bucket Access Revoke", Ordered, Label("revoke", "objectscale")
 
 		// STEP: Bucket resource referencing BucketClaim resource "my-bucket-claim" is created in ObjectStore "${objectstoreName}"
 		By("Checking if the Bucket referencing 'my-bucket-claim' is created in ObjectStore '${objectstoreName}'")
-		steps.CheckBucketResourceInObjectStore(ctx, objectscale, namespace, myBucket)
+		steps.CheckBucketResourceInObjectStore(ctx, objectscale, Namespace, myBucket)
 
 		// STEP: BucketClaim resource "my-bucket-claim" in namespace "namespace-1" status "bucketReady" is "true"
 		By("Checking if the BucketClaim 'my-bucket-claim' in namespace 'namespace-1' status 'bucketReady' is 'true'")
@@ -177,7 +177,7 @@ var _ = Describe("Bucket Access Revoke", Ordered, Label("revoke", "objectscale")
 
 		// STEP: User "${user}" in account on ObjectScale platform is created
 		By("Creating User '${user}' in account on ObjectScale platform")
-		steps.CreateUser(ctx, iamClient, "${user}", "${arn}")
+		steps.CreateUser(ctx, IAMClient, "${user}", "${arn}")
 
 		// STEP: Policy "${policy}" on ObjectScale platform is created
 		By("Creating Policy '${policy}' on ObjectScale platform")
@@ -208,7 +208,7 @@ var _ = Describe("Bucket Access Revoke", Ordered, Label("revoke", "objectscale")
 
 		// STEP: User "${user}" in account on ObjectScale platform is deleted
 		By("Deleting User '${user}' in account on ObjectScale platform")
-		steps.DeleteUser(ctx, iamClient, "${user}")
+		steps.DeleteUser(ctx, IAMClient, "${user}")
 
 		DeferCleanup(func() {
 			// Cleanup for scenario: Revoke access to bucket

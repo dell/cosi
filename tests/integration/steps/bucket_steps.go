@@ -66,14 +66,16 @@ func CheckBucketID(bucket *v1alpha1.Bucket) {
 }
 
 // CreateBucketClassResource Function for creating BucketClass resource.
-func CreateBucketClassResource(ctx ginkgo.SpecContext, bucketClient *bucketclientset.Clientset, bucketClass *v1alpha1.BucketClass) {
+func CreateBucketClassResource(ctx ginkgo.SpecContext, bucketClient *bucketclientset.Clientset, bucketClass *v1alpha1.BucketClass) *v1alpha1.BucketClass {
 	_, err := bucketClient.ObjectstorageV1alpha1().BucketClasses().Get(ctx, bucketClass.Name, v1.GetOptions{})
 	if errors.IsNotFound(err) {
-		_, err := bucketClient.ObjectstorageV1alpha1().BucketClasses().Create(ctx, bucketClass, v1.CreateOptions{})
+		bucketClass, err = bucketClient.ObjectstorageV1alpha1().BucketClasses().Create(ctx, bucketClass, v1.CreateOptions{})
 		gomega.Expect(err).ToNot(gomega.HaveOccurred())
 	} else {
 		gomega.Expect(err).ToNot(gomega.HaveOccurred())
 	}
+
+	return bucketClass
 }
 
 // DeleteBucketClassResource Function for deleting BucketClass resource.

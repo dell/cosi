@@ -10,16 +10,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-//go:build integration
-
 package main_test
 
 import (
-	"sigs.k8s.io/container-object-storage-interface-api/apis/objectstorage/v1alpha1"
-
 	. "github.com/onsi/ginkgo/v2"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"sigs.k8s.io/container-object-storage-interface-api/apis/objectstorage/v1alpha1"
 
 	"github.com/dell/cosi-driver/tests/integration/steps"
 )
@@ -117,7 +114,7 @@ var _ = Describe("Bucket Access Grant", Ordered, Label("grant", "objectscale"), 
 
 		// STEP: ObjectStore "${objectstoreId}" is created
 		By("Checking if the ObjectStore '${objectstoreId}' is created")
-		steps.CheckObjectStoreExists(ctx, objectscale, objectstoreID)
+		steps.CheckObjectStoreExists(ctx, objectscale, ObjectstoreID)
 
 		// STEP: Kubernetes namespace "cosi-driver" is created
 		By("Checking if namespace 'cosi-driver' is created")
@@ -137,7 +134,7 @@ var _ = Describe("Bucket Access Grant", Ordered, Label("grant", "objectscale"), 
 
 		// STEP: BucketClass resource is created from specification "my-bucket-class"
 		By("Creating the BucketClass 'my-bucket-class' is created")
-		steps.CreateBucketClassResource(ctx, bucketClient, myBucketClass)
+		myBucketClass = steps.CreateBucketClassResource(ctx, bucketClient, myBucketClass)
 
 		// STEP: BucketClaim resource is created from specification "my-bucket-claim"
 		By("Creating the BucketClaim 'my-bucket-claim'")
@@ -149,7 +146,7 @@ var _ = Describe("Bucket Access Grant", Ordered, Label("grant", "objectscale"), 
 
 		// STEP: Bucket resource referencing BucketClaim resource "my-bucket-claim" is created in ObjectStore "${objectstoreName}"
 		By("Checking if bucket referencing 'my-bucket-claim' is created in ObjectStore '${objectstoreName}'")
-		steps.CheckBucketResourceInObjectStore(ctx, objectscale, namespace, myBucket)
+		steps.CheckBucketResourceInObjectStore(ctx, objectscale, Namespace, myBucket)
 
 		// STEP: BucketClaim resource "my-bucket-claim" in namespace "namespace-1" status "bucketReady" is "true"
 		By("Checking if BucketClaim resource 'my-bucket-claim' status 'bucketReady' is 'true'")
@@ -182,14 +179,16 @@ var _ = Describe("Bucket Access Grant", Ordered, Label("grant", "objectscale"), 
 		By("Checking if BucketAccess resource 'my-bucket-access' in namespace 'namespace-1' status 'accessGranted' is 'true'")
 		steps.CheckBucketAccessStatus(ctx, bucketClient, myBucketAccess, true)
 
-		// STEP: User "${user}" in account on ObjectScale platform is created
-		By("Checking if User '${user}' in account on ObjectScale platform is created")
-		steps.CheckUser(ctx, iamClient, "${user}")
+		// STEP: User "user-1" in account on ObjectScale platform is created
+		By("Checking if User 'user-1' in account on ObjectScale platform is created")
+		steps.CheckUser(ctx, IAMClient, myBucket.Name, Namespace)
 
+		// TODO: Change to happy policy
 		// STEP: Policy "${policy}" for Bucket resource referencing BucketClaim resource "my-bucket-claim" on ObjectScale platform is created
-		By("Checking if Policy '${policy}' for Bucket resource referencing BucketClaim resource 'my-bucket-claim' is created")
-		steps.CheckPolicy(ctx, objectscale, "${policy}", myBucket)
+		By("Checking if Policy '{}' for Bucket resource referencing BucketClaim resource 'my-bucket-claim' is created")
+		steps.CheckPolicy(ctx, objectscale, "{}", myBucket)
 
+		// TODO: Get AccountID from environment
 		// STEP: BucketAccess resource "my-bucket-access" in namespace "namespace-1" status "accountID" is "${accountID}"
 		By("Checking if BucketAccess resource 'my-bucket-access' in namespace 'namespace-1' status 'accountID' is '${accountID}'")
 		steps.CheckBucketAccessAccountID(ctx, bucketClient, myBucketAccess, "${accountID}")
@@ -205,14 +204,14 @@ var _ = Describe("Bucket Access Grant", Ordered, Label("grant", "objectscale"), 
 		DeferCleanup(func() {
 			steps.DeleteBucketAccessResource(ctx, bucketClient, myBucketAccess)
 			steps.DeletePolicy(ctx, objectscale, myBucket)
-			steps.DeleteUser(ctx, iamClient, "${user}")
+			steps.DeleteUser(ctx, IAMClient, myBucketAccess.Status.AccountID)
 			steps.DeleteBucketAccessClassResource(ctx, bucketClient, myBucketAccessClass)
 		})
 	})
 	AfterAll(func() {
-		DeferCleanup(func(ctx SpecContext) {
-			steps.DeleteBucketClassResource(ctx, bucketClient, myBucketClass)
-			steps.DeleteBucketClaimResource(ctx, bucketClient, myBucketClaim)
-		})
+		// DeferCleanup(func(ctx SpecContext) {
+		// 	steps.DeleteBucketClassResource(ctx, bucketClient, myBucketClass)
+		// 	steps.DeleteBucketClaimResource(ctx, bucketClient, myBucketClaim)
+		// })
 	})
 })

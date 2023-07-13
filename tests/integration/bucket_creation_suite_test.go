@@ -100,7 +100,7 @@ var _ = Describe("Bucket Creation", Ordered, Label("create", "objectscale"), fun
 
 		// STEP: ObjectStore "${objectstoreId}" is created
 		By("Checking if the ObjectStore '${objectstoreId}' is created")
-		steps.CheckObjectStoreExists(ctx, objectscale, objectstoreID)
+		steps.CheckObjectStoreExists(ctx, objectscale, ObjectstoreID)
 
 		// STEP: Kubernetes namespace "cosi-driver" is created
 		By("Checking if namespace 'cosi-driver' is created")
@@ -138,7 +138,7 @@ var _ = Describe("Bucket Creation", Ordered, Label("create", "objectscale"), fun
 		validBucket = steps.GetBucketResource(ctx, bucketClient, validBucketClaim)
 		// STEP: Bucket resource referencing BucketClaim resource "bucket-claim-valid" is created in ObjectStore "${objectstoreName}""
 		By("checking if Bucket resource referencing BucketClaim resource 'bucket-claim-valid' is created in ObjectStore '${objectstoreName}'")
-		steps.CheckBucketResourceInObjectStore(ctx, objectscale, namespace, validBucket)
+		steps.CheckBucketResourceInObjectStore(ctx, objectscale, Namespace, validBucket)
 
 		// STEP: BucketClaim resource "bucket-claim-valid" in namespace "namespace-1" status "bucketReady" is "true"
 		By("checking if the status 'bucketReady' of BucketClaim resource 'bucket-claim-valid' in namespace 'namespace-1' is 'true'")

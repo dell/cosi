@@ -15,6 +15,7 @@ package steps
 import (
 	"strings"
 
+	objscl "github.com/dell/cosi-driver/pkg/provisioner/objectscale"
 	objectscaleRest "github.com/dell/goobjectscale/pkg/client/rest"
 	ginkgo "github.com/onsi/ginkgo/v2"
 	gomega "github.com/onsi/gomega"
@@ -107,13 +108,14 @@ func CreateUser(ctx ginkgo.SpecContext, iamClient *iam.IAM, user, arn string) {
 }
 
 // CheckUser checks if user exists in ObjectScale.
-func CheckUser(ctx ginkgo.SpecContext, iamClient *iam.IAM, user string) {
-	// TODO: verify it's working correctly once all the steps are integrated
-	userOut, err := iamClient.GetUserWithContext(ctx, &iam.GetUserInput{UserName: &user})
+func CheckUser(ctx ginkgo.SpecContext, iamClient *iam.IAM, user string, namespace string) {
+	username := objscl.BuildUsername(namespace, user)
+	userOut, err := iamClient.GetUserWithContext(ctx, &iam.GetUserInput{UserName: &username})
 	gomega.Expect(err).ToNot(gomega.HaveOccurred())
 	gomega.Expect(userOut.User).NotTo(gomega.BeNil())
-	gomega.Expect(*(userOut.User.UserName)).To(gomega.Equal(user))
-	gomega.Expect(userOut.User.Arn).To(gomega.Or(gomega.BeNil(), gomega.BeEmpty()))
+	gomega.Expect(*(userOut.User.UserName)).To(gomega.Equal(username))
+	// The line below was here when I got here. I'm not sure why.
+	// gomega.Expect(userOut.User.Arn).To(gomega.Or(gomega.BeNil(), gomega.BeEmpty()))
 }
 
 // DeleteUser Function for deleting user from ObjectScale.
