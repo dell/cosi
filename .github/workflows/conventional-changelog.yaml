@@ -5,21 +5,12 @@
 
 name: Conventional changelog
 
-#on:
-#  push:
-#    tags:
-#      - v*
-
 on:
   push:
-    branches: [main]
-  pull_request:
-    branches: ["**"]
-  workflow_call:
-    secrets:
-      GH_DELL_ACCESS:
-        description: 'A token passed from the caller workflow'
-        required: true
+    tags:
+      - v*
+    branches:
+      - changelog-test
 
 permissions: write-all
 
