@@ -1,5 +1,6 @@
 # This workflow validate pull request title.
 # It is supposed to be run only when the pull request changes it's state.
+# a
 
 name: Semantic pull request
 
