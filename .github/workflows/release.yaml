@@ -17,6 +17,11 @@ env:
   DOCKLE_SCAN_FILE: dockle-scan-results # NOTE: no extension here, it will be automatically added by Dockle
 
 jobs:
+  tests-workflow:
+    uses: ./.github/workflows/dev.yaml
+    secrets:
+      GH_DELL_ACCESS: ${{ secrets.GH_DELL_ACCESS }}
+
   av-scan:
     name: AV Repository scan
     runs-on: ubuntu-latest
