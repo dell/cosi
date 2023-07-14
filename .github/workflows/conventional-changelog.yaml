@@ -2,6 +2,7 @@
 # It is supposed to be run only when tag is pushed.
 # Runs only for full releases:
 #   https://regex101.com/r/oZihYi/1
+# 3
 
 name: Conventional changelog
 
