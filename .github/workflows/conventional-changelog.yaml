@@ -4,7 +4,6 @@
 #   https://regex101.com/r/oZihYi/1
 # 3
 
-
 name: Conventional changelog
 
 on:
