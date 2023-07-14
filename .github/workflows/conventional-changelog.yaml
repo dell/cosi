@@ -14,6 +14,9 @@ on:
 
 permissions: write-all
 
+env:
+  REFNAME: v1.0.0
+
 jobs:
   deploy:
     name: Generate changelog and publish a release
@@ -43,6 +46,6 @@ jobs:
           allowUpdates: true
           draft: false
           makeLatest: true
-          name: test-tag
+          name: REFNAME
           body: ${{ steps.changelog.outputs.changes }}
           token: ${{ github.token }}
