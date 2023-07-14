@@ -15,7 +15,7 @@ on:
 permissions: write-all
 
 env:
-  REFNAME: v1.0.0
+  REFNAME: v1.1.0
 
 jobs:
   deploy:
