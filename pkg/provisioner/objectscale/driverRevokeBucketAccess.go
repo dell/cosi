@@ -86,7 +86,7 @@ func (s *Server) DriverRevokeBucketAccess(ctx context.Context, // nolint:gocogni
 	}).Info("parameters of the bucket")
 
 	// Check if bucket for revoking access exists.
-	isBucketExist := true
+	bucketExist := true
 
 	_, err = s.mgmtClient.Buckets().Get(ctx, bucketName, parameters)
 	if err != nil && !errors.Is(err, ErrParameterNotFound) {
@@ -106,11 +106,11 @@ func (s *Server) DriverRevokeBucketAccess(ctx context.Context, // nolint:gocogni
 			"bucket": bucketName,
 			"error":  err,
 		}).Warn(warnMsg)
-		isBucketExist = false
+		bucketExist = false
 	}
 
 	// Check user existence.
-	isUserExist := true
+	userExist := true
 
 	_, err = s.iamClient.GetUser(&iam.GetUserInput{UserName: &req.AccountId})
 	if err != nil && err.Error() != iam.ErrCodeNoSuchEntityException {
@@ -130,10 +130,10 @@ func (s *Server) DriverRevokeBucketAccess(ctx context.Context, // nolint:gocogni
 			"user":  req.AccountId,
 			"error": err,
 		}).Warn(warnMsg)
-		isUserExist = false
+		userExist = false
 	}
 
-	if isBucketExist {
+	if bucketExist {
 		// Get existing policy.
 		policy, err := s.mgmtClient.Buckets().GetPolicy(ctx, bucketName, parameters)
 		if err != nil && !errors.Is(err, model.Error{Code: model.CodeResourceNotFound}) {
@@ -234,7 +234,7 @@ func (s *Server) DriverRevokeBucketAccess(ctx context.Context, // nolint:gocogni
 		}
 	}
 
-	if isUserExist {
+	if userExist {
 		// Get access keys list.
 		accessKeyList, err := s.iamClient.ListAccessKeys(&iam.ListAccessKeysInput{UserName: &req.AccountId})
 		if err != nil {

@@ -13,6 +13,7 @@
 package objectscale
 
 import (
+	"errors"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -37,6 +38,7 @@ func TestServerBucketAccessRevoke(t *testing.T) {
 
 	for scenario, fn := range map[string]func(t *testing.T){
 		"testValidAccessRevoking":              testValidAccessRevoking,
+		"testNothingToChange":                  testNothingToChange,
 		"testEmptyBucketIDRevoke":              testEmptyBucketIDRevoke,
 		"testInvalidBucketID":                  testInvalidBucketID,
 		"testEmptyAccountID":                   testEmptyAccountID,
@@ -91,6 +93,42 @@ func testValidAccessRevoking(t *testing.T) {
 	}, nil).Once()
 	bucketsMock.On("GetPolicy", mock.Anything, mock.Anything, mock.Anything).Return(testPolicy, nil).Once()
 	bucketsMock.On("UpdatePolicy", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil).Once()
+
+	// Generic mock for the ClientSet interface, we care only about returning Buckets from it.
+	mgmtClientMock := &mocks.ClientSet{}
+	mgmtClientMock.On("Buckets").Return(bucketsMock)
+
+	server := Server{
+		mgmtClient:    mgmtClientMock,
+		iamClient:     IAMClient,
+		namespace:     testNamespace,
+		backendID:     testID,
+		objectScaleID: objectScaleID,
+		objectStoreID: objectStoreID,
+	}
+
+	req := &cosi.DriverRevokeBucketAccessRequest{
+		BucketId:  "bucket-valid",
+		AccountId: testUserName,
+	}
+
+	response, err := server.DriverRevokeBucketAccess(ctx, req)
+	assert.ErrorIs(t, err, nil, err)
+	assert.NotNil(t, response)
+}
+
+// testNothingToChange tests if no error appear when there is no resource to delete.
+func testNothingToChange(t *testing.T) {
+	ctx, cancel := testcontext.New(t)
+	defer cancel()
+
+	// skip deleting access keys
+	IAMClient := iamfaketoo.NewIAMAPI(t)
+	IAMClient.On("GetUser", mock.Anything).Return(nil, errors.New("NoSuchEntity")).Once()
+
+	// skip updating policy
+	bucketsMock := &mocks.BucketsInterface{}
+	bucketsMock.On("Get", mock.Anything, mock.Anything, mock.Anything).Return(nil, ErrParameterNotFound).Once()
 
 	// Generic mock for the ClientSet interface, we care only about returning Buckets from it.
 	mgmtClientMock := &mocks.ClientSet{}
@@ -274,12 +312,8 @@ func testFailToGetAccessKeysList(t *testing.T) {
 
 	bucketsMock := &mocks.BucketsInterface{}
 
-	bucketsMock.On("Get", mock.Anything, mock.Anything, mock.Anything).Return(&model.Bucket{
-		Name:      "valid",
-		Namespace: testNamespace,
-	}, nil).Once()
-	bucketsMock.On("GetPolicy", mock.Anything, mock.Anything, mock.Anything).Return(testPolicy, nil).Once()
-	bucketsMock.On("UpdatePolicy", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil).Once()
+	// skip updating policy
+	bucketsMock.On("Get", mock.Anything, mock.Anything, mock.Anything).Return(nil, ErrParameterNotFound).Once()
 
 	IAMClient := iamfaketoo.NewIAMAPI(t)
 	IAMClient.On("GetUser", mock.Anything).Return(&iam.GetUserOutput{
@@ -319,12 +353,8 @@ func testFailToDeleteAccessKey(t *testing.T) {
 
 	bucketsMock := &mocks.BucketsInterface{}
 
-	bucketsMock.On("Get", mock.Anything, mock.Anything, mock.Anything).Return(&model.Bucket{
-		Name:      "valid",
-		Namespace: testNamespace,
-	}, nil).Once()
-	bucketsMock.On("GetPolicy", mock.Anything, mock.Anything, mock.Anything).Return(testPolicy, nil).Once()
-	bucketsMock.On("UpdatePolicy", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil).Once()
+	// skip updating policy
+	bucketsMock.On("Get", mock.Anything, mock.Anything, mock.Anything).Return(nil, ErrParameterNotFound).Once()
 
 	IAMClient := iamfaketoo.NewIAMAPI(t)
 	IAMClient.On("GetUser", mock.Anything).Return(&iam.GetUserOutput{
@@ -488,12 +518,8 @@ func testFailedToDeleteUser(t *testing.T) {
 	}, nil).Once()
 
 	bucketsMock := &mocks.BucketsInterface{}
-	bucketsMock.On("Get", mock.Anything, mock.Anything, mock.Anything).Return(&model.Bucket{
-		Name:      "valid",
-		Namespace: testNamespace,
-	}, nil).Once()
-	bucketsMock.On("GetPolicy", mock.Anything, mock.Anything, mock.Anything).Return(testPolicy, nil).Once()
-	bucketsMock.On("UpdatePolicy", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil).Once()
+	// skip updating policy
+	bucketsMock.On("Get", mock.Anything, mock.Anything, mock.Anything).Return(nil, ErrParameterNotFound).Once()
 
 	mgmtClientMock := &mocks.ClientSet{}
 	mgmtClientMock.On("Buckets").Return(bucketsMock)
