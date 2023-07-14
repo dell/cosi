@@ -106,6 +106,7 @@ func (s *Server) DriverRevokeBucketAccess(ctx context.Context, // nolint:gocogni
 			"bucket": bucketName,
 			"error":  err,
 		}).Warn(warnMsg)
+		span.AddEvent("bucket not found")
 		bucketExist = false
 	}
 
@@ -130,6 +131,7 @@ func (s *Server) DriverRevokeBucketAccess(ctx context.Context, // nolint:gocogni
 			"user":  req.AccountId,
 			"error": err,
 		}).Warn(warnMsg)
+		span.AddEvent("user does not exist")
 		userExist = false
 	}
 
@@ -296,7 +298,7 @@ func GetBucketName(bucketID string) (string, error) {
 	list := strings.Split(bucketID, "-")
 
 	if len(list) != 2 { // nolint:gomnd
-		return "", errors.New("improper bucketId")
+		return "", errors.New("invalid bucketId")
 	}
 
 	return list[1], nil

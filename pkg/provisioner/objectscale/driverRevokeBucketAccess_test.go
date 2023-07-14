@@ -199,13 +199,13 @@ func testInvalidBucketID(t *testing.T) {
 	}
 
 	req := &cosi.DriverRevokeBucketAccessRequest{
-		BucketId:  "bucket-invalid-too-much-dashes",
+		BucketId:  "bucket-invalid-too-many-dashes",
 		AccountId: testUserName,
 	}
 
 	_, err := server.DriverRevokeBucketAccess(ctx, req)
 
-	assert.ErrorIs(t, err, status.Error(codes.InvalidArgument, "improper bucketId"))
+	assert.ErrorIs(t, err, status.Error(codes.InvalidArgument, "invalid bucketId"))
 }
 
 // testEmptyAccountID tests if error handling for empty AccountID in the (*Server).DriverRevokeBucketAccess method.
