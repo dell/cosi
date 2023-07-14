@@ -43,6 +43,6 @@ jobs:
           allowUpdates: true
           draft: false
           makeLatest: true
-          name: ${{ github.ref_name }}
+          name: test-tag
           body: ${{ steps.changelog.outputs.changes }}
           token: ${{ github.token }}
