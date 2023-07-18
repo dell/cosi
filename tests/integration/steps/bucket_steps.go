@@ -54,13 +54,13 @@ func CheckBucketClaimStatus(ctx ginkgo.SpecContext, bucketClient *bucketclientse
 }
 
 // CheckBucketStatus Function for checking Bucket status.
-func CheckBucketStatus(ctx ginkgo.SpecContext, bucketClient *bucketclientset.Clientset, bucket *v1alpha1.Bucket, status bool) {
+func CheckBucketStatus(bucket *v1alpha1.Bucket, status bool) {
 	gomega.Expect(bucket.Status.BucketReady).To(gomega.Equal(status))
 	ginkgo.GinkgoWriter.Printf("Kubernetes Bucket status: %+v\n", bucket.Status)
 }
 
 // CheckBucketID Function for checking bucketID.
-func CheckBucketID(ctx ginkgo.SpecContext, bucketClient *bucketclientset.Clientset, bucket *v1alpha1.Bucket) {
+func CheckBucketID(bucket *v1alpha1.Bucket) {
 	gomega.Expect(bucket.Status.BucketID).NotTo(gomega.Or(gomega.BeEmpty(), gomega.BeNil()))
 	ginkgo.GinkgoWriter.Printf("Kubernetes Bucket status: %+v\n", bucket.Status)
 }
