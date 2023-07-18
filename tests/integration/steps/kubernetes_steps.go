@@ -50,14 +50,14 @@ const (
 )
 
 // CheckClusterAvailability Ensure that Kubernetes cluster is available.
-func CheckClusterAvailability(clientset *kubernetes.Clientset) {
+func CheckClusterAvailability(ctx context.Context, clientset *kubernetes.Clientset) {
 	value, err := clientset.ServerVersion()
 	gomega.Expect(err).ToNot(gomega.HaveOccurred())
 	gomega.Expect(value).ToNot(gomega.BeNil())
 }
 
 // CreateNamespace Ensure that Kubernetes namespace is created.
-func CreateNamespace(ctx ginkgo.SpecContext, clientset *kubernetes.Clientset, namespace string) {
+func CreateNamespace(ctx context.Context, clientset *kubernetes.Clientset, namespace string) {
 	_, err := clientset.CoreV1().Namespaces().Get(ctx, namespace, metav1.GetOptions{})
 	if errors.IsNotFound(err) {
 		namespaceObj := &v1.Namespace{ObjectMeta: metav1.ObjectMeta{Name: namespace}}
@@ -69,7 +69,7 @@ func CreateNamespace(ctx ginkgo.SpecContext, clientset *kubernetes.Clientset, na
 }
 
 // DeleteNamespace Ensure that Kubernetes namespace is deleted.
-func DeleteNamespace(ctx ginkgo.SpecContext, clientset *kubernetes.Clientset, namespace string) {
+func DeleteNamespace(ctx context.Context, clientset *kubernetes.Clientset, namespace string) {
 	err := clientset.CoreV1().Namespaces().Delete(ctx, namespace, metav1.DeleteOptions{})
 	gomega.Expect(err).ToNot(gomega.HaveOccurred())
 }
@@ -81,7 +81,7 @@ func CheckBucketClassSpec(_ *kubernetes.Clientset, _ v1alpha1.BucketClaimSpec) {
 }
 
 // CheckSecret is used to check if secret exists.
-func CheckSecret(ctx ginkgo.SpecContext, clientset *kubernetes.Clientset, secret *v1.Secret) *v1.Secret {
+func CheckSecret(ctx context.Context, clientset *kubernetes.Clientset, secret *v1.Secret) *v1.Secret {
 	sec, err := clientset.CoreV1().Secrets(secret.Namespace).Get(ctx, secret.Name, metav1.GetOptions{})
 	gomega.Expect(err).ToNot(gomega.HaveOccurred())
 	gomega.Expect(sec).NotTo(gomega.BeNil())
@@ -92,7 +92,7 @@ func CheckSecret(ctx ginkgo.SpecContext, clientset *kubernetes.Clientset, secret
 }
 
 // CheckBucketClaimEvents Check BucketClaim events.
-func CheckBucketClaimEvents(ctx ginkgo.SpecContext, clientset *kubernetes.Clientset, bucketClaim *v1alpha1.BucketClaim, expected *v1.Event) {
+func CheckBucketClaimEvents(ctx context.Context, clientset *kubernetes.Clientset, bucketClaim *v1alpha1.BucketClaim, expected *v1.Event) {
 	listOptions := metav1.ListOptions{}
 
 	listOptions.FieldSelector = fields.AndSelectors(
@@ -151,7 +151,7 @@ func GetAccessKeyID(ctx context.Context, clientset *kubernetes.Clientset, validS
 }
 
 // CheckBucketAccessFromSecret Check if Bucket can be accessed with data from specified secret.
-func CheckBucketAccessFromSecret(ctx ginkgo.SpecContext, clientset *kubernetes.Clientset, bucketClient *bucketclientset.Clientset, validSecret *v1.Secret, myBucket *v1alpha1.Bucket) {
+func CheckBucketAccessFromSecret(ctx context.Context, clientset *kubernetes.Clientset, bucketClient *bucketclientset.Clientset, validSecret *v1.Secret, myBucket *v1alpha1.Bucket) {
 	secret, err := clientset.CoreV1().Secrets(validSecret.Namespace).Get(ctx, validSecret.Name, metav1.GetOptions{})
 	gomega.Expect(err).ToNot(gomega.HaveOccurred())
 

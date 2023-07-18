@@ -13,6 +13,7 @@
 package steps
 
 import (
+	"context"
 	"fmt"
 	"os"
 
@@ -21,7 +22,6 @@ import (
 	"helm.sh/helm/v3/pkg/cli"
 	"k8s.io/client-go/kubernetes"
 
-	ginkgo "github.com/onsi/ginkgo/v2"
 	gomega "github.com/onsi/gomega"
 	log "github.com/sirupsen/logrus"
 	v1 "k8s.io/api/apps/v1"
@@ -29,18 +29,18 @@ import (
 )
 
 // CheckCOSIControllerInstallation Ensure that COSI controller objectstorage-controller is installed in particular namespace.
-func CheckCOSIControllerInstallation(ctx ginkgo.SpecContext, clientset *kubernetes.Clientset, controllerName string, namespace string) {
+func CheckCOSIControllerInstallation(ctx context.Context, clientset *kubernetes.Clientset, controllerName string, namespace string) {
 	// TODO: check if controller can be installed via chart
 	checkAppIsInstalled(ctx, clientset, controllerName, namespace)
 }
 
 // CheckCOSIDriverInstallation Ensure that COSI driver is installed in particular namespace.
-func CheckCOSIDriverInstallation(ctx ginkgo.SpecContext, clientset *kubernetes.Clientset, driver string, namespace string) {
+func CheckCOSIDriverInstallation(ctx context.Context, clientset *kubernetes.Clientset, driver string, namespace string) {
 	checkAppIsInstalled(ctx, clientset, driver, namespace)
 }
 
 // checkAppIsInstalled Ensure that an app is installed in particular namespace.
-func checkAppIsInstalled(ctx ginkgo.SpecContext, clientset *kubernetes.Clientset, releaseName, namespace string) {
+func checkAppIsInstalled(ctx context.Context, clientset *kubernetes.Clientset, releaseName, namespace string) {
 	deployment, err := clientset.AppsV1().Deployments(namespace).Get(ctx, releaseName, metav1.GetOptions{})
 	gomega.Expect(err).ToNot(gomega.HaveOccurred())
 	gomega.Expect(deployment.Status.Conditions).To(gomega.ContainElement(gomega.HaveField("Type", gomega.Equal(v1.DeploymentAvailable))))
