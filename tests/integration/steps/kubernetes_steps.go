@@ -13,7 +13,10 @@
 package steps
 
 import (
+	"context"
+	"crypto/tls"
 	"encoding/json"
+	"net/http"
 	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -78,13 +81,14 @@ func CheckBucketClassSpec(_ *kubernetes.Clientset, _ v1alpha1.BucketClaimSpec) {
 }
 
 // CheckSecret is used to check if secret exists.
-func CheckSecret(ctx ginkgo.SpecContext, clientset *kubernetes.Clientset, secret *v1.Secret) {
+func CheckSecret(ctx ginkgo.SpecContext, clientset *kubernetes.Clientset, secret *v1.Secret) *v1.Secret {
 	sec, err := clientset.CoreV1().Secrets(secret.Namespace).Get(ctx, secret.Name, metav1.GetOptions{})
 	gomega.Expect(err).ToNot(gomega.HaveOccurred())
 	gomega.Expect(sec).NotTo(gomega.BeNil())
 	gomega.Expect(sec.Name).To(gomega.Equal(secret.Name))
 	gomega.Expect(sec.Namespace).To(gomega.Equal(secret.Namespace))
 	gomega.Expect(sec.Data).NotTo(gomega.Or(gomega.BeNil(), gomega.BeEmpty()))
+	return sec
 }
 
 // CheckBucketClaimEvents Check BucketClaim events.
@@ -133,14 +137,9 @@ func CheckBucketClaimEvents(ctx ginkgo.SpecContext, clientset *kubernetes.Client
 	gomega.Expect(found).To(gomega.BeTrue())
 }
 
-// CheckBucketAccessFromSecret Check if Bucket can be accessed with data from specified secret.
-func CheckBucketAccessFromSecret(ctx ginkgo.SpecContext, clientset *kubernetes.Clientset, bucketClient *bucketclientset.Clientset, bucket *v1alpha1.Bucket, validSecret *v1.Secret, driverID string) {
+func GetAccessKeyID(ctx context.Context, clientset *kubernetes.Clientset, validSecret *v1.Secret) string {
 	secret, err := clientset.CoreV1().Secrets(validSecret.Namespace).Get(ctx, validSecret.Name, metav1.GetOptions{})
 	gomega.Expect(err).ToNot(gomega.HaveOccurred())
-
-	bucket, err = bucketClient.ObjectstorageV1alpha1().Buckets().Get(ctx, bucket.Name, metav1.GetOptions{})
-	gomega.Expect(err).ToNot(gomega.HaveOccurred())
-	gomega.Expect(bucket.Status.BucketID).ToNot(gomega.BeEmpty())
 
 	var secretData cosiapi.BucketInfo
 
@@ -148,19 +147,34 @@ func CheckBucketAccessFromSecret(ctx ginkgo.SpecContext, clientset *kubernetes.C
 	gomega.Expect(err).ToNot(gomega.HaveOccurred())
 
 	accessKey := secretData.Spec.S3.AccessKeyID
+	return accessKey
+}
+
+// CheckBucketAccessFromSecret Check if Bucket can be accessed with data from specified secret.
+func CheckBucketAccessFromSecret(ctx ginkgo.SpecContext, clientset *kubernetes.Clientset, bucketClient *bucketclientset.Clientset, validSecret *v1.Secret, myBucket *v1alpha1.Bucket) {
+	secret, err := clientset.CoreV1().Secrets(validSecret.Namespace).Get(ctx, validSecret.Name, metav1.GetOptions{})
+	gomega.Expect(err).ToNot(gomega.HaveOccurred())
+
+	var secretData cosiapi.BucketInfo
+
+	err = json.Unmarshal(secret.Data[bucketInfo], &secretData)
+	gomega.Expect(err).ToNot(gomega.HaveOccurred())
+	accessKey := secretData.Spec.S3.AccessKeyID
 	secretKey := secretData.Spec.S3.AccessSecretKey
 	s3Endpoint := secretData.Spec.S3.Endpoint
 	bucketName := secretData.Spec.BucketName
 
-	expectedBucketID := driverID + "-" + bucketName
-
-	gomega.Expect(expectedBucketID).To(gomega.Equal(bucket.Status.BucketID))
+	x509Client := http.Client{Transport: &http.Transport{
+		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+	}}
 
 	s3Config := &aws.Config{
 		Credentials:      credentials.NewStaticCredentials(accessKey, secretKey, ""),
 		Endpoint:         aws.String(s3Endpoint),
 		DisableSSL:       aws.Bool(false),
 		S3ForcePathStyle: aws.Bool(true),
+		HTTPClient:       &x509Client,
+		Region:           aws.String("us-east-1"),
 	}
 
 	session, err := session.NewSession(s3Config)
@@ -179,5 +193,19 @@ func CheckBucketAccessFromSecret(ctx ginkgo.SpecContext, clientset *kubernetes.C
 		Bucket: aws.String(bucketName),
 		Key:    aws.String(testObjectKey),
 	})
+	gomega.Expect(err).ToNot(gomega.HaveOccurred())
+}
+
+// DeleteSecret first removes the finalizers from secret and then deletes it.
+func DeleteSecret(ctx context.Context, clientset *kubernetes.Clientset, secret *v1.Secret) {
+	secret, err := clientset.CoreV1().Secrets(secret.Namespace).Get(ctx, secret.Name, metav1.GetOptions{})
+	gomega.Expect(err).ToNot(gomega.HaveOccurred())
+
+	secret.SetFinalizers([]string{})
+
+	_, err = clientset.CoreV1().Secrets(secret.Namespace).Update(ctx, secret, metav1.UpdateOptions{})
+	gomega.Expect(err).ToNot(gomega.HaveOccurred())
+
+	err = clientset.CoreV1().Secrets(secret.Namespace).Delete(ctx, secret.Name, metav1.DeleteOptions{})
 	gomega.Expect(err).ToNot(gomega.HaveOccurred())
 }

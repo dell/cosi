@@ -26,7 +26,6 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/aws/credentials"
-	"github.com/aws/aws-sdk-go/aws/request"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/iam"
 	"github.com/aws/aws-sdk-go/service/iam/iamiface"
@@ -39,7 +38,6 @@ import (
 	"google.golang.org/grpc/status"
 	"sigs.k8s.io/container-object-storage-interface-provisioner-sidecar/pkg/consts"
 
-	v4 "github.com/aws/aws-sdk-go/aws/signer/v4"
 	internalLogger "github.com/dell/cosi-driver/pkg/internal/logger"
 	driver "github.com/dell/cosi-driver/pkg/provisioner/virtualdriver"
 	objectscaleRest "github.com/dell/goobjectscale/pkg/client/rest"
@@ -180,24 +178,6 @@ func New(ctx context.Context, config *config.Objectscale) (*Server, error) {
 		Password: password,
 	}
 
-	handler := request.NamedHandler{
-		Name: iamObjectscale.SDSHandlerName,
-		Fn: func(r *request.Request) {
-			if !objClient.IsAuthenticated() {
-				ctx, cancel := context.WithTimeout(ctx, defaultTimeout)
-				defer cancel()
-
-				err := objClient.Login(ctx, &x509Client)
-				if err != nil {
-					r.Error = err // no return intentional
-				}
-			}
-
-			token := objClient.Token()
-			r.HTTPRequest.Header.Add(iamObjectscale.SDSHeaderName, token)
-		},
-	}
-
 	iamSession, err := session.NewSessionWithOptions(
 		session.Options{
 			Config: aws.Config{
@@ -214,26 +194,17 @@ func New(ctx context.Context, config *config.Objectscale) (*Server, error) {
 		return nil, fmt.Errorf("failed to create new IAM session: %w", err)
 	}
 
-	iamSession.Handlers.Sign.RemoveByName(v4.SignRequestHandler.Name)
-	swapped := iamSession.Handlers.Sign.SwapNamed(handler)
-
-	if !swapped {
-		iamSession.Handlers.Sign.PushFrontNamed(handler)
-	}
-
-	handler2 := request.NamedHandler{
-		Name: iamObjectscale.AccountIDHandlerName,
-		Fn: func(r *request.Request) {
-			r.HTTPRequest.Header.Add(iamObjectscale.AccountIDHeaderName, namespace)
-		},
-	}
-
-	swapped = iamSession.Handlers.Sign.SwapNamed(handler2)
-	if !swapped {
-		iamSession.Handlers.Sign.PushFrontNamed(handler2)
-	}
-
 	iamClient := iam.New(iamSession)
+
+	err = iamObjectscale.InjectAccountIDToIAMClient(iamClient, namespace)
+	if err != nil {
+		return nil, fmt.Errorf("failed to inject account ID to IAM client: %w", err)
+	}
+
+	err = iamObjectscale.InjectTokenToIAMClient(iamClient, &objectscaleAuthUser, x509Client)
+	if err != nil {
+		return nil, fmt.Errorf("failed to inject token to IAM client: %w", err)
+	}
 
 	return &Server{
 		mgmtClient:         mgmtClient,
@@ -438,7 +409,7 @@ func (s *Server) DriverGrantBucketAccess( // nolint:gocognit
 
 	userName := BuildUsername(s.namespace, bucketName)
 
-	userGet, err := s.iamClient.GetUser(&iam.GetUserInput{UserName: &userName})
+	userGet, err := s.iamClient.GetUserWithContext(ctx, &iam.GetUserInput{UserName: &userName})
 	if err != nil {
 		if myAwsErr, ok := err.(awserr.Error); ok {
 			if myAwsErr.Code() != iam.ErrCodeNoSuchEntityException {
@@ -467,7 +438,10 @@ func (s *Server) DriverGrantBucketAccess( // nolint:gocognit
 		}
 	}
 
-	if userGet != nil && *userGet.User.UserName == userName {
+	// The userGet is being set to &iam.GetUserOutput{} in
+	// GetUser function so I don't think wrapping this in additional if is necessary.
+	// Check if IAM user exists.
+	if userGet.User != nil {
 		log.WithFields(log.Fields{
 			"user": userName,
 		}).Warn("user already exists")
@@ -534,8 +508,8 @@ func (s *Server) DriverGrantBucketAccess( // nolint:gocognit
 	}
 
 	// Update policy.
-	awsBucketResourceARN := fmt.Sprintf("arn:aws:s3:%s:%s:%s/*", s.objectScaleID, s.objectStoreID, bucketName)
-	awsPrincipalString := fmt.Sprintf("urn:osc:iam::%s:user/%s", s.namespace, userName)
+	awsBucketResourceARN := BuildResourceString(s.objectScaleID, s.objectStoreID, bucketName)
+	awsPrincipalString := BuildPrincipalString(s.namespace, bucketName)
 	policyRequest.Statement = parsePolicyStatement(
 		ctx, policyRequest.Statement, awsBucketResourceARN, awsPrincipalString,
 	)
@@ -750,7 +724,7 @@ func assembleCredentials(
 	secretsMap[consts.S3SecretAccessKeyID] = *accessKey.AccessKey.AccessKeyId
 	secretsMap[consts.S3SecretAccessSecretKey] = *accessKey.AccessKey.SecretAccessKey
 	secretsMap[consts.S3Endpoint] = s3Endpoint
-
+	secretsMap["bucketName"] = bucketName
 	log.WithFields(log.Fields{
 		"user":        userName,
 		"secretKeyId": *accessKey.AccessKey.AccessKeyId,
@@ -775,4 +749,12 @@ func assembleCredentials(
 
 func BuildUsername(namespace, bucketName string) string {
 	return fmt.Sprintf("%v-user-%v", namespace, bucketName)[:maxUsernameLength]
+}
+
+func BuildResourceString(objectScaleID, objectStoreID, bucketName string) string {
+	return fmt.Sprintf("arn:aws:s3:%s:%s:%s/*", objectScaleID, objectStoreID, bucketName)
+}
+
+func BuildPrincipalString(namespace, bucketName string) string {
+	return fmt.Sprintf("urn:osc:iam::%s:user/%s", namespace, BuildUsername(namespace, bucketName))
 }
