@@ -64,7 +64,7 @@ func (d *Driver) ID() string {
 // DriverCreateBucket is implementation of method from virtualdriver.Driver interface.
 //
 // To forcefully fail it, add parameter with Key "X-TEST/force-fail" and any non-zero value.
-func (d *Driver) DriverCreateBucket(ctx context.Context, req *cosi.DriverCreateBucketRequest) (*cosi.DriverCreateBucketResponse, error) {
+func (d *Driver) DriverCreateBucket(_ context.Context, req *cosi.DriverCreateBucketRequest) (*cosi.DriverCreateBucketResponse, error) {
 	if _, ok := req.Parameters[ForceFail]; ok {
 		return nil, status.Error(codes.Internal, "an unexpected error occurred")
 	}
@@ -77,7 +77,7 @@ func (d *Driver) DriverCreateBucket(ctx context.Context, req *cosi.DriverCreateB
 // DriverDeleteBucket is implementation of method from virtualdriver.Driver interface.
 //
 // To forcefully fail it set BucketId in request to contain string "X-TEST/force-fail".
-func (d *Driver) DriverDeleteBucket(ctx context.Context, req *cosi.DriverDeleteBucketRequest) (*cosi.DriverDeleteBucketResponse, error) {
+func (d *Driver) DriverDeleteBucket(_ context.Context, req *cosi.DriverDeleteBucketRequest) (*cosi.DriverDeleteBucketResponse, error) {
 	if strings.Contains(req.BucketId, ForceFail) {
 		return nil, status.Error(codes.Internal, "an unexpected error occurred")
 	}
@@ -88,7 +88,7 @@ func (d *Driver) DriverDeleteBucket(ctx context.Context, req *cosi.DriverDeleteB
 // DriverGrantBucketAccess is implementation of method from virtualdriver.Driver interface.
 //
 // To forcefully fail it, add parameter with Key "X-TEST/force-fail" and any non-zero value.
-func (d *Driver) DriverGrantBucketAccess(ctx context.Context, req *cosi.DriverGrantBucketAccessRequest) (*cosi.DriverGrantBucketAccessResponse, error) {
+func (d *Driver) DriverGrantBucketAccess(_ context.Context, req *cosi.DriverGrantBucketAccessRequest) (*cosi.DriverGrantBucketAccessResponse, error) {
 	if _, ok := req.Parameters[ForceFail]; ok {
 		return nil, status.Error(codes.Internal, "an unexpected error occurred")
 	}
@@ -110,7 +110,7 @@ func (d *Driver) DriverGrantBucketAccess(ctx context.Context, req *cosi.DriverGr
 // DriverRevokeBucketAccess is implementation of method from virtualdriver.Driver interface.
 //
 // To forcefully fail it set BucketId in request to contain string "X-TEST/force-fail".
-func (d *Driver) DriverRevokeBucketAccess(ctx context.Context, req *cosi.DriverRevokeBucketAccessRequest) (*cosi.DriverRevokeBucketAccessResponse, error) {
+func (d *Driver) DriverRevokeBucketAccess(_ context.Context, req *cosi.DriverRevokeBucketAccessRequest) (*cosi.DriverRevokeBucketAccessResponse, error) {
 	if strings.Contains(req.BucketId, ForceFail) {
 		return nil, status.Error(codes.Internal, "an unexpected error occurred")
 	}

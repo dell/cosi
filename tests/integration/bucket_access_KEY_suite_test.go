@@ -109,7 +109,7 @@ var _ = Describe("Bucket Access KEY", Ordered, Label("key-flow", "objectscale"),
 
 		// STEP: Kubernetes cluster is up and running
 		By("Checking if the cluster is ready")
-		steps.CheckClusterAvailability(ctx, clientset)
+		steps.CheckClusterAvailability(clientset)
 
 		// STEP: ObjectScale platform is installed on the cluster
 		By("Checking if the ObjectScale platform is ready")
@@ -157,11 +157,11 @@ var _ = Describe("Bucket Access KEY", Ordered, Label("key-flow", "objectscale"),
 
 		// STEP: Bucket resource referencing BucketClaim resource "my-bucket-claim" status "bucketReady" is "true"
 		By("Checking if Bucket resource referencing 'my-bucket-claim' status 'bucketReady' is 'true'")
-		steps.CheckBucketStatus(ctx, bucketClient, myBucket, true)
+		steps.CheckBucketStatus(myBucket, true)
 
 		// STEP: Bucket resource referencing BucketClaim resource "my-bucket" bucketID is not empty
 		By("Checking if Bucket resource 'my-bucket' status 'bucketID' is not empty")
-		steps.CheckBucketID(ctx, bucketClient, myBucket)
+		steps.CheckBucketID(myBucket)
 
 		DeferCleanup(func() {
 			// Cleanup for background

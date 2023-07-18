@@ -103,7 +103,7 @@ func New(ctx context.Context, config *config.ConfigSchemaJson, socket, name stri
 }
 
 // starts the gRPC server and returns a channel that will be closed when it is ready.
-func (s *Driver) start(ctx context.Context) <-chan struct{} {
+func (s *Driver) start(_ context.Context) <-chan struct{} {
 	ready := make(chan struct{})
 	go func() {
 		close(ready)

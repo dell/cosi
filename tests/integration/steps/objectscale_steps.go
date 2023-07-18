@@ -66,7 +66,7 @@ func CheckBucketDeletionInObjectStore(ctx ginkgo.SpecContext, objectscale *objec
 }
 
 // CheckBucketAccessFromSecret Check if Bucket can be accessed with data from specified secret.
-func CheckBucketAccessFromSecret(objectscale *objectscaleRest.ClientSet, bucket *v1alpha1.Bucket, secretName string) {
+func CheckBucketAccessFromSecret(_ *objectscaleRest.ClientSet, _ *v1alpha1.Bucket, _ string) {
 	// TODO: Implementation goes here
 	ginkgo.Fail("UNIMPLEMENTED")
 }

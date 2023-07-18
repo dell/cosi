@@ -127,7 +127,7 @@ func (fakeIAM *FakeIAMClient) ListAccessKeys(input *iam.ListAccessKeysInput) (*i
 }
 
 // CreateUserWithContext returns CreateUserOutput or error depending on provided CreateUserInput.UserName.
-func (fakeIAM *FakeIAMClient) CreateUserWithContext(_ aws.Context, input *iam.CreateUserInput, opts ...request.Option) (*iam.CreateUserOutput, error) {
+func (fakeIAM *FakeIAMClient) CreateUserWithContext(_ aws.Context, input *iam.CreateUserInput, _ ...request.Option) (*iam.CreateUserOutput, error) {
 	// I think this needs to be refactored to user options because
 	// user name is generated from namesapce and bucket name and this here is not ergonomic to use in tests
 	switch *input.UserName {

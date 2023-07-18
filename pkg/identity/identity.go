@@ -40,8 +40,8 @@ func New(provisioner string) *Server {
 }
 
 // DriverGetInfo returns name of server.
-func (srv *Server) DriverGetInfo(ctx context.Context,
-	req *cosi.DriverGetInfoRequest,
+func (srv *Server) DriverGetInfo(_ context.Context,
+	_ *cosi.DriverGetInfoRequest,
 ) (*cosi.DriverGetInfoResponse, error) {
 	if srv.name == "" {
 		log.Error("driver name is empty")

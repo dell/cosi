@@ -92,7 +92,7 @@ var _ = Describe("Bucket Creation", Ordered, Label("create", "objectscale"), fun
 
 		// STEP: Kubernetes cluster is up and running
 		By("Checking if the cluster is ready")
-		steps.CheckClusterAvailability(ctx, clientset)
+		steps.CheckClusterAvailability(clientset)
 
 		// STEP: ObjectScale platform is installed on the cluster
 		By("Checking if the ObjectScale platform is ready")
@@ -146,11 +146,11 @@ var _ = Describe("Bucket Creation", Ordered, Label("create", "objectscale"), fun
 
 		// STEP: Bucket resource referencing BucketClaim resource "bucket-claim-valid" status "bucketReady" is "true" and bucketID is not empty
 		By("checking the status 'bucketReady' of Bucket resource referencing BucketClaim resource 'bucket-claim-valid'  is 'true'")
-		steps.CheckBucketStatus(ctx, bucketClient, validBucket, true)
+		steps.CheckBucketStatus(validBucket, true)
 
 		// STEP: Bucket resource referencing BucketClaim resource "bucket-claim-valid" status "bucketID" is not empty
 		By("checking the status 'bucketID' of Bucket resource referencing BucketClaim resource 'bucket-claim-valid' is not empty")
-		steps.CheckBucketID(ctx, bucketClient, validBucket)
+		steps.CheckBucketID(validBucket)
 
 		DeferCleanup(func(ctx SpecContext) {
 			steps.DeleteBucketClaimResource(ctx, bucketClient, validBucketClaim)

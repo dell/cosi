@@ -26,7 +26,7 @@ import (
 )
 
 // CheckClusterAvailability Ensure that Kubernetes cluster is available.
-func CheckClusterAvailability(ctx ginkgo.SpecContext, clientset *kubernetes.Clientset) {
+func CheckClusterAvailability(clientset *kubernetes.Clientset) {
 	value, err := clientset.ServerVersion()
 	gomega.Expect(err).ToNot(gomega.HaveOccurred())
 	gomega.Expect(value).ToNot(gomega.BeNil())
@@ -51,7 +51,7 @@ func DeleteNamespace(ctx ginkgo.SpecContext, clientset *kubernetes.Clientset, na
 }
 
 // CheckBucketClassSpec Ensure that specification of custom resource "my-bucket-class" is correct.
-func CheckBucketClassSpec(clientset *kubernetes.Clientset, bucketClassSpec v1alpha1.BucketClaimSpec) {
+func CheckBucketClassSpec(_ *kubernetes.Clientset, _ v1alpha1.BucketClaimSpec) {
 	// TODO: Implementation goes here
 	ginkgo.Fail("UNIMPLEMENTED")
 }
