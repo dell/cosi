@@ -184,7 +184,7 @@ var _ = Describe("Bucket Access Revoke", Ordered, Label("revoke", "objectscale")
 
 		// STEP: Policy "${policy}" on ObjectScale platform is created
 		By("Creating Policy '${policy}' on ObjectScale platform")
-		steps.CreatePolicy(ctx, objectscale, policy.PolicyDocument{}, myBucket)
+		steps.CreatePolicy(ctx, objectscale, policy.Document{}, myBucket)
 
 		// STEP: BucketAccess resource "my-bucket-access" in namespace "namespace-1" status "accountID" is "${accountID}"
 		By("Checking if BucketAccess resource 'my-bucket-access' in namespace 'namespace-1' status 'accountID' is '${accountID}'")
