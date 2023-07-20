@@ -172,7 +172,6 @@ var _ = Describe("Bucket Deletion", Ordered, Label("delete", "objectscale"), fun
 		steps.CheckBucketDeletionInObjectStore(ctx, objectscale, Namespace, deleteBucket)
 
 		DeferCleanup(func(ctx context.Context) {
-			// steps.DeleteBucket(ctx, objectscale, Namespace, deleteBucket)
 			steps.DeleteBucketClassResource(ctx, bucketClient, bucketClassDelete)
 		})
 	})
@@ -220,11 +219,7 @@ var _ = Describe("Bucket Deletion", Ordered, Label("delete", "objectscale"), fun
 		steps.CheckBucketResourceInObjectStore(ctx, objectscale, Namespace, retainBucket)
 
 		DeferCleanup(func(ctx context.Context) {
-			// steps.DeleteBucket(ctx, objectscale, Namespace, retainBucket)
+			steps.DeleteBucketClassResource(ctx, bucketClient, bucketClassRetain)
 		})
-	})
-
-	AfterEach(func(ctx context.Context) {
-		steps.DeleteBucketClassResource(ctx, bucketClient, bucketClassRetain)
 	})
 })

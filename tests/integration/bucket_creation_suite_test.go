@@ -152,7 +152,7 @@ var _ = Describe("Bucket Creation", Ordered, Label("create", "objectscale"), fun
 
 		DeferCleanup(func(ctx context.Context) {
 			steps.DeleteBucketClaimResource(ctx, bucketClient, validBucketClaim)
-			steps.DeleteBucket(ctx, objectscale, Namespace, validBucket)
+			// steps.DeleteBucket(ctx, objectscale, Namespace, validBucket)
 		})
 	})
 
