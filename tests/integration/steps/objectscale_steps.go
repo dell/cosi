@@ -19,7 +19,6 @@ import (
 	objscl "github.com/dell/cosi-driver/pkg/provisioner/objectscale"
 	"github.com/dell/cosi-driver/pkg/provisioner/policy"
 	objectscaleRest "github.com/dell/goobjectscale/pkg/client/rest"
-	ginkgo "github.com/onsi/ginkgo/v2"
 	gomega "github.com/onsi/gomega"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/client-go/kubernetes"
@@ -50,8 +49,6 @@ func CheckBucketResourceInObjectStore(ctx context.Context, objectscale *objectsc
 	objectScaleBucket, err := objectscale.Buckets().Get(ctx, id, param)
 	gomega.Expect(err).ToNot(gomega.HaveOccurred())
 	gomega.Expect(objectScaleBucket).NotTo(gomega.BeNil())
-
-	ginkgo.GinkgoWriter.Printf("Bucket in Objectstore: %+v\n", objectScaleBucket)
 }
 
 // CheckBucketDeletionInObjectStore Function for checking Bucket deletion in ObjectStore.
@@ -60,14 +57,9 @@ func CheckBucketDeletionInObjectStore(ctx context.Context, objectscale *objectsc
 	param["namespace"] = namespace
 	id := strings.SplitN(bucket.Status.BucketID, "-", 2)[1] // nolint:gomnd
 
-	err := retry(ctx, attempts, sleep, func() error {
-		var err error
-		objectScaleBucket, err := objectscale.Buckets().Get(ctx, id, param)
-		ginkgo.GinkgoWriter.Printf("Bucket in Objectstore: %+v\n", objectScaleBucket)
-		return err
-	})
-
+	objectScaleBucket, err := objectscale.Buckets().Get(ctx, id, param)
 	gomega.Expect(err).To(gomega.HaveOccurred())
+	gomega.Expect(objectScaleBucket).To(gomega.BeNil())
 }
 
 // CheckBucketAccessFromSecret Check if Bucket can be accessed with data from specified secret.

@@ -15,6 +15,8 @@
 package main_test
 
 import (
+	"context"
+
 	"sigs.k8s.io/container-object-storage-interface-api/apis/objectstorage/v1alpha1"
 
 	. "github.com/onsi/ginkgo/v2"
@@ -35,7 +37,7 @@ var _ = Describe("Bucket Deletion", Ordered, Label("delete", "objectscale"), fun
 	)
 
 	// Background
-	BeforeEach(func(ctx SpecContext) {
+	BeforeEach(func(ctx context.Context) {
 		// Initialize variables
 		bucketClassDelete = &v1alpha1.BucketClass{
 			TypeMeta: metav1.TypeMeta{
@@ -43,7 +45,7 @@ var _ = Describe("Bucket Deletion", Ordered, Label("delete", "objectscale"), fun
 				APIVersion: "objectstorage.k8s.io/v1alpha1",
 			},
 			ObjectMeta: metav1.ObjectMeta{
-				Name: "my-bucket-class-delete",
+				Name: "deletion-bucket-class-delete",
 			},
 			DeletionPolicy: v1alpha1.DeletionPolicyDelete,
 			DriverName:     "cosi.dellemc.com",
@@ -57,7 +59,7 @@ var _ = Describe("Bucket Deletion", Ordered, Label("delete", "objectscale"), fun
 				APIVersion: "objectstorage.k8s.io/v1alpha1",
 			},
 			ObjectMeta: metav1.ObjectMeta{
-				Name: "my-bucket-class-retain",
+				Name: "deletion-bucket-class-retain",
 			},
 			DeletionPolicy: v1alpha1.DeletionPolicyRetain,
 			DriverName:     "cosi.dellemc.com",
@@ -71,11 +73,11 @@ var _ = Describe("Bucket Deletion", Ordered, Label("delete", "objectscale"), fun
 				APIVersion: "objectstorage.k8s.io/v1alpha1",
 			},
 			ObjectMeta: metav1.ObjectMeta{
-				Name:      "my-bucket-claim-delete",
-				Namespace: "namespace-1",
+				Name:      "deletion-bucket-claim-delete",
+				Namespace: "deletion-namespace",
 			},
 			Spec: v1alpha1.BucketClaimSpec{
-				BucketClassName: "my-bucket-class-delete",
+				BucketClassName: "deletion-bucket-class-delete",
 				Protocols: []v1alpha1.Protocol{
 					v1alpha1.ProtocolS3,
 				},
@@ -87,11 +89,11 @@ var _ = Describe("Bucket Deletion", Ordered, Label("delete", "objectscale"), fun
 				APIVersion: "objectstorage.k8s.io/v1alpha1",
 			},
 			ObjectMeta: metav1.ObjectMeta{
-				Name:      "my-bucket-claim-retain",
-				Namespace: "namespace-1",
+				Name:      "deletion-bucket-claim-retain",
+				Namespace: "deletion-namespace",
 			},
 			Spec: v1alpha1.BucketClaimSpec{
-				BucketClassName: "my-bucket-class-retain",
+				BucketClassName: "deletion-bucket-class-retain",
 				Protocols: []v1alpha1.Protocol{
 					v1alpha1.ProtocolS3,
 				},
@@ -114,9 +116,9 @@ var _ = Describe("Bucket Deletion", Ordered, Label("delete", "objectscale"), fun
 		By("Checking if namespace 'cosi-driver' is created")
 		steps.CreateNamespace(ctx, clientset, "cosi-driver")
 
-		// STEP: Kubernetes namespace "namespace-1" is created
-		By("Checking if namespace 'namespace-1' is created")
-		steps.CreateNamespace(ctx, clientset, "namespace-1")
+		// STEP: Kubernetes namespace "deletion-namespace" is created
+		By("Checking if namespace 'deletion-namespace' is created")
+		steps.CreateNamespace(ctx, clientset, "deletion-namespace")
 
 		// STEP: COSI controller "objectstorage-controller" is installed in namespace "default"
 		By("Checking if COSI controller objectstorage-controller is installed in namespace 'default'")
@@ -125,14 +127,10 @@ var _ = Describe("Bucket Deletion", Ordered, Label("delete", "objectscale"), fun
 		// STEP: COSI driver "cosi-driver" is installed in namespace "cosi-driver"
 		By("Checking if COSI driver 'cosi-driver' is installed in namespace 'cosi-driver'")
 		steps.CheckCOSIDriverInstallation(ctx, clientset, "cosi-driver", "cosi-driver")
-
-		DeferCleanup(func() {
-			// Cleanup for background
-		})
 	})
 
 	// STEP: Scenario: BucketClaim deletion with deletionPolicy set to "delete"
-	It("Delets the bucket when deletionPolicy is set to 'delete'", func(ctx SpecContext) {
+	It("Deletes the bucket when deletionPolicy is set to 'delete'", func(ctx context.Context) {
 		// STEP: BucketClass resource is created from specification "my-bucket-class-delete"
 		By("creating a BucketClass resource from specification 'my-bucket-class-delete'")
 		steps.CreateBucketClassResource(ctx, bucketClient, bucketClassDelete)
@@ -149,8 +147,8 @@ var _ = Describe("Bucket Deletion", Ordered, Label("delete", "objectscale"), fun
 		By("checking if Bucket resource referencing BucketClaim resource 'bucket-claim-delete' is created in ObjectStore '${objectstoreName}'")
 		steps.CheckBucketResourceInObjectStore(ctx, objectscale, Namespace, deleteBucket)
 
-		// STEP: BucketClaim resource "bucket-claim-delete" in namespace "namespace-1" status "bucketReady" is "true"
-		By("checking if the status 'bucketReady' of BucketClaim resource 'bucket-claim-delete' in namespace 'namespace-1' is 'true'")
+		// STEP: BucketClaim resource "bucket-claim-delete" in namespace "deletion-namespace" status "bucketReady" is "true"
+		By("checking if the status 'bucketReady' of BucketClaim resource 'bucket-claim-delete' in namespace 'deletion-namespace' is 'true'")
 		steps.CheckBucketClaimStatus(ctx, bucketClient, bucketClaimDelete, true)
 
 		// STEP: Bucket resource referencing BucketClaim resource "bucket-claim-delete" status "bucketReady" is "true" and bucketID is not empty
@@ -165,21 +163,22 @@ var _ = Describe("Bucket Deletion", Ordered, Label("delete", "objectscale"), fun
 		By("checking if Bucket referencing BucketClaim resource 'my-bucket-claim-retain' is available in ObjectStore '${objectstoreName}'")
 		steps.CheckBucketResourceInObjectStore(ctx, objectscale, Namespace, deleteBucket)
 
-		// STEP: BucketClaim resource "my-bucket-claim-delete" is deleted in namespace "namespace-1"
-		By("deleting BucketClaim resource 'my-bucket-claim-delete' in namespace 'namespace-1'")
+		// STEP: BucketClaim resource "my-bucket-claim-delete" is deleted in namespace "deletion-namespace"
+		By("deleting BucketClaim resource 'my-bucket-claim-delete' in namespace 'deletion-namespace'")
 		steps.DeleteBucketClaimResource(ctx, bucketClient, bucketClaimDelete)
 
 		// STEP: Bucket referencing BucketClaim resource "my-bucket-claim-delete" is deleted in ObjectStore "${objectstoreName}"
 		By("checking if Bucket referencing BucketClaim resource 'my-bucket-claim-delete' is deleted in ObjectStore '${objectstoreName}'")
 		steps.CheckBucketDeletionInObjectStore(ctx, objectscale, Namespace, deleteBucket)
 
-		DeferCleanup(func(ctx SpecContext) {
+		DeferCleanup(func(ctx context.Context) {
+			// steps.DeleteBucket(ctx, objectscale, Namespace, deleteBucket)
 			steps.DeleteBucketClassResource(ctx, bucketClient, bucketClassDelete)
 		})
 	})
 
 	// STEP: Scenario: BucketClaim deletion with deletionPolicy set to "retain"
-	It("Does not delete the bucket when deletionPolicy is set to 'retain'", func(ctx SpecContext) {
+	It("Does not delete the bucket when deletionPolicy is set to 'retain'", func(ctx context.Context) {
 		// STEP: BucketClass resource is created from specification "my-bucket-class-retain"
 		By("creating a BucketClass resource from specification 'my-bucket-class-retain'")
 		steps.CreateBucketClassResource(ctx, bucketClient, bucketClassRetain)
@@ -196,8 +195,8 @@ var _ = Describe("Bucket Deletion", Ordered, Label("delete", "objectscale"), fun
 		By("checking if Bucket resource referencing BucketClaim resource 'bucket-claim-retain' is created in ObjectStore '${objectstoreName}'")
 		steps.CheckBucketResourceInObjectStore(ctx, objectscale, Namespace, retainBucket)
 
-		// STEP: BucketClaim resource "bucket-claim-retain" in namespace "namespace-1" status "bucketReady" is "true"
-		By("checking if the status 'bucketReady' of BucketClaim resource 'bucket-claim-retain' in namespace 'namespace-1' is 'true'")
+		// STEP: BucketClaim resource "bucket-claim-retain" in namespace "deletion-namespace" status "bucketReady" is "true"
+		By("checking if the status 'bucketReady' of BucketClaim resource 'bucket-claim-retain' in namespace 'deletion-namespace' is 'true'")
 		steps.CheckBucketClaimStatus(ctx, bucketClient, bucketClaimRetain, true)
 
 		// STEP: Bucket resource referencing BucketClaim resource "bucket-claim-retain" status "bucketReady" is "true" and bucketID is not empty
@@ -212,18 +211,20 @@ var _ = Describe("Bucket Deletion", Ordered, Label("delete", "objectscale"), fun
 		By("checking if Bucket referencing BucketClaim resource 'my-bucket-claim-retain' is available in ObjectStore '${objectstoreId}'")
 		steps.CheckBucketResourceInObjectStore(ctx, objectscale, Namespace, retainBucket)
 
-		// STEP: BucketClaim resource "my-bucket-claim-retain" is deleted in namespace "namespace-1"
-		By("deleting BucketClaim resource 'my-bucket-claim-retain' in namespace 'namespace-1'")
+		// STEP: BucketClaim resource "my-bucket-claim-retain" is deleted in namespace "deletion-namespace"
+		By("deleting BucketClaim resource 'my-bucket-claim-retain' in namespace 'deletion-namespace'")
 		steps.DeleteBucketClaimResource(ctx, bucketClient, bucketClaimRetain)
 
 		// STEP: Bucket referencing BucketClaim resource "my-bucket-claim-retain" is available in ObjectStore "${objectstoreId}"
 		By("checking if Bucket referencing BucketClaim resource 'my-bucket-claim-retain' is available in ObjectStore '${objectstoreId}'")
 		steps.CheckBucketResourceInObjectStore(ctx, objectscale, Namespace, retainBucket)
-	})
-	AfterAll(func() {
-		DeferCleanup(func(ctx SpecContext) {
-			steps.DeleteBucket(ctx, objectscale, Namespace, retainBucket)
-			steps.DeleteBucketClassResource(ctx, bucketClient, bucketClassRetain)
+
+		DeferCleanup(func(ctx context.Context) {
+			// steps.DeleteBucket(ctx, objectscale, Namespace, retainBucket)
 		})
+	})
+
+	AfterEach(func(ctx context.Context) {
+		steps.DeleteBucketClassResource(ctx, bucketClient, bucketClassRetain)
 	})
 })

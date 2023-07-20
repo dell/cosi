@@ -15,6 +15,8 @@
 package main_test
 
 import (
+	"context"
+
 	"sigs.k8s.io/container-object-storage-interface-api/apis/objectstorage/v1alpha1"
 
 	. "github.com/onsi/ginkgo/v2"
@@ -37,7 +39,7 @@ var _ = Describe("Bucket Access Revoke", Ordered, Label("revoke", "objectscale")
 	)
 
 	// Background
-	BeforeEach(func(ctx SpecContext) {
+	BeforeEach(func(ctx context.Context) {
 		// Initialize variables
 		myBucketClass = &v1alpha1.BucketClass{
 			TypeMeta: metav1.TypeMeta{
@@ -198,7 +200,7 @@ var _ = Describe("Bucket Access Revoke", Ordered, Label("revoke", "objectscale")
 	})
 
 	// STEP: Revoke access to bucket
-	It("Successfully revokes access to bucket", func(ctx SpecContext) {
+	It("Successfully revokes access to bucket", func(ctx context.Context) {
 		// STEP: BucketAccess resource "my-bucket-access" in namespace "namespace-1" is deleted
 		By("Deleting the BucketAccess 'my-bucket-access'")
 		steps.DeleteBucketAccessResource(ctx, bucketClient, myBucketAccess)
@@ -216,7 +218,7 @@ var _ = Describe("Bucket Access Revoke", Ordered, Label("revoke", "objectscale")
 		})
 	})
 	AfterAll(func() {
-		DeferCleanup(func(ctx SpecContext) {
+		DeferCleanup(func(ctx context.Context) {
 			steps.DeleteBucketAccessResource(ctx, bucketClient, myBucketAccess)
 			steps.DeleteBucketClassResource(ctx, bucketClient, myBucketClass)
 			steps.DeleteBucketClaimResource(ctx, bucketClient, myBucketClaim)
