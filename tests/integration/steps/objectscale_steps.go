@@ -63,7 +63,7 @@ func CheckBucketDeletionInObjectStore(ctx context.Context, objectscale *objectsc
 }
 
 // CreatePolicy Function for creating policy in ObjectScale.
-func CreatePolicy(ctx context.Context, objectscale *objectscaleRest.ClientSet, policy policy.PolicyDocument, myBucket *v1alpha1.Bucket) {
+func CreatePolicy(ctx context.Context, objectscale *objectscaleRest.ClientSet, policy policy.Document, myBucket *v1alpha1.Bucket) {
 	policyString, err := policy.ToJSON()
 	gomega.Expect(err).ToNot(gomega.HaveOccurred())
 	err = objectscale.Buckets().UpdatePolicy(ctx, myBucket.Name, policyString, nil)
@@ -71,7 +71,7 @@ func CreatePolicy(ctx context.Context, objectscale *objectscaleRest.ClientSet, p
 }
 
 // CheckPolicy checks  if policy exists in ObjectScale.
-func CheckPolicy(ctx context.Context, objectscale *objectscaleRest.ClientSet, expectedPolicyDocument policy.PolicyDocument, myBucket *v1alpha1.Bucket, namespace string) {
+func CheckPolicy(ctx context.Context, objectscale *objectscaleRest.ClientSet, expectedPolicyDocument policy.Document, myBucket *v1alpha1.Bucket, namespace string) {
 	param := make(map[string]string)
 	param["namespace"] = namespace
 	actualPolicy, err := objectscale.Buckets().GetPolicy(ctx, myBucket.Name, param)
@@ -112,8 +112,6 @@ func CheckUser(ctx context.Context, iamClient *iam.IAM, user string, namespace s
 	gomega.Expect(err).ToNot(gomega.HaveOccurred())
 	gomega.Expect(userOut.User).NotTo(gomega.BeNil())
 	gomega.Expect(*(userOut.User.UserName)).To(gomega.Equal(username))
-	// The line below was here when I got here. I'm not sure why.
-	// gomega.Expect(userOut.User.Arn).To(gomega.Or(gomega.BeNil(), gomega.BeEmpty()))
 }
 
 // DeleteUser Function for deleting user from ObjectScale.

@@ -31,15 +31,6 @@ func CreateBucketClaimResource(ctx context.Context, bucketClient *bucketclientse
 
 // DeleteBucketClaimResource Function for deleting BucketClaim resource.
 func DeleteBucketClaimResource(ctx context.Context, bucketClient *bucketclientset.Clientset, bucketClaim *v1alpha1.BucketClaim) {
-	// first delete finalizers
-	// bucketClaim, err := bucketClient.ObjectstorageV1alpha1().BucketClaims(bucketClaim.Namespace).Get(ctx, bucketClaim.Name, v1.GetOptions{})
-	// gomega.Expect(err).ToNot(gomega.HaveOccurred())
-
-	// bucketClaim.Finalizers = []string{}
-
-	// _, err = bucketClient.ObjectstorageV1alpha1().BucketClaims(bucketClaim.Namespace).Update(ctx, bucketClaim, v1.UpdateOptions{})
-	// gomega.Expect(err).ToNot(gomega.HaveOccurred())
-
 	err := bucketClient.ObjectstorageV1alpha1().BucketClaims(bucketClaim.Namespace).Delete(ctx, bucketClaim.Name, v1.DeleteOptions{})
 	gomega.Expect(err).ToNot(gomega.HaveOccurred())
 }
@@ -53,12 +44,12 @@ func CheckBucketClaimStatus(ctx context.Context, bucketClient *bucketclientset.C
 }
 
 // CheckBucketStatus Function for checking Bucket status.
-func CheckBucketStatus(ctx context.Context, bucketClient *bucketclientset.Clientset, bucket *v1alpha1.Bucket, status bool) {
+func CheckBucketStatus(bucket *v1alpha1.Bucket, status bool) {
 	gomega.Expect(bucket.Status.BucketReady).To(gomega.Equal(status))
 }
 
 // CheckBucketID Function for checking bucketID.
-func CheckBucketID(ctx context.Context, bucketClient *bucketclientset.Clientset, bucket *v1alpha1.Bucket) {
+func CheckBucketID(bucket *v1alpha1.Bucket) {
 	gomega.Expect(bucket.Status.BucketID).NotTo(gomega.Or(gomega.BeEmpty(), gomega.BeNil()))
 }
 

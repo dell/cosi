@@ -14,14 +14,14 @@ type PrincipalEntry struct {
 	AWS []string
 }
 
-type PolicyDocument struct {
+type Document struct {
 	Version   string
-	Id        string
+	ID        string
 	Statement []StatementEntry
 }
 
 // To JSON to string.
-func (p *PolicyDocument) ToJSON() (string, error) {
+func (p *Document) ToJSON() (string, error) {
 	b, err := json.Marshal(p)
 	if err != nil {
 		return "", err
@@ -31,23 +31,22 @@ func (p *PolicyDocument) ToJSON() (string, error) {
 }
 
 // JSON to PolicyDocument.
-func NewFromJSON(jsonString string) (PolicyDocument, error) {
-	p := PolicyDocument{}
-	err := json.Unmarshal([]byte(jsonString), &p)
-	if err != nil {
-		return PolicyDocument{}, err
+func NewFromJSON(jsonString string) (Document, error) {
+	p := Document{}
+	if err := json.Unmarshal([]byte(jsonString), &p); err != nil {
+		return Document{}, err
 	}
 
 	return p, nil
 }
 
 // Check equality between documents.
-func (p *PolicyDocument) Equal(p2 *PolicyDocument) bool {
+func (p *Document) Equal(p2 *Document) bool {
 	if p.Version != p2.Version {
 		return false
 	}
 
-	if p.Id != p2.Id {
+	if p.ID != p2.ID {
 		return false
 	}
 

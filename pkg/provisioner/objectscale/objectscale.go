@@ -87,7 +87,7 @@ var _ driver.Driver = (*Server)(nil)
 
 // New initializes server based on the config file.
 // TODO: verify if emptiness verification can be moved to a separate function.
-func New(ctx context.Context, config *config.Objectscale) (*Server, error) {
+func New(config *config.Objectscale) (*Server, error) {
 	id := config.Id
 	if id == "" {
 		return nil, errors.New("empty driver id")
@@ -411,7 +411,8 @@ func (s *Server) DriverGrantBucketAccess( // nolint:gocognit
 
 	userGet, err := s.iamClient.GetUserWithContext(ctx, &iam.GetUserInput{UserName: &userName})
 	if err != nil {
-		if myAwsErr, ok := err.(awserr.Error); ok {
+		var myAwsErr awserr.Error
+		if errors.As(err, &myAwsErr) {
 			if myAwsErr.Code() != iam.ErrCodeNoSuchEntityException {
 				errMsg := errors.New("failed to check for user existence")
 				log.WithFields(log.Fields{
@@ -725,6 +726,7 @@ func assembleCredentials(
 	secretsMap[consts.S3SecretAccessSecretKey] = *accessKey.AccessKey.SecretAccessKey
 	secretsMap[consts.S3Endpoint] = s3Endpoint
 	secretsMap["bucketName"] = bucketName
+
 	log.WithFields(log.Fields{
 		"user":        userName,
 		"secretKeyId": *accessKey.AccessKey.AccessKeyId,

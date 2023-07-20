@@ -1,4 +1,4 @@
-//Copyright © 2023 Dell Inc. or its subsidiaries. All Rights Reserved.
+// Copyright © 2023 Dell Inc. or its subsidiaries. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -48,6 +48,7 @@ const (
 )
 
 func TestIntegration(t *testing.T) {
+	t.Parallel()
 	RegisterFailHandler(Fail)
 	RunSpecs(t, "COSI Integration Suite")
 }
@@ -63,7 +64,7 @@ var _ = BeforeSuite(func() {
 	kubeConfig, exists := os.LookupEnv("KUBECONFIG")
 	Expect(exists).To(BeTrue())
 	cfg, err := clientcmd.BuildConfigFromFlags("", kubeConfig)
-	Expect(err).To(BeNil())
+	Expect(err).ToNot(HaveOccurred())
 
 	objectscaleGateway, exists := os.LookupEnv("OBJECTSCALE_GATEWAY")
 	Expect(exists).To(BeTrue())
@@ -85,15 +86,15 @@ var _ = BeforeSuite(func() {
 
 	// k8s clientset
 	clientset, err = kubernetes.NewForConfig(cfg)
-	Expect(err).To(BeNil())
+	Expect(err).ToNot(HaveOccurred())
 
 	// Bucket clientset
 	bucketClient, err = bucketclientset.NewForConfig(cfg)
-	Expect(err).To(BeNil())
+	Expect(err).ToNot(HaveOccurred())
 
 	// ObjectScale clientset
 	transport := &http.Transport{
-		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+		TLSClientConfig: &tls.Config{InsecureSkipVerify: true}, // nolint:gosec
 	}
 	unsafeClient := &http.Client{Transport: transport}
 
@@ -121,7 +122,7 @@ var _ = BeforeSuite(func() {
 		Region:   &region,
 		HTTPClient: &http.Client{
 			Transport: &http.Transport{
-				TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+				TLSClientConfig: &tls.Config{InsecureSkipVerify: true}, // nolint:gosec
 			},
 		},
 	})
@@ -129,8 +130,10 @@ var _ = BeforeSuite(func() {
 	Expect(err).ToNot(HaveOccurred())
 
 	IAMClient = iam.New(iamSession)
-	objectscaleIAM.InjectTokenToIAMClient(IAMClient, &objectscaleAuthUser, *unsafeClient)
-	objectscaleIAM.InjectAccountIDToIAMClient(IAMClient, Namespace)
+	err = objectscaleIAM.InjectTokenToIAMClient(IAMClient, &objectscaleAuthUser, *unsafeClient)
+	Expect(err).ToNot(HaveOccurred())
+	err = objectscaleIAM.InjectAccountIDToIAMClient(IAMClient, Namespace)
+	Expect(err).ToNot(HaveOccurred())
 })
 
 var _ = AfterSuite(func() {

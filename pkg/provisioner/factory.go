@@ -13,7 +13,6 @@
 package provisioner
 
 import (
-	"context"
 	"errors"
 
 	driver "github.com/dell/cosi-driver/pkg/provisioner/virtualdriver"
@@ -25,7 +24,7 @@ import (
 
 // NewVirtualDriver is factory function, that takes configuration, validates if it is correct, and
 // returns correct driver.
-func NewVirtualDriver(ctx context.Context, config config.Configuration) (driver.Driver, error) {
+func NewVirtualDriver(config config.Configuration) (driver.Driver, error) {
 	// in the future, here can be more than one
 	if !exactlyOne(config.Objectscale) {
 		return nil, errors.New("expected exactly one object storage platform in configuration")
@@ -33,7 +32,7 @@ func NewVirtualDriver(ctx context.Context, config config.Configuration) (driver.
 
 	if config.Objectscale != nil {
 		log.Debug("ObjectScale config created")
-		return objectscale.New(ctx, config.Objectscale)
+		return objectscale.New(config.Objectscale)
 	}
 
 	panic("programming error")

@@ -34,7 +34,6 @@ import (
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	cosiapi "sigs.k8s.io/container-object-storage-interface-api/apis"
-	bucketclientset "sigs.k8s.io/container-object-storage-interface-api/client/clientset/versioned"
 )
 
 const (
@@ -50,7 +49,7 @@ const (
 )
 
 // CheckClusterAvailability Ensure that Kubernetes cluster is available.
-func CheckClusterAvailability(ctx context.Context, clientset *kubernetes.Clientset) {
+func CheckClusterAvailability(clientset *kubernetes.Clientset) {
 	value, err := clientset.ServerVersion()
 	gomega.Expect(err).ToNot(gomega.HaveOccurred())
 	gomega.Expect(value).ToNot(gomega.BeNil())
@@ -88,6 +87,7 @@ func CheckSecret(ctx context.Context, clientset *kubernetes.Clientset, secret *v
 	gomega.Expect(sec.Name).To(gomega.Equal(secret.Name))
 	gomega.Expect(sec.Namespace).To(gomega.Equal(secret.Namespace))
 	gomega.Expect(sec.Data).NotTo(gomega.Or(gomega.BeNil(), gomega.BeEmpty()))
+
 	return sec
 }
 
@@ -147,11 +147,12 @@ func GetAccessKeyID(ctx context.Context, clientset *kubernetes.Clientset, validS
 	gomega.Expect(err).ToNot(gomega.HaveOccurred())
 
 	accessKey := secretData.Spec.S3.AccessKeyID
+
 	return accessKey
 }
 
 // CheckBucketAccessFromSecret Check if Bucket can be accessed with data from specified secret.
-func CheckBucketAccessFromSecret(ctx context.Context, clientset *kubernetes.Clientset, bucketClient *bucketclientset.Clientset, validSecret *v1.Secret, myBucket *v1alpha1.Bucket) {
+func CheckBucketAccessFromSecret(ctx context.Context, clientset *kubernetes.Clientset, validSecret *v1.Secret) {
 	secret, err := clientset.CoreV1().Secrets(validSecret.Namespace).Get(ctx, validSecret.Name, metav1.GetOptions{})
 	gomega.Expect(err).ToNot(gomega.HaveOccurred())
 
@@ -159,13 +160,14 @@ func CheckBucketAccessFromSecret(ctx context.Context, clientset *kubernetes.Clie
 
 	err = json.Unmarshal(secret.Data[bucketInfo], &secretData)
 	gomega.Expect(err).ToNot(gomega.HaveOccurred())
+
 	accessKey := secretData.Spec.S3.AccessKeyID
 	secretKey := secretData.Spec.S3.AccessSecretKey
 	s3Endpoint := secretData.Spec.S3.Endpoint
 	bucketName := secretData.Spec.BucketName
 
 	x509Client := http.Client{Transport: &http.Transport{
-		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+		TLSClientConfig: &tls.Config{InsecureSkipVerify: true}, // nolint:gosec
 	}}
 
 	s3Config := &aws.Config{

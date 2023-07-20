@@ -102,7 +102,7 @@ var _ = Describe("Bucket Deletion", Ordered, Label("delete", "objectscale"), fun
 
 		// STEP: Kubernetes cluster is up and running
 		By("Checking if the cluster is ready")
-		steps.CheckClusterAvailability(ctx, clientset)
+		steps.CheckClusterAvailability(clientset)
 
 		// STEP: ObjectScale platform is installed on the cluster
 		By("Checking if the ObjectScale platform is ready")
@@ -153,11 +153,11 @@ var _ = Describe("Bucket Deletion", Ordered, Label("delete", "objectscale"), fun
 
 		// STEP: Bucket resource referencing BucketClaim resource "bucket-claim-delete" status "bucketReady" is "true" and bucketID is not empty
 		By("checking the status 'bucketReady' of Bucket resource referencing BucketClaim resource 'bucket-claim-delete'  is 'true'")
-		steps.CheckBucketStatus(ctx, bucketClient, deleteBucket, true)
+		steps.CheckBucketStatus(deleteBucket, true)
 
 		// STEP: Bucket resource referencing BucketClaim resource "bucket-claim-delete" status "bucketID" is not empty
 		By("checking the status 'bucketID' of Bucket resource referencing BucketClaim resource 'bucket-claim-delete' is not empty")
-		steps.CheckBucketID(ctx, bucketClient, deleteBucket)
+		steps.CheckBucketID(deleteBucket)
 
 		// STEP: Bucket referencing BucketClaim resource "my-bucket-claim-retain" is available in ObjectStore "${objectstoreName}"
 		By("checking if Bucket referencing BucketClaim resource 'my-bucket-claim-retain' is available in ObjectStore '${objectstoreName}'")
@@ -200,11 +200,11 @@ var _ = Describe("Bucket Deletion", Ordered, Label("delete", "objectscale"), fun
 
 		// STEP: Bucket resource referencing BucketClaim resource "bucket-claim-retain" status "bucketReady" is "true" and bucketID is not empty
 		By("checking the status 'bucketReady' of Bucket resource referencing BucketClaim resource 'bucket-claim-retain'  is 'true'")
-		steps.CheckBucketStatus(ctx, bucketClient, retainBucket, true)
+		steps.CheckBucketStatus(retainBucket, true)
 
 		// STEP: Bucket resource referencing BucketClaim resource "bucket-claim-retain" status "bucketID" is not empty
 		By("checking the ID of Bucket resource referencing BucketClaim resource 'bucket-claim-retain' is not empty")
-		steps.CheckBucketID(ctx, bucketClient, retainBucket)
+		steps.CheckBucketID(retainBucket)
 
 		// STEP: Bucket referencing BucketClaim resource "my-bucket-claim-retain" is available in ObjectStore "${objectstoreId}"
 		By("checking if Bucket referencing BucketClaim resource 'my-bucket-claim-retain' is available in ObjectStore '${objectstoreId}'")

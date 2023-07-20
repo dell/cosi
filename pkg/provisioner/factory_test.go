@@ -20,7 +20,6 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	"github.com/dell/cosi-driver/pkg/config"
-	"github.com/dell/cosi-driver/pkg/internal/testcontext"
 )
 
 // TestExactlyOne tests the exactlyOne function
@@ -123,20 +122,14 @@ func TestNewVirtualDriver(t *testing.T) {
 }
 
 func testValidConfig(t *testing.T) {
-	ctx, cancel := testcontext.New(t)
-	defer cancel()
-
-	vd, err := NewVirtualDriver(ctx, validConfig)
+	vd, err := NewVirtualDriver(validConfig)
 	assert.NotNil(t, vd)
 	assert.NoError(t, err)
 	assert.Equal(t, validConfig.Objectscale.Id, vd.ID())
 }
 
 func testInvalidConfig(t *testing.T) {
-	ctx, cancel := testcontext.New(t)
-	defer cancel()
-
-	vd, err := NewVirtualDriver(ctx, invalidConfig)
+	vd, err := NewVirtualDriver(invalidConfig)
 	assert.Nil(t, vd)
 	assert.Error(t, err)
 	assert.Regexp(t, expectedOne, err.Error())
