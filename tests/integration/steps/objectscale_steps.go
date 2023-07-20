@@ -62,12 +62,6 @@ func CheckBucketDeletionInObjectStore(ctx context.Context, objectscale *objectsc
 	gomega.Expect(objectScaleBucket).To(gomega.BeNil())
 }
 
-// CheckBucketAccessFromSecret Check if Bucket can be accessed with data from specified secret.
-func CheckBucketAccessFromSecret(_ *objectscaleRest.ClientSet, _ *v1alpha1.Bucket, _ string) {
-	// TODO: Implementation goes here
-	ginkgo.Fail("UNIMPLEMENTED")
-}
-
 // CreatePolicy Function for creating policy in ObjectScale.
 func CreatePolicy(ctx context.Context, objectscale *objectscaleRest.ClientSet, policy policy.PolicyDocument, myBucket *v1alpha1.Bucket) {
 	policyString, err := policy.ToJSON()
