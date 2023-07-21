@@ -750,7 +750,12 @@ func assembleCredentials(
 }
 
 func BuildUsername(namespace, bucketName string) string {
-	return fmt.Sprintf("%v-user-%v", namespace, bucketName)[:maxUsernameLength]
+	raw := fmt.Sprintf("%v-user-%v", namespace, bucketName)
+	if len(raw) > maxUsernameLength {
+		raw = raw[:maxUsernameLength]
+	}
+
+	return raw
 }
 
 func BuildResourceString(objectScaleID, objectStoreID, bucketName string) string {
