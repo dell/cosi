@@ -87,7 +87,7 @@ func CreateBucketAccessResource(ctx context.Context, bucketClient *bucketclients
 
 // DeleteBucketAccessResource Function for deleting BucketAccess resource.
 func DeleteBucketAccessResource(ctx context.Context, bucketClient *bucketclientset.Clientset, bucketAccess *v1alpha1.BucketAccess) {
-	// Not sure why but ginkgo context is meesing with kubernetes client here creating error:
+	// Not sure why but ginkgo context is messing with kubernetes client here creating error:
 	// client rate limiter Wait returned error: context canceled
 	// So new context it is.
 	bucketAccess, err := bucketClient.ObjectstorageV1alpha1().BucketAccesses(bucketAccess.Namespace).Get(ctx, bucketAccess.Name, v1.GetOptions{})

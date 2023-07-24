@@ -57,7 +57,7 @@ const (
 	bucketVersion = "2012-10-17"
 	// allowEffect is used when updating the bucket policy, in order to grant permissions to user.
 	allowEffect = "Allow"
-
+	// maxUsernameLength is used to trim the username to specific length.
 	maxUsernameLength = 64
 )
 
