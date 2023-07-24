@@ -75,7 +75,7 @@ func testValidAccessGranting(t *testing.T) {
 				UserName: aws.String("namespace-user-valid"), // This mocked response is based on `namesapce` from server and bucketId from request
 			},
 		}, nil).Once()
-	IAMClient.On("GetUser", mock.Anything).Return(nil, nil).Once()
+	IAMClient.On("GetUserWithContext", mock.Anything, mock.Anything).Return(&iam.GetUserOutput{}, nil).Once()
 	IAMClient.On("CreateAccessKey", mock.Anything).Return(&iam.CreateAccessKeyOutput{AccessKey: &iam.AccessKey{AccessKeyId: aws.String("acc"), SecretAccessKey: aws.String("sec")}}, nil).Once()
 
 	server := Server{
@@ -116,7 +116,7 @@ func testInvalidAccessKeyCreation(t *testing.T) {
 				UserName: aws.String("namespace-user-valid"), // This mocked response is based on `namesapce` from server and bucketId from request
 			},
 		}, nil).Once()
-	IAMClient.On("GetUser", mock.Anything).Return(nil, nil).Once()
+	IAMClient.On("GetUserWithContext", mock.Anything, mock.Anything).Return(&iam.GetUserOutput{}, nil).Once()
 	IAMClient.On("CreateAccessKey", mock.Anything).Return(nil, errors.New("failed to create access key")).Once()
 
 	server := Server{
@@ -151,7 +151,7 @@ func testInvalidUserCreation(t *testing.T) {
 
 	// That's how we can mock the objectscale IAM api client
 	IAMClient := iamfaketoo.NewIAMAPI(t)
-	IAMClient.On("GetUser", mock.Anything).Return(nil, nil).Once()
+	IAMClient.On("GetUserWithContext", mock.Anything, mock.Anything).Return(&iam.GetUserOutput{}, nil).Once()
 	IAMClient.On("CreateUserWithContext", mock.Anything, mock.Anything).Return(nil, errors.New("failed to create user")).Once()
 
 	server := Server{
@@ -186,7 +186,7 @@ func testInvalidUserRetrieval(t *testing.T) {
 
 	// That's how we can mock the objectscale IAM api client
 	IAMClient := iamfaketoo.NewIAMAPI(t)
-	IAMClient.On("GetUser", mock.Anything).Return(nil, errors.New("failed to retrieve user")).Once()
+	IAMClient.On("GetUserWithContext", mock.Anything, mock.Anything).Return(&iam.GetUserOutput{}, errors.New("failed to retrieve user")).Once()
 
 	server := Server{
 		mgmtClient: fake.NewClientSet(&model.Bucket{ // That's how we can mock the objectscale bucket api client
@@ -220,7 +220,7 @@ func testInvalidBucketPolicyUpdate(t *testing.T) {
 
 	// That's how we can mock the objectscale IAM api client
 	IAMClient := iamfaketoo.NewIAMAPI(t)
-	IAMClient.On("GetUser", mock.Anything).Return(nil, nil).Once()
+	IAMClient.On("GetUserWithContext", mock.Anything, mock.Anything).Return(&iam.GetUserOutput{}, nil).Once()
 	IAMClient.On("CreateUserWithContext", mock.Anything, mock.Anything).Return(
 		&iam.CreateUserOutput{
 			User: &iam.User{
@@ -410,9 +410,11 @@ func testBucketNotFound(t *testing.T) {
 	ctx, cancel := testcontext.New(t)
 	defer cancel()
 
+	IAMClient := iamfaketoo.NewIAMAPI(t)
+
 	server := Server{
-		mgmtClient:    fake.NewClientSet(),     // That's how we can mock the objectscale bucket api client
-		iamClient:     iamfaketoo.NewIAMAPI(t), // Inject mocked IAM client
+		mgmtClient:    fake.NewClientSet(), // That's how we can mock the objectscale bucket api client
+		iamClient:     IAMClient,           // Inject mocked IAM client
 		namespace:     testNamespace,
 		backendID:     testID,
 		objectScaleID: objectScaleID,
@@ -436,7 +438,7 @@ func testValidButUserAlreadyExists(t *testing.T) {
 	defer cancel()
 
 	IAMClient := iamfaketoo.NewIAMAPI(t)
-	IAMClient.On("GetUser", mock.Anything).Return(&iam.GetUserOutput{
+	IAMClient.On("GetUserWithContext", mock.Anything, mock.Anything).Return(&iam.GetUserOutput{
 		User: &iam.User{
 			UserName: aws.String("namespace-user-valid"),
 		},
@@ -481,7 +483,7 @@ func testFailToGetExistingPolicy(t *testing.T) {
 				UserName: aws.String("namespace-user-valid"), // This mocked response is based on `namesapce` from server and bucketId from request
 			},
 		}, nil).Once()
-	IAMClient.On("GetUser", mock.Anything).Return(nil, nil).Once()
+	IAMClient.On("GetUserWithContext", mock.Anything, mock.Anything).Return(&iam.GetUserOutput{}, nil).Once()
 
 	server := Server{
 		mgmtClient: fake.NewClientSet(&model.Bucket{ // That's how we can mock the objectscale bucket api client
@@ -521,7 +523,7 @@ func testInvalidPolicyJSON(t *testing.T) {
 				UserName: aws.String("namespace-user-valid"), // This mocked response is based on `namesapce` from server and bucketId from request
 			},
 		}, nil).Once()
-	IAMClient.On("GetUser", mock.Anything).Return(nil, nil).Once()
+	IAMClient.On("GetUserWithContext", mock.Anything, mock.Anything).Return(&iam.GetUserOutput{}, nil).Once()
 
 	server := Server{
 		mgmtClient: fake.NewClientSet(&model.Bucket{ // That's how we can mock the objectscale bucket api client

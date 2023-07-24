@@ -1,4 +1,4 @@
-//Copyright © 2023 Dell Inc. or its subsidiaries. All Rights Reserved.
+// Copyright © 2023 Dell Inc. or its subsidiaries. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -28,26 +28,29 @@ import (
 
 	objectscaleRest "github.com/dell/goobjectscale/pkg/client/rest"
 	objectscaleClient "github.com/dell/goobjectscale/pkg/client/rest/client"
+	objectscaleIAM "github.com/dell/goobjectscale/pkg/client/rest/iam"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	bucketclientset "sigs.k8s.io/container-object-storage-interface-api/client/clientset/versioned"
 )
 
-// place for storing global variables like specs
+// place for storing global variables like specs.
 var (
 	clientset     *kubernetes.Clientset
 	bucketClient  *bucketclientset.Clientset
 	objectscale   *objectscaleRest.ClientSet
-	iamClient     *iam.IAM
-	namespace     string
-	objectstoreID string
+	IAMClient     *iam.IAM
+	Namespace     string
+	ObjectstoreID string
+	ObjectscaleID string
 )
 
 const (
-	driverID = "e2e.test.objectscale"
+	DriverID = "e2e.test.objectscale"
 )
 
 func TestIntegration(t *testing.T) {
+	t.Parallel()
 	RegisterFailHandler(Fail)
 	RunSpecs(t, "COSI Integration Suite")
 }
@@ -57,13 +60,13 @@ var _ = BeforeSuite(func() {
 	// Load environment variables
 
 	exists := false
-	namespace, exists = os.LookupEnv("OBJECTSCALE_NAMESPACE")
+	Namespace, exists = os.LookupEnv("OBJECTSCALE_NAMESPACE")
 	Expect(exists).To(BeTrue())
 
 	kubeConfig, exists := os.LookupEnv("KUBECONFIG")
 	Expect(exists).To(BeTrue())
 	cfg, err := clientcmd.BuildConfigFromFlags("", kubeConfig)
-	Expect(err).To(BeNil())
+	Expect(err).ToNot(HaveOccurred())
 
 	objectscaleGateway, exists := os.LookupEnv("OBJECTSCALE_GATEWAY")
 	Expect(exists).To(BeTrue())
@@ -77,20 +80,23 @@ var _ = BeforeSuite(func() {
 	objectscalePassword, exists := os.LookupEnv("OBJECTSCALE_PASSWORD")
 	Expect(exists).To(BeTrue())
 
-	objectstoreID, exists = os.LookupEnv("OBJECTSCALE_OBJECTSTORE_ID")
+	ObjectstoreID, exists = os.LookupEnv("OBJECTSCALE_OBJECTSTORE_ID")
+	Expect(exists).To(BeTrue())
+
+	ObjectscaleID, exists = os.LookupEnv("OBJECTSCALE_ID")
 	Expect(exists).To(BeTrue())
 
 	// k8s clientset
 	clientset, err = kubernetes.NewForConfig(cfg)
-	Expect(err).To(BeNil())
+	Expect(err).ToNot(HaveOccurred())
 
 	// Bucket clientset
 	bucketClient, err = bucketclientset.NewForConfig(cfg)
-	Expect(err).To(BeNil())
+	Expect(err).ToNot(HaveOccurred())
 
 	// ObjectScale clientset
 	transport := &http.Transport{
-		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+		TLSClientConfig: &tls.Config{InsecureSkipVerify: true}, // nolint:gosec
 	}
 	unsafeClient := &http.Client{Transport: transport}
 
@@ -110,7 +116,7 @@ var _ = BeforeSuite(func() {
 
 	// IAM clientset
 	var (
-		endpoint = objectscaleGateway
+		endpoint = objectscaleGateway + "/iam"
 		region   = "us-west-2"
 	)
 	iamSession, err := session.NewSession(&aws.Config{
@@ -118,12 +124,18 @@ var _ = BeforeSuite(func() {
 		Region:   &region,
 		HTTPClient: &http.Client{
 			Transport: &http.Transport{
-				TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+				TLSClientConfig: &tls.Config{InsecureSkipVerify: true}, // nolint:gosec
 			},
 		},
 	})
-	Expect(err).To(BeNil())
-	iamClient = iam.New(iamSession)
+
+	Expect(err).ToNot(HaveOccurred())
+
+	IAMClient = iam.New(iamSession)
+	err = objectscaleIAM.InjectTokenToIAMClient(IAMClient, &objectscaleAuthUser, *unsafeClient)
+	Expect(err).ToNot(HaveOccurred())
+	err = objectscaleIAM.InjectAccountIDToIAMClient(IAMClient, Namespace)
+	Expect(err).ToNot(HaveOccurred())
 })
 
 var _ = AfterSuite(func() {

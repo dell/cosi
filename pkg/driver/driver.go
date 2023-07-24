@@ -46,14 +46,14 @@ type Driver struct {
 }
 
 // New creates a new driver for COSI API with identity and provisioner servers.
-func New(ctx context.Context, config *config.ConfigSchemaJson, socket, name string) (*Driver, error) {
+func New(config *config.ConfigSchemaJson, socket, name string) (*Driver, error) {
 	// Setup identity server and provisioner server
 	identityServer := identity.New(name)
 
 	driverset := &provisioner.Driverset{}
 
 	for _, cfg := range config.Connections {
-		driver, err := provisioner.NewVirtualDriver(ctx, cfg)
+		driver, err := provisioner.NewVirtualDriver(cfg)
 		if err != nil {
 			return nil, fmt.Errorf("failed to validate provided object storage platform connection: %w", err)
 		}
@@ -121,7 +121,7 @@ func (s *Driver) start(_ context.Context) <-chan struct{} {
 // Await for context if you want the thread you are running this in to block.
 func Run(ctx context.Context, config *config.ConfigSchemaJson, socket, name string) (<-chan struct{}, error) {
 	// Create new driver
-	driver, err := New(ctx, config, socket, name)
+	driver, err := New(config, socket, name)
 	if err != nil {
 		log.WithFields(log.Fields{
 			"error": err,
@@ -138,7 +138,7 @@ func Run(ctx context.Context, config *config.ConfigSchemaJson, socket, name stri
 // RunBlocking is a blocking version of Run.
 func RunBlocking(ctx context.Context, config *config.ConfigSchemaJson, socket, name string) error {
 	// Create new driver
-	driver, err := New(ctx, config, socket, name)
+	driver, err := New(config, socket, name)
 	if err != nil {
 		log.WithFields(log.Fields{
 			"error": err,

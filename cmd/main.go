@@ -230,6 +230,13 @@ func setLogFormatter(logFormat string) {
 			DisableColors:   true, // never use colors in logs, even if the terminal supports it
 		})
 
+	case "pretty":
+		log.SetFormatter(&log.TextFormatter{
+			TimestampFormat: timestampFormat,
+			FullTimestamp:   false, // do not print full timestamps
+			DisableColors:   false, // do not disable colors
+		})
+
 	default:
 		log.SetFormatter(&log.TextFormatter{
 			TimestampFormat: timestampFormat,

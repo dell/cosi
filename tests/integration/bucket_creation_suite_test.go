@@ -15,6 +15,8 @@
 package main_test
 
 import (
+	"context"
+
 	"sigs.k8s.io/container-object-storage-interface-api/apis/objectstorage/v1alpha1"
 
 	. "github.com/onsi/ginkgo/v2"
@@ -35,7 +37,7 @@ var _ = Describe("Bucket Creation", Ordered, Label("create", "objectscale"), fun
 	)
 
 	// Background
-	BeforeEach(func(ctx SpecContext) {
+	BeforeEach(func(ctx context.Context) {
 		// Initialize variables
 		myBucketClass = &v1alpha1.BucketClass{
 			TypeMeta: metav1.TypeMeta{
@@ -43,12 +45,12 @@ var _ = Describe("Bucket Creation", Ordered, Label("create", "objectscale"), fun
 				APIVersion: "objectstorage.k8s.io/v1alpha1",
 			},
 			ObjectMeta: metav1.ObjectMeta{
-				Name: "my-bucket-class",
+				Name: "creation-bucket-class",
 			},
 			DeletionPolicy: v1alpha1.DeletionPolicyDelete,
 			DriverName:     "cosi.dellemc.com",
 			Parameters: map[string]string{
-				"id": driverID,
+				"id": DriverID,
 			},
 		}
 		validBucketClaim = &v1alpha1.BucketClaim{
@@ -57,11 +59,11 @@ var _ = Describe("Bucket Creation", Ordered, Label("create", "objectscale"), fun
 				APIVersion: "objectstorage.k8s.io/v1alpha1",
 			},
 			ObjectMeta: metav1.ObjectMeta{
-				Name:      "bucket-claim-valid",
-				Namespace: "namespace-1",
+				Name:      "creation-bucket-claim-valid",
+				Namespace: "creation-namespace",
 			},
 			Spec: v1alpha1.BucketClaimSpec{
-				BucketClassName: "my-bucket-class",
+				BucketClassName: "creation-bucket-class",
 				Protocols: []v1alpha1.Protocol{
 					v1alpha1.ProtocolS3,
 				},
@@ -73,11 +75,11 @@ var _ = Describe("Bucket Creation", Ordered, Label("create", "objectscale"), fun
 				APIVersion: "objectstorage.k8s.io/v1alpha1",
 			},
 			ObjectMeta: metav1.ObjectMeta{
-				Name:      "bucket-claim-invalid",
-				Namespace: "namespace-1",
+				Name:      "creation-bucket-claim-invalid",
+				Namespace: "creation-namespace",
 			},
 			Spec: v1alpha1.BucketClaimSpec{
-				BucketClassName: "bucket-class-invalid",
+				BucketClassName: "creation-bucket-class-invalid",
 				Protocols: []v1alpha1.Protocol{
 					v1alpha1.ProtocolS3,
 				},
@@ -100,15 +102,15 @@ var _ = Describe("Bucket Creation", Ordered, Label("create", "objectscale"), fun
 
 		// STEP: ObjectStore "${objectstoreId}" is created
 		By("Checking if the ObjectStore '${objectstoreId}' is created")
-		steps.CheckObjectStoreExists(ctx, objectscale, objectstoreID)
+		steps.CheckObjectStoreExists(ctx, objectscale, ObjectstoreID)
 
 		// STEP: Kubernetes namespace "cosi-driver" is created
 		By("Checking if namespace 'cosi-driver' is created")
 		steps.CreateNamespace(ctx, clientset, "cosi-driver")
 
-		// STEP: Kubernetes namespace "namespace-1" is created
-		By("Checking if namespace 'namespace-1' is created")
-		steps.CreateNamespace(ctx, clientset, "namespace-1")
+		// STEP: Kubernetes namespace "creation-namespace" is created
+		By("Checking if namespace 'creation-namespace' is created")
+		steps.CreateNamespace(ctx, clientset, "creation-namespace")
 
 		// STEP: COSI controller "objectstorage-controller" is installed in namespace "default"
 		By("Checking if COSI controller 'objectstorage-controller' is installed in namespace 'default'")
@@ -119,16 +121,12 @@ var _ = Describe("Bucket Creation", Ordered, Label("create", "objectscale"), fun
 		steps.CheckCOSIDriverInstallation(ctx, clientset, "cosi-driver", "cosi-driver")
 
 		// STEP: BucketClass resource is created from specification "my-bucket-class"
-		By("Creating the BucketClass 'my-bucket-class' is created")
+		By("Creating the BucketClass 'my-bucket-class'")
 		steps.CreateBucketClassResource(ctx, bucketClient, myBucketClass)
-
-		DeferCleanup(func() {
-			// Cleanup for background
-		})
 	})
 
 	// STEP: Scenario: Successfull bucket creation
-	It("Successfully creates bucket", func(ctx SpecContext) {
+	It("Successfully creates bucket", func(ctx context.Context) {
 		// STEP: BucketClaim resource is created from specification "bucket-claim-valid"
 		By("creating a BucketClaim resource from specification 'bucket-claim-valid'")
 		steps.CreateBucketClaimResource(ctx, bucketClient, validBucketClaim)
@@ -138,10 +136,10 @@ var _ = Describe("Bucket Creation", Ordered, Label("create", "objectscale"), fun
 		validBucket = steps.GetBucketResource(ctx, bucketClient, validBucketClaim)
 		// STEP: Bucket resource referencing BucketClaim resource "bucket-claim-valid" is created in ObjectStore "${objectstoreName}""
 		By("checking if Bucket resource referencing BucketClaim resource 'bucket-claim-valid' is created in ObjectStore '${objectstoreName}'")
-		steps.CheckBucketResourceInObjectStore(ctx, objectscale, namespace, validBucket)
+		steps.CheckBucketResourceInObjectStore(ctx, objectscale, Namespace, validBucket)
 
-		// STEP: BucketClaim resource "bucket-claim-valid" in namespace "namespace-1" status "bucketReady" is "true"
-		By("checking if the status 'bucketReady' of BucketClaim resource 'bucket-claim-valid' in namespace 'namespace-1' is 'true'")
+		// STEP: BucketClaim resource "bucket-claim-valid" in namespace "creation-namespace" status "bucketReady" is "true"
+		By("checking if the status 'bucketReady' of BucketClaim resource 'bucket-claim-valid' in namespace 'creation-namespace' is 'true'")
 		steps.CheckBucketClaimStatus(ctx, bucketClient, validBucketClaim, true)
 
 		// STEP: Bucket resource referencing BucketClaim resource "bucket-claim-valid" status "bucketReady" is "true" and bucketID is not empty
@@ -152,13 +150,14 @@ var _ = Describe("Bucket Creation", Ordered, Label("create", "objectscale"), fun
 		By("checking the status 'bucketID' of Bucket resource referencing BucketClaim resource 'bucket-claim-valid' is not empty")
 		steps.CheckBucketID(validBucket)
 
-		DeferCleanup(func(ctx SpecContext) {
+		DeferCleanup(func(ctx context.Context) {
 			steps.DeleteBucketClaimResource(ctx, bucketClient, validBucketClaim)
+			// steps.DeleteBucket(ctx, objectscale, Namespace, validBucket)
 		})
 	})
 
 	// STEP: Scenario: Unsuccessfull bucket creation
-	It("Unsuccessfully tries to create bucket", func(ctx SpecContext) {
+	It("Unsuccessfully tries to create bucket", func(ctx context.Context) {
 		// STEP: BucketClaim resource is created from specification "bucket-claim-invalid"
 		By("creating a BucketClaim resource from specification 'bucket-claim-invalid'")
 		steps.CreateBucketClaimResource(ctx, bucketClient, invalidBucketClaim)
@@ -171,8 +170,8 @@ var _ = Describe("Bucket Creation", Ordered, Label("create", "objectscale"), fun
 		By("checking if Bucket resource referencing BucketClaim resource 'bucket-claim-invalid' is not created in ObjectStore '${objectstoreName}'")
 		steps.CheckBucketNotInObjectStore(ctx, objectscale, invalidBucketClaim)
 
-		// STEP: BucketClaim resource "bucket-claim-invalid" in namespace "namespace-1" status "bucketReady" is "false"
-		By("checking if the status 'bucketReady' of BucketClaim resource 'bucket-claim-invalid' in namespace 'namespace-1' is 'false'")
+		// STEP: BucketClaim resource "bucket-claim-invalid" in namespace "creation-namespace" status "bucketReady" is "false"
+		By("checking if the status 'bucketReady' of BucketClaim resource 'bucket-claim-invalid' in namespace 'creation-namespace' is 'false'")
 		steps.CheckBucketClaimStatus(ctx, bucketClient, invalidBucketClaim, false)
 
 		// NOTE: commented for now until changes introduced to provisioner sidecar
@@ -180,12 +179,13 @@ var _ = Describe("Bucket Creation", Ordered, Label("create", "objectscale"), fun
 		// By("checking if the BucketClaim events contains an error: 'Cannot create Bucket: BucketClass does not exist'")
 		// steps.CheckBucketClaimEvents(ctx, clientset, invalidBucketClaim, myEvent)
 
-		DeferCleanup(func(ctx SpecContext) {
+		DeferCleanup(func(ctx context.Context) {
 			steps.DeleteBucketClaimResource(ctx, bucketClient, invalidBucketClaim)
 		})
 	})
-	AfterAll(func() {
-		DeferCleanup(func(ctx SpecContext) {
+
+	AfterEach(func() {
+		DeferCleanup(func(ctx context.Context) {
 			steps.DeleteBucketClassResource(ctx, bucketClient, myBucketClass)
 		})
 	})

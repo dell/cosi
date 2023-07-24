@@ -167,10 +167,10 @@ func testDriverNew(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			ctx, cancel := testcontext.New(t)
+			_, cancel := testcontext.New(t)
 			defer cancel()
 
-			driver, err := New(ctx, tc.config)
+			driver, err := New(tc.config)
 			switch tc.result {
 			case ok:
 				assert.NoError(t, err)

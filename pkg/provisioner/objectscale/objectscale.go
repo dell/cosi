@@ -24,11 +24,12 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/request"
+	"github.com/aws/aws-sdk-go/aws/awserr"
+	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/session"
-	v4 "github.com/aws/aws-sdk-go/aws/signer/v4"
 	"github.com/aws/aws-sdk-go/service/iam"
 	"github.com/aws/aws-sdk-go/service/iam/iamiface"
+	"github.com/bombsimon/logrusr/v4"
 	"github.com/dell/goobjectscale/pkg/client/api"
 	"github.com/dell/goobjectscale/pkg/client/model"
 	"github.com/google/uuid"
@@ -37,6 +38,7 @@ import (
 	"google.golang.org/grpc/status"
 	"sigs.k8s.io/container-object-storage-interface-provisioner-sidecar/pkg/consts"
 
+	internalLogger "github.com/dell/cosi-driver/pkg/internal/logger"
 	driver "github.com/dell/cosi-driver/pkg/provisioner/virtualdriver"
 	objectscaleRest "github.com/dell/goobjectscale/pkg/client/rest"
 	objectscaleClient "github.com/dell/goobjectscale/pkg/client/rest/client"
@@ -55,6 +57,8 @@ const (
 	bucketVersion = "2012-10-17"
 	// allowEffect is used when updating the bucket policy, in order to grant permissions to user.
 	allowEffect = "Allow"
+	// maxUsernameLength is used to trim the username to specific length.
+	maxUsernameLength = 64
 )
 
 // defaultTimeout is default call length before context is getting canceled.
@@ -83,7 +87,7 @@ var _ driver.Driver = (*Server)(nil)
 
 // New initializes server based on the config file.
 // TODO: verify if emptiness verification can be moved to a separate function.
-func New(ctx context.Context, config *config.Objectscale) (*Server, error) {
+func New(config *config.Objectscale) (*Server, error) {
 	id := config.Id
 	if id == "" {
 		return nil, errors.New("empty driver id")
@@ -152,6 +156,8 @@ func New(ctx context.Context, config *config.Objectscale) (*Server, error) {
 		return nil, fmt.Errorf("initialization of transport failed: %w", err)
 	}
 
+	x509Client := http.Client{Transport: transport}
+
 	objectscaleAuthUser := objectscaleClient.AuthUser{
 		Gateway:  objectscaleGateway,
 		Username: username,
@@ -161,71 +167,44 @@ func New(ctx context.Context, config *config.Objectscale) (*Server, error) {
 		&objectscaleClient.Simple{
 			Endpoint:       objectstoreGateway,
 			Authenticator:  &objectscaleAuthUser,
-			HTTPClient:     &http.Client{Transport: transport},
+			HTTPClient:     &x509Client,
 			OverrideHeader: false,
 		},
 	)
 
-	x509Client := *http.DefaultClient
 	objClient := objectscaleClient.AuthUser{
 		Gateway:  objectscaleGateway,
 		Username: username,
 		Password: password,
 	}
 
-	handler := request.NamedHandler{
-		Name: iamObjectscale.SDSHandlerName,
-		Fn: func(r *request.Request) {
-			if !objClient.IsAuthenticated() {
-				ctx, cancel := context.WithTimeout(ctx, defaultTimeout)
-				defer cancel()
-
-				err := objClient.Login(ctx, &x509Client)
-				if err != nil {
-					r.Error = err // no return intentional
-				}
-			}
-
-			token := objClient.Token()
-			r.HTTPRequest.Header.Add(iamObjectscale.SDSHeaderName, token)
-		},
-	}
-
 	iamSession, err := session.NewSessionWithOptions(
 		session.Options{
 			Config: aws.Config{
-				Endpoint:                      &objectstoreGateway,
-				Region:                        region,
 				CredentialsChainVerboseErrors: aws.Bool(true),
+				Credentials:                   credentials.AnonymousCredentials,
+				Endpoint:                      aws.String(objectscaleGateway + "/iam"),
+				Region:                        region,
 				HTTPClient:                    &x509Client,
+				Logger:                        internalLogger.New(logrusr.New(log.StandardLogger())),
 			},
 		},
 	)
-
-	iamSession.Handlers.Sign.RemoveByName(v4.SignRequestHandler.Name)
-	swapped := iamSession.Handlers.Sign.SwapNamed(handler)
-
-	if !swapped {
-		iamSession.Handlers.Sign.PushFrontNamed(handler)
-	}
-
-	handler2 := request.NamedHandler{
-		Name: iamObjectscale.AccountIDHandlerName,
-		Fn: func(r *request.Request) {
-			r.HTTPRequest.Header.Add(iamObjectscale.AccountIDHeaderName, namespace)
-		},
-	}
-
-	swapped = iamSession.Handlers.Sign.SwapNamed(handler2)
-	if !swapped {
-		iamSession.Handlers.Sign.PushFrontNamed(handler2)
-	}
-
 	if err != nil {
 		return nil, fmt.Errorf("failed to create new IAM session: %w", err)
 	}
 
 	iamClient := iam.New(iamSession)
+
+	err = iamObjectscale.InjectAccountIDToIAMClient(iamClient, namespace)
+	if err != nil {
+		return nil, fmt.Errorf("failed to inject account ID to IAM client: %w", err)
+	}
+
+	err = iamObjectscale.InjectTokenToIAMClient(iamClient, &objectscaleAuthUser, x509Client)
+	if err != nil {
+		return nil, fmt.Errorf("failed to inject token to IAM client: %w", err)
+	}
 
 	return &Server{
 		mgmtClient:         mgmtClient,
@@ -428,23 +407,42 @@ func (s *Server) DriverGrantBucketAccess( // nolint:gocognit
 		return nil, status.Error(codes.NotFound, "bucket not found")
 	}
 
-	userName := fmt.Sprintf("%v-user-%v", s.namespace, bucketName)
+	userName := BuildUsername(s.namespace, bucketName)
 
-	userGet, err := s.iamClient.GetUser(&iam.GetUserInput{UserName: &userName})
-	if err != nil && err.Error() != iam.ErrCodeNoSuchEntityException {
-		errMsg := errors.New("failed to check for user existence")
-		log.WithFields(log.Fields{
-			"user":  userName,
-			"error": err,
-		}).Error(errMsg.Error())
+	userGet, err := s.iamClient.GetUserWithContext(ctx, &iam.GetUserInput{UserName: &userName})
+	if err != nil {
+		var myAwsErr awserr.Error
+		if errors.As(err, &myAwsErr) {
+			if myAwsErr.Code() != iam.ErrCodeNoSuchEntityException {
+				errMsg := errors.New("failed to check for user existence")
+				log.WithFields(log.Fields{
+					"user":  userName,
+					"error": myAwsErr,
+				}).Error(errMsg.Error())
 
-		span.RecordError(err)
-		span.SetStatus(otelCodes.Error, errMsg.Error())
+				span.RecordError(myAwsErr)
+				span.SetStatus(otelCodes.Error, errMsg.Error())
 
-		return nil, status.Error(codes.Internal, "failed to check for user existence")
+				return nil, status.Error(codes.Internal, errMsg.Error())
+			}
+		} else {
+			errMsg := errors.New("failed to check for user existence")
+			log.WithFields(log.Fields{
+				"user":  userName,
+				"error": err,
+			}).Error(errMsg.Error())
+
+			span.RecordError(err)
+			span.SetStatus(otelCodes.Error, errMsg.Error())
+
+			return nil, status.Error(codes.Internal, errMsg.Error())
+		}
 	}
 
-	if userGet != nil && *userGet.User.UserName == userName {
+	// The userGet is being set to &iam.GetUserOutput{} in
+	// GetUser function so I don't think wrapping this in additional if is necessary.
+	// Check if IAM user exists.
+	if userGet.User != nil {
 		log.WithFields(log.Fields{
 			"user": userName,
 		}).Warn("user already exists")
@@ -511,8 +509,8 @@ func (s *Server) DriverGrantBucketAccess( // nolint:gocognit
 	}
 
 	// Update policy.
-	awsBucketResourceARN := fmt.Sprintf("arn:aws:s3:%s:%s:%s/*", s.objectScaleID, s.objectStoreID, bucketName)
-	awsPrincipalString := fmt.Sprintf("urn:osc:iam::%s:user/%s", s.namespace, userName)
+	awsBucketResourceARN := BuildResourceString(s.objectScaleID, s.objectStoreID, bucketName)
+	awsPrincipalString := BuildPrincipalString(s.namespace, bucketName)
 	policyRequest.Statement = parsePolicyStatement(
 		ctx, policyRequest.Statement, awsBucketResourceARN, awsPrincipalString,
 	)
@@ -727,6 +725,7 @@ func assembleCredentials(
 	secretsMap[consts.S3SecretAccessKeyID] = *accessKey.AccessKey.AccessKeyId
 	secretsMap[consts.S3SecretAccessSecretKey] = *accessKey.AccessKey.SecretAccessKey
 	secretsMap[consts.S3Endpoint] = s3Endpoint
+	secretsMap["bucketName"] = bucketName
 
 	log.WithFields(log.Fields{
 		"user":        userName,
@@ -748,4 +747,21 @@ func assembleCredentials(
 	span.AddEvent("access to the bucket for user successfully granted")
 
 	return credentials
+}
+
+func BuildUsername(namespace, bucketName string) string {
+	raw := fmt.Sprintf("%v-user-%v", namespace, bucketName)
+	if len(raw) > maxUsernameLength {
+		raw = raw[:maxUsernameLength]
+	}
+
+	return raw
+}
+
+func BuildResourceString(objectScaleID, objectStoreID, bucketName string) string {
+	return fmt.Sprintf("arn:aws:s3:%s:%s:%s/*", objectScaleID, objectStoreID, bucketName)
+}
+
+func BuildPrincipalString(namespace, bucketName string) string {
+	return fmt.Sprintf("urn:osc:iam::%s:user/%s", namespace, BuildUsername(namespace, bucketName))
 }

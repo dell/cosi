@@ -13,9 +13,8 @@
 package steps
 
 import (
+	"context"
 	"time"
-
-	ginkgo "github.com/onsi/ginkgo/v2"
 )
 
 const (
@@ -23,7 +22,7 @@ const (
 	sleep    = 2 * time.Second // nolint:gomnd
 )
 
-func retry(ctx ginkgo.SpecContext, attempts int, sleep time.Duration, f func() error) error {
+func retry(ctx context.Context, attempts int, sleep time.Duration, f func() error) error {
 	ticker := time.NewTicker(sleep)
 	retries := 0
 
