@@ -14,10 +14,12 @@ package steps
 
 import (
 	"context"
+	"errors"
 	"strings"
 
 	objscl "github.com/dell/cosi-driver/pkg/provisioner/objectscale"
 	"github.com/dell/cosi-driver/pkg/provisioner/policy"
+	"github.com/dell/goobjectscale/pkg/client/model"
 	objectscaleRest "github.com/dell/goobjectscale/pkg/client/rest"
 	gomega "github.com/onsi/gomega"
 	v1 "k8s.io/api/core/v1"
@@ -28,8 +30,11 @@ import (
 )
 
 // CheckObjectScaleInstallation Ensure that ObjectScale platform is installed on the cluster.
-func CheckObjectScaleInstallation(ctx context.Context, objectscale *objectscaleRest.ClientSet) {
-	_, err := objectscale.FederatedObjectStores().List(ctx, map[string]string{})
+func CheckObjectScaleInstallation(ctx context.Context, objectscale *objectscaleRest.ClientSet, namespace string) {
+	param := make(map[string]string)
+	param["namespace"] = namespace
+
+	_, err := objectscale.Buckets().List(ctx, param)
 	gomega.Expect(err).ToNot(gomega.HaveOccurred())
 }
 
@@ -57,9 +62,22 @@ func CheckBucketDeletionInObjectStore(ctx context.Context, objectscale *objectsc
 	param["namespace"] = namespace
 	id := strings.SplitN(bucket.Status.BucketID, "-", 2)[1] // nolint:gomnd
 
-	objectScaleBucket, err := objectscale.Buckets().Get(ctx, id, param)
-	gomega.Expect(err).To(gomega.HaveOccurred())
-	gomega.Expect(objectScaleBucket).To(gomega.BeNil())
+	err := retry(ctx, attempts, sleep, func() error {
+		var err error
+
+		expectedError := model.Error{
+			Code: model.CodeParameterNotFound,
+		}
+
+		_, err = objectscale.Buckets().Get(ctx, id, param)
+		if !errors.Is(err, expectedError) {
+			return err
+		}
+
+		return nil
+	})
+
+	gomega.Expect(err).ToNot(gomega.HaveOccurred())
 }
 
 // CreatePolicy Function for creating policy in ObjectScale.
