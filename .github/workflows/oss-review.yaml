@@ -1,5 +1,6 @@
 on:
   pull_request:
+  push:
 jobs:
   ort:
     runs-on: ubuntu-latest
@@ -19,5 +20,5 @@ jobs:
             advisor,
             reporter,
             upload-results
-          fail-on: issues
+          fail-on: issues,violations
   
