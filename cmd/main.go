@@ -33,8 +33,8 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 
-	"github.com/dell/cosi-driver/pkg/config"
-	"github.com/dell/cosi-driver/pkg/driver"
+	"github.com/dell/cosi/pkg/config"
+	"github.com/dell/cosi/pkg/driver"
 )
 
 var (

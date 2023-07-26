@@ -15,7 +15,7 @@ package objectscale
 import (
 	"github.com/aws/aws-sdk-go/aws"
 
-	"github.com/dell/cosi-driver/pkg/config"
+	"github.com/dell/cosi/pkg/config"
 )
 
 var invalidBase64 = `💀`

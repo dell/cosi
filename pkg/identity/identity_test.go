@@ -17,7 +17,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/dell/cosi-driver/pkg/internal/testcontext"
+	"github.com/dell/cosi/pkg/internal/testcontext"
 	log "github.com/sirupsen/logrus"
 	cosi "sigs.k8s.io/container-object-storage-interface-spec"
 )

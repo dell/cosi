@@ -38,8 +38,8 @@ import (
 	"google.golang.org/grpc/status"
 	"sigs.k8s.io/container-object-storage-interface-provisioner-sidecar/pkg/consts"
 
-	internalLogger "github.com/dell/cosi-driver/pkg/internal/logger"
-	driver "github.com/dell/cosi-driver/pkg/provisioner/virtualdriver"
+	internalLogger "github.com/dell/cosi/pkg/internal/logger"
+	driver "github.com/dell/cosi/pkg/provisioner/virtualdriver"
 	objectscaleRest "github.com/dell/goobjectscale/pkg/client/rest"
 	objectscaleClient "github.com/dell/goobjectscale/pkg/client/rest/client"
 	iamObjectscale "github.com/dell/goobjectscale/pkg/client/rest/iam"
@@ -47,8 +47,8 @@ import (
 	otelCodes "go.opentelemetry.io/otel/codes"
 	cosi "sigs.k8s.io/container-object-storage-interface-spec"
 
-	"github.com/dell/cosi-driver/pkg/config"
-	"github.com/dell/cosi-driver/pkg/transport"
+	"github.com/dell/cosi/pkg/config"
+	"github.com/dell/cosi/pkg/transport"
 )
 
 const (

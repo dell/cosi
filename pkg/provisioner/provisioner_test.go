@@ -26,8 +26,8 @@ import (
 
 	cosi "sigs.k8s.io/container-object-storage-interface-spec"
 
-	"github.com/dell/cosi-driver/pkg/internal/testcontext"
-	"github.com/dell/cosi-driver/pkg/provisioner/virtualdriver/fake"
+	"github.com/dell/cosi/pkg/internal/testcontext"
+	"github.com/dell/cosi/pkg/provisioner/virtualdriver/fake"
 )
 
 func TestMain(m *testing.M) {

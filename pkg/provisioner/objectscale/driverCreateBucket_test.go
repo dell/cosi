@@ -16,7 +16,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/dell/cosi-driver/pkg/internal/testcontext"
+	"github.com/dell/cosi/pkg/internal/testcontext"
 	"github.com/dell/goobjectscale/pkg/client/api/mocks"
 	"github.com/dell/goobjectscale/pkg/client/model"
 	"github.com/stretchr/testify/assert"
