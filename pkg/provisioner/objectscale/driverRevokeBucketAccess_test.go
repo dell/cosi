@@ -14,6 +14,7 @@ package objectscale
 
 import (
 	"errors"
+	"strings"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -26,9 +27,10 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
+	cosi "sigs.k8s.io/container-object-storage-interface-spec"
+
 	"github.com/dell/goobjectscale/pkg/client/api/mocks"
 	"github.com/dell/goobjectscale/pkg/client/model"
-	cosi "sigs.k8s.io/container-object-storage-interface-spec"
 )
 
 var _ iamiface.IAMAPI = (*iamfaketoo.IAMAPI)(nil)
@@ -590,4 +592,25 @@ func testFailedToUpdateBucketPolicy(t *testing.T) {
 	_, err := server.DriverRevokeBucketAccess(ctx, req)
 
 	assert.ErrorIs(t, err, status.Error(codes.Internal, "failed to update bucket policy"))
+}
+
+func FuzzGetBucketName(f *testing.F) {
+	for _, seed := range []string{
+		"driverid-bucketname",
+		"driver.id-bucket.name",
+		".driver.id-bucket.name",
+		".driver.id-bucket-name",
+	} {
+		f.Add(seed) // Use f.Add to provide a seed corpus
+	}
+
+	f.Fuzz(func(t *testing.T, in string) {
+		out, err := GetBucketName(in)
+		if strings.Contains(in, "-") {
+			assert.NoErrorf(t, err, "Input was: %s", in)
+			assert.NotEmpty(t, out, "Input was: %s", in)
+		} else {
+			assert.Errorf(t, err, "Input was: %s", in)
+		}
+	})
 }

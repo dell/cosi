@@ -17,11 +17,12 @@ package main_test
 import (
 	"context"
 
+	"sigs.k8s.io/container-object-storage-interface-api/apis/objectstorage/v1alpha1"
+
 	objscl "github.com/dell/cosi/pkg/provisioner/objectscale"
 	. "github.com/onsi/ginkgo/v2"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"sigs.k8s.io/container-object-storage-interface-api/apis/objectstorage/v1alpha1"
 
 	"github.com/dell/cosi/pkg/provisioner/policy"
 	"github.com/dell/cosi/tests/integration/steps"
@@ -64,7 +65,7 @@ var _ = Describe("Bucket Access Grant", Ordered, Label("grant", "objectscale"), 
 			},
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      "access-bucket-claim",
-				Namespace: "access-namespace",
+				Namespace: "access-grant-namespace",
 			},
 			Spec: v1alpha1.BucketClaimSpec{
 				BucketClassName: "access-bucket-class",
@@ -94,7 +95,7 @@ var _ = Describe("Bucket Access Grant", Ordered, Label("grant", "objectscale"), 
 			},
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      "access-bucket-access",
-				Namespace: "access-namespace",
+				Namespace: "access-grant-namespace",
 			},
 			Spec: v1alpha1.BucketAccessSpec{
 				BucketAccessClassName: "access-bucket-access-class",
@@ -105,7 +106,7 @@ var _ = Describe("Bucket Access Grant", Ordered, Label("grant", "objectscale"), 
 		validSecret = &v1.Secret{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      "access-bucket-credentials",
-				Namespace: "access-namespace",
+				Namespace: "access-grant-namespace",
 			},
 			Data: map[string][]byte{
 				"BucketInfo": []byte(""),
@@ -128,9 +129,9 @@ var _ = Describe("Bucket Access Grant", Ordered, Label("grant", "objectscale"), 
 		By("Checking if namespace 'cosi-driver' is created")
 		steps.CreateNamespace(ctx, clientset, "cosi-driver")
 
-		// STEP: Kubernetes namespace "access-namespace" is created
-		By("Checking if namespace 'access-namespace' is created")
-		steps.CreateNamespace(ctx, clientset, "access-namespace")
+		// STEP: Kubernetes namespace "access-grant-namespace" is created
+		By("Checking if namespace 'access-grant-namespace' is created")
+		steps.CreateNamespace(ctx, clientset, "access-grant-namespace")
 
 		// STEP: COSI controller "objectstorage-controller" is installed in namespace "default"
 		By("Checking if COSI controller 'objectstorage-controller' is installed in namespace 'default'")
@@ -156,7 +157,7 @@ var _ = Describe("Bucket Access Grant", Ordered, Label("grant", "objectscale"), 
 		By("Checking if bucket referencing 'my-bucket-claim' is created in ObjectStore '${objectstoreName}'")
 		steps.CheckBucketResourceInObjectStore(ctx, objectscale, Namespace, myBucket)
 
-		// STEP: BucketClaim resource "my-bucket-claim" in namespace "access-namespace" status "bucketReady" is "true"
+		// STEP: BucketClaim resource "my-bucket-claim" in namespace "access-grant-namespace" status "bucketReady" is "true"
 		By("Checking if BucketClaim resource 'my-bucket-claim' status 'bucketReady' is 'true'")
 		steps.CheckBucketClaimStatus(ctx, bucketClient, myBucketClaim, true)
 
@@ -204,33 +205,30 @@ var _ = Describe("Bucket Access Grant", Ordered, Label("grant", "objectscale"), 
 		steps.CreateBucketAccessResource(ctx, bucketClient, myBucketAccess)
 
 		// STEP: BucketAccess resource "my-bucket-access" status "accessGranted" is "true"
-		By("Checking if BucketAccess resource 'my-bucket-access' in namespace 'access-namespace' status 'accessGranted' is 'true'")
+		By("Checking if BucketAccess resource 'my-bucket-access' in namespace 'access-grant-namespace' status 'accessGranted' is 'true'")
 		myBucketAccess = steps.CheckBucketAccessStatus(ctx, bucketClient, myBucketAccess, true)
 
 		// STEP: User "user-1" in account on ObjectScale platform is created
 		By("Checking if User 'user-1' in account on ObjectScale platform is created")
 		steps.CheckUser(ctx, IAMClient, myBucket.Name, Namespace)
 
-		// TODO: Change to happy policy
 		// STEP: Policy "${policy}" for Bucket resource referencing BucketClaim resource "my-bucket-claim" on ObjectScale platform is created
 		By("Checking if Policy for Bucket resource referencing BucketClaim resource 'my-bucket-claim' is created")
 		steps.CheckPolicy(ctx, objectscale, myBucketPolicy, myBucket, Namespace)
 
-		// TODO: Get AccountID from environment
-		// STEP: BucketAccess resource "my-bucket-access" in namespace "access-namespace" status "accountID" is "${accountID}"
-		By("Checking if BucketAccess resource 'my-bucket-access' in namespace 'access-namespace' status 'accountID' is '${accountID}'")
+		// STEP: BucketAccess resource "my-bucket-access" in namespace "access-grant-namespace" status "accountID" is "${accountID}"
+		By("Checking if BucketAccess resource 'my-bucket-access' in namespace 'access-grant-namespace' status 'accountID' is '${accountID}'")
 		steps.CheckBucketAccessAccountID(ctx, bucketClient, myBucketAccess, principalUsername)
 
-		// STEP: Secret "bucket-credentials-1" is created in namespace "access-namespace" and is not empty
-		By("Checking if Secret 'bucket-credentials-1' in namespace 'access-namespace' is not empty")
+		// STEP: Secret "bucket-credentials-1" is created in namespace "access-grant-namespace" and is not empty
+		By("Checking if Secret 'bucket-credentials-1' in namespace 'access-grant-namespace' is not empty")
 		steps.CheckSecret(ctx, clientset, validSecret)
 
 		// STEP: Bucket resource referencing BucketClaim resource "bucket-claim-delete" is accessible from Secret "bucket-credentials-1"
 		By("Checking if Bucket resource referencing BucketClaim resource 'my-bucket-claim' is accessible from Secret 'bucket-credentials-1'")
 		steps.CheckBucketAccessFromSecret(ctx, clientset, validSecret)
 
-		DeferCleanup(func() {
-			ctx := context.Background()
+		DeferCleanup(func(ctx context.Context) {
 			steps.DeletePolicy(ctx, objectscale, myBucket, Namespace)
 			steps.DeleteAccessKey(ctx, IAMClient, clientset, validSecret)
 			steps.DeleteUser(ctx, IAMClient, myBucketAccess.Status.AccountID)
