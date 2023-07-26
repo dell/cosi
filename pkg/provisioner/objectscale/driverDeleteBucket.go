@@ -17,7 +17,6 @@ import (
 	"errors"
 	"strings"
 
-	"github.com/dell/goobjectscale/pkg/client/model"
 	"go.opentelemetry.io/otel"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -57,7 +56,7 @@ func (s *Server) DriverDeleteBucket(ctx context.Context,
 	// Delete bucket.
 	err := s.mgmtClient.Buckets().Delete(ctx, bucketName, s.namespace, s.emptyBucket)
 
-	if errors.Is(err, model.Error{Code: model.CodeResourceNotFound}) {
+	if errors.Is(err, ErrParameterNotFound) {
 		log.WithFields(log.Fields{
 			"bucket": bucketName,
 		}).Warn("bucket does not exist")

@@ -13,84 +13,133 @@
 package objectscale
 
 import (
-	"context"
-	"strings"
 	"testing"
-	"time"
 
-	"github.com/dell/goobjectscale/pkg/client/fake"
-	"github.com/dell/goobjectscale/pkg/client/model"
+	"github.com/dell/cosi-driver/pkg/internal/testcontext"
+	"github.com/dell/goobjectscale/pkg/client/api/mocks"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
+	"github.com/stretchr/testify/require"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
-
-	cosi "sigs.k8s.io/container-object-storage-interface-spec"
 )
 
-// testDriverCreateBucket tests bucket deletion functionality on ObjectScale platform.
-func TestDriverDeleteBucket(t *testing.T) {
-	const (
-		namespace = "namespace"
-		testID    = "test.id"
-	)
+// TestServerDriverDeleteBucket contains table tests for (*Server).DriverDeleteBucket method.
+func TestServerDriverDeleteBucket(t *testing.T) {
+	t.Parallel()
 
-	testCases := []struct {
-		description   string
-		inputBucketID string
-		expectedError error
-		server        Server
-	}{
-		{
-			description:   "invalid bucketID",
-			inputBucketID: "",
-			expectedError: status.Error(codes.InvalidArgument, "empty bucketID"),
-		},
-		{
-			description:   "bucket does not exist",
-			inputBucketID: strings.Join([]string{testID, "bucket-valid"}, "-"),
-			expectedError: nil,
-			server: Server{
-				mgmtClient: fake.NewClientSet(),
-				namespace:  namespace,
-				backendID:  testID,
-			},
-		},
-		{
-			description:   "failed to delete bucket",
-			inputBucketID: strings.Join([]string{testID, "bucket-invalid-FORCEFAIL"}, "-"),
-			expectedError: status.Error(codes.Internal, "bucket was not successfully deleted"),
-			server: Server{
-				mgmtClient: fake.NewClientSet(&model.Bucket{
-					Name:      "bucket-valid",
-					Namespace: namespace,
-				}),
-				namespace:   namespace,
-				backendID:   testID,
-				emptyBucket: true,
-			},
-		},
-		{
-			description:   "bucket successfully deleted",
-			inputBucketID: strings.Join([]string{testID, "bucket-valid"}, "-"),
-			expectedError: nil,
-			server: Server{
-				mgmtClient: fake.NewClientSet(&model.Bucket{
-					Name:      "bucket-valid",
-					Namespace: namespace,
-				}),
-				namespace:   namespace,
-				backendID:   testID,
-				emptyBucket: true,
-			},
-		},
-	}
+	for scenario, fn := range map[string]func(t *testing.T){
+		// happy path
+		"BucketDeleted":       testDriverDeleteBucketBucketDeleted,
+		"BucketDoesNotExists": testDriverDeleteBucketBucketDoesNotExists,
+		// // testing errors
+		"InvalidBucketID":      testDriverDeleteBucketInvalidBucketID,
+		"BucketDeletionFailed": testDriverDeleteBucketBucketDeletionFailed,
+	} {
+		fn := fn
 
-	for _, scenario := range testCases {
-		t.Run(scenario.description, func(t *testing.T) {
-			ctx, cancel := context.WithTimeout(context.Background(), time.Second)
-			defer cancel()
-			_, err := scenario.server.DriverDeleteBucket(ctx, &cosi.DriverDeleteBucketRequest{BucketId: scenario.inputBucketID})
-			assert.ErrorIs(t, err, scenario.expectedError, err)
+		t.Run(scenario, func(t *testing.T) {
+			t.Parallel()
+
+			fn(t)
 		})
 	}
+}
+
+// testDriverDeleteBucketBucketDeleted tests the happy path of the (*Server).DriverDeleteBucket method.
+// It assumes that bucket exists on the backend.
+func testDriverDeleteBucketBucketDeleted(t *testing.T) {
+	ctx, cancel := testcontext.New(t)
+	defer cancel()
+
+	bucketsMock := &mocks.BucketsInterface{}
+	bucketsMock.On("Delete", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil).Once()
+
+	mgmtClientMock := &mocks.ClientSet{}
+	mgmtClientMock.On("Buckets").Return(bucketsMock).Once()
+
+	server := Server{
+		mgmtClient:    mgmtClientMock,
+		namespace:     testNamespace,
+		backendID:     testID,
+		objectScaleID: objectScaleID,
+		objectStoreID: objectStoreID,
+	}
+
+	res, err := server.DriverDeleteBucket(ctx, testBucketDeletionRequest)
+
+	assert.NoError(t, err)
+	require.NotNil(t, res)
+}
+
+// testDriverDeleteBucketBucketDoesNotExists tests the happy path of the (*Server).DriverDeleteBucket method.
+// It assumes that bucket does not exist on the backend.
+func testDriverDeleteBucketBucketDoesNotExists(t *testing.T) {
+	ctx, cancel := testcontext.New(t)
+	defer cancel()
+
+	bucketsMock := &mocks.BucketsInterface{}
+	bucketsMock.On("Delete", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(ErrParameterNotFound).Once()
+
+	mgmtClientMock := &mocks.ClientSet{}
+	mgmtClientMock.On("Buckets").Return(bucketsMock).Once()
+
+	server := Server{
+		mgmtClient:    mgmtClientMock,
+		namespace:     testNamespace,
+		backendID:     testID,
+		objectScaleID: objectScaleID,
+		objectStoreID: objectStoreID,
+	}
+
+	res, err := server.DriverDeleteBucket(ctx, testBucketDeletionRequest)
+
+	assert.NoError(t, err)
+	require.NotNil(t, res)
+}
+
+// testDriverDeleteBucketInvalidBucketID tests if missing bucket ID is handled correctly.
+// in the (*Server).DriverDeleteBucket method.
+func testDriverDeleteBucketInvalidBucketID(t *testing.T) {
+	ctx, cancel := testcontext.New(t)
+	defer cancel()
+
+	mgmtClientMock := &mocks.ClientSet{}
+
+	server := Server{
+		mgmtClient:    mgmtClientMock,
+		namespace:     testNamespace,
+		backendID:     testID,
+		objectScaleID: objectScaleID,
+		objectStoreID: objectStoreID,
+	}
+
+	_, err := server.DriverDeleteBucket(ctx, testBucketDeletionRequestEmptyBucketID)
+
+	assert.ErrorIs(t, err, status.Error(codes.InvalidArgument, "empty bucketID"))
+}
+
+// testDriverDeleteBucketBucketDeleted tests if error during deletion of bucket is handled correctly
+// in the (*Server).DriverDeleteBucket method.
+func testDriverDeleteBucketBucketDeletionFailed(t *testing.T) {
+	ctx, cancel := testcontext.New(t)
+	defer cancel()
+
+	bucketsMock := &mocks.BucketsInterface{}
+	bucketsMock.On("Delete", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(ErrInternalException).Once()
+
+	mgmtClientMock := &mocks.ClientSet{}
+	mgmtClientMock.On("Buckets").Return(bucketsMock).Once()
+
+	server := Server{
+		mgmtClient:    mgmtClientMock,
+		namespace:     testNamespace,
+		backendID:     testID,
+		objectScaleID: objectScaleID,
+		objectStoreID: objectStoreID,
+	}
+
+	_, err := server.DriverDeleteBucket(ctx, testBucketDeletionRequest)
+
+	assert.ErrorIs(t, err, status.Error(codes.Internal, "bucket was not successfully deleted"))
 }
