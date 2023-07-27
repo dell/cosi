@@ -15,7 +15,6 @@ package objectscale
 import (
 	"context"
 	"errors"
-	"strings"
 
 	"go.opentelemetry.io/otel"
 	"google.golang.org/grpc/codes"
@@ -51,10 +50,21 @@ func (s *Server) DriverDeleteBucket(ctx context.Context,
 	}
 
 	// Extract bucket name from bucketID.
-	bucketName := strings.SplitN(req.BucketId, "-", splitNumber)[1]
+	bucketName, err := GetBucketName(req.BucketId)
+	if err != nil {
+		log.WithFields(log.Fields{
+			"bucketID": req.BucketId,
+			"error":    err,
+		}).Error(err.Error())
+
+		span.RecordError(err)
+		span.SetStatus(otelCodes.Error, err.Error())
+
+		return nil, status.Error(codes.InvalidArgument, err.Error())
+	}
 
 	// Delete bucket.
-	err := s.mgmtClient.Buckets().Delete(ctx, bucketName, s.namespace, s.emptyBucket)
+	err = s.mgmtClient.Buckets().Delete(ctx, bucketName, s.namespace, s.emptyBucket)
 
 	if errors.Is(err, ErrParameterNotFound) {
 		log.WithFields(log.Fields{

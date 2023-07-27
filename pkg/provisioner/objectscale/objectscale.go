@@ -707,3 +707,14 @@ func BuildResourceString(objectScaleID, objectStoreID, bucketName string) string
 func BuildPrincipalString(namespace, bucketName string) string {
 	return fmt.Sprintf("urn:osc:iam::%s:user/%s", namespace, BuildUsername(namespace, bucketName))
 }
+
+// GetBucketName splits BucketID by -, the first element is backendID, the second element is bucketName.
+func GetBucketName(bucketID string) (string, error) {
+	list := strings.Split(bucketID, "-")
+
+	if len(list) != 2 { // nolint:gomnd
+		return "", errors.New("invalid bucketId")
+	}
+
+	return list[1], nil
+}

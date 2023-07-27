@@ -22,6 +22,8 @@ import (
 	"github.com/stretchr/testify/require"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+
+	cosi "sigs.k8s.io/container-object-storage-interface-spec"
 )
 
 // TestServerDriverDeleteBucket contains table tests for (*Server).DriverDeleteBucket method.
@@ -33,6 +35,7 @@ func TestServerDriverDeleteBucket(t *testing.T) {
 		"BucketDeleted":       testDriverDeleteBucketBucketDeleted,
 		"BucketDoesNotExists": testDriverDeleteBucketBucketDoesNotExists,
 		// // testing errors
+		"EmptyBucketID":        testDriverDeleteBucketEmptyBucketID,
 		"InvalidBucketID":      testDriverDeleteBucketInvalidBucketID,
 		"BucketDeletionFailed": testDriverDeleteBucketBucketDeletionFailed,
 	} {
@@ -98,7 +101,32 @@ func testDriverDeleteBucketBucketDoesNotExists(t *testing.T) {
 	require.NotNil(t, res)
 }
 
-// testDriverDeleteBucketInvalidBucketID tests if missing bucket ID is handled correctly.
+// testDriverDeleteBucketEmptyBucketID tests if missing bucket ID is handled correctly.
+// in the (*Server).DriverDeleteBucket method.
+func testDriverDeleteBucketEmptyBucketID(t *testing.T) {
+	ctx, cancel := testcontext.New(t)
+	defer cancel()
+
+	mgmtClientMock := &mocks.ClientSet{}
+
+	server := Server{
+		mgmtClient:    mgmtClientMock,
+		namespace:     testNamespace,
+		backendID:     testID,
+		objectScaleID: objectScaleID,
+		objectStoreID: objectStoreID,
+	}
+
+	req := &cosi.DriverDeleteBucketRequest{
+		BucketId: "",
+	}
+
+	_, err := server.DriverDeleteBucket(ctx, req)
+
+	assert.ErrorIs(t, err, status.Error(codes.InvalidArgument, "empty bucketID"))
+}
+
+// testDriverDeleteBucketInvalidBucketID tests if too many dashes in bucket ID is handled correctly.
 // in the (*Server).DriverDeleteBucket method.
 func testDriverDeleteBucketInvalidBucketID(t *testing.T) {
 	ctx, cancel := testcontext.New(t)
@@ -114,9 +142,13 @@ func testDriverDeleteBucketInvalidBucketID(t *testing.T) {
 		objectStoreID: objectStoreID,
 	}
 
-	_, err := server.DriverDeleteBucket(ctx, testBucketDeletionRequestEmptyBucketID)
+	req := &cosi.DriverDeleteBucketRequest{
+		BucketId: "bucket-invalid-too-many-dashes",
+	}
 
-	assert.ErrorIs(t, err, status.Error(codes.InvalidArgument, "empty bucketID"))
+	_, err := server.DriverDeleteBucket(ctx, req)
+
+	assert.ErrorIs(t, err, status.Error(codes.InvalidArgument, "invalid bucketId"))
 }
 
 // testDriverDeleteBucketBucketDeleted tests if error during deletion of bucket is handled correctly
