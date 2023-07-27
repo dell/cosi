@@ -15,7 +15,7 @@ package objectscale
 import (
 	"testing"
 
-	"github.com/dell/cosi-driver/pkg/internal/testcontext"
+	"github.com/dell/cosi/pkg/internal/testcontext"
 	"github.com/dell/goobjectscale/pkg/client/api/mocks"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
