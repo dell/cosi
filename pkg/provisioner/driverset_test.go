@@ -18,9 +18,9 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	driver "github.com/dell/cosi-driver/pkg/provisioner/virtualdriver"
+	driver "github.com/dell/cosi/pkg/provisioner/virtualdriver"
 
-	"github.com/dell/cosi-driver/pkg/provisioner/virtualdriver/fake"
+	"github.com/dell/cosi/pkg/provisioner/virtualdriver/fake"
 )
 
 func TestDriversetAdd(t *testing.T) {

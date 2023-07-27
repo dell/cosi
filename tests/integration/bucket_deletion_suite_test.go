@@ -22,7 +22,7 @@ import (
 	. "github.com/onsi/ginkgo/v2"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	"github.com/dell/cosi-driver/tests/integration/steps"
+	"github.com/dell/cosi/tests/integration/steps"
 )
 
 var _ = Describe("Bucket Deletion", Ordered, Label("delete", "objectscale"), func() {

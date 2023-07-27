@@ -17,8 +17,8 @@ import (
 	"errors"
 	"strings"
 
-	objscl "github.com/dell/cosi-driver/pkg/provisioner/objectscale"
-	"github.com/dell/cosi-driver/pkg/provisioner/policy"
+	objscl "github.com/dell/cosi/pkg/provisioner/objectscale"
+	"github.com/dell/cosi/pkg/provisioner/policy"
 	"github.com/dell/goobjectscale/pkg/client/model"
 	objectscaleRest "github.com/dell/goobjectscale/pkg/client/rest"
 	gomega "github.com/onsi/gomega"

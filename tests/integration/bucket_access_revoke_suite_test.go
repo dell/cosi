@@ -23,8 +23,8 @@ import (
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	"github.com/dell/cosi-driver/pkg/provisioner/policy"
-	"github.com/dell/cosi-driver/tests/integration/steps"
+	"github.com/dell/cosi/pkg/provisioner/policy"
+	"github.com/dell/cosi/tests/integration/steps"
 )
 
 var _ = Describe("Bucket Access Revoke", Ordered, Label("revoke", "objectscale"), func() {

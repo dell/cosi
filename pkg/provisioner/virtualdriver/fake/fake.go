@@ -20,7 +20,7 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	driver "github.com/dell/cosi-driver/pkg/provisioner/virtualdriver"
+	driver "github.com/dell/cosi/pkg/provisioner/virtualdriver"
 	cosi "sigs.k8s.io/container-object-storage-interface-spec"
 )
 

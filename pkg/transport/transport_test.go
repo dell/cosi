@@ -22,7 +22,7 @@ import (
 
 	log "github.com/sirupsen/logrus"
 
-	"github.com/dell/cosi-driver/pkg/config"
+	"github.com/dell/cosi/pkg/config"
 )
 
 var (

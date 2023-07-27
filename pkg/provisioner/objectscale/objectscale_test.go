@@ -30,8 +30,8 @@ import (
 	log "github.com/sirupsen/logrus"
 	cosi "sigs.k8s.io/container-object-storage-interface-spec"
 
-	"github.com/dell/cosi-driver/pkg/config"
-	"github.com/dell/cosi-driver/pkg/internal/testcontext"
+	"github.com/dell/cosi/pkg/config"
+	"github.com/dell/cosi/pkg/internal/testcontext"
 )
 
 type expected int

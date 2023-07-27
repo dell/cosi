@@ -1,4 +1,4 @@
-module github.com/dell/cosi-driver
+module github.com/dell/cosi
 
 go 1.20
 

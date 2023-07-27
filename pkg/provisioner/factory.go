@@ -15,11 +15,11 @@ package provisioner
 import (
 	"errors"
 
-	driver "github.com/dell/cosi-driver/pkg/provisioner/virtualdriver"
+	driver "github.com/dell/cosi/pkg/provisioner/virtualdriver"
 	log "github.com/sirupsen/logrus"
 
-	"github.com/dell/cosi-driver/pkg/config"
-	"github.com/dell/cosi-driver/pkg/provisioner/objectscale"
+	"github.com/dell/cosi/pkg/config"
+	"github.com/dell/cosi/pkg/provisioner/objectscale"
 )
 
 // NewVirtualDriver is factory function, that takes configuration, validates if it is correct, and

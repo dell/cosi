@@ -93,7 +93,7 @@ jobs:
         with:
           threshold: 90
           test-folder: "."
-          skip-list: "github.com/dell/cosi-driver/core,github.com/dell/cosi-driver/tests/integration/main_test"
+          skip-list: "github.com/dell/cosi/core,github.com/dell/cosi/tests/integration/main_test"
 
   build-and-secure:
     name: Build and Scan Docker image
