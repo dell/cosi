@@ -50,7 +50,7 @@ var _ = Describe("Bucket Access Grant", Ordered, Label("grant", "objectscale"), 
 				APIVersion: "objectstorage.k8s.io/v1alpha1",
 			},
 			ObjectMeta: metav1.ObjectMeta{
-				Name: "access-bucket-class",
+				Name: "grant-bucket-class",
 			},
 			DriverName:     "cosi.dellemc.com",
 			DeletionPolicy: v1alpha1.DeletionPolicyDelete,
@@ -64,11 +64,11 @@ var _ = Describe("Bucket Access Grant", Ordered, Label("grant", "objectscale"), 
 				APIVersion: "objectstorage.k8s.io/v1alpha1",
 			},
 			ObjectMeta: metav1.ObjectMeta{
-				Name:      "access-bucket-claim",
+				Name:      "grant-bucket-claim",
 				Namespace: "access-grant-namespace",
 			},
 			Spec: v1alpha1.BucketClaimSpec{
-				BucketClassName: "access-bucket-class",
+				BucketClassName: "grant-bucket-class",
 				Protocols: []v1alpha1.Protocol{
 					v1alpha1.ProtocolS3,
 				},
@@ -80,7 +80,7 @@ var _ = Describe("Bucket Access Grant", Ordered, Label("grant", "objectscale"), 
 				APIVersion: "objectstorage.k8s.io/v1alpha1",
 			},
 			ObjectMeta: metav1.ObjectMeta{
-				Name: "access-bucket-access-class",
+				Name: "grant-bucket-access-class",
 			},
 			DriverName:         "cosi.dellemc.com",
 			AuthenticationType: v1alpha1.AuthenticationTypeKey,
@@ -94,22 +94,22 @@ var _ = Describe("Bucket Access Grant", Ordered, Label("grant", "objectscale"), 
 				APIVersion: "objectstorage.k8s.io/v1alpha1",
 			},
 			ObjectMeta: metav1.ObjectMeta{
-				Name:      "access-bucket-access",
+				Name:      "grant-bucket-access",
 				Namespace: "access-grant-namespace",
 			},
 			Spec: v1alpha1.BucketAccessSpec{
-				BucketAccessClassName: "access-bucket-access-class",
-				BucketClaimName:       "access-bucket-claim",
-				CredentialsSecretName: "access-bucket-credentials",
+				BucketAccessClassName: "grant-bucket-access-class",
+				BucketClaimName:       "grant-bucket-claim",
+				CredentialsSecretName: "grant-bucket-credentials",
 			},
 		}
 		validSecret = &v1.Secret{
 			ObjectMeta: metav1.ObjectMeta{
-				Name:      "access-bucket-credentials",
+				Name:      "grant-bucket-credentials",
 				Namespace: "access-grant-namespace",
 			},
 			Data: map[string][]byte{
-				"BucketInfo": []byte(""),
+				"BucketInfo": []byte(`{"metadata":{"name":""},"spec":{"bucketName":"","authenticationType":"","secretS3":{"endpoint":"","region":"","accessKeyID":"","accessSecretKey":""},"protocols":[]}}`),
 			},
 		}
 
@@ -229,10 +229,6 @@ var _ = Describe("Bucket Access Grant", Ordered, Label("grant", "objectscale"), 
 		steps.CheckBucketAccessFromSecret(ctx, clientset, validSecret)
 
 		DeferCleanup(func(ctx context.Context) {
-			steps.DeletePolicy(ctx, objectscale, myBucket, Namespace)
-			steps.DeleteAccessKey(ctx, IAMClient, clientset, validSecret)
-			steps.DeleteUser(ctx, IAMClient, myBucketAccess.Status.AccountID)
-			steps.DeleteSecret(ctx, clientset, validSecret)
 			steps.DeleteBucketAccessResource(ctx, bucketClient, myBucketAccess)
 			steps.DeleteBucketAccessClassResource(ctx, bucketClient, myBucketAccessClass)
 			steps.DeleteBucketClaimResource(ctx, bucketClient, myBucketClaim)

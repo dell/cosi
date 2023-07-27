@@ -15,6 +15,7 @@
 package main_test
 
 import (
+	"context"
 	"crypto/tls"
 	"net/http"
 	"os"
@@ -23,9 +24,11 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/iam"
+	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/clientcmd"
 
+	"github.com/dell/cosi/tests/integration/steps"
 	objectscaleRest "github.com/dell/goobjectscale/pkg/client/rest"
 	objectscaleClient "github.com/dell/goobjectscale/pkg/client/rest/client"
 	objectscaleIAM "github.com/dell/goobjectscale/pkg/client/rest/iam"
@@ -138,6 +141,11 @@ var _ = BeforeSuite(func() {
 	Expect(err).ToNot(HaveOccurred())
 })
 
-var _ = AfterSuite(func() {
-	// Global teardown
+var _ = AfterSuite(func(ctx context.Context) {
+	podList, err := clientset.CoreV1().Pods(Namespace).List(ctx, v1.ListOptions{})
+	Expect(err).ToNot(HaveOccurred())
+
+	for _, pod := range podList.Items {
+		steps.CheckErrors(ctx, clientset, pod.Name, pod.Namespace)
+	}
 })

@@ -124,7 +124,7 @@ func CheckBucketAccessAccountID(ctx context.Context, bucketClient *bucketclients
 	myBucketAccess, err := bucketClient.ObjectstorageV1alpha1().BucketAccesses(bucketAccess.Namespace).Get(ctx, bucketAccess.Name, v1.GetOptions{})
 	gomega.Expect(err).ToNot(gomega.HaveOccurred())
 	gomega.Expect(myBucketAccess).NotTo(gomega.BeNil())
-	gomega.Expect(myBucketAccess.Status.AccountID).To(gomega.Equal(accountID))
+	gomega.Expect(accountID).To(gomega.Equal(myBucketAccess.Status.AccountID))
 }
 
 // GetBucketResource function for getting Bucket resource.

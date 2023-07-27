@@ -594,6 +594,39 @@ func testFailedToUpdateBucketPolicy(t *testing.T) {
 	assert.ErrorIs(t, err, status.Error(codes.Internal, "failed to update bucket policy"))
 }
 
+func TestGetBucketName(t *testing.T) {
+	t.Parallel()
+
+	testCases := []struct {
+		name     string
+		input    string
+		expected string
+	}{
+		{
+			name:     "basic",
+			input:    "first-second",
+			expected: "second",
+		},
+		{
+			name:     "extra_dashes",
+			input:    "first-second-third",
+			expected: "second-third",
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+
+			output, err := GetBucketName(tc.input)
+			assert.NoError(t, err)
+			assert.Equal(t, tc.expected, output)
+		})
+	}
+}
+
 func FuzzGetBucketName(f *testing.F) {
 	for _, seed := range []string{
 		"driverid-bucketname",

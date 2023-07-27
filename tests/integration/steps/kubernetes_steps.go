@@ -13,9 +13,11 @@
 package steps
 
 import (
+	"bytes"
 	"context"
 	"crypto/tls"
 	"encoding/json"
+	"io"
 	"net/http"
 	"strings"
 
@@ -81,14 +83,30 @@ func CheckBucketClassSpec(_ *kubernetes.Clientset, _ v1alpha1.BucketClaimSpec) {
 
 // CheckSecret is used to check if secret exists.
 func CheckSecret(ctx context.Context, clientset *kubernetes.Clientset, secret *v1.Secret) *v1.Secret {
-	sec, err := clientset.CoreV1().Secrets(secret.Namespace).Get(ctx, secret.Name, metav1.GetOptions{})
-	gomega.Expect(err).ToNot(gomega.HaveOccurred())
-	gomega.Expect(sec).NotTo(gomega.BeNil())
-	gomega.Expect(sec.Name).To(gomega.Equal(secret.Name))
-	gomega.Expect(sec.Namespace).To(gomega.Equal(secret.Namespace))
-	gomega.Expect(sec.Data).NotTo(gomega.Or(gomega.BeNil(), gomega.BeEmpty()))
+	var newSecret *v1.Secret
 
-	return sec
+	err := retry(ctx, attempts, sleep, func() error {
+		var err error
+		newSecret, err = clientset.CoreV1().Secrets(secret.Namespace).Get(ctx, secret.Name, metav1.GetOptions{})
+		if err != nil {
+			return err
+		}
+
+		return nil
+	})
+
+	gomega.Expect(err).ToNot(gomega.HaveOccurred())
+	gomega.Expect(newSecret).NotTo(gomega.BeNil())
+	gomega.Expect(secret.Name).To(gomega.Equal(newSecret.Name))
+	gomega.Expect(secret.Namespace).To(gomega.Equal(newSecret.Namespace))
+	gomega.Expect(newSecret.Data).NotTo(gomega.Or(gomega.BeNil(), gomega.BeEmpty()))
+
+	for k, v := range secret.Data {
+		gomega.Expect(k).To(gomega.BeKeyOf(newSecret.Data))
+		gomega.Expect(len(v)).To(gomega.BeNumerically("<=", len(newSecret.Data[k])))
+	}
+
+	return newSecret
 }
 
 // CheckBucketClaimEvents Check BucketClaim events.
@@ -210,4 +228,21 @@ func DeleteSecret(ctx context.Context, clientset *kubernetes.Clientset, secret *
 
 	err = clientset.CoreV1().Secrets(secret.Namespace).Delete(ctx, secret.Name, metav1.DeleteOptions{})
 	gomega.Expect(err).ToNot(gomega.HaveOccurred())
+}
+
+// CheckErrors parses logs and counts occurrences of error messages.
+func CheckErrors(ctx context.Context, clientset *kubernetes.Clientset, pod, namespace string) {
+	req := clientset.CoreV1().Pods(namespace).GetLogs(pod, &v1.PodLogOptions{})
+
+	podLogs, err := req.Stream(ctx)
+	gomega.Expect(err).ToNot(gomega.HaveOccurred())
+
+	defer podLogs.Close()
+
+	buf := new(bytes.Buffer)
+
+	_, err = io.Copy(buf, podLogs)
+	gomega.Expect(err).ToNot(gomega.HaveOccurred())
+	gomega.Expect(buf).ToNot(gomega.BeEmpty())
+	gomega.Expect(buf.String()).ToNot(gomega.Or(gomega.ContainSubstring("error"), gomega.ContainSubstring("Error")))
 }

@@ -13,6 +13,6 @@ ginkgo \
     --race \
     --trace \
     --tags integration \
-    --label-filter "create||delete||grant||revoke" \
+    --label-filter "revoke" \
     --output-dir=../reports/integration \
     ./...

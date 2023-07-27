@@ -15,18 +15,20 @@ package steps
 import (
 	"context"
 	"errors"
+	"reflect"
 	"strings"
 
-	objscl "github.com/dell/cosi/pkg/provisioner/objectscale"
-	"github.com/dell/cosi/pkg/provisioner/policy"
+	"github.com/aws/aws-sdk-go/service/iam"
 	"github.com/dell/goobjectscale/pkg/client/model"
+	"k8s.io/client-go/kubernetes"
+	"sigs.k8s.io/container-object-storage-interface-api/apis/objectstorage/v1alpha1"
+
+	objscl "github.com/dell/cosi/pkg/provisioner/objectscale"
 	objectscaleRest "github.com/dell/goobjectscale/pkg/client/rest"
 	gomega "github.com/onsi/gomega"
 	v1 "k8s.io/api/core/v1"
-	"k8s.io/client-go/kubernetes"
 
-	"github.com/aws/aws-sdk-go/service/iam"
-	"sigs.k8s.io/container-object-storage-interface-api/apis/objectstorage/v1alpha1"
+	"github.com/dell/cosi/pkg/provisioner/policy"
 )
 
 // CheckObjectScaleInstallation Ensure that ObjectScale platform is installed on the cluster.
@@ -90,13 +92,35 @@ func CreatePolicy(ctx context.Context, objectscale *objectscaleRest.ClientSet, p
 
 // CheckPolicy checks  if policy exists in ObjectScale.
 func CheckPolicy(ctx context.Context, objectscale *objectscaleRest.ClientSet, expectedPolicyDocument policy.Document, myBucket *v1alpha1.Bucket, namespace string) {
-	param := make(map[string]string)
-	param["namespace"] = namespace
-	actualPolicy, err := objectscale.Buckets().GetPolicy(ctx, myBucket.Name, param)
-	gomega.Expect(err).ToNot(gomega.HaveOccurred())
-	actualPolicyDocument, err := policy.NewFromJSON(actualPolicy)
-	gomega.Expect(err).ToNot(gomega.HaveOccurred())
-	gomega.Expect(actualPolicyDocument).To(gomega.BeEquivalentTo(expectedPolicyDocument))
+	var actualPolicyDocument policy.Document
+
+	ErrComparisonFailed := errors.New("comparison failed")
+
+	err := retry(ctx, attempts, sleep, func() error {
+		var err error
+
+		param := make(map[string]string)
+		param["namespace"] = namespace
+
+		actualPolicy, err := objectscale.Buckets().GetPolicy(ctx, myBucket.Name, param)
+		if err != nil {
+			return err
+		}
+
+		actualPolicyDocument, err = policy.NewFromJSON(actualPolicy)
+		if err != nil {
+			return err
+		}
+
+		if !reflect.DeepEqual(actualPolicyDocument, expectedPolicyDocument) {
+			return ErrComparisonFailed
+		}
+
+		return nil
+	})
+
+	gomega.Expect(err).ToNot(gomega.Or(gomega.BeEquivalentTo(ErrComparisonFailed), gomega.HaveOccurred()))
+	gomega.Expect(expectedPolicyDocument).To(gomega.BeEquivalentTo(actualPolicyDocument))
 }
 
 // DeletePolicy is a function deleting a policy from the ObjectStore.
@@ -129,7 +153,7 @@ func CheckUser(ctx context.Context, iamClient *iam.IAM, user string, namespace s
 	userOut, err := iamClient.GetUserWithContext(ctx, &iam.GetUserInput{UserName: &username})
 	gomega.Expect(err).ToNot(gomega.HaveOccurred())
 	gomega.Expect(userOut.User).NotTo(gomega.BeNil())
-	gomega.Expect(*(userOut.User.UserName)).To(gomega.Equal(username))
+	gomega.Expect(username).To(gomega.Equal(*(userOut.User.UserName)))
 }
 
 // DeleteUser Function for deleting user from ObjectScale.

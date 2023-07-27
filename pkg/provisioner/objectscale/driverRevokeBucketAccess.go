@@ -182,7 +182,13 @@ func (s *Server) DriverRevokeBucketAccess(ctx context.Context, // nolint:gocogni
 			return nil, status.Error(codes.Internal, errMsg.Error())
 		}
 
+		// FIXME: is Statement empty?
 		for k, statement := range jsonPolicy.Statement {
+			log.WithFields(log.Fields{
+				"k":         k,
+				"statement": statement,
+			}).Debug("processing next statement")
+
 			isPrincipal := false
 			isResource := false
 
@@ -218,6 +224,12 @@ func (s *Server) DriverRevokeBucketAccess(ctx context.Context, // nolint:gocogni
 			return nil, status.Error(codes.Internal, errMsg.Error())
 		}
 
+		log.WithFields(log.Fields{
+			"policy":    jsonPolicy,
+			"rawPolicy": string(updatedPolicy),
+		}).Debug("updating policy")
+
+		// FIXME: An error occurred in the API Service: An error occurred in the API service. Cause: Missing required field Statement..
 		// Update policy.
 		err = s.mgmtClient.Buckets().UpdatePolicy(ctx, bucketName, string(updatedPolicy), parameters)
 		if err != nil {
