@@ -42,8 +42,4 @@ var (
 	testBucketDeletionRequest = &cosi.DriverDeleteBucketRequest{
 		BucketId: strings.Join([]string{testID, testBucketName}, "-"),
 	}
-
-	testBucketDeletionRequestEmptyBucketID = &cosi.DriverDeleteBucketRequest{
-		BucketId: "",
-	}
 )
