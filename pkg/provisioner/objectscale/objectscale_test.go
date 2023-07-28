@@ -13,16 +13,13 @@
 package objectscale
 
 import (
-	"context"
+	"github.com/dell/goobjectscale/pkg/client/fake"
+	"github.com/stretchr/testify/assert"
 	"io"
 	"os"
 	"regexp"
 	"strings"
 	"testing"
-	"time"
-
-	"github.com/dell/goobjectscale/pkg/client/fake"
-	"github.com/stretchr/testify/assert"
 
 	log "github.com/sirupsen/logrus"
 
@@ -195,80 +192,6 @@ func testDriverID(t *testing.T) {
 		namespace:  "namespace",
 	}
 	assert.Equal(t, "id", driver.ID())
-}
-
-func testParsePolicyStatement(t *testing.T) {
-	testCases := []struct {
-		description          string
-		inputStatements      []UpdateBucketPolicyStatement
-		awsBucketResourceARN string
-		awsPrincipalString   string
-		expectedOutput       []UpdateBucketPolicyStatement
-	}{
-		{
-			description: "valid policy statement parsing",
-			inputStatements: []UpdateBucketPolicyStatement{
-				{
-					Resource: []string{"happyAwsBucketResourceARN"},
-					SID:      "GetObject_permission",
-					Effect:   allowEffect,
-					Principal: Principal{
-						AWS: []string{"happyAwsPrincipalString"},
-					},
-					Action: []string{"*"},
-				},
-			},
-			awsBucketResourceARN: "happyAwsBucketResourceARN",
-			awsPrincipalString:   "happyAwsPrincipalString",
-			expectedOutput: []UpdateBucketPolicyStatement{
-				{
-					Resource: []string{"happyAwsBucketResourceARN"},
-					SID:      "GetObject_permission",
-					Effect:   allowEffect,
-					Principal: Principal{
-						AWS: []string{"happyAwsPrincipalString"},
-					},
-					Action: []string{"*"},
-				},
-			},
-		},
-		{
-			description: "policy needed update parsing",
-			inputStatements: []UpdateBucketPolicyStatement{
-				{
-					Resource: nil,
-					SID:      "GetObject_permission",
-					Effect:   "",
-					Principal: Principal{
-						AWS: []string{"urn:osc:iam::osai07c2ae318ae9d6f2:user/iam_user20230523061025118"},
-					},
-					Action: []string{"s3:GetObjectVersion"},
-				},
-			},
-			awsBucketResourceARN: "happyAwsBucketResourceARN",
-			awsPrincipalString:   "happyAwsPrincipalString",
-			expectedOutput: []UpdateBucketPolicyStatement{
-				{
-					Resource: []string{"happyAwsBucketResourceARN"},
-					SID:      "GetObject_permission",
-					Effect:   allowEffect,
-					Principal: Principal{
-						AWS: []string{"urn:osc:iam::osai07c2ae318ae9d6f2:user/iam_user20230523061025118", "happyAwsPrincipalString"},
-					},
-					Action: []string{"s3:GetObjectVersion", "*"},
-				},
-			},
-		},
-	}
-
-	for _, scenario := range testCases {
-		t.Run(scenario.description, func(t *testing.T) {
-			ctx, cancel := context.WithTimeout(context.Background(), time.Second)
-			defer cancel()
-			updatedPolicy := parsePolicyStatement(ctx, scenario.inputStatements, scenario.awsBucketResourceARN, scenario.awsPrincipalString)
-			assert.Equalf(t, scenario.expectedOutput, updatedPolicy, "not equal")
-		})
-	}
 }
 
 // TestGetBucketName tests BucketID splitting.

@@ -13,8 +13,10 @@
 package objectscale
 
 import (
+	"context"
 	"errors"
 	"testing"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/iam"
@@ -551,4 +553,78 @@ func testInvalidPolicyJSON(t *testing.T) {
 	response, err := server.DriverGrantBucketAccess(ctx, req)
 	assert.ErrorIs(t, err, status.Error(codes.Internal, "failed to decode existing bucket policy"), err)
 	assert.Nil(t, response)
+}
+
+func testParsePolicyStatement(t *testing.T) {
+	testCases := []struct {
+		description          string
+		inputStatements      []UpdateBucketPolicyStatement
+		awsBucketResourceARN string
+		awsPrincipalString   string
+		expectedOutput       []UpdateBucketPolicyStatement
+	}{
+		{
+			description: "valid policy statement parsing",
+			inputStatements: []UpdateBucketPolicyStatement{
+				{
+					Resource: []string{"happyAwsBucketResourceARN"},
+					SID:      "GetObject_permission",
+					Effect:   allowEffect,
+					Principal: Principal{
+						AWS: []string{"happyAwsPrincipalString"},
+					},
+					Action: []string{"*"},
+				},
+			},
+			awsBucketResourceARN: "happyAwsBucketResourceARN",
+			awsPrincipalString:   "happyAwsPrincipalString",
+			expectedOutput: []UpdateBucketPolicyStatement{
+				{
+					Resource: []string{"happyAwsBucketResourceARN"},
+					SID:      "GetObject_permission",
+					Effect:   allowEffect,
+					Principal: Principal{
+						AWS: []string{"happyAwsPrincipalString"},
+					},
+					Action: []string{"*"},
+				},
+			},
+		},
+		{
+			description: "policy needed update parsing",
+			inputStatements: []UpdateBucketPolicyStatement{
+				{
+					Resource: nil,
+					SID:      "GetObject_permission",
+					Effect:   "",
+					Principal: Principal{
+						AWS: []string{"urn:osc:iam::osai07c2ae318ae9d6f2:user/iam_user20230523061025118"},
+					},
+					Action: []string{"s3:GetObjectVersion"},
+				},
+			},
+			awsBucketResourceARN: "happyAwsBucketResourceARN",
+			awsPrincipalString:   "happyAwsPrincipalString",
+			expectedOutput: []UpdateBucketPolicyStatement{
+				{
+					Resource: []string{"happyAwsBucketResourceARN"},
+					SID:      "GetObject_permission",
+					Effect:   allowEffect,
+					Principal: Principal{
+						AWS: []string{"urn:osc:iam::osai07c2ae318ae9d6f2:user/iam_user20230523061025118", "happyAwsPrincipalString"},
+					},
+					Action: []string{"s3:GetObjectVersion", "*"},
+				},
+			},
+		},
+	}
+
+	for _, scenario := range testCases {
+		t.Run(scenario.description, func(t *testing.T) {
+			ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+			defer cancel()
+			updatedPolicy := parsePolicyStatement(ctx, scenario.inputStatements, scenario.awsBucketResourceARN, scenario.awsPrincipalString)
+			assert.Equalf(t, scenario.expectedOutput, updatedPolicy, "not equal")
+		})
+	}
 }
