@@ -17,7 +17,7 @@ import (
 	"fmt"
 	"sync"
 
-	driver "github.com/dell/cosi-driver/pkg/provisioner/virtualdriver"
+	driver "github.com/dell/cosi/pkg/provisioner/virtualdriver"
 	log "github.com/sirupsen/logrus"
 )
 

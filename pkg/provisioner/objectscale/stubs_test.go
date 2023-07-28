@@ -13,6 +13,8 @@
 package objectscale
 
 import (
+	"strings"
+
 	"github.com/dell/goobjectscale/pkg/client/model"
 	cosi "sigs.k8s.io/container-object-storage-interface-spec"
 )
@@ -33,7 +35,11 @@ var (
 		Name:      testBucketName,
 	}
 
-	testRequest = &cosi.DriverCreateBucketRequest{
+	testBucketCreationRequest = &cosi.DriverCreateBucketRequest{
 		Name: testBucketName,
+	}
+
+	testBucketDeletionRequest = &cosi.DriverDeleteBucketRequest{
+		BucketId: strings.Join([]string{testID, testBucketName}, "-"),
 	}
 )

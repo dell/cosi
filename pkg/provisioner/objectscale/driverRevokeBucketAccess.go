@@ -17,7 +17,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"strings"
 
 	"github.com/aws/aws-sdk-go/service/iam"
 	"github.com/dell/goobjectscale/pkg/client/model"
@@ -291,15 +290,4 @@ func (s *Server) DriverRevokeBucketAccess(ctx context.Context, // nolint:gocogni
 	}).Info("bucket access for bucket is revoked")
 
 	return &cosi.DriverRevokeBucketAccessResponse{}, nil
-}
-
-// GetBucketName splits BucketID by -, the first element is backendID, the second element is bucketName.
-func GetBucketName(bucketID string) (string, error) {
-	list := strings.Split(bucketID, "-")
-
-	if len(list) != 2 { // nolint:gomnd
-		return "", errors.New("invalid bucketId")
-	}
-
-	return list[1], nil
 }

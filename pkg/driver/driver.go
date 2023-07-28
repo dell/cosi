@@ -27,9 +27,9 @@ import (
 	log "github.com/sirupsen/logrus"
 	spec "sigs.k8s.io/container-object-storage-interface-spec"
 
-	"github.com/dell/cosi-driver/pkg/config"
-	"github.com/dell/cosi-driver/pkg/identity"
-	"github.com/dell/cosi-driver/pkg/provisioner"
+	"github.com/dell/cosi/pkg/config"
+	"github.com/dell/cosi/pkg/identity"
+	"github.com/dell/cosi/pkg/provisioner"
 )
 
 const (

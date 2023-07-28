@@ -38,8 +38,8 @@ import (
 	"google.golang.org/grpc/status"
 	"sigs.k8s.io/container-object-storage-interface-provisioner-sidecar/pkg/consts"
 
-	internalLogger "github.com/dell/cosi-driver/pkg/internal/logger"
-	driver "github.com/dell/cosi-driver/pkg/provisioner/virtualdriver"
+	internalLogger "github.com/dell/cosi/pkg/internal/logger"
+	driver "github.com/dell/cosi/pkg/provisioner/virtualdriver"
 	objectscaleRest "github.com/dell/goobjectscale/pkg/client/rest"
 	objectscaleClient "github.com/dell/goobjectscale/pkg/client/rest/client"
 	iamObjectscale "github.com/dell/goobjectscale/pkg/client/rest/iam"
@@ -47,8 +47,8 @@ import (
 	otelCodes "go.opentelemetry.io/otel/codes"
 	cosi "sigs.k8s.io/container-object-storage-interface-spec"
 
-	"github.com/dell/cosi-driver/pkg/config"
-	"github.com/dell/cosi-driver/pkg/transport"
+	"github.com/dell/cosi/pkg/config"
+	"github.com/dell/cosi/pkg/transport"
 )
 
 const (
@@ -228,67 +228,6 @@ func New(config *config.Objectscale) (*Server, error) {
 // ID extends COSI interface by adding ID method.
 func (s *Server) ID() string {
 	return s.backendID
-}
-
-// DriverDeleteBucket deletes Bucket on specific Object Storage Platform.
-func (s *Server) DriverDeleteBucket(ctx context.Context,
-	req *cosi.DriverDeleteBucketRequest,
-) (*cosi.DriverDeleteBucketResponse, error) {
-	_, span := otel.Tracer("DeleteBucketRequest").Start(ctx, "ObjectscaleDriverDeleteBucket")
-	defer span.End()
-
-	log.WithFields(log.Fields{
-		"bucketID": req.BucketId,
-	}).Info("bucket is being deleted")
-
-	span.AddEvent("bucket is being deleted")
-
-	// Check if bucketID is not empty.
-	if req.GetBucketId() == "" {
-		err := errors.New("empty bucketID")
-		log.Error(err.Error())
-
-		span.RecordError(err)
-		span.SetStatus(otelCodes.Error, err.Error())
-
-		return nil, status.Error(codes.InvalidArgument, err.Error())
-	}
-
-	// Extract bucket name from bucketID.
-	bucketName := strings.SplitN(req.BucketId, "-", splitNumber)[1]
-
-	// Delete bucket.
-	err := s.mgmtClient.Buckets().Delete(ctx, bucketName, s.namespace, s.emptyBucket)
-
-	if errors.Is(err, model.Error{Code: model.CodeResourceNotFound}) {
-		log.WithFields(log.Fields{
-			"bucket": bucketName,
-		}).Warn("bucket does not exist")
-
-		span.AddEvent("bucket does not exist")
-
-		return &cosi.DriverDeleteBucketResponse{}, nil
-	}
-
-	if err != nil {
-		log.WithFields(log.Fields{
-			"bucket": bucketName,
-			"error":  err,
-		}).Error("failed to delete bucket")
-
-		span.RecordError(err)
-		span.SetStatus(otelCodes.Error, "failed to delete bucket")
-
-		return nil, status.Error(codes.Internal, "bucket was not successfully deleted")
-	}
-
-	log.WithFields(log.Fields{
-		"bucket": bucketName,
-	}).Info("bucket successfully deleted")
-
-	span.AddEvent("bucket successfully deleted")
-
-	return &cosi.DriverDeleteBucketResponse{}, nil
 }
 
 // Principal is a principal of AWS policy.
@@ -749,6 +688,7 @@ func assembleCredentials(
 	return credentials
 }
 
+// BuildUsername constructs user name for user in bucket access process.
 func BuildUsername(namespace, bucketName string) string {
 	raw := fmt.Sprintf("%v-user-%v", namespace, bucketName)
 	if len(raw) > maxUsernameLength {
@@ -758,10 +698,23 @@ func BuildUsername(namespace, bucketName string) string {
 	return raw
 }
 
+// BuildResourceString constructs policy resource string.
 func BuildResourceString(objectScaleID, objectStoreID, bucketName string) string {
 	return fmt.Sprintf("arn:aws:s3:%s:%s:%s/*", objectScaleID, objectStoreID, bucketName)
 }
 
+// BuildPrincipalString constructs policy principal string.
 func BuildPrincipalString(namespace, bucketName string) string {
 	return fmt.Sprintf("urn:osc:iam::%s:user/%s", namespace, BuildUsername(namespace, bucketName))
+}
+
+// GetBucketName splits BucketID by -, the first element is backendID, the second element is bucketName.
+func GetBucketName(bucketID string) (string, error) {
+	list := strings.SplitN(bucketID, "-", 2) //nolint:gomnd
+
+	if len(list) != 2 { //nolint:gomnd
+		return "", errors.New("invalid bucketId")
+	}
+
+	return list[1], nil
 }

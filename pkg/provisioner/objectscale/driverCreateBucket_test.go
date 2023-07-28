@@ -16,7 +16,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/dell/cosi-driver/pkg/internal/testcontext"
+	"github.com/dell/cosi/pkg/internal/testcontext"
 	"github.com/dell/goobjectscale/pkg/client/api/mocks"
 	"github.com/dell/goobjectscale/pkg/client/model"
 	"github.com/stretchr/testify/assert"
@@ -28,8 +28,8 @@ import (
 	cosi "sigs.k8s.io/container-object-storage-interface-spec"
 )
 
-// TestGetBucket contains table tests for (*Server).DriverCreateBucket method.
-func TestDriverCreateBucket(t *testing.T) {
+// TestServerDriverCreateBucket contains table tests for (*Server).DriverCreateBucket method.
+func TestServerDriverCreateBucket(t *testing.T) {
 	t.Parallel()
 
 	for scenario, fn := range map[string]func(t *testing.T){
@@ -52,7 +52,7 @@ func TestDriverCreateBucket(t *testing.T) {
 }
 
 // testDriverCreateBucketBucketCreated tests the happy path of the (*Server).DriverCreateBucket method.
-// It assumes that the driver does not exist on the backend.
+// It assumes that the bucket does not exist on the backend.
 func testDriverCreateBucketBucketCreated(t *testing.T) {
 	ctx, cancel := testcontext.New(t)
 	defer cancel()
@@ -74,7 +74,7 @@ func testDriverCreateBucketBucketCreated(t *testing.T) {
 
 	expectedBucketID := strings.Join([]string{server.backendID, testBucket.Name}, "-")
 
-	res, err := server.DriverCreateBucket(ctx, testRequest)
+	res, err := server.DriverCreateBucket(ctx, testBucketCreationRequest)
 
 	assert.NoError(t, err)
 	require.NotNil(t, res)
@@ -82,7 +82,7 @@ func testDriverCreateBucketBucketCreated(t *testing.T) {
 }
 
 // testDriverCreateBucketBucketExists tests the happy path of the (*Server).DriverCreateBucket method.
-// It assumes that the driver already exists on the backend.
+// It assumes that the bucket already exists on the backend.
 func testDriverCreateBucketBucketExists(t *testing.T) {
 	ctx, cancel := testcontext.New(t)
 	defer cancel()
@@ -103,7 +103,7 @@ func testDriverCreateBucketBucketExists(t *testing.T) {
 
 	expectedBucketID := strings.Join([]string{server.backendID, testBucket.Name}, "-")
 
-	res, err := server.DriverCreateBucket(ctx, testRequest)
+	res, err := server.DriverCreateBucket(ctx, testBucketCreationRequest)
 
 	assert.NoError(t, err)
 	require.NotNil(t, res)
@@ -154,7 +154,7 @@ func testDriverCreateBucketCheckBucketFailed(t *testing.T) {
 		objectStoreID: objectStoreID,
 	}
 
-	_, err := server.DriverCreateBucket(ctx, testRequest)
+	_, err := server.DriverCreateBucket(ctx, testBucketCreationRequest)
 
 	assert.ErrorIs(t, err, status.Error(codes.Internal, "failed to check if bucket exists"))
 }
@@ -180,7 +180,7 @@ func testDriverCreateBucketBucketCreationFailed(t *testing.T) {
 		objectStoreID: objectStoreID,
 	}
 
-	_, err := server.DriverCreateBucket(ctx, testRequest)
+	_, err := server.DriverCreateBucket(ctx, testBucketCreationRequest)
 
 	assert.ErrorIs(t, err, status.Error(codes.Internal, "failed to create bucket"))
 }

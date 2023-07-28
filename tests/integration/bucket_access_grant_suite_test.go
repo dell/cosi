@@ -17,14 +17,14 @@ package main_test
 import (
 	"context"
 
-	objscl "github.com/dell/cosi-driver/pkg/provisioner/objectscale"
+	objscl "github.com/dell/cosi/pkg/provisioner/objectscale"
 	. "github.com/onsi/ginkgo/v2"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/container-object-storage-interface-api/apis/objectstorage/v1alpha1"
 
-	"github.com/dell/cosi-driver/pkg/provisioner/policy"
-	"github.com/dell/cosi-driver/tests/integration/steps"
+	"github.com/dell/cosi/pkg/provisioner/policy"
+	"github.com/dell/cosi/tests/integration/steps"
 )
 
 var _ = Describe("Bucket Access Grant", Ordered, Label("grant", "objectscale"), func() {
