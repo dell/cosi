@@ -10,9 +10,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-.PHONY: all
-all: clean generate format build
-
 COSI_BUILD_DIR   := build
 COSI_BUILD_PATH  := ./cmd/
 
@@ -25,8 +22,12 @@ include overrides.mk
 help:	##show help
 	@fgrep --no-filename "##" $(MAKEFILE_LIST) | fgrep --invert-match fgrep | sed --expression='s/\\$$//' | sed --expression='s/##//'
 
+.PHONY: all
+all: clean codegen lint build
+
 .PHONY: clean
 clean:	##clean directory
+	rm --force pkg/config/*.gen.go
 	rm --force core/core.gen.go
 	rm --force semver.mk
 	go clean
@@ -36,8 +37,8 @@ clean:	##clean directory
 ########################################################################
 
 .PHONY: codegen
-codegen:	##regenerate files
-	go codegen ./...
+codegen: clean	##regenerate files
+	go generate ./...
 
 # FIXME: remove this target after we remove dependency on private goobjectscale.
 .PHONY: vendor
