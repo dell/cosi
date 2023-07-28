@@ -30,3 +30,6 @@ semver.mk
 
 # vscode config dir
 .vscode/
+
+# mirrord dir
+.mirrord/

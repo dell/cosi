@@ -23,6 +23,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/iam"
 	"github.com/dell/goobjectscale/pkg/client/model"
 	"github.com/google/uuid"
+	"go.opencensus.io/trace"
 	"go.opentelemetry.io/otel"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -33,10 +34,39 @@ import (
 	cosi "sigs.k8s.io/container-object-storage-interface-spec"
 )
 
+// All errors that can be returned by DriverGrantBucketAccess.
+var (
+	ErrInvalidBucketID       = errors.New("invalid bucketID")
+	ErrEmptyBucketAccessName = errors.New("empty bucket access name")
+)
+
+// Check if bucketID is not empty.
+func isBucketIDEmpty(ctx context.Context, req *cosi.DriverGrantBucketAccessRequest) error {
+	if req.GetBucketId() == "" {
+		return ErrInvalidBucketID
+	}
+
+	return nil
+}
+
+// Check if bucket access name is not empty.
+func isBucketAccessNameEmpty(ctx context.Context, req *cosi.DriverGrantBucketAccessRequest) error {
+	if req.GetName() == "" {
+		return ErrEmptyBucketAccessName
+	}
+
+	return nil
+}
+
+// Put error message into span and logs.
+func putErrorIntoSpanAndLogs(ctx context.Context, span trace.Span, err error) {
+	log.Error(err.Error())
+	span.RecordError(err)
+	span.SetStatus(otelCodes.Error, err.Error())
+}
+
 // DriverGrantBucketAccess provides access to Bucket on specific Object Storage Platform.
-// TODO: how about splitting key and IAM mechanisms into different functions?
-// TODO: this probably has to be refactored in order to meet the gocognit requirements (complexity < 30).
-func (s *Server) DriverGrantBucketAccess( // nolint:gocognit
+func (s *Server) DriverGrantBucketAccess(
 	ctx context.Context,
 	req *cosi.DriverGrantBucketAccessRequest,
 ) (*cosi.DriverGrantBucketAccessResponse, error) {
@@ -44,15 +74,12 @@ func (s *Server) DriverGrantBucketAccess( // nolint:gocognit
 	defer span.End()
 
 	// Check if bucketID is not empty.
-	if req.GetBucketId() == "" {
-		err := errors.New("empty bucketID")
-		log.Error(err.Error())
-
-		span.RecordError(err)
-		span.SetStatus(otelCodes.Error, err.Error())
-
+	if err := isBucketIDEmpty(ctx, req); err != nil {
+		putErrorIntoSpanAndLogs(ctx, span, err)
 		return nil, status.Error(codes.InvalidArgument, err.Error())
 	}
+
+	// Check if bucket access name is not empty.
 
 	// Check if bucket access name is not empty.
 	if req.GetName() == "" {
