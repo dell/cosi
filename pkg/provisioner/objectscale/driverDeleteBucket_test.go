@@ -126,7 +126,7 @@ func testDriverDeleteBucketEmptyBucketID(t *testing.T) {
 	assert.ErrorIs(t, err, status.Error(codes.InvalidArgument, "empty bucketID"))
 }
 
-// testDriverDeleteBucketInvalidBucketID tests if too many dashes in bucket ID is handled correctly.
+// testDriverDeleteBucketInvalidBucketID tests if bucket name is extracted correctly from bucket ID.
 // in the (*Server).DriverDeleteBucket method.
 func testDriverDeleteBucketInvalidBucketID(t *testing.T) {
 	ctx, cancel := testcontext.New(t)
