@@ -151,7 +151,7 @@ func testDriverDeleteBucketInvalidBucketID(t *testing.T) {
 	assert.ErrorIs(t, err, status.Error(codes.InvalidArgument, "invalid bucketId"))
 }
 
-// testDriverDeleteBucketBucketDeleted tests if error during deletion of bucket is handled correctly
+// testDriverDeleteBucketBucketDeletionFailed tests if error during deletion of bucket is handled correctly
 // in the (*Server).DriverDeleteBucket method.
 func testDriverDeleteBucketBucketDeletionFailed(t *testing.T) {
 	ctx, cancel := testcontext.New(t)
