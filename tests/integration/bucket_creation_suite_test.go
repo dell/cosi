@@ -120,8 +120,8 @@ var _ = Describe("Bucket Creation", Ordered, Label("create", "objectscale"), fun
 		By("Checking if COSI driver 'cosi-driver' is installed in namespace 'cosi-driver'")
 		steps.CheckCOSIDriverInstallation(ctx, clientset, "cosi-driver", "cosi-driver")
 
-		// STEP: BucketClass resource is created from specification "my-bucket-class"
-		By("Creating the BucketClass 'my-bucket-class'")
+		// STEP: BucketClass resource is created from specification "create-bucket-class"
+		By("Creating the BucketClass 'create-bucket-class'")
 		steps.CreateBucketClassResource(ctx, bucketClient, createClass)
 	})
 

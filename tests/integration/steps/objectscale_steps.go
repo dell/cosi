@@ -159,7 +159,7 @@ func CheckUser(ctx context.Context, iamClient *iam.IAM, user string, namespace s
 	gomega.Expect(username).To(gomega.Equal(*(userOut.User.UserName)))
 }
 
-// CheckUserDeleted checks if user does not exists in ObjectScale.
+// CheckUserDeleted checks if user does not exist in ObjectScale.
 func CheckUserDeleted(ctx context.Context, iamClient *iam.IAM, user string, namespace string) {
 	username := objscl.BuildUsername(namespace, user)
 

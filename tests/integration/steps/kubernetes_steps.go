@@ -82,12 +82,12 @@ func CheckBucketClassSpec(_ *kubernetes.Clientset, _ v1alpha1.BucketClaimSpec) {
 }
 
 // CheckSecret is used to check if secret exists.
-func CheckSecret(ctx context.Context, clientset *kubernetes.Clientset, secret *v1.Secret) *v1.Secret {
-	var newSecret *v1.Secret
+func CheckSecret(ctx context.Context, clientset *kubernetes.Clientset, inputSecret *v1.Secret) *v1.Secret {
+	var k8sSecret *v1.Secret
 
 	err := retry(ctx, attempts, sleep, func() error {
 		var err error
-		newSecret, err = clientset.CoreV1().Secrets(secret.Namespace).Get(ctx, secret.Name, metav1.GetOptions{})
+		k8sSecret, err = clientset.CoreV1().Secrets(inputSecret.Namespace).Get(ctx, inputSecret.Name, metav1.GetOptions{})
 		if err != nil {
 			return err
 		}
@@ -96,17 +96,39 @@ func CheckSecret(ctx context.Context, clientset *kubernetes.Clientset, secret *v
 	})
 
 	gomega.Expect(err).ToNot(gomega.HaveOccurred())
-	gomega.Expect(newSecret).NotTo(gomega.BeNil())
-	gomega.Expect(secret.Name).To(gomega.Equal(newSecret.Name))
-	gomega.Expect(secret.Namespace).To(gomega.Equal(newSecret.Namespace))
-	gomega.Expect(newSecret.Data).NotTo(gomega.Or(gomega.BeNil(), gomega.BeEmpty()))
+	gomega.Expect(k8sSecret).NotTo(gomega.BeNil())
+	gomega.Expect(inputSecret.Name).To(gomega.Equal(k8sSecret.Name))
+	gomega.Expect(inputSecret.Namespace).To(gomega.Equal(k8sSecret.Namespace))
+	gomega.Expect(k8sSecret.Data).NotTo(gomega.Or(gomega.BeNil(), gomega.BeEmpty()))
 
-	for k, v := range secret.Data {
-		gomega.Expect(k).To(gomega.BeKeyOf(newSecret.Data))
-		gomega.Expect(len(v)).To(gomega.BeNumerically("<=", len(newSecret.Data[k])))
+	for k, v := range k8sSecret.Data {
+		gomega.Expect(k).To(gomega.BeKeyOf(k8sSecret.Data))
+		gomega.Expect(len(v)).To(gomega.BeNumerically("<=", len(k8sSecret.Data[k])))
+
+		data := make(map[string]interface{})
+		err = json.Unmarshal(k8sSecret.Data[k], &data)
+		gomega.Expect(err).ToNot(gomega.HaveOccurred())
+		gomega.Expect(data).To(gomega.HaveKey("metadata"))
+		gomega.Expect(data).To(gomega.HaveKey("spec"))
+
+		metadata, typeAssertion := data["metadata"].(map[string]interface{})
+		gomega.Expect(typeAssertion).To(gomega.BeTrue())
+		gomega.Expect(metadata).To(gomega.HaveKey("name"))
+
+		spec, typeAssertion := data["spec"].(map[string]interface{})
+		gomega.Expect(typeAssertion).To(gomega.BeTrue())
+		gomega.Expect(spec).To(gomega.HaveKey("authenticationType"))
+		gomega.Expect(spec).To(gomega.HaveKey("bucketName"))
+		gomega.Expect(spec).To(gomega.HaveKey("protocols"))
+		gomega.Expect(spec).To(gomega.HaveKey("secretS3"))
+
+		s3Secret, typeAssertion := spec["secretS3"].(map[string]interface{})
+		gomega.Expect(typeAssertion).To(gomega.BeTrue())
+		gomega.Expect(s3Secret).To(gomega.HaveKey("accessKeyID"))
+		gomega.Expect(s3Secret).To(gomega.HaveKey("accessSecretKey"))
 	}
 
-	return newSecret
+	return k8sSecret
 }
 
 // CheckBucketClaimEvents Check BucketClaim events.

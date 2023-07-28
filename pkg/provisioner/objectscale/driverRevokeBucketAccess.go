@@ -288,7 +288,7 @@ func (s *Server) DriverRevokeBucketAccess(ctx context.Context, //nolint:gocognit
 	return &cosi.DriverRevokeBucketAccessResponse{}, nil
 }
 
-// removeItem is generic function that removes all occurrences of item.
+// remove is a generic function that removes all occurrences of an item.
 func remove[T comparable](from []T, item T) []T {
 	output := make([]T, 0, len(from)) // should be little bit faster if we preallocate capacity
 

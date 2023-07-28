@@ -131,16 +131,16 @@ var _ = Describe("Bucket Deletion", Ordered, Label("delete", "objectscale"), fun
 
 	// STEP: Scenario: BucketClaim deletion with deletionPolicy set to "delete"
 	It("Deletes the bucket when deletionPolicy is set to 'delete'", func(ctx context.Context) {
-		// STEP: BucketClass resource is created from specification "my-bucket-class-delete"
-		By("creating a BucketClass resource from specification 'my-bucket-class-delete'")
+		// STEP: BucketClass resource is created from specification "delete-bucket-class-delete"
+		By("creating a BucketClass resource from specification 'delete-bucket-class-delete'")
 		steps.CreateBucketClassResource(ctx, bucketClient, bucketClassDelete)
 
-		// STEP: BucketClaim resource is created from specification "my-bucket-claim-delete"
-		By("creating a BucketClaim resource from specification 'my-bucket-claim-delete'")
+		// STEP: BucketClaim resource is created from specification "delete-bucket-claim-delete"
+		By("creating a BucketClaim resource from specification 'delete-bucket-claim-delete'")
 		steps.CreateBucketClaimResource(ctx, bucketClient, bucketClaimDelete)
 
-		// STEP: Bucket resource referencing BucketClaim resource "my-bucket-claim-delete' is created
-		By("checking if Bucket resource referencing BucketClaim resource 'my-bucket-claim-delete' is created")
+		// STEP: Bucket resource referencing BucketClaim resource "delete-bucket-claim-delete' is created
+		By("checking if Bucket resource referencing BucketClaim resource 'delete-bucket-claim-delete' is created")
 		deleteBucket = steps.GetBucketResource(ctx, bucketClient, bucketClaimDelete)
 
 		// STEP: Bucket resource referencing BucketClaim resource "bucket-claim-delete" is created in ObjectStore "${objectstoreName}"
@@ -159,16 +159,16 @@ var _ = Describe("Bucket Deletion", Ordered, Label("delete", "objectscale"), fun
 		By("checking the status 'bucketID' of Bucket resource referencing BucketClaim resource 'bucket-claim-delete' is not empty")
 		steps.CheckBucketID(deleteBucket)
 
-		// STEP: Bucket referencing BucketClaim resource "my-bucket-claim-retain" is available in ObjectStore "${objectstoreName}"
-		By("checking if Bucket referencing BucketClaim resource 'my-bucket-claim-retain' is available in ObjectStore '${objectstoreName}'")
+		// STEP: Bucket referencing BucketClaim resource "delete-bucket-claim-retain" is available in ObjectStore "${objectstoreName}"
+		By("checking if Bucket referencing BucketClaim resource 'delete-bucket-claim-retain' is available in ObjectStore '${objectstoreName}'")
 		steps.CheckBucketResourceInObjectStore(ctx, objectscale, Namespace, deleteBucket)
 
-		// STEP: BucketClaim resource "my-bucket-claim-delete" is deleted in namespace "deletion-namespace"
-		By("deleting BucketClaim resource 'my-bucket-claim-delete' in namespace 'deletion-namespace'")
+		// STEP: BucketClaim resource "delete-bucket-claim-delete" is deleted in namespace "deletion-namespace"
+		By("deleting BucketClaim resource 'delete-bucket-claim-delete' in namespace 'deletion-namespace'")
 		steps.DeleteBucketClaimResource(ctx, bucketClient, bucketClaimDelete)
 
-		// STEP: Bucket referencing BucketClaim resource "my-bucket-claim-delete" is deleted in ObjectStore "${objectstoreName}"
-		By("checking if Bucket referencing BucketClaim resource 'my-bucket-claim-delete' is deleted in ObjectStore '${objectstoreName}'")
+		// STEP: Bucket referencing BucketClaim resource "delete-bucket-claim-delete" is deleted in ObjectStore "${objectstoreName}"
+		By("checking if Bucket referencing BucketClaim resource 'delete-bucket-claim-delete' is deleted in ObjectStore '${objectstoreName}'")
 		steps.CheckBucketDeletionInObjectStore(ctx, objectscale, Namespace, deleteBucket)
 
 		DeferCleanup(func(ctx context.Context) {
@@ -178,16 +178,16 @@ var _ = Describe("Bucket Deletion", Ordered, Label("delete", "objectscale"), fun
 
 	// STEP: Scenario: BucketClaim deletion with deletionPolicy set to "retain"
 	It("Does not delete the bucket when deletionPolicy is set to 'retain'", func(ctx context.Context) {
-		// STEP: BucketClass resource is created from specification "my-bucket-class-retain"
-		By("creating a BucketClass resource from specification 'my-bucket-class-retain'")
+		// STEP: BucketClass resource is created from specification "delete-bucket-class-retain"
+		By("creating a BucketClass resource from specification 'delete-bucket-class-retain'")
 		steps.CreateBucketClassResource(ctx, bucketClient, bucketClassRetain)
 
-		// STEP: BucketClaim resource is created from specification "my-bucket-claim-retain"
-		By("creating a BucketClaim resource from specification 'my-bucket-claim-retain'")
+		// STEP: BucketClaim resource is created from specification "delete-bucket-claim-retain"
+		By("creating a BucketClaim resource from specification 'delete-bucket-claim-retain'")
 		steps.CreateBucketClaimResource(ctx, bucketClient, bucketClaimRetain)
 
-		// STEP: Bucket resource referencing BucketClaim resource 'my-bucket-claim-retain' is created"
-		By("checking if Bucket resource referencing BucketClaim resource 'my-bucket-claim-retain' is created")
+		// STEP: Bucket resource referencing BucketClaim resource 'delete-bucket-claim-retain' is created"
+		By("checking if Bucket resource referencing BucketClaim resource 'delete-bucket-claim-retain' is created")
 		retainBucket = steps.GetBucketResource(ctx, bucketClient, bucketClaimRetain)
 
 		// STEP: Bucket resource referencing BucketClaim resource "bucket-claim-retain" is created in ObjectStore "${objectstoreName}"
@@ -206,16 +206,16 @@ var _ = Describe("Bucket Deletion", Ordered, Label("delete", "objectscale"), fun
 		By("checking the ID of Bucket resource referencing BucketClaim resource 'bucket-claim-retain' is not empty")
 		steps.CheckBucketID(retainBucket)
 
-		// STEP: Bucket referencing BucketClaim resource "my-bucket-claim-retain" is available in ObjectStore "${objectstoreId}"
-		By("checking if Bucket referencing BucketClaim resource 'my-bucket-claim-retain' is available in ObjectStore '${objectstoreId}'")
+		// STEP: Bucket referencing BucketClaim resource "delete-bucket-claim-retain" is available in ObjectStore "${objectstoreId}"
+		By("checking if Bucket referencing BucketClaim resource 'delete-bucket-claim-retain' is available in ObjectStore '${objectstoreId}'")
 		steps.CheckBucketResourceInObjectStore(ctx, objectscale, Namespace, retainBucket)
 
-		// STEP: BucketClaim resource "my-bucket-claim-retain" is deleted in namespace "deletion-namespace"
-		By("deleting BucketClaim resource 'my-bucket-claim-retain' in namespace 'deletion-namespace'")
+		// STEP: BucketClaim resource "delete-bucket-claim-retain" is deleted in namespace "deletion-namespace"
+		By("deleting BucketClaim resource 'delete-bucket-claim-retain' in namespace 'deletion-namespace'")
 		steps.DeleteBucketClaimResource(ctx, bucketClient, bucketClaimRetain)
 
-		// STEP: Bucket referencing BucketClaim resource "my-bucket-claim-retain" is available in ObjectStore "${objectstoreId}"
-		By("checking if Bucket referencing BucketClaim resource 'my-bucket-claim-retain' is available in ObjectStore '${objectstoreId}'")
+		// STEP: Bucket referencing BucketClaim resource "delete-bucket-claim-retain" is available in ObjectStore "${objectstoreId}"
+		By("checking if Bucket referencing BucketClaim resource 'delete-bucket-claim-retain' is available in ObjectStore '${objectstoreId}'")
 		steps.CheckBucketResourceInObjectStore(ctx, objectscale, Namespace, retainBucket)
 
 		DeferCleanup(func(ctx context.Context) {
