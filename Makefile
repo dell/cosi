@@ -80,6 +80,10 @@ integration-test:	##run integration test (Linux only)
 lint:	##run golangci-lint over the repository
 	golangci-lint run
 
+.PHONY: fuzz
+fuzz:	##run all possible fuzzy tests for 10s each
+	./scripts/fuzz-all.sh
+
 .PHONY: gofumpt
 gofumpt:	##run gofumpt over specific packages
 	gofumpt -w cmd pkg tests

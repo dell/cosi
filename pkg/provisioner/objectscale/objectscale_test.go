@@ -311,17 +311,29 @@ func FuzzGetBucketName(f *testing.F) {
 		"driver.id-bucket.name",
 		".driver.id-bucket.name",
 		".driver.id-bucket-name",
+		"--",
+		"-.",
 	} {
 		f.Add(seed) // Use f.Add to provide a seed corpus
 	}
 
 	f.Fuzz(func(t *testing.T, in string) {
 		out, err := GetBucketName(in)
-		if strings.Contains(in, "-") {
-			assert.NoErrorf(t, err, "Input was: %s", in)
-			assert.NotEmpty(t, out, "Input was: %s", in)
+
+		// Check if the input string has one hyphen, but not ending with a hyphen
+		hasHyphen := strings.Count(in, "-") == 1 && !strings.HasSuffix(in, "-")
+		// Check if the input string has more than one hyphen
+		hasMultipleHyphens := strings.Count(in, "-") > 1
+
+		// If the input has one hyphen and doesn't end with a hyphen, or has multiple hyphens
+		if hasHyphen || hasMultipleHyphens {
+			// The error should be nil
+			assert.NoErrorf(t, err, "Input was '%s'", in)
+			// The output should not be empty
+			assert.NotEmpty(t, out, "Input was '%s'", in)
 		} else {
-			assert.Errorf(t, err, "Input was: %s", in)
+			// Otherwise, there should be an error
+			assert.Errorf(t, err, "Input was '%s'", in)
 		}
 	})
 }
