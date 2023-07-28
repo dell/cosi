@@ -254,7 +254,7 @@ type UpdateBucketPolicyRequest struct {
 // DriverGrantBucketAccess provides access to Bucket on specific Object Storage Platform.
 // TODO: how about splitting key and IAM mechanisms into different functions?
 // TODO: this probably has to be refactored in order to meet the gocognit requirements (complexity < 30).
-func (s *Server) DriverGrantBucketAccess( // nolint:gocognit
+func (s *Server) DriverGrantBucketAccess( //nolint:gocognit
 	ctx context.Context,
 	req *cosi.DriverGrantBucketAccessRequest,
 ) (*cosi.DriverGrantBucketAccessResponse, error) {
@@ -529,7 +529,7 @@ func (s *Server) DriverGrantBucketAccess( // nolint:gocognit
 
 // parsePolicyStatement generates new bucket policy statements array with updated resource and principal.
 // TODO: this probably has to be refactored in order to meet the gocognit requirements (complexity < 30).
-func parsePolicyStatement( // nolint:gocognit
+func parsePolicyStatement( //nolint:gocognit
 	ctx context.Context,
 	inputStatements []UpdateBucketPolicyStatement,
 	awsBucketResourceARN,

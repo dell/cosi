@@ -20,6 +20,7 @@ import (
 	"net/http"
 	"os"
 	"testing"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
@@ -46,6 +47,9 @@ var (
 	Namespace     string
 	ObjectstoreID string
 	ObjectscaleID string
+
+	DriverNamespace     string
+	DriverContainerName string
 )
 
 const (
@@ -63,6 +67,12 @@ var _ = BeforeSuite(func() {
 	// Load environment variables
 
 	exists := false
+	DriverNamespace, exists = os.LookupEnv("DRIVER_NAMESPACE")
+	Expect(exists).To(BeTrue())
+
+	DriverContainerName, exists = os.LookupEnv("DRIVER_CONTAINER_NAME")
+	Expect(exists).To(BeTrue())
+
 	Namespace, exists = os.LookupEnv("OBJECTSCALE_NAMESPACE")
 	Expect(exists).To(BeTrue())
 
@@ -99,7 +109,7 @@ var _ = BeforeSuite(func() {
 
 	// ObjectScale clientset
 	transport := &http.Transport{
-		TLSClientConfig: &tls.Config{InsecureSkipVerify: true}, // nolint:gosec
+		TLSClientConfig: &tls.Config{InsecureSkipVerify: true}, //nolint:gosec
 	}
 	unsafeClient := &http.Client{Transport: transport}
 
@@ -127,7 +137,7 @@ var _ = BeforeSuite(func() {
 		Region:   &region,
 		HTTPClient: &http.Client{
 			Transport: &http.Transport{
-				TLSClientConfig: &tls.Config{InsecureSkipVerify: true}, // nolint:gosec
+				TLSClientConfig: &tls.Config{InsecureSkipVerify: true}, //nolint:gosec
 			},
 		},
 	})
@@ -142,10 +152,13 @@ var _ = BeforeSuite(func() {
 })
 
 var _ = AfterSuite(func(ctx context.Context) {
-	podList, err := clientset.CoreV1().Pods(Namespace).List(ctx, v1.ListOptions{})
+	podList, err := clientset.CoreV1().Pods(DriverNamespace).List(ctx, v1.ListOptions{})
 	Expect(err).ToNot(HaveOccurred())
+	Expect(podList.Items).ToNot(BeEmpty())
 
+	// ensure every job from test is processed
+	time.Sleep(time.Second)
 	for _, pod := range podList.Items {
-		steps.CheckErrors(ctx, clientset, pod.Name, pod.Namespace)
+		steps.CheckErrors(ctx, clientset, pod.Name, DriverContainerName, pod.Namespace)
 	}
 })

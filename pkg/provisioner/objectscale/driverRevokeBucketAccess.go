@@ -31,7 +31,7 @@ import (
 
 // DriverRevokeBucketAccess revokes access from Bucket on specific Object Storage Platform.
 // TODO: this probably has to be refactored in order to meet the gocognit requirements (complexity < 30).
-func (s *Server) DriverRevokeBucketAccess(ctx context.Context, // nolint:gocognit
+func (s *Server) DriverRevokeBucketAccess(ctx context.Context, //nolint:gocognit
 	req *cosi.DriverRevokeBucketAccessRequest,
 ) (*cosi.DriverRevokeBucketAccessResponse, error) {
 	ctx, span := otel.Tracer("RevokeBucketAccessRequest").Start(ctx, "ObjectscaleDriverRevokeBucketAccess")
@@ -182,31 +182,16 @@ func (s *Server) DriverRevokeBucketAccess(ctx context.Context, // nolint:gocogni
 			return nil, status.Error(codes.Internal, errMsg.Error())
 		}
 
-		// FIXME: is Statement empty?
 		for k, statement := range jsonPolicy.Statement {
 			log.WithFields(log.Fields{
 				"k":         k,
 				"statement": statement,
 			}).Debug("processing next statement")
 
-			isPrincipal := false
-			isResource := false
+			statement.Principal.AWS = remove(statement.Principal.AWS, awsPrincipalString)
+			statement.Resource = remove(statement.Resource, awsBucketResourceARN)
 
-			for _, p := range statement.Principal.AWS {
-				if p == awsPrincipalString {
-					isPrincipal = true
-				}
-			}
-
-			for _, r := range statement.Resource {
-				if r == awsBucketResourceARN {
-					isResource = true
-				}
-			}
-
-			if isPrincipal && isResource {
-				jsonPolicy.Statement = append(jsonPolicy.Statement[:k], jsonPolicy.Statement[k+1:]...)
-			}
+			jsonPolicy.Statement[k] = statement
 		}
 
 		updatedPolicy, err := json.Marshal(jsonPolicy)
@@ -229,7 +214,6 @@ func (s *Server) DriverRevokeBucketAccess(ctx context.Context, // nolint:gocogni
 			"rawPolicy": string(updatedPolicy),
 		}).Debug("updating policy")
 
-		// FIXME: An error occurred in the API Service: An error occurred in the API service. Cause: Missing required field Statement..
 		// Update policy.
 		err = s.mgmtClient.Buckets().UpdatePolicy(ctx, bucketName, string(updatedPolicy), parameters)
 		if err != nil {
@@ -302,4 +286,17 @@ func (s *Server) DriverRevokeBucketAccess(ctx context.Context, // nolint:gocogni
 	}).Info("bucket access for bucket is revoked")
 
 	return &cosi.DriverRevokeBucketAccessResponse{}, nil
+}
+
+// removeItem is generic function that removes all occurrences of item.
+func remove[T comparable](from []T, item T) []T {
+	output := make([]T, 0, len(from)) // should be little bit faster if we preallocate capacity
+
+	for _, element := range from {
+		if element != item {
+			output = append(output, element)
+		}
+	}
+
+	return output
 }

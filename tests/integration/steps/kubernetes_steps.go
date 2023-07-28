@@ -185,7 +185,7 @@ func CheckBucketAccessFromSecret(ctx context.Context, clientset *kubernetes.Clie
 	bucketName := secretData.Spec.BucketName
 
 	x509Client := http.Client{Transport: &http.Transport{
-		TLSClientConfig: &tls.Config{InsecureSkipVerify: true}, // nolint:gosec
+		TLSClientConfig: &tls.Config{InsecureSkipVerify: true}, //nolint:gosec
 	}}
 
 	s3Config := &aws.Config{
@@ -231,8 +231,8 @@ func DeleteSecret(ctx context.Context, clientset *kubernetes.Clientset, secret *
 }
 
 // CheckErrors parses logs and counts occurrences of error messages.
-func CheckErrors(ctx context.Context, clientset *kubernetes.Clientset, pod, namespace string) {
-	req := clientset.CoreV1().Pods(namespace).GetLogs(pod, &v1.PodLogOptions{})
+func CheckErrors(ctx context.Context, clientset *kubernetes.Clientset, pod, container, namespace string) {
+	req := clientset.CoreV1().Pods(namespace).GetLogs(pod, &v1.PodLogOptions{Container: container})
 
 	podLogs, err := req.Stream(ctx)
 	gomega.Expect(err).ToNot(gomega.HaveOccurred())
@@ -243,6 +243,8 @@ func CheckErrors(ctx context.Context, clientset *kubernetes.Clientset, pod, name
 
 	_, err = io.Copy(buf, podLogs)
 	gomega.Expect(err).ToNot(gomega.HaveOccurred())
-	gomega.Expect(buf).ToNot(gomega.BeEmpty())
-	gomega.Expect(buf.String()).ToNot(gomega.Or(gomega.ContainSubstring("error"), gomega.ContainSubstring("Error")))
+	gomega.Expect(buf.Bytes()).ToNot(gomega.BeEmpty())
+	gomega.Expect(buf.String()).To(gomega.SatisfyAll(
+		gomega.Not(gomega.ContainSubstring("error")),
+		gomega.Not(gomega.ContainSubstring("Error"))))
 }

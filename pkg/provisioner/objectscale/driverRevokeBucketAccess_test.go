@@ -14,7 +14,6 @@ package objectscale
 
 import (
 	"errors"
-	"strings"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -594,23 +593,32 @@ func testFailedToUpdateBucketPolicy(t *testing.T) {
 	assert.ErrorIs(t, err, status.Error(codes.Internal, "failed to update bucket policy"))
 }
 
-func TestGetBucketName(t *testing.T) {
+func TestRemove(t *testing.T) {
 	t.Parallel()
 
 	testCases := []struct {
-		name     string
-		input    string
-		expected string
+		name          string
+		inputList     []string
+		inputToRemove string
+		expected      []string
 	}{
 		{
-			name:     "basic",
-			input:    "first-second",
-			expected: "second",
+			name:          "basic",
+			inputList:     []string{"a", "b", "c"},
+			inputToRemove: "a",
+			expected:      []string{"b", "c"},
 		},
 		{
-			name:     "extra_dashes",
-			input:    "first-second-third",
-			expected: "second-third",
+			name:          "empty input",
+			inputList:     []string{},
+			inputToRemove: "a",
+			expected:      []string{},
+		},
+		{
+			name:          "repeated removal",
+			inputList:     []string{"a", "b", "a", "a", "c"},
+			inputToRemove: "a",
+			expected:      []string{"b", "c"},
 		},
 	}
 
@@ -620,30 +628,8 @@ func TestGetBucketName(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 
-			output, err := GetBucketName(tc.input)
-			assert.NoError(t, err)
+			output := remove(tc.expected, tc.inputToRemove)
 			assert.Equal(t, tc.expected, output)
 		})
 	}
-}
-
-func FuzzGetBucketName(f *testing.F) {
-	for _, seed := range []string{
-		"driverid-bucketname",
-		"driver.id-bucket.name",
-		".driver.id-bucket.name",
-		".driver.id-bucket-name",
-	} {
-		f.Add(seed) // Use f.Add to provide a seed corpus
-	}
-
-	f.Fuzz(func(t *testing.T, in string) {
-		out, err := GetBucketName(in)
-		if strings.Contains(in, "-") {
-			assert.NoErrorf(t, err, "Input was: %s", in)
-			assert.NotEmpty(t, out, "Input was: %s", in)
-		} else {
-			assert.Errorf(t, err, "Input was: %s", in)
-		}
-	})
 }

@@ -19,7 +19,7 @@ import (
 
 const (
 	attempts = 5
-	sleep    = 2 * time.Second // nolint:gomnd
+	sleep    = 2 * time.Second //nolint:gomnd
 )
 
 func retry(ctx context.Context, attempts int, sleep time.Duration, f func() error) error {

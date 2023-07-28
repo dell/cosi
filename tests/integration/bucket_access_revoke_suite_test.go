@@ -31,21 +31,21 @@ import (
 var _ = Describe("Bucket Access Revoke", Ordered, Label("revoke", "objectscale"), func() {
 	// Resources for scenarios
 	var (
-		myBucketClass       *v1alpha1.BucketClass
-		myBucketClaim       *v1alpha1.BucketClaim
-		myBucket            *v1alpha1.Bucket
-		myBucketAccessClass *v1alpha1.BucketAccessClass
-		myBucketAccess      *v1alpha1.BucketAccess
-		initialPolicy       policy.Document
-		finalPolicy         policy.Document
-		validSecret         *v1.Secret
-		principalUsername   string
+		revokeBucketClass       *v1alpha1.BucketClass
+		revokeBucketClaim       *v1alpha1.BucketClaim
+		revokeBucket            *v1alpha1.Bucket
+		revokeBucketAccessClass *v1alpha1.BucketAccessClass
+		revokeBucketAccess      *v1alpha1.BucketAccess
+		initialPolicy           policy.Document
+		finalPolicy             policy.Document
+		validSecret             *v1.Secret
+		principalUsername       string
 	)
 
 	// Background
 	BeforeEach(func(ctx context.Context) {
 		// Initialize variables
-		myBucketClass = &v1alpha1.BucketClass{
+		revokeBucketClass = &v1alpha1.BucketClass{
 			TypeMeta: metav1.TypeMeta{
 				Kind:       "BucketClass",
 				APIVersion: "objectstorage.k8s.io/v1alpha1",
@@ -59,7 +59,7 @@ var _ = Describe("Bucket Access Revoke", Ordered, Label("revoke", "objectscale")
 				"id": DriverID,
 			},
 		}
-		myBucketClaim = &v1alpha1.BucketClaim{
+		revokeBucketClaim = &v1alpha1.BucketClaim{
 			TypeMeta: metav1.TypeMeta{
 				Kind:       "BucketClaim",
 				APIVersion: "objectstorage.k8s.io/v1alpha1",
@@ -75,7 +75,7 @@ var _ = Describe("Bucket Access Revoke", Ordered, Label("revoke", "objectscale")
 				},
 			},
 		}
-		myBucketAccessClass = &v1alpha1.BucketAccessClass{
+		revokeBucketAccessClass = &v1alpha1.BucketAccessClass{
 			TypeMeta: metav1.TypeMeta{
 				Kind:       "BucketAccessClass",
 				APIVersion: "objectstorage.k8s.io/v1alpha1",
@@ -89,7 +89,7 @@ var _ = Describe("Bucket Access Revoke", Ordered, Label("revoke", "objectscale")
 				"id": DriverID,
 			},
 		}
-		myBucketAccess = &v1alpha1.BucketAccess{
+		revokeBucketAccess = &v1alpha1.BucketAccess{
 			TypeMeta: metav1.TypeMeta{
 				Kind:       "BucketAccess",
 				APIVersion: "objectstorage.k8s.io/v1alpha1",
@@ -144,68 +144,53 @@ var _ = Describe("Bucket Access Revoke", Ordered, Label("revoke", "objectscale")
 
 		// STEP: BucketClass resource is created from specification "revoke-bucket-class"
 		By("Creating the BucketClass 'revoke-bucket-class'")
-		steps.CreateBucketClassResource(ctx, bucketClient, myBucketClass)
+		steps.CreateBucketClassResource(ctx, bucketClient, revokeBucketClass)
 
 		// STEP: BucketClaim resource is created from specification "revoke-bucket-claim"
 		By("Creating the BucketClaim 'revoke-bucket-claim'")
-		steps.CreateBucketClaimResource(ctx, bucketClient, myBucketClaim)
+		steps.CreateBucketClaimResource(ctx, bucketClient, revokeBucketClaim)
 
 		// STEP: Bucket resource referencing BucketClaim resource 'revoke-bucket-claim' is created
 		By("Checking if Bucket resource referencing BucketClaim resource 'revoke-bucket-claim' is created")
-		myBucket = steps.GetBucketResource(ctx, bucketClient, myBucketClaim)
+		revokeBucket = steps.GetBucketResource(ctx, bucketClient, revokeBucketClaim)
 
 		// STEP: Bucket resource referencing BucketClaim resource "revoke-bucket-claim" is created in ObjectStore "${objectstoreName}"
 		By("Checking if the Bucket referencing 'revoke-bucket-claim' is created in ObjectStore '${objectstoreName}'")
-		steps.CheckBucketResourceInObjectStore(ctx, objectscale, Namespace, myBucket)
+		steps.CheckBucketResourceInObjectStore(ctx, objectscale, Namespace, revokeBucket)
 
 		// STEP: BucketClaim resource "revoke-bucket-claim" in namespace "access-revoke-namespace" status "bucketReady" is "true"
 		By("Checking if the BucketClaim 'revoke-bucket-claim' in namespace 'access-revoke-namespace' status 'bucketReady' is 'true'")
-		steps.CheckBucketClaimStatus(ctx, bucketClient, myBucketClaim, true)
+		steps.CheckBucketClaimStatus(ctx, bucketClient, revokeBucketClaim, true)
 
 		// STEP: Bucket resource referencing BucketClaim resource "revoke-bucket-claim" status "bucketReady" is "true"
 		By("Checking if the Bucket referencing 'revoke-bucket-claim' status 'bucketReady' is 'true'")
-		steps.CheckBucketStatus(myBucket, true)
+		steps.CheckBucketStatus(revokeBucket, true)
 
 		// STEP: Bucket resource referencing BucketClaim resource "revoke-bucket-claim" bucketID is not empty
 		By("Checking if the Bucket referencing 'revoke-bucket-claim' bucketID is not empty")
-		steps.CheckBucketID(myBucket)
+		steps.CheckBucketID(revokeBucket)
 
 		// STEP: BucketAccessClass resource is created from specification "revoke-bucket-access-class"
 		By("Creating the BucketAccessClass 'revoke-bucket-access-class'")
-		steps.CreateBucketAccessClassResource(ctx, bucketClient, myBucketAccessClass)
+		steps.CreateBucketAccessClassResource(ctx, bucketClient, revokeBucketAccessClass)
 
 		// STEP: BucketAccess resource is created from specification "revoke-bucket-access"
 		By("Creating the BucketAccess 'revoke-bucket-access'")
-		steps.CreateBucketAccessResource(ctx, bucketClient, myBucketAccess)
+		steps.CreateBucketAccessResource(ctx, bucketClient, revokeBucketAccess)
 
 		// STEP: BucketAccess resource "revoke-bucket-access" in namespace "access-revoke-namespace" status "accessGranted" is "true"
 		By("Checking if the BucketAccess 'revoke-bucket-access' has status 'accessGranted' set to 'true")
-		steps.CheckBucketAccessStatus(ctx, bucketClient, myBucketAccess, true)
+		steps.CheckBucketAccessStatus(ctx, bucketClient, revokeBucketAccess, true)
 
 		// STEP: User "${user}" in account on ObjectScale platform is created
 		By("Creating User '${user}' in account on ObjectScale platform")
-		steps.CheckUser(ctx, IAMClient, myBucket.Name, Namespace)
+		steps.CheckUser(ctx, IAMClient, revokeBucket.Name, Namespace)
 
 		// I need bucket name here that is generated by one of the steps above, I think. Maybe there is a better way to do this.
-		resourceARN := objscl.BuildResourceString(ObjectscaleID, ObjectstoreID, myBucket.Name)
-		principalUsername = objscl.BuildUsername(Namespace, myBucket.Name)
-		principalARN := objscl.BuildPrincipalString(Namespace, myBucket.Name)
+		resourceARN := objscl.BuildResourceString(ObjectscaleID, ObjectstoreID, revokeBucket.Name)
+		principalUsername = objscl.BuildUsername(Namespace, revokeBucket.Name)
+		principalARN := objscl.BuildPrincipalString(Namespace, revokeBucket.Name)
 		initialPolicy = policy.Document{
-			Version: "2012-10-17",
-			Statement: []policy.StatementEntry{
-				{
-					Effect: "Allow",
-					Action: []string{
-						"*",
-					},
-					Resource: []string{},
-					Principal: policy.PrincipalEntry{
-						AWS: []string{},
-					},
-				},
-			},
-		}
-		finalPolicy = policy.Document{
 			Version: "2012-10-17",
 			Statement: []policy.StatementEntry{
 				{
@@ -224,14 +209,29 @@ var _ = Describe("Bucket Access Revoke", Ordered, Label("revoke", "objectscale")
 				},
 			},
 		}
+		finalPolicy = policy.Document{
+			Version: "2012-10-17",
+			Statement: []policy.StatementEntry{
+				{
+					Effect: "Allow",
+					Action: []string{
+						"*",
+					},
+					Resource: []string{},
+					Principal: policy.PrincipalEntry{
+						AWS: []string{},
+					},
+				},
+			},
+		}
 
 		// STEP: Policy "${policy}" on ObjectScale platform is created
 		By("Creating Policy '${policy}' on ObjectScale platform")
-		steps.CheckPolicy(ctx, objectscale, initialPolicy, myBucket, Namespace)
+		steps.CheckPolicy(ctx, objectscale, initialPolicy, revokeBucket, Namespace)
 
 		// STEP: BucketAccess resource "revoke-bucket-access" in namespace "access-revoke-namespace" status "accountID" is "${accountID}"
 		By("Checking if BucketAccess resource 'revoke-bucket-access' in namespace 'access-revoke-namespace' status 'accountID' is '${accountID}'")
-		steps.CheckBucketAccessAccountID(ctx, bucketClient, myBucketAccess, principalUsername)
+		steps.CheckBucketAccessAccountID(ctx, bucketClient, revokeBucketAccess, principalUsername)
 
 		// STEP: Secret "bucket-credentials-1" is created in namespace "access-revoke-namespace" and is not empty
 		By("Checking if Secret 'bucket-credentials-1' is created in namespace 'access-revoke-namespace'")
@@ -242,20 +242,19 @@ var _ = Describe("Bucket Access Revoke", Ordered, Label("revoke", "objectscale")
 	It("Successfully revokes access to bucket", func(ctx context.Context) {
 		// STEP: BucketAccess resource "revoke-bucket-access" in namespace "access-revoke-namespace" is deleted
 		By("Deleting the BucketAccess 'revoke-bucket-access'")
-		steps.DeleteBucketAccessResource(ctx, bucketClient, myBucketAccess)
+		steps.DeleteBucketAccessResource(ctx, bucketClient, revokeBucketAccess)
 
 		// STEP: Policy "${policy}" for Bucket resource referencing BucketClaim resource "revoke-bucket-claim" on ObjectScale platform is deleted
 		By("Deleting Policy for Bucket referencing BucketClaim 'revoke-bucket-claim' on ObjectScale platform")
-		steps.CheckPolicy(ctx, objectscale, finalPolicy, myBucket, Namespace)
+		steps.CheckPolicy(ctx, objectscale, finalPolicy, revokeBucket, Namespace)
 
 		// STEP: User "${user}" in account on ObjectScale platform is deleted
 		By("Deleting User '${user}' in account on ObjectScale platform")
-		steps.CheckUser(ctx, IAMClient, myBucket.Name, Namespace)
+		steps.CheckUserDeleted(ctx, IAMClient, revokeBucket.Name, Namespace)
 
 		DeferCleanup(func(ctx context.Context) {
-			steps.DeleteBucketAccessResource(ctx, bucketClient, myBucketAccess)
-			steps.DeleteBucketClassResource(ctx, bucketClient, myBucketClass)
-			steps.DeleteBucketClaimResource(ctx, bucketClient, myBucketClaim)
+			steps.DeleteBucketClaimResource(ctx, bucketClient, revokeBucketClaim)
+			steps.DeleteBucketClassResource(ctx, bucketClient, revokeBucketClass)
 		})
 	})
 })

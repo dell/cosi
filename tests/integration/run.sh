@@ -13,6 +13,6 @@ ginkgo \
     --race \
     --trace \
     --tags integration \
-    --label-filter "revoke" \
+    --label-filter "objectscale" \
     --output-dir=../reports/integration \
     ./...

@@ -18,6 +18,7 @@ import (
 	"reflect"
 	"strings"
 
+	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/iam"
 	"github.com/dell/goobjectscale/pkg/client/model"
 	"k8s.io/client-go/kubernetes"
@@ -51,7 +52,7 @@ func CheckObjectStoreExists(ctx context.Context, objectscale *objectscaleRest.Cl
 func CheckBucketResourceInObjectStore(ctx context.Context, objectscale *objectscaleRest.ClientSet, namespace string, bucket *v1alpha1.Bucket) {
 	param := make(map[string]string)
 	param["namespace"] = namespace
-	id := strings.SplitN(bucket.Status.BucketID, "-", 2)[1] // nolint:gomnd
+	id := strings.SplitN(bucket.Status.BucketID, "-", 2)[1] //nolint:gomnd
 
 	objectScaleBucket, err := objectscale.Buckets().Get(ctx, id, param)
 	gomega.Expect(err).ToNot(gomega.HaveOccurred())
@@ -62,7 +63,7 @@ func CheckBucketResourceInObjectStore(ctx context.Context, objectscale *objectsc
 func CheckBucketDeletionInObjectStore(ctx context.Context, objectscale *objectscaleRest.ClientSet, namespace string, bucket *v1alpha1.Bucket) {
 	param := make(map[string]string)
 	param["namespace"] = namespace
-	id := strings.SplitN(bucket.Status.BucketID, "-", 2)[1] // nolint:gomnd
+	id := strings.SplitN(bucket.Status.BucketID, "-", 2)[1] //nolint:gomnd
 
 	err := retry(ctx, attempts, sleep, func() error {
 		var err error
@@ -96,6 +97,7 @@ func CheckPolicy(ctx context.Context, objectscale *objectscaleRest.ClientSet, ex
 
 	ErrComparisonFailed := errors.New("comparison failed")
 
+	// This also needs to be retried, as we are not sure, if the policy was already updated.
 	err := retry(ctx, attempts, sleep, func() error {
 		var err error
 
@@ -119,7 +121,8 @@ func CheckPolicy(ctx context.Context, objectscale *objectscaleRest.ClientSet, ex
 		return nil
 	})
 
-	gomega.Expect(err).ToNot(gomega.Or(gomega.BeEquivalentTo(ErrComparisonFailed), gomega.HaveOccurred()))
+	// If the error is ErrComparisonFailed, I want full gomega match on objects, so I get pretty output.
+	gomega.Expect(err).To(gomega.Or(gomega.BeEquivalentTo(ErrComparisonFailed), gomega.Not(gomega.HaveOccurred())))
 	gomega.Expect(expectedPolicyDocument).To(gomega.BeEquivalentTo(actualPolicyDocument))
 }
 
@@ -154,6 +157,20 @@ func CheckUser(ctx context.Context, iamClient *iam.IAM, user string, namespace s
 	gomega.Expect(err).ToNot(gomega.HaveOccurred())
 	gomega.Expect(userOut.User).NotTo(gomega.BeNil())
 	gomega.Expect(username).To(gomega.Equal(*(userOut.User.UserName)))
+}
+
+// CheckUserDeleted checks if user does not exists in ObjectScale.
+func CheckUserDeleted(ctx context.Context, iamClient *iam.IAM, user string, namespace string) {
+	username := objscl.BuildUsername(namespace, user)
+
+	_, err := iamClient.GetUserWithContext(ctx, &iam.GetUserInput{UserName: &username})
+	gomega.Expect(err).To(gomega.HaveOccurred())
+
+	var myAwsErr awserr.Error
+	matched := errors.As(err, &myAwsErr)
+
+	gomega.Expect(matched).To(gomega.BeTrue())
+	gomega.Expect(iam.ErrCodeNoSuchEntityException).To(gomega.Equal(myAwsErr.Code()))
 }
 
 // DeleteUser Function for deleting user from ObjectScale.
