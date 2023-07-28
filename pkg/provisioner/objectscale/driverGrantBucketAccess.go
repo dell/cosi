@@ -76,7 +76,7 @@ func isAuthenticationTypeNotEmpty(req *cosi.DriverGrantBucketAccessRequest) erro
 	return nil
 }
 
-func handleIAMAuthentication(ctx context.Context, s *Server, req *cosi.DriverGrantBucketAccessRequest) (*cosi.DriverGrantBucketAccessResponse, error) {
+func handleIAMAuthentication(_ context.Context, _ *Server, _ *cosi.DriverGrantBucketAccessRequest) (*cosi.DriverGrantBucketAccessResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "authentication type IAM not implemented")
 }
 
