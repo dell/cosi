@@ -31,7 +31,7 @@ import (
 
 // DriverRevokeBucketAccess revokes access from Bucket on specific Object Storage Platform.
 // TODO: this probably has to be refactored in order to meet the gocognit requirements (complexity < 30).
-func (s *Server) DriverRevokeBucketAccess(ctx context.Context, // nolint:gocognit
+func (s *Server) DriverRevokeBucketAccess(ctx context.Context, //nolint:gocognit
 	req *cosi.DriverRevokeBucketAccessRequest,
 ) (*cosi.DriverRevokeBucketAccessResponse, error) {
 	ctx, span := otel.Tracer("RevokeBucketAccessRequest").Start(ctx, "ObjectscaleDriverRevokeBucketAccess")
@@ -183,24 +183,15 @@ func (s *Server) DriverRevokeBucketAccess(ctx context.Context, // nolint:gocogni
 		}
 
 		for k, statement := range jsonPolicy.Statement {
-			isPrincipal := false
-			isResource := false
+			log.WithFields(log.Fields{
+				"k":         k,
+				"statement": statement,
+			}).Debug("processing next statement")
 
-			for _, p := range statement.Principal.AWS {
-				if p == awsPrincipalString {
-					isPrincipal = true
-				}
-			}
+			statement.Principal.AWS = remove(statement.Principal.AWS, awsPrincipalString)
+			statement.Resource = remove(statement.Resource, awsBucketResourceARN)
 
-			for _, r := range statement.Resource {
-				if r == awsBucketResourceARN {
-					isResource = true
-				}
-			}
-
-			if isPrincipal && isResource {
-				jsonPolicy.Statement = append(jsonPolicy.Statement[:k], jsonPolicy.Statement[k+1:]...)
-			}
+			jsonPolicy.Statement[k] = statement
 		}
 
 		updatedPolicy, err := json.Marshal(jsonPolicy)
@@ -217,6 +208,11 @@ func (s *Server) DriverRevokeBucketAccess(ctx context.Context, // nolint:gocogni
 
 			return nil, status.Error(codes.Internal, errMsg.Error())
 		}
+
+		log.WithFields(log.Fields{
+			"policy":    jsonPolicy,
+			"rawPolicy": string(updatedPolicy),
+		}).Debug("updating policy")
 
 		// Update policy.
 		err = s.mgmtClient.Buckets().UpdatePolicy(ctx, bucketName, string(updatedPolicy), parameters)
@@ -290,4 +286,17 @@ func (s *Server) DriverRevokeBucketAccess(ctx context.Context, // nolint:gocogni
 	}).Info("bucket access for bucket is revoked")
 
 	return &cosi.DriverRevokeBucketAccessResponse{}, nil
+}
+
+// remove is a generic function that removes all occurrences of an item.
+func remove[T comparable](from []T, item T) []T {
+	output := make([]T, 0, len(from)) // should be little bit faster if we preallocate capacity
+
+	for _, element := range from {
+		if element != item {
+			output = append(output, element)
+		}
+	}
+
+	return output
 }

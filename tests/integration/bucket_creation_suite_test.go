@@ -28,7 +28,7 @@ import (
 var _ = Describe("Bucket Creation", Ordered, Label("create", "objectscale"), func() {
 	// Resources for scenarios
 	var (
-		myBucketClass      *v1alpha1.BucketClass
+		createClass        *v1alpha1.BucketClass
 		validBucketClaim   *v1alpha1.BucketClaim
 		invalidBucketClaim *v1alpha1.BucketClaim
 		validBucket        *v1alpha1.Bucket
@@ -39,7 +39,7 @@ var _ = Describe("Bucket Creation", Ordered, Label("create", "objectscale"), fun
 	// Background
 	BeforeEach(func(ctx context.Context) {
 		// Initialize variables
-		myBucketClass = &v1alpha1.BucketClass{
+		createClass = &v1alpha1.BucketClass{
 			TypeMeta: metav1.TypeMeta{
 				Kind:       "BucketClass",
 				APIVersion: "objectstorage.k8s.io/v1alpha1",
@@ -120,9 +120,9 @@ var _ = Describe("Bucket Creation", Ordered, Label("create", "objectscale"), fun
 		By("Checking if COSI driver 'cosi-driver' is installed in namespace 'cosi-driver'")
 		steps.CheckCOSIDriverInstallation(ctx, clientset, "cosi-driver", "cosi-driver")
 
-		// STEP: BucketClass resource is created from specification "my-bucket-class"
-		By("Creating the BucketClass 'my-bucket-class'")
-		steps.CreateBucketClassResource(ctx, bucketClient, myBucketClass)
+		// STEP: BucketClass resource is created from specification "create-bucket-class"
+		By("Creating the BucketClass 'create-bucket-class'")
+		steps.CreateBucketClassResource(ctx, bucketClient, createClass)
 	})
 
 	// STEP: Scenario: Successfull bucket creation
@@ -186,7 +186,7 @@ var _ = Describe("Bucket Creation", Ordered, Label("create", "objectscale"), fun
 
 	AfterEach(func() {
 		DeferCleanup(func(ctx context.Context) {
-			steps.DeleteBucketClassResource(ctx, bucketClient, myBucketClass)
+			steps.DeleteBucketClassResource(ctx, bucketClient, createClass)
 		})
 	})
 })

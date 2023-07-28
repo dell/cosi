@@ -13,9 +13,11 @@
 package steps
 
 import (
+	"bytes"
 	"context"
 	"crypto/tls"
 	"encoding/json"
+	"io"
 	"net/http"
 	"strings"
 
@@ -80,15 +82,53 @@ func CheckBucketClassSpec(_ *kubernetes.Clientset, _ v1alpha1.BucketClaimSpec) {
 }
 
 // CheckSecret is used to check if secret exists.
-func CheckSecret(ctx context.Context, clientset *kubernetes.Clientset, secret *v1.Secret) *v1.Secret {
-	sec, err := clientset.CoreV1().Secrets(secret.Namespace).Get(ctx, secret.Name, metav1.GetOptions{})
-	gomega.Expect(err).ToNot(gomega.HaveOccurred())
-	gomega.Expect(sec).NotTo(gomega.BeNil())
-	gomega.Expect(sec.Name).To(gomega.Equal(secret.Name))
-	gomega.Expect(sec.Namespace).To(gomega.Equal(secret.Namespace))
-	gomega.Expect(sec.Data).NotTo(gomega.Or(gomega.BeNil(), gomega.BeEmpty()))
+func CheckSecret(ctx context.Context, clientset *kubernetes.Clientset, inputSecret *v1.Secret) *v1.Secret {
+	var k8sSecret *v1.Secret
 
-	return sec
+	err := retry(ctx, attempts, sleep, func() error {
+		var err error
+		k8sSecret, err = clientset.CoreV1().Secrets(inputSecret.Namespace).Get(ctx, inputSecret.Name, metav1.GetOptions{})
+		if err != nil {
+			return err
+		}
+
+		return nil
+	})
+
+	gomega.Expect(err).ToNot(gomega.HaveOccurred())
+	gomega.Expect(k8sSecret).NotTo(gomega.BeNil())
+	gomega.Expect(inputSecret.Name).To(gomega.Equal(k8sSecret.Name))
+	gomega.Expect(inputSecret.Namespace).To(gomega.Equal(k8sSecret.Namespace))
+	gomega.Expect(k8sSecret.Data).NotTo(gomega.Or(gomega.BeNil(), gomega.BeEmpty()))
+
+	for k, v := range k8sSecret.Data {
+		gomega.Expect(k).To(gomega.BeKeyOf(k8sSecret.Data))
+		gomega.Expect(len(v)).To(gomega.BeNumerically("<=", len(k8sSecret.Data[k])))
+
+		data := make(map[string]interface{})
+		err = json.Unmarshal(k8sSecret.Data[k], &data)
+		gomega.Expect(err).ToNot(gomega.HaveOccurred())
+		gomega.Expect(data).To(gomega.HaveKey("metadata"))
+		gomega.Expect(data).To(gomega.HaveKey("spec"))
+
+		metadata, typeAssertion := data["metadata"].(map[string]interface{})
+		gomega.Expect(typeAssertion).To(gomega.BeTrue())
+		gomega.Expect(metadata).To(gomega.HaveKey("name"))
+
+		spec, typeAssertion := data["spec"].(map[string]interface{})
+		gomega.Expect(typeAssertion).To(gomega.BeTrue())
+		gomega.Expect(spec).To(gomega.HaveKey("authenticationType"))
+		gomega.Expect(spec).To(gomega.HaveKey("bucketName"))
+		gomega.Expect(spec).To(gomega.HaveKey("protocols"))
+		gomega.Expect(spec).To(gomega.HaveKey("secretS3"))
+
+		s3Secret, typeAssertion := spec["secretS3"].(map[string]interface{})
+		gomega.Expect(typeAssertion).To(gomega.BeTrue())
+		gomega.Expect(s3Secret).To(gomega.HaveKey("accessKeyID"))
+		gomega.Expect(s3Secret).To(gomega.HaveKey("accessSecretKey"))
+	}
+
+	return k8sSecret
 }
 
 // CheckBucketClaimEvents Check BucketClaim events.
@@ -167,7 +207,7 @@ func CheckBucketAccessFromSecret(ctx context.Context, clientset *kubernetes.Clie
 	bucketName := secretData.Spec.BucketName
 
 	x509Client := http.Client{Transport: &http.Transport{
-		TLSClientConfig: &tls.Config{InsecureSkipVerify: true}, // nolint:gosec
+		TLSClientConfig: &tls.Config{InsecureSkipVerify: true}, //nolint:gosec
 	}}
 
 	s3Config := &aws.Config{
@@ -210,4 +250,23 @@ func DeleteSecret(ctx context.Context, clientset *kubernetes.Clientset, secret *
 
 	err = clientset.CoreV1().Secrets(secret.Namespace).Delete(ctx, secret.Name, metav1.DeleteOptions{})
 	gomega.Expect(err).ToNot(gomega.HaveOccurred())
+}
+
+// CheckErrors parses logs and counts occurrences of error messages.
+func CheckErrors(ctx context.Context, clientset *kubernetes.Clientset, pod, container, namespace string) {
+	req := clientset.CoreV1().Pods(namespace).GetLogs(pod, &v1.PodLogOptions{Container: container})
+
+	podLogs, err := req.Stream(ctx)
+	gomega.Expect(err).ToNot(gomega.HaveOccurred())
+
+	defer podLogs.Close()
+
+	buf := new(bytes.Buffer)
+
+	_, err = io.Copy(buf, podLogs)
+	gomega.Expect(err).ToNot(gomega.HaveOccurred())
+	gomega.Expect(buf.Bytes()).ToNot(gomega.BeEmpty())
+	gomega.Expect(buf.String()).To(gomega.SatisfyAll(
+		gomega.Not(gomega.ContainSubstring("error")),
+		gomega.Not(gomega.ContainSubstring("Error"))))
 }

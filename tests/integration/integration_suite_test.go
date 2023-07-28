@@ -15,17 +15,21 @@
 package main_test
 
 import (
+	"context"
 	"crypto/tls"
 	"net/http"
 	"os"
 	"testing"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/iam"
+	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/clientcmd"
 
+	"github.com/dell/cosi/tests/integration/steps"
 	objectscaleRest "github.com/dell/goobjectscale/pkg/client/rest"
 	objectscaleClient "github.com/dell/goobjectscale/pkg/client/rest/client"
 	objectscaleIAM "github.com/dell/goobjectscale/pkg/client/rest/iam"
@@ -43,6 +47,9 @@ var (
 	Namespace     string
 	ObjectstoreID string
 	ObjectscaleID string
+
+	DriverNamespace     string
+	DriverContainerName string
 )
 
 const (
@@ -60,6 +67,12 @@ var _ = BeforeSuite(func() {
 	// Load environment variables
 
 	exists := false
+	DriverNamespace, exists = os.LookupEnv("DRIVER_NAMESPACE")
+	Expect(exists).To(BeTrue())
+
+	DriverContainerName, exists = os.LookupEnv("DRIVER_CONTAINER_NAME")
+	Expect(exists).To(BeTrue())
+
 	Namespace, exists = os.LookupEnv("OBJECTSCALE_NAMESPACE")
 	Expect(exists).To(BeTrue())
 
@@ -96,7 +109,7 @@ var _ = BeforeSuite(func() {
 
 	// ObjectScale clientset
 	transport := &http.Transport{
-		TLSClientConfig: &tls.Config{InsecureSkipVerify: true}, // nolint:gosec
+		TLSClientConfig: &tls.Config{InsecureSkipVerify: true}, //nolint:gosec
 	}
 	unsafeClient := &http.Client{Transport: transport}
 
@@ -124,7 +137,7 @@ var _ = BeforeSuite(func() {
 		Region:   &region,
 		HTTPClient: &http.Client{
 			Transport: &http.Transport{
-				TLSClientConfig: &tls.Config{InsecureSkipVerify: true}, // nolint:gosec
+				TLSClientConfig: &tls.Config{InsecureSkipVerify: true}, //nolint:gosec
 			},
 		},
 	})
@@ -138,6 +151,14 @@ var _ = BeforeSuite(func() {
 	Expect(err).ToNot(HaveOccurred())
 })
 
-var _ = AfterSuite(func() {
-	// Global teardown
+var _ = AfterSuite(func(ctx context.Context) {
+	podList, err := clientset.CoreV1().Pods(DriverNamespace).List(ctx, v1.ListOptions{})
+	Expect(err).ToNot(HaveOccurred())
+	Expect(podList.Items).ToNot(BeEmpty())
+
+	// ensure every job from test is processed
+	time.Sleep(time.Second)
+	for _, pod := range podList.Items {
+		steps.CheckErrors(ctx, clientset, pod.Name, DriverContainerName, pod.Namespace)
+	}
 })

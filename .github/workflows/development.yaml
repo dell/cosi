@@ -33,7 +33,7 @@ jobs:
           cache: false
       - name: Checkout the code
         uses: actions/checkout@v3.2.0
-      - name: "Vendor packages"
+      - name: Vendor packages
         run: |
           go mod vendor
       - name: golangci-lint
@@ -85,7 +85,7 @@ jobs:
           echo "machine github.com login csmbot password $TOKEN" >> ~/.netrc
       - name: Checkout the code
         uses: actions/checkout@v3.2.0
-      - name: "Vendor packages"
+      - name: Vendor packages
         run: |
           go mod vendor
       - name: Run unit tests and check package coverage
@@ -94,6 +94,9 @@ jobs:
           threshold: 90
           test-folder: "."
           skip-list: "github.com/dell/cosi/core,github.com/dell/cosi/tests/integration/main_test"
+      - name: Run fuzzy tests
+        run: |
+          make fuzz
 
   build-and-secure:
     name: Build and Scan Docker image

@@ -13,6 +13,6 @@ ginkgo \
     --race \
     --trace \
     --tags integration \
-    --label-filter "create||delete||grant" \
+    --label-filter "objectscale" \
     --output-dir=../reports/integration \
     ./...

@@ -26,9 +26,10 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
+	cosi "sigs.k8s.io/container-object-storage-interface-spec"
+
 	"github.com/dell/goobjectscale/pkg/client/api/mocks"
 	"github.com/dell/goobjectscale/pkg/client/model"
-	cosi "sigs.k8s.io/container-object-storage-interface-spec"
 )
 
 var _ iamiface.IAMAPI = (*iamfaketoo.IAMAPI)(nil)
@@ -590,4 +591,45 @@ func testFailedToUpdateBucketPolicy(t *testing.T) {
 	_, err := server.DriverRevokeBucketAccess(ctx, req)
 
 	assert.ErrorIs(t, err, status.Error(codes.Internal, "failed to update bucket policy"))
+}
+
+func TestRemove(t *testing.T) {
+	t.Parallel()
+
+	testCases := []struct {
+		name          string
+		inputList     []string
+		inputToRemove string
+		expected      []string
+	}{
+		{
+			name:          "basic",
+			inputList:     []string{"a", "b", "c"},
+			inputToRemove: "a",
+			expected:      []string{"b", "c"},
+		},
+		{
+			name:          "empty input",
+			inputList:     []string{},
+			inputToRemove: "a",
+			expected:      []string{},
+		},
+		{
+			name:          "repeated removal",
+			inputList:     []string{"a", "b", "a", "a", "c"},
+			inputToRemove: "a",
+			expected:      []string{"b", "c"},
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+
+			output := remove(tc.expected, tc.inputToRemove)
+			assert.Equal(t, tc.expected, output)
+		})
+	}
 }

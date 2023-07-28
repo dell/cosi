@@ -30,3 +30,6 @@ semver.mk
 
 # vscode config dir
 .vscode/
+
+# Fuzzing output
+testdata/

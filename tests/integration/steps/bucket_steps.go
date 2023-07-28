@@ -90,17 +90,9 @@ func DeleteBucketAccessResource(ctx context.Context, bucketClient *bucketclients
 	// Not sure why but ginkgo context is messing with kubernetes client here creating error:
 	// client rate limiter Wait returned error: context canceled
 	// So new context it is.
-	bucketAccess, err := bucketClient.ObjectstorageV1alpha1().BucketAccesses(bucketAccess.Namespace).Get(ctx, bucketAccess.Name, v1.GetOptions{})
+	err := bucketClient.ObjectstorageV1alpha1().BucketAccesses(bucketAccess.Namespace).Delete(ctx, bucketAccess.Name, v1.DeleteOptions{})
 	// it's ok if it's no error or erorr has reason NotFound, we want to delete it anyway
 	gomega.Expect(err).To(gomega.Or(gomega.BeNil(), gomega.HaveField("Reason", "NotFound")))
-	// we can abort if bucketAccess is already deleted
-	if err != nil {
-		return
-	}
-	// remove finalizers deletes the BukcetAccess on cluster. I think controller does this but haven't checked.
-	bucketAccess.Finalizers = []string{}
-	_, err = bucketClient.ObjectstorageV1alpha1().BucketAccesses(bucketAccess.Namespace).Update(ctx, bucketAccess, v1.UpdateOptions{})
-	gomega.Expect(err).ToNot(gomega.HaveOccurred())
 }
 
 // CheckBucketAccessStatus Function for checking BucketAccess status.
@@ -132,7 +124,7 @@ func CheckBucketAccessAccountID(ctx context.Context, bucketClient *bucketclients
 	myBucketAccess, err := bucketClient.ObjectstorageV1alpha1().BucketAccesses(bucketAccess.Namespace).Get(ctx, bucketAccess.Name, v1.GetOptions{})
 	gomega.Expect(err).ToNot(gomega.HaveOccurred())
 	gomega.Expect(myBucketAccess).NotTo(gomega.BeNil())
-	gomega.Expect(myBucketAccess.Status.AccountID).To(gomega.Equal(accountID))
+	gomega.Expect(accountID).To(gomega.Equal(myBucketAccess.Status.AccountID))
 }
 
 // GetBucketResource function for getting Bucket resource.
