@@ -352,7 +352,7 @@ func (s *Server) DriverGrantBucketAccess(
 
 // parsePolicyStatement generates new bucket policy statements array with updated resource and principal.
 // TODO: this probably has to be refactored in order to meet the gocognit requirements (complexity < 30).
-func parsePolicyStatement( // nolint:gocognit
+func parsePolicyStatement(
 	ctx context.Context,
 	inputStatements []UpdateBucketPolicyStatement,
 	awsBucketResourceARN,
@@ -371,19 +371,12 @@ func parsePolicyStatement( // nolint:gocognit
 	}
 
 	for k, statement := range outputStatements {
-		foundResource := false
 
 		if statement.Resource == nil {
 			statement.Resource = []string{}
 		}
 
-		for _, r := range statement.Resource {
-			if r == awsBucketResourceARN {
-				foundResource = true
-			}
-		}
-
-		if !foundResource {
+		if !awsBucketResourceArnExists(&statement, awsBucketResourceARN) {
 			statement.Resource = append(statement.Resource, awsBucketResourceARN)
 		}
 
@@ -393,19 +386,7 @@ func parsePolicyStatement( // nolint:gocognit
 			statement.Effect = allowEffect
 		}
 
-		foundPrincipal := false
-
-		if statement.Principal.AWS == nil {
-			statement.Principal.AWS = []string{}
-		}
-
-		for _, p := range statement.Principal.AWS {
-			if p == awsPrincipalString {
-				foundPrincipal = true
-			}
-		}
-
-		if !foundPrincipal {
+		if !principalExists(&statement, awsPrincipalString) {
 			statement.Principal.AWS = append(statement.Principal.AWS, awsPrincipalString)
 		}
 
@@ -413,19 +394,7 @@ func parsePolicyStatement( // nolint:gocognit
 
 		// TODO: shouldn't action be validated with params? Maybe we only want to grant read access by default?
 		// if yes, then this should be done later, when we have more info about the params (MVP is to grant all permissions)
-		foundAction := false
-
-		if statement.Action == nil {
-			statement.Action = []string{}
-		}
-
-		for _, a := range statement.Action {
-			if a == "*" {
-				foundAction = true
-			}
-		}
-
-		if !foundAction {
+		if !actionExists(&statement) {
 			statement.Action = append(statement.Action, "*")
 		}
 
@@ -435,6 +404,44 @@ func parsePolicyStatement( // nolint:gocognit
 	}
 
 	return outputStatements
+}
+
+func actionExists(statement *UpdateBucketPolicyStatement) bool {
+	if statement.Action == nil {
+		statement.Action = []string{}
+	}
+
+	for _, a := range statement.Action {
+		if a == "*" {
+			return true
+		}
+	}
+
+	return false
+}
+
+func principalExists(statement *UpdateBucketPolicyStatement, principalString string) bool {
+	if statement.Principal.AWS == nil {
+		statement.Principal.AWS = []string{}
+	}
+
+	for _, p := range statement.Principal.AWS {
+		if p == principalString {
+			return true
+		}
+	}
+
+	return false
+}
+
+func awsBucketResourceArnExists(statement *UpdateBucketPolicyStatement, awsBucketResourceARN string) bool {
+	for _, r := range statement.Resource {
+		if r == awsBucketResourceARN {
+			return true
+		}
+	}
+
+	return false
 }
 
 // generatePolicyID creates new policy for the bucket.
