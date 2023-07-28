@@ -39,6 +39,7 @@ var (
 	ErrInvalidBucketID           = errors.New("invalid bucketID")
 	ErrEmptyBucketAccessName     = errors.New("empty bucket access name")
 	ErrInvalidAuthenticationType = errors.New("invalid authentication type")
+	ErrUnknownAuthenticationType = errors.New("unknown authentication type")
 )
 
 // Check if bucketID is not empty.
@@ -75,36 +76,13 @@ func isAuthenticationTypeNotEmpty(req *cosi.DriverGrantBucketAccessRequest) erro
 	return nil
 }
 
-// DriverGrantBucketAccess provides access to Bucket on specific Object Storage Platform.
-func (s *Server) DriverGrantBucketAccess(
-	ctx context.Context,
-	req *cosi.DriverGrantBucketAccessRequest,
-) (*cosi.DriverGrantBucketAccessResponse, error) {
-	ctx, span := otel.Tracer("GrantBucketAccessRequest").Start(ctx, "ObjectscaleDriverGrantBucketAccess")
+func handleIAMAuthentication(ctx context.Context, s *Server, req *cosi.DriverGrantBucketAccessRequest) (*cosi.DriverGrantBucketAccessResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "authentication type IAM not implemented")
+}
+
+func handleKeyAuthentication(ctx context.Context, s *Server, req *cosi.DriverGrantBucketAccessRequest) (*cosi.DriverGrantBucketAccessResponse, error) {
+	ctx, span := otel.Tracer("GrantBucketAccessRequest").Start(ctx, "ObjectscaleHandleKeyAuthentication")
 	defer span.End()
-
-	// Check if bucketID is not empty.
-	if err := isBucketIDEmpty(req); err != nil {
-		putErrorIntoSpanAndLogs(span, err)
-		return nil, status.Error(codes.InvalidArgument, err.Error())
-	}
-
-	// Check if bucket access name is not empty.
-	if err := isBucketAccessNameEmpty(req); err != nil {
-		putErrorIntoSpanAndLogs(span, err)
-		return nil, status.Error(codes.InvalidArgument, err.Error())
-	}
-
-	// Check if authentication type is not unknown.
-	if err := isAuthenticationTypeNotEmpty(req); err != nil {
-		putErrorIntoSpanAndLogs(span, err)
-		return nil, status.Error(codes.InvalidArgument, err.Error())
-	}
-
-	if req.AuthenticationType == cosi.AuthenticationType_IAM {
-		return nil, status.Error(codes.Unimplemented, "authentication type IAM not implemented")
-	}
-
 	// TODO: this should probably be moved to a separate function
 	// Extract bucket name from bucketID.
 	bucketName := strings.SplitN(req.BucketId, "-", splitNumber)[1]
@@ -331,6 +309,45 @@ func (s *Server) DriverGrantBucketAccess(
 	credentials := assembleCredentials(ctx, accessKey, s.s3Endpoint, userName, bucketName)
 
 	return &cosi.DriverGrantBucketAccessResponse{AccountId: userName, Credentials: credentials}, nil
+}
+
+// DriverGrantBucketAccess provides access to Bucket on specific Object Storage Platform.
+func (s *Server) DriverGrantBucketAccess(
+	ctx context.Context,
+	req *cosi.DriverGrantBucketAccessRequest,
+) (*cosi.DriverGrantBucketAccessResponse, error) {
+	ctx, span := otel.Tracer("GrantBucketAccessRequest").Start(ctx, "ObjectscaleDriverGrantBucketAccess")
+	defer span.End()
+
+	// Check if bucketID is not empty.
+	if err := isBucketIDEmpty(req); err != nil {
+		putErrorIntoSpanAndLogs(span, err)
+		return nil, status.Error(codes.InvalidArgument, err.Error())
+	}
+
+	// Check if bucket access name is not empty.
+	if err := isBucketAccessNameEmpty(req); err != nil {
+		putErrorIntoSpanAndLogs(span, err)
+		return nil, status.Error(codes.InvalidArgument, err.Error())
+	}
+
+	// Check if authentication type is not unknown.
+	if err := isAuthenticationTypeNotEmpty(req); err != nil {
+		putErrorIntoSpanAndLogs(span, err)
+		return nil, status.Error(codes.InvalidArgument, err.Error())
+	}
+
+	if req.AuthenticationType == cosi.AuthenticationType_IAM {
+		return handleIAMAuthentication(ctx, s, req)
+	}
+
+	if req.AuthenticationType == cosi.AuthenticationType_Key {
+		return handleKeyAuthentication(ctx, s, req)
+	}
+
+	putErrorIntoSpanAndLogs(span, ErrUnknownAuthenticationType)
+
+	return nil, status.Error(codes.Internal, ErrUnknownAuthenticationType.Error())
 }
 
 // parsePolicyStatement generates new bucket policy statements array with updated resource and principal.
