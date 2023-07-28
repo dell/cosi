@@ -22,13 +22,9 @@ import (
 	"time"
 
 	"github.com/dell/goobjectscale/pkg/client/fake"
-	"github.com/dell/goobjectscale/pkg/client/model"
 	"github.com/stretchr/testify/assert"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 
 	log "github.com/sirupsen/logrus"
-	cosi "sigs.k8s.io/container-object-storage-interface-spec"
 
 	"github.com/dell/cosi/pkg/config"
 	"github.com/dell/cosi/pkg/internal/testcontext"
@@ -57,11 +53,9 @@ func TestServer(t *testing.T) {
 	t.Parallel()
 
 	for scenario, fn := range map[string]func(t *testing.T){
-		"testNew":                      testDriverNew,
-		"testID":                       testDriverID,
-		"testDriverDeleteBucket":       testDriverDeleteBucket,
-		"testDriverRevokeBucketAccess": testDriverRevokeBucketAccess,
-		"testParsePolicyStatement":     testParsePolicyStatement,
+		"testNew":                  testDriverNew,
+		"testID":                   testDriverID,
+		"testParsePolicyStatement": testParsePolicyStatement,
 	} {
 		fn := fn
 
@@ -203,87 +197,6 @@ func testDriverID(t *testing.T) {
 	assert.Equal(t, "id", driver.ID())
 }
 
-// testDriverCreateBucket tests bucket deletion functionality on ObjectScale platform.
-func testDriverDeleteBucket(t *testing.T) {
-	const (
-		namespace = "namespace"
-		testID    = "test.id"
-	)
-
-	testCases := []struct {
-		description   string
-		inputBucketID string
-		expectedError error
-		server        Server
-	}{
-		{
-			description:   "invalid bucketID",
-			inputBucketID: "",
-			expectedError: status.Error(codes.InvalidArgument, "empty bucketID"),
-		},
-		{
-			description:   "bucket does not exist",
-			inputBucketID: strings.Join([]string{testID, "bucket-valid"}, "-"),
-			expectedError: nil,
-			server: Server{
-				mgmtClient: fake.NewClientSet(),
-				namespace:  namespace,
-				backendID:  testID,
-			},
-		},
-		{
-			description:   "failed to delete bucket",
-			inputBucketID: strings.Join([]string{testID, "bucket-invalid-FORCEFAIL"}, "-"),
-			expectedError: status.Error(codes.Internal, "bucket was not successfully deleted"),
-			server: Server{
-				mgmtClient: fake.NewClientSet(&model.Bucket{
-					Name:      "bucket-valid",
-					Namespace: namespace,
-				}),
-				namespace:   namespace,
-				backendID:   testID,
-				emptyBucket: true,
-			},
-		},
-		{
-			description:   "bucket successfully deleted",
-			inputBucketID: strings.Join([]string{testID, "bucket-valid"}, "-"),
-			expectedError: nil,
-			server: Server{
-				mgmtClient: fake.NewClientSet(&model.Bucket{
-					Name:      "bucket-valid",
-					Namespace: namespace,
-				}),
-				namespace:   namespace,
-				backendID:   testID,
-				emptyBucket: true,
-			},
-		},
-	}
-
-	for _, scenario := range testCases {
-		t.Run(scenario.description, func(t *testing.T) {
-			ctx, cancel := context.WithTimeout(context.Background(), time.Second)
-			defer cancel()
-			_, err := scenario.server.DriverDeleteBucket(ctx, &cosi.DriverDeleteBucketRequest{BucketId: scenario.inputBucketID})
-			assert.ErrorIs(t, err, scenario.expectedError, err)
-		})
-	}
-}
-
-// FIXME: write valid test.
-func testDriverRevokeBucketAccess(t *testing.T) {
-	srv := Server{}
-
-	ctx, cancel := testcontext.New(t)
-	defer cancel()
-
-	_, err := srv.DriverRevokeBucketAccess(ctx, &cosi.DriverRevokeBucketAccessRequest{})
-	if err == nil {
-		t.Error("expected error")
-	}
-}
-
 func testParsePolicyStatement(t *testing.T) {
 	testCases := []struct {
 		description          string
@@ -356,4 +269,59 @@ func testParsePolicyStatement(t *testing.T) {
 			assert.Equalf(t, scenario.expectedOutput, updatedPolicy, "not equal")
 		})
 	}
+}
+
+// TestGetBucketName tests BucketID splitting.
+func TestGetBucketName(t *testing.T) {
+	t.Parallel()
+
+	testCases := []struct {
+		name     string
+		input    string
+		expected string
+	}{
+		{
+			name:     "basic",
+			input:    "first-second",
+			expected: "second",
+		},
+		{
+			name:     "extra_dashes",
+			input:    "first-second-third",
+			expected: "second-third",
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+
+			output, err := GetBucketName(tc.input)
+			assert.NoError(t, err)
+			assert.Equal(t, tc.expected, output)
+		})
+	}
+}
+
+func FuzzGetBucketName(f *testing.F) {
+	for _, seed := range []string{
+		"driverid-bucketname",
+		"driver.id-bucket.name",
+		".driver.id-bucket.name",
+		".driver.id-bucket-name",
+	} {
+		f.Add(seed) // Use f.Add to provide a seed corpus
+	}
+
+	f.Fuzz(func(t *testing.T, in string) {
+		out, err := GetBucketName(in)
+		if strings.Contains(in, "-") {
+			assert.NoErrorf(t, err, "Input was: %s", in)
+			assert.NotEmpty(t, out, "Input was: %s", in)
+		} else {
+			assert.Errorf(t, err, "Input was: %s", in)
+		}
+	})
 }

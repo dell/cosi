@@ -6,6 +6,7 @@ require (
 	github.com/aws/aws-sdk-go v1.44.271
 	github.com/bombsimon/logrusr/v4 v4.0.0
 	github.com/dell/goobjectscale v0.0.0-20230704080749-d4e5ff4691b0
+	github.com/go-logr/logr v1.2.4
 	github.com/google/uuid v1.3.0
 	github.com/onsi/ginkgo/v2 v2.9.2
 	github.com/onsi/gomega v1.27.5
@@ -54,7 +55,6 @@ require (
 	github.com/fatih/color v1.13.0 // indirect
 	github.com/go-errors/errors v1.0.1 // indirect
 	github.com/go-gorp/gorp/v3 v3.0.5 // indirect
-	github.com/go-logr/logr v1.2.4 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect
 	github.com/go-openapi/jsonpointer v0.19.5 // indirect
 	github.com/go-openapi/jsonreference v0.20.0 // indirect
