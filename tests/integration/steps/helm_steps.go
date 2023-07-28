@@ -14,16 +14,10 @@ package steps
 
 import (
 	"context"
-	"fmt"
-	"os"
 
-	"helm.sh/helm/v3/pkg/action"
-	"helm.sh/helm/v3/pkg/chart/loader"
-	"helm.sh/helm/v3/pkg/cli"
 	"k8s.io/client-go/kubernetes"
 
 	gomega "github.com/onsi/gomega"
-	log "github.com/sirupsen/logrus"
 	v1 "k8s.io/api/apps/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -44,41 +38,4 @@ func checkAppIsInstalled(ctx context.Context, clientset *kubernetes.Clientset, r
 	deployment, err := clientset.AppsV1().Deployments(namespace).Get(ctx, releaseName, metav1.GetOptions{})
 	gomega.Expect(err).ToNot(gomega.HaveOccurred())
 	gomega.Expect(deployment.Status.Conditions).To(gomega.ContainElement(gomega.HaveField("Type", gomega.Equal(v1.DeploymentAvailable))))
-}
-
-// InstallChartInNamespace install particular release from k8s chart.
-func InstallChartInNamespace(releaseName, namespace, repo, chartName, version string) {
-	settings := cli.New()
-	actionConfig := new(action.Configuration)
-	err := actionConfig.Init(settings.RESTClientGetter(), namespace, os.Getenv("HELM_DRIVER"), log.Debugf)
-	gomega.Expect(err).ToNot(gomega.HaveOccurred())
-
-	helmClient := action.NewInstall(actionConfig)
-	helmClient.ReleaseName = releaseName
-	helmClient.Namespace = namespace
-
-	chartPath, err := helmClient.LocateChart(fmt.Sprintf("https://github.com/%s/%s-%s", repo, chartName, version), settings)
-
-	gomega.Expect(err).ToNot(gomega.HaveOccurred())
-	chart, err := loader.Load(chartPath)
-	gomega.Expect(err).ToNot(gomega.HaveOccurred())
-
-	release, err := helmClient.Run(chart, nil)
-	gomega.Expect(err).ToNot(gomega.HaveOccurred())
-
-	log.Println("Successfully installed release: ", release.Name)
-}
-
-// UninstallChartReleaseinNamespace Delete particular release from k8s chart.
-func UninstallChartReleaseinNamespace(releaseName, namespace string) {
-	settings := cli.New()
-	actionConfig := new(action.Configuration)
-	err := actionConfig.Init(settings.RESTClientGetter(), namespace, os.Getenv("HELM_DRIVER"), log.Debugf)
-	gomega.Expect(err).ToNot(gomega.HaveOccurred())
-
-	helmClient := action.NewUninstall(actionConfig)
-	release, err := helmClient.Run(releaseName)
-	gomega.Expect(err).ToNot(gomega.HaveOccurred())
-
-	log.Println("Successfully uninstalled release: ", release.Release.Name)
 }
