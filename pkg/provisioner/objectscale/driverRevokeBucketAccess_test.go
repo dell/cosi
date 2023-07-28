@@ -199,7 +199,7 @@ func testInvalidBucketID(t *testing.T) {
 	}
 
 	req := &cosi.DriverRevokeBucketAccessRequest{
-		BucketId:  "bucket-invalid-too-many-dashes",
+		BucketId:  "bucket",
 		AccountId: testUserName,
 	}
 

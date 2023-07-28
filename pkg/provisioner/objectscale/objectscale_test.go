@@ -270,3 +270,58 @@ func testParsePolicyStatement(t *testing.T) {
 		})
 	}
 }
+
+// TestGetBucketName tests BucketID splitting.
+func TestGetBucketName(t *testing.T) {
+	t.Parallel()
+
+	testCases := []struct {
+		name     string
+		input    string
+		expected string
+	}{
+		{
+			name:     "basic",
+			input:    "first-second",
+			expected: "second",
+		},
+		{
+			name:     "extra_dashes",
+			input:    "first-second-third",
+			expected: "second-third",
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+
+			output, err := GetBucketName(tc.input)
+			assert.NoError(t, err)
+			assert.Equal(t, tc.expected, output)
+		})
+	}
+}
+
+func FuzzGetBucketName(f *testing.F) {
+	for _, seed := range []string{
+		"driverid-bucketname",
+		"driver.id-bucket.name",
+		".driver.id-bucket.name",
+		".driver.id-bucket-name",
+	} {
+		f.Add(seed) // Use f.Add to provide a seed corpus
+	}
+
+	f.Fuzz(func(t *testing.T, in string) {
+		out, err := GetBucketName(in)
+		if strings.Contains(in, "-") {
+			assert.NoErrorf(t, err, "Input was: %s", in)
+			assert.NotEmpty(t, out, "Input was: %s", in)
+		} else {
+			assert.Errorf(t, err, "Input was: %s", in)
+		}
+	})
+}

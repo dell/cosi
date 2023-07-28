@@ -143,7 +143,7 @@ func testDriverDeleteBucketInvalidBucketID(t *testing.T) {
 	}
 
 	req := &cosi.DriverDeleteBucketRequest{
-		BucketId: "bucket-invalid-too-many-dashes",
+		BucketId: "bucket",
 	}
 
 	_, err := server.DriverDeleteBucket(ctx, req)
