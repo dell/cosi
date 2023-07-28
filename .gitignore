@@ -33,3 +33,6 @@ semver.mk
 
 # Fuzzing output
 testdata/
+
+# mirrord dir
+.mirrord/
