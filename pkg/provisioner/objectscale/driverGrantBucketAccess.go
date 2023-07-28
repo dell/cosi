@@ -23,8 +23,8 @@ import (
 	"github.com/aws/aws-sdk-go/service/iam"
 	"github.com/dell/goobjectscale/pkg/client/model"
 	"github.com/google/uuid"
-	"go.opencensus.io/trace"
 	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/trace"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"sigs.k8s.io/container-object-storage-interface-provisioner-sidecar/pkg/consts"
@@ -36,12 +36,13 @@ import (
 
 // All errors that can be returned by DriverGrantBucketAccess.
 var (
-	ErrInvalidBucketID       = errors.New("invalid bucketID")
-	ErrEmptyBucketAccessName = errors.New("empty bucket access name")
+	ErrInvalidBucketID           = errors.New("invalid bucketID")
+	ErrEmptyBucketAccessName     = errors.New("empty bucket access name")
+	ErrInvalidAuthenticationType = errors.New("invalid authentication type")
 )
 
 // Check if bucketID is not empty.
-func isBucketIDEmpty(ctx context.Context, req *cosi.DriverGrantBucketAccessRequest) error {
+func isBucketIDEmpty(req *cosi.DriverGrantBucketAccessRequest) error {
 	if req.GetBucketId() == "" {
 		return ErrInvalidBucketID
 	}
@@ -50,7 +51,7 @@ func isBucketIDEmpty(ctx context.Context, req *cosi.DriverGrantBucketAccessReque
 }
 
 // Check if bucket access name is not empty.
-func isBucketAccessNameEmpty(ctx context.Context, req *cosi.DriverGrantBucketAccessRequest) error {
+func isBucketAccessNameEmpty(req *cosi.DriverGrantBucketAccessRequest) error {
 	if req.GetName() == "" {
 		return ErrEmptyBucketAccessName
 	}
@@ -59,10 +60,19 @@ func isBucketAccessNameEmpty(ctx context.Context, req *cosi.DriverGrantBucketAcc
 }
 
 // Put error message into span and logs.
-func putErrorIntoSpanAndLogs(ctx context.Context, span trace.Span, err error) {
+func putErrorIntoSpanAndLogs(span trace.Span, err error) {
 	log.Error(err.Error())
 	span.RecordError(err)
 	span.SetStatus(otelCodes.Error, err.Error())
+}
+
+// Check if authentication type is not unknown.
+func isAuthenticationTypeNotEmpty(req *cosi.DriverGrantBucketAccessRequest) error {
+	if req.GetAuthenticationType() == cosi.AuthenticationType_UnknownAuthenticationType {
+		return ErrInvalidAuthenticationType
+	}
+
+	return nil
 }
 
 // DriverGrantBucketAccess provides access to Bucket on specific Object Storage Platform.
@@ -74,33 +84,20 @@ func (s *Server) DriverGrantBucketAccess(
 	defer span.End()
 
 	// Check if bucketID is not empty.
-	if err := isBucketIDEmpty(ctx, req); err != nil {
-		putErrorIntoSpanAndLogs(ctx, span, err)
+	if err := isBucketIDEmpty(req); err != nil {
+		putErrorIntoSpanAndLogs(span, err)
 		return nil, status.Error(codes.InvalidArgument, err.Error())
 	}
 
 	// Check if bucket access name is not empty.
-
-	// Check if bucket access name is not empty.
-	if req.GetName() == "" {
-		err := errors.New("empty bucket access name")
-		log.Error(err.Error())
-
-		span.RecordError(err)
-		span.SetStatus(otelCodes.Error, err.Error())
-
+	if err := isBucketAccessNameEmpty(req); err != nil {
+		putErrorIntoSpanAndLogs(span, err)
 		return nil, status.Error(codes.InvalidArgument, err.Error())
 	}
 
-	// TODO: after adding IAM the flow here could be if auth type key -> run key, if auth type iam -> run IAM, else error
-	// Check authentication type.
-	if req.GetAuthenticationType() == cosi.AuthenticationType_UnknownAuthenticationType {
-		err := errors.New("invalid authentication type")
-		log.Error(err.Error())
-
-		span.RecordError(err)
-		span.SetStatus(otelCodes.Error, err.Error())
-
+	// Check if authentication type is not unknown.
+	if err := isAuthenticationTypeNotEmpty(req); err != nil {
+		putErrorIntoSpanAndLogs(span, err)
 		return nil, status.Error(codes.InvalidArgument, err.Error())
 	}
 
