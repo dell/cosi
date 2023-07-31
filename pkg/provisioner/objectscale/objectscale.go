@@ -219,27 +219,6 @@ func (s *Server) ID() string {
 	return s.backendID
 }
 
-// Principal is a principal of AWS policy.
-type Principal struct {
-	AWS []string `json:"AWS"`
-}
-
-// UpdateBucketPolicyStatement is a statement of AWS policy.
-type UpdateBucketPolicyStatement struct {
-	Resource  []string  `json:"Resource"`
-	SID       string    `json:"Sid"`
-	Effect    string    `json:"Effect"`
-	Principal Principal `json:"Principal"`
-	Action    []string  `json:"Action"`
-}
-
-// UpdateBucketPolicyRequest is a full body of a policy.
-type UpdateBucketPolicyRequest struct {
-	PolicyID  string                        `json:"Id"`
-	Version   string                        `json:"Version"`
-	Statement []UpdateBucketPolicyStatement `json:"Statement"`
-}
-
 func BuildUsername(namespace, bucketName string) string {
 	raw := fmt.Sprintf("%v-user-%v", namespace, bucketName)
 	if len(raw) > maxUsernameLength {

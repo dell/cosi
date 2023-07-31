@@ -16,11 +16,11 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"strings"
 
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/iam"
+	"github.com/dell/cosi/pkg/provisioner/policy"
 	"github.com/dell/goobjectscale/pkg/client/model"
 	"github.com/google/uuid"
 	"go.opentelemetry.io/otel"
@@ -40,6 +40,17 @@ var (
 	ErrEmptyBucketAccessName     = errors.New("empty bucket access name")
 	ErrInvalidAuthenticationType = errors.New("invalid authentication type")
 	ErrUnknownAuthenticationType = errors.New("unknown authentication type")
+	ErrBucketNotFound            = errors.New("bucket not found")
+	ErrFailedToCheckBucketExist  = errors.New("failed to check bucket existence")
+	ErrFailedToCheckUserExist    = errors.New("failed to check for user existence")
+	ErrFailedToCreateUser        = errors.New("failed to create user")
+	ErrFailedToCheckPolicyExist  = errors.New("failed to check bucket policy existence")
+	ErrFailedToDecodePolicy      = errors.New("failed to decode bucket policy")
+	ErrFailedToUpdatePolicy      = errors.New("failed to update bucket policy")
+	ErrFailedToCreateAccessKey   = errors.New("failed to create access key")
+	ErrFailedToMarshalPolicy     = errors.New("failed to marshal updateBucketPolicyRequest into JSON")
+	ErrFailedToGeneratePolicyID  = errors.New("failed to generate PolicyID UUID")
+	ErrGeneratedPolicyIDIsEmpty  = errors.New("generated PolicyID was empty")
 )
 
 // Check if bucketID is not empty.
@@ -67,6 +78,27 @@ func putErrorIntoSpanAndLogs(span trace.Span, err error) {
 	span.SetStatus(otelCodes.Error, err.Error())
 }
 
+func putErrorIntoSpanAndLogsWithFields(span trace.Span, err error) {
+	log.Error(err.Error())
+	span.RecordError(err)
+	span.SetStatus(otelCodes.Error, err.Error())
+}
+
+// Contruct common parameters for bucket requests.
+func constructParameters(req *cosi.DriverGrantBucketAccessRequest, s *Server) map[string]string {
+	parameters := ""
+	parametersCopy := make(map[string]string)
+
+	for key, value := range req.GetParameters() {
+		parameters += key + ":" + value + ";"
+		parametersCopy[key] = value
+	}
+
+	parametersCopy["namespace"] = s.namespace
+
+	return parametersCopy
+}
+
 // Check if authentication type is not unknown.
 func isAuthenticationTypeNotEmpty(req *cosi.DriverGrantBucketAccessRequest) error {
 	if req.GetAuthenticationType() == cosi.AuthenticationType_UnknownAuthenticationType {
@@ -83,93 +115,86 @@ func handleIAMAuthentication(_ context.Context, _ *Server, _ *cosi.DriverGrantBu
 func handleKeyAuthentication(ctx context.Context, s *Server, req *cosi.DriverGrantBucketAccessRequest) (*cosi.DriverGrantBucketAccessResponse, error) {
 	ctx, span := otel.Tracer("GrantBucketAccessRequest").Start(ctx, "ObjectscaleHandleKeyAuthentication")
 	defer span.End()
-	// TODO: this should probably be moved to a separate function
-	// Extract bucket name from bucketID.
-	bucketName := strings.SplitN(req.BucketId, "-", splitNumber)[1]
+
+	// Get bucket name from bucketID.
+	bucketName, err := GetBucketName(req.GetBucketId())
+	if err != nil {
+		putErrorIntoSpanAndLogs(span, err)
+		return nil, status.Error(codes.InvalidArgument, err.Error())
+	}
 
 	log.WithFields(log.Fields{
 		"bucket":        bucketName,
 		"bucket_access": req.Name,
 	}).Info("bucket access for bucket is being created")
 
-	parameters := ""
-	parametersCopy := make(map[string]string)
-
-	for key, value := range req.GetParameters() {
-		parameters += key + ":" + value + ";"
-		parametersCopy[key] = value
-	}
-
-	parametersCopy["namespace"] = s.namespace
+	// Construct common parameters for bucket requests.
+	parameters := constructParameters(req, s)
 
 	log.WithFields(log.Fields{
 		"parameters": parameters,
 	}).Info("parameters of the bucket")
 
 	// Check if bucket for granting access exists.
-	_, err := s.mgmtClient.Buckets().Get(ctx, bucketName, parametersCopy)
-	if err != nil && !errors.Is(err, ErrParameterNotFound) {
-		log.WithFields(log.Fields{
+	_, err = s.mgmtClient.Buckets().Get(ctx, bucketName, parameters)
+	if err != nil {
+		fields := log.Fields{
 			"bucket": bucketName,
 			"error":  err,
-		}).Error("failed to check bucket existence")
+		}
+		if errors.Is(err, ErrParameterNotFound) {
+			log.WithFields(fields).Error(ErrBucketNotFound)
+			span.RecordError(err)
+			span.SetStatus(otelCodes.Error, ErrBucketNotFound.Error())
 
+			return nil, status.Error(codes.NotFound, ErrBucketNotFound.Error())
+		}
+
+		log.WithFields(fields).Error(ErrFailedToCheckBucketExist)
 		span.RecordError(err)
-		span.SetStatus(otelCodes.Error, "failed to check bucket existence")
+		span.SetStatus(otelCodes.Error, ErrFailedToCheckBucketExist.Error())
 
-		return nil, status.Error(codes.Internal, "an unexpected error occurred")
-	} else if err != nil {
-		log.WithFields(log.Fields{
-			"bucket": bucketName,
-			"error":  err,
-		}).Error("bucket not found")
-
-		span.RecordError(err)
-		span.SetStatus(otelCodes.Error, "bucket not found")
-
-		return nil, status.Error(codes.NotFound, "bucket not found")
+		return nil, status.Error(codes.Internal, ErrFailedToCheckBucketExist.Error())
 	}
 
 	userName := BuildUsername(s.namespace, bucketName)
 
 	userGet, err := s.iamClient.GetUserWithContext(ctx, &iam.GetUserInput{UserName: &userName})
 	if err != nil {
+		fields := log.Fields{
+			"user":  userName,
+			"error": err,
+		}
+
 		var myAwsErr awserr.Error
+
 		if errors.As(err, &myAwsErr) {
 			if myAwsErr.Code() != iam.ErrCodeNoSuchEntityException {
-				errMsg := errors.New("failed to check for user existence")
-				log.WithFields(log.Fields{
-					"user":  userName,
-					"error": myAwsErr,
-				}).Error(errMsg.Error())
-
+				log.WithFields(fields).Error(ErrFailedToCheckUserExist)
 				span.RecordError(myAwsErr)
-				span.SetStatus(otelCodes.Error, errMsg.Error())
+				span.RecordError(ErrFailedToCheckUserExist)
+				span.SetStatus(otelCodes.Error, ErrFailedToCheckUserExist.Error())
 
-				return nil, status.Error(codes.Internal, errMsg.Error())
+				return nil, status.Error(codes.Internal, ErrFailedToCheckUserExist.Error())
 			}
 		} else {
-			errMsg := errors.New("failed to check for user existence")
-			log.WithFields(log.Fields{
-				"user":  userName,
-				"error": err,
-			}).Error(errMsg.Error())
-
+			log.WithFields(fields).Error(ErrFailedToCheckUserExist)
 			span.RecordError(err)
-			span.SetStatus(otelCodes.Error, errMsg.Error())
+			span.SetStatus(otelCodes.Error, ErrFailedToCheckUserExist.Error())
 
-			return nil, status.Error(codes.Internal, errMsg.Error())
+			return nil, status.Error(codes.Internal, ErrFailedToCheckUserExist.Error())
 		}
 	}
 
-	// The userGet is being set to &iam.GetUserOutput{} in
-	// GetUser function so I don't think wrapping this in additional if is necessary.
 	// Check if IAM user exists.
 	if userGet.User != nil {
+		// Case when user exists.
 		log.WithFields(log.Fields{
 			"user": userName,
 		}).Warn("user already exists")
 	} else {
+		// Case when user does not exist.
+		// TODO: tutaj skończyłem !!
 		user, err := s.iamClient.CreateUserWithContext(ctx, &iam.CreateUserInput{
 			UserName: &userName,
 		})
@@ -178,12 +203,12 @@ func handleKeyAuthentication(ctx context.Context, s *Server, req *cosi.DriverGra
 			log.WithFields(log.Fields{
 				"user":  userName,
 				"error": err,
-			}).Error("cannot create user")
+			}).Error(ErrFailedToCreateUser)
 
 			span.RecordError(err)
-			span.SetStatus(otelCodes.Error, "cannot create user")
+			span.SetStatus(otelCodes.Error, ErrFailedToCreateUser.Error())
 
-			return nil, status.Error(codes.Internal, fmt.Sprintf("cannot create user %s", userName))
+			return nil, status.Error(codes.Internal, ErrFailedToCreateUser.Error())
 		}
 
 		log.WithFields(log.Fields{
@@ -193,41 +218,34 @@ func handleKeyAuthentication(ctx context.Context, s *Server, req *cosi.DriverGra
 	}
 
 	// Check if policy for specific bucket exists.
-	policy, err := s.mgmtClient.Buckets().GetPolicy(ctx, bucketName, parametersCopy)
+
+	existingPolicy, err := s.mgmtClient.Buckets().GetPolicy(ctx, bucketName, parameters)
 	if err != nil && !errors.Is(err, model.Error{Code: model.CodeResourceNotFound}) {
-		errMsg := errors.New("failed to check bucket policy existence")
 		log.WithFields(log.Fields{
 			"bucket": bucketName,
 			"error":  err,
-		}).Error(errMsg.Error())
+		}).Error(ErrFailedToCheckPolicyExist)
 
 		span.RecordError(err)
-		span.SetStatus(otelCodes.Error, errMsg.Error())
+		span.SetStatus(otelCodes.Error, ErrFailedToCheckPolicyExist.Error())
 
-		return nil, status.Error(codes.Internal, errMsg.Error())
-	} else if err == nil {
-		// TODO: this block is not necessary
-		// Even if we get no error, the policy can be empty, e.g. we get a 200 OK response and empty policy
-		log.WithFields(log.Fields{
-			"bucket": bucketName,
-		}).Info("bucket policy already exists")
+		return nil, status.Error(codes.Internal, ErrFailedToCheckPolicyExist.Error())
 	}
 
-	policyRequest := UpdateBucketPolicyRequest{}
-	if policy != "" {
-		err = json.NewDecoder(strings.NewReader(policy)).Decode(&policyRequest)
+	policyRequest := policy.Document{}
+	if existingPolicy != "" {
+		err = json.NewDecoder(strings.NewReader(existingPolicy)).Decode(&policyRequest)
 		if err != nil {
-			errMsg := errors.New("failed to decode existing bucket policy")
 			log.WithFields(log.Fields{
 				"bucket": bucketName,
-				"policy": policy,
+				"policy": existingPolicy,
 				"error":  err,
-			}).Error(errMsg.Error())
+			}).Error(ErrFailedToDecodePolicy)
 
 			span.RecordError(err)
-			span.SetStatus(otelCodes.Error, errMsg.Error())
+			span.SetStatus(otelCodes.Error, ErrFailedToDecodePolicy.Error())
 
-			return nil, status.Error(codes.Internal, errMsg.Error())
+			return nil, status.Error(codes.Internal, ErrFailedToDecodePolicy.Error())
 		}
 	}
 
@@ -244,7 +262,7 @@ func handleKeyAuthentication(ctx context.Context, s *Server, req *cosi.DriverGra
 		"statement":            policyRequest.Statement,
 	}).Info("policy request statement was parsed")
 
-	if policyRequest.PolicyID == "" {
+	if policyRequest.ID == "" {
 		policyID, err := generatePolicyID(ctx, bucketName)
 		if err != nil {
 			return nil, status.Error(codes.Internal, err.Error())
@@ -266,7 +284,7 @@ func handleKeyAuthentication(ctx context.Context, s *Server, req *cosi.DriverGra
 		errMsg := errors.New("failed to marshal updateBucketPolicyRequest into JSON")
 		log.WithFields(log.Fields{
 			"bucket":   bucketName,
-			"PolicyID": policyRequest.PolicyID,
+			"PolicyID": policyRequest.ID,
 			"error":    err,
 		}).Error(errMsg.Error())
 
@@ -276,7 +294,7 @@ func handleKeyAuthentication(ctx context.Context, s *Server, req *cosi.DriverGra
 		return nil, status.Error(codes.Internal, errMsg.Error())
 	}
 
-	err = s.mgmtClient.Buckets().UpdatePolicy(ctx, bucketName, string(updateBucketPolicyJSON), parametersCopy)
+	err = s.mgmtClient.Buckets().UpdatePolicy(ctx, bucketName, string(updateBucketPolicyJSON), parameters)
 	if err != nil {
 		errMsg := errors.New("failed to update bucket policy")
 		log.WithFields(log.Fields{
@@ -354,20 +372,20 @@ func (s *Server) DriverGrantBucketAccess(
 // TODO: this probably has to be refactored in order to meet the gocognit requirements (complexity < 30).
 func parsePolicyStatement(
 	ctx context.Context,
-	inputStatements []UpdateBucketPolicyStatement,
+	inputStatements []policy.StatementEntry,
 	awsBucketResourceARN,
 	awsPrincipalString string,
-) []UpdateBucketPolicyStatement {
+) []policy.StatementEntry {
 	_, span := otel.Tracer("GrantBucketAccessRequest").Start(ctx, "ObjectscaleParsePolicyStatement")
 	defer span.End()
 
-	outputStatements := []UpdateBucketPolicyStatement{}
+	outputStatements := []policy.StatementEntry{}
 
 	// Omitting a nil check, as the len() is defined as at lest zero.
 	if len(inputStatements) > 0 {
 		outputStatements = inputStatements
 	} else {
-		outputStatements = append(outputStatements, UpdateBucketPolicyStatement{})
+		outputStatements = append(outputStatements, policy.StatementEntry{})
 	}
 
 	for k, statement := range outputStatements {
