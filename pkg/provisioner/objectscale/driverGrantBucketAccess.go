@@ -72,13 +72,6 @@ func isBucketAccessNameEmpty(req *cosi.DriverGrantBucketAccessRequest) error {
 	return nil
 }
 
-// Put error message into span and logs.
-func putErrorIntoSpanAndLogs(span trace.Span, err error) {
-	log.Error(err.Error())
-	span.RecordError(err)
-	span.SetStatus(otelCodes.Error, err.Error())
-}
-
 // Construct common parameters for bucket requests.
 func constructParameters(req *cosi.DriverGrantBucketAccessRequest, s *Server) map[string]string {
 	parameters := ""
@@ -126,8 +119,7 @@ func handleKeyAuthentication(ctx context.Context, s *Server, req *cosi.DriverGra
 	// Get bucket name from bucketID.
 	bucketName, err := GetBucketName(req.GetBucketId())
 	if err != nil {
-		putErrorIntoSpanAndLogs(span, err)
-		return nil, status.Error(codes.InvalidArgument, err.Error())
+		return nil, logAndTraceError(log.WithFields(log.Fields{}), span, ErrInvalidBucketID.Error(), err, codes.InvalidArgument)
 	}
 
 	log.WithFields(log.Fields{
@@ -300,20 +292,17 @@ func (s *Server) DriverGrantBucketAccess(
 
 	// Check if bucketID is not empty.
 	if err := isBucketIDEmpty(req); err != nil {
-		putErrorIntoSpanAndLogs(span, err)
-		return nil, status.Error(codes.InvalidArgument, err.Error())
+		return nil, logAndTraceError(log.WithFields(log.Fields{}), span, ErrInvalidBucketID.Error(), err, codes.InvalidArgument)
 	}
 
 	// Check if bucket access name is not empty.
 	if err := isBucketAccessNameEmpty(req); err != nil {
-		putErrorIntoSpanAndLogs(span, err)
-		return nil, status.Error(codes.InvalidArgument, err.Error())
+		return nil, logAndTraceError(log.WithFields(log.Fields{}), span, ErrInvalidBucketID.Error(), err, codes.InvalidArgument)
 	}
 
 	// Check if authentication type is not unknown.
 	if err := isAuthenticationTypeNotEmpty(req); err != nil {
-		putErrorIntoSpanAndLogs(span, err)
-		return nil, status.Error(codes.InvalidArgument, err.Error())
+		return nil, logAndTraceError(log.WithFields(log.Fields{}), span, ErrInvalidBucketID.Error(), err, codes.InvalidArgument)
 	}
 
 	if req.AuthenticationType == cosi.AuthenticationType_IAM {
@@ -324,9 +313,7 @@ func (s *Server) DriverGrantBucketAccess(
 		return handleKeyAuthentication(ctx, s, req)
 	}
 
-	putErrorIntoSpanAndLogs(span, ErrUnknownAuthenticationType)
-
-	return nil, status.Error(codes.Internal, ErrUnknownAuthenticationType.Error())
+	return nil, logAndTraceError(log.WithFields(log.Fields{}), span, ErrUnknownAuthenticationType.Error(), ErrUnknownAuthenticationType, codes.Internal)
 }
 
 // parsePolicyStatement generates new bucket policy statements array with updated resource and principal.
