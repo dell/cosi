@@ -194,7 +194,6 @@ func handleKeyAuthentication(ctx context.Context, s *Server, req *cosi.DriverGra
 		}).Warn("user already exists")
 	} else {
 		// Case when user does not exist.
-		// TODO: tutaj skończyłem !!
 		user, err := s.iamClient.CreateUserWithContext(ctx, &iam.CreateUserInput{
 			UserName: &userName,
 		})
