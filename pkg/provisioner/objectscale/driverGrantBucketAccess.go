@@ -48,7 +48,7 @@ var (
 	ErrFailedToDecodePolicy      = errors.New("failed to decode bucket policy")
 	ErrFailedToUpdatePolicy      = errors.New("failed to update bucket policy")
 	ErrFailedToCreateAccessKey   = errors.New("failed to create access key")
-	ErrFailedToMarshalPolicy     = errors.New("failed to marshal updateBucketPolicyRequest into JSON")
+	ErrFailedToMarshalPolicy     = errors.New("failed to marshal policy into JSON")
 	ErrFailedToGeneratePolicyID  = errors.New("failed to generate PolicyID UUID")
 	ErrGeneratedPolicyIDIsEmpty  = errors.New("generated PolicyID was empty")
 )
@@ -280,46 +280,43 @@ func handleKeyAuthentication(ctx context.Context, s *Server, req *cosi.DriverGra
 	// Marshal the struct to JSON to confirm JSON validity
 	updateBucketPolicyJSON, err := json.Marshal(policyRequest)
 	if err != nil {
-		errMsg := errors.New("failed to marshal updateBucketPolicyRequest into JSON")
 		log.WithFields(log.Fields{
 			"bucket":   bucketName,
 			"PolicyID": policyRequest.ID,
 			"error":    err,
-		}).Error(errMsg.Error())
+		}).Error(ErrFailedToMarshalPolicy)
 
 		span.RecordError(err)
-		span.SetStatus(otelCodes.Error, errMsg.Error())
+		span.SetStatus(otelCodes.Error, ErrFailedToMarshalPolicy.Error())
 
-		return nil, status.Error(codes.Internal, errMsg.Error())
+		return nil, status.Error(codes.Internal, ErrFailedToMarshalPolicy.Error())
 	}
 
 	err = s.mgmtClient.Buckets().UpdatePolicy(ctx, bucketName, string(updateBucketPolicyJSON), parameters)
 	if err != nil {
-		errMsg := errors.New("failed to update bucket policy")
 		log.WithFields(log.Fields{
 			"bucket": bucketName,
 			"policy": updateBucketPolicyJSON,
 			"error":  err,
-		}).Error(errMsg.Error())
+		}).Error(ErrFailedToUpdatePolicy)
 
 		span.RecordError(err)
-		span.SetStatus(otelCodes.Error, errMsg.Error())
+		span.SetStatus(otelCodes.Error, ErrFailedToUpdatePolicy.Error())
 
-		return nil, status.Error(codes.Internal, errMsg.Error())
+		return nil, status.Error(codes.Internal, ErrFailedToUpdatePolicy.Error())
 	}
 
 	accessKey, err := s.iamClient.CreateAccessKey(&iam.CreateAccessKeyInput{UserName: &userName})
 	if err != nil {
-		errMsg := errors.New("failed to create access key")
 		log.WithFields(log.Fields{
 			"user":  userName,
 			"error": err,
-		}).Error(errMsg.Error())
+		}).Error(ErrFailedToCreateAccessKey)
 
 		span.RecordError(err)
-		span.SetStatus(otelCodes.Error, errMsg.Error())
+		span.SetStatus(otelCodes.Error, ErrFailedToCreateAccessKey.Error())
 
-		return nil, status.Error(codes.Internal, errMsg.Error())
+		return nil, status.Error(codes.Internal, ErrFailedToCreateAccessKey.Error())
 	}
 
 	// TODO: can credentials have empty values? if no, should we check any specific fields for non-emptiness?
