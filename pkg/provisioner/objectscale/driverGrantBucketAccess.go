@@ -388,13 +388,13 @@ func parsePolicyStatement(
 		outputStatements = append(outputStatements, policy.StatementEntry{})
 	}
 
-	for k, statement := range outputStatements {
-
+	for k := range outputStatements {
+		statement := &outputStatements[k]
 		if statement.Resource == nil {
 			statement.Resource = []string{}
 		}
 
-		if !awsBucketResourceArnExists(&statement, awsBucketResourceARN) {
+		if !awsBucketResourceArnExists(statement, awsBucketResourceARN) {
 			statement.Resource = append(statement.Resource, awsBucketResourceARN)
 		}
 
@@ -404,7 +404,7 @@ func parsePolicyStatement(
 			statement.Effect = allowEffect
 		}
 
-		if !principalExists(&statement, awsPrincipalString) {
+		if !principalExists(statement, awsPrincipalString) {
 			statement.Principal.AWS = append(statement.Principal.AWS, awsPrincipalString)
 		}
 
@@ -412,19 +412,20 @@ func parsePolicyStatement(
 
 		// TODO: shouldn't action be validated with params? Maybe we only want to grant read access by default?
 		// if yes, then this should be done later, when we have more info about the params (MVP is to grant all permissions)
-		if !actionExists(&statement) {
+		if !actionExists(statement) {
 			statement.Action = append(statement.Action, "*")
 		}
 
 		span.AddEvent("update principal action in policy statement")
 
-		outputStatements[k] = statement
+		// TODO: I don't think this is necessary after the changes to addressing "statement" variable
+		outputStatements[k] = *statement
 	}
 
 	return outputStatements
 }
 
-func actionExists(statement *UpdateBucketPolicyStatement) bool {
+func actionExists(statement *policy.StatementEntry) bool {
 	if statement.Action == nil {
 		statement.Action = []string{}
 	}
@@ -438,7 +439,7 @@ func actionExists(statement *UpdateBucketPolicyStatement) bool {
 	return false
 }
 
-func principalExists(statement *UpdateBucketPolicyStatement, principalString string) bool {
+func principalExists(statement *policy.StatementEntry, principalString string) bool {
 	if statement.Principal.AWS == nil {
 		statement.Principal.AWS = []string{}
 	}
@@ -452,7 +453,7 @@ func principalExists(statement *UpdateBucketPolicyStatement, principalString str
 	return false
 }
 
-func awsBucketResourceArnExists(statement *UpdateBucketPolicyStatement, awsBucketResourceARN string) bool {
+func awsBucketResourceArnExists(statement *policy.StatementEntry, awsBucketResourceARN string) bool {
 	for _, r := range statement.Resource {
 		if r == awsBucketResourceARN {
 			return true
