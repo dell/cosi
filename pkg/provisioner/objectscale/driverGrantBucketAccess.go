@@ -29,6 +29,7 @@ import (
 	"google.golang.org/grpc/status"
 	"sigs.k8s.io/container-object-storage-interface-provisioner-sidecar/pkg/consts"
 
+	"github.com/sirupsen/logrus"
 	log "github.com/sirupsen/logrus"
 	otelCodes "go.opentelemetry.io/otel/codes"
 	cosi "sigs.k8s.io/container-object-storage-interface-spec"
@@ -78,12 +79,6 @@ func putErrorIntoSpanAndLogs(span trace.Span, err error) {
 	span.SetStatus(otelCodes.Error, err.Error())
 }
 
-func putErrorIntoSpanAndLogsWithFields(span trace.Span, err error) {
-	log.Error(err.Error())
-	span.RecordError(err)
-	span.SetStatus(otelCodes.Error, err.Error())
-}
-
 // Contruct common parameters for bucket requests.
 func constructParameters(req *cosi.DriverGrantBucketAccessRequest, s *Server) map[string]string {
 	parameters := ""
@@ -106,6 +101,18 @@ func isAuthenticationTypeNotEmpty(req *cosi.DriverGrantBucketAccessRequest) erro
 	}
 
 	return nil
+}
+
+// logAndTraceError is a helper function that logs an error with specified fields and records it in a span.
+func logAndTraceError(logger *logrus.Entry, span trace.Span, errMsg string, err error, code codes.Code) error {
+	logger.WithFields(logrus.Fields{
+		"error": err,
+	}).Error(errMsg)
+
+	span.RecordError(err)
+	span.SetStatus(otelCodes.Error, errMsg)
+
+	return status.Error(code, errMsg)
 }
 
 func handleIAMAuthentication(_ context.Context, _ *Server, _ *cosi.DriverGrantBucketAccessRequest) (*cosi.DriverGrantBucketAccessResponse, error) {
@@ -140,21 +147,12 @@ func handleKeyAuthentication(ctx context.Context, s *Server, req *cosi.DriverGra
 	if err != nil {
 		fields := log.Fields{
 			"bucket": bucketName,
-			"error":  err,
 		}
 		if errors.Is(err, ErrParameterNotFound) {
-			log.WithFields(fields).Error(ErrBucketNotFound)
-			span.RecordError(err)
-			span.SetStatus(otelCodes.Error, ErrBucketNotFound.Error())
-
-			return nil, status.Error(codes.NotFound, ErrBucketNotFound.Error())
+			return nil, logAndTraceError(log.WithFields(fields), span, ErrBucketNotFound.Error(), err, codes.NotFound)
 		}
 
-		log.WithFields(fields).Error(ErrFailedToCheckBucketExist)
-		span.RecordError(err)
-		span.SetStatus(otelCodes.Error, ErrFailedToCheckBucketExist.Error())
-
-		return nil, status.Error(codes.Internal, ErrFailedToCheckBucketExist.Error())
+		return nil, logAndTraceError(log.WithFields(fields), span, ErrFailedToCheckBucketExist.Error(), err, codes.Internal)
 	}
 
 	userName := BuildUsername(s.namespace, bucketName)
@@ -162,27 +160,18 @@ func handleKeyAuthentication(ctx context.Context, s *Server, req *cosi.DriverGra
 	userGet, err := s.iamClient.GetUserWithContext(ctx, &iam.GetUserInput{UserName: &userName})
 	if err != nil {
 		fields := log.Fields{
-			"user":  userName,
-			"error": err,
+			"user": userName,
 		}
 
 		var myAwsErr awserr.Error
 
 		if errors.As(err, &myAwsErr) {
 			if myAwsErr.Code() != iam.ErrCodeNoSuchEntityException {
-				log.WithFields(fields).Error(ErrFailedToCheckUserExist)
 				span.RecordError(myAwsErr)
-				span.RecordError(ErrFailedToCheckUserExist)
-				span.SetStatus(otelCodes.Error, ErrFailedToCheckUserExist.Error())
-
-				return nil, status.Error(codes.Internal, ErrFailedToCheckUserExist.Error())
+				return nil, logAndTraceError(log.WithFields(fields), span, ErrFailedToCheckUserExist.Error(), err, codes.Internal)
 			}
 		} else {
-			log.WithFields(fields).Error(ErrFailedToCheckUserExist)
-			span.RecordError(err)
-			span.SetStatus(otelCodes.Error, ErrFailedToCheckUserExist.Error())
-
-			return nil, status.Error(codes.Internal, ErrFailedToCheckUserExist.Error())
+			return nil, logAndTraceError(log.WithFields(fields), span, ErrFailedToCheckUserExist.Error(), err, codes.Internal)
 		}
 	}
 
@@ -199,15 +188,11 @@ func handleKeyAuthentication(ctx context.Context, s *Server, req *cosi.DriverGra
 		})
 		// add idempotency case (user exists)
 		if err != nil {
-			log.WithFields(log.Fields{
-				"user":  userName,
-				"error": err,
-			}).Error(ErrFailedToCreateUser)
+			fields := log.Fields{
+				"user": userName,
+			}
 
-			span.RecordError(err)
-			span.SetStatus(otelCodes.Error, ErrFailedToCreateUser.Error())
-
-			return nil, status.Error(codes.Internal, ErrFailedToCreateUser.Error())
+			return nil, logAndTraceError(log.WithFields(fields), span, ErrFailedToCreateUser.Error(), err, codes.Internal)
 		}
 
 		log.WithFields(log.Fields{
@@ -220,31 +205,23 @@ func handleKeyAuthentication(ctx context.Context, s *Server, req *cosi.DriverGra
 
 	existingPolicy, err := s.mgmtClient.Buckets().GetPolicy(ctx, bucketName, parameters)
 	if err != nil && !errors.Is(err, model.Error{Code: model.CodeResourceNotFound}) {
-		log.WithFields(log.Fields{
+		fields := log.Fields{
 			"bucket": bucketName,
-			"error":  err,
-		}).Error(ErrFailedToCheckPolicyExist)
+		}
 
-		span.RecordError(err)
-		span.SetStatus(otelCodes.Error, ErrFailedToCheckPolicyExist.Error())
-
-		return nil, status.Error(codes.Internal, ErrFailedToCheckPolicyExist.Error())
+		return nil, logAndTraceError(log.WithFields(fields), span, ErrFailedToCheckPolicyExist.Error(), err, codes.Internal)
 	}
 
 	policyRequest := policy.Document{}
 	if existingPolicy != "" {
 		err = json.NewDecoder(strings.NewReader(existingPolicy)).Decode(&policyRequest)
 		if err != nil {
-			log.WithFields(log.Fields{
+			fields := log.Fields{
 				"bucket": bucketName,
 				"policy": existingPolicy,
-				"error":  err,
-			}).Error(ErrFailedToDecodePolicy)
+			}
 
-			span.RecordError(err)
-			span.SetStatus(otelCodes.Error, ErrFailedToDecodePolicy.Error())
-
-			return nil, status.Error(codes.Internal, ErrFailedToDecodePolicy.Error())
+			return nil, logAndTraceError(log.WithFields(fields), span, ErrFailedToDecodePolicy.Error(), err, codes.Internal)
 		}
 	}
 
@@ -280,43 +257,31 @@ func handleKeyAuthentication(ctx context.Context, s *Server, req *cosi.DriverGra
 	// Marshal the struct to JSON to confirm JSON validity
 	updateBucketPolicyJSON, err := json.Marshal(policyRequest)
 	if err != nil {
-		log.WithFields(log.Fields{
+		fields := log.Fields{
 			"bucket":   bucketName,
 			"PolicyID": policyRequest.ID,
-			"error":    err,
-		}).Error(ErrFailedToMarshalPolicy)
+		}
 
-		span.RecordError(err)
-		span.SetStatus(otelCodes.Error, ErrFailedToMarshalPolicy.Error())
-
-		return nil, status.Error(codes.Internal, ErrFailedToMarshalPolicy.Error())
+		return nil, logAndTraceError(log.WithFields(fields), span, ErrFailedToMarshalPolicy.Error(), err, codes.Internal)
 	}
 
 	err = s.mgmtClient.Buckets().UpdatePolicy(ctx, bucketName, string(updateBucketPolicyJSON), parameters)
 	if err != nil {
-		log.WithFields(log.Fields{
+		fields := log.Fields{
 			"bucket": bucketName,
 			"policy": updateBucketPolicyJSON,
-			"error":  err,
-		}).Error(ErrFailedToUpdatePolicy)
+		}
 
-		span.RecordError(err)
-		span.SetStatus(otelCodes.Error, ErrFailedToUpdatePolicy.Error())
-
-		return nil, status.Error(codes.Internal, ErrFailedToUpdatePolicy.Error())
+		return nil, logAndTraceError(log.WithFields(fields), span, ErrFailedToUpdatePolicy.Error(), err, codes.Internal)
 	}
 
 	accessKey, err := s.iamClient.CreateAccessKey(&iam.CreateAccessKeyInput{UserName: &userName})
 	if err != nil {
-		log.WithFields(log.Fields{
-			"user":  userName,
-			"error": err,
-		}).Error(ErrFailedToCreateAccessKey)
+		fields := log.Fields{
+			"user": userName,
+		}
 
-		span.RecordError(err)
-		span.SetStatus(otelCodes.Error, ErrFailedToCreateAccessKey.Error())
-
-		return nil, status.Error(codes.Internal, ErrFailedToCreateAccessKey.Error())
+		return nil, logAndTraceError(log.WithFields(fields), span, ErrFailedToCreateAccessKey.Error(), err, codes.Internal)
 	}
 
 	// TODO: can credentials have empty values? if no, should we check any specific fields for non-emptiness?
