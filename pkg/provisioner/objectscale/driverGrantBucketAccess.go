@@ -79,7 +79,7 @@ func putErrorIntoSpanAndLogs(span trace.Span, err error) {
 	span.SetStatus(otelCodes.Error, err.Error())
 }
 
-// Contruct common parameters for bucket requests.
+// Construct common parameters for bucket requests.
 func constructParameters(req *cosi.DriverGrantBucketAccessRequest, s *Server) map[string]string {
 	parameters := ""
 	parametersCopy := make(map[string]string)
