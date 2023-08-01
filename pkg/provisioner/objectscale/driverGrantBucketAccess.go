@@ -418,29 +418,20 @@ func generatePolicyID(ctx context.Context, bucketName string) (*uuid.UUID, error
 
 	policyID, err := uuid.NewUUID()
 	if err != nil {
-		errMsg := errors.New("failed to generate PolicyID UUID")
-		log.WithFields(log.Fields{
+		fields := log.Fields{
 			"bucket": bucketName,
-			"error":  err,
-		}).Error(errMsg.Error())
+		}
 
-		span.RecordError(err)
-		span.SetStatus(otelCodes.Error, errMsg.Error())
-
-		return nil, errMsg
+		return nil, logAndTraceError(log.WithFields(fields), span, ErrFailedToGeneratePolicyID.Error(), err, codes.Internal)
 	}
 
 	if policyID.String() == "" {
-		errMsg := errors.New("generated PolicyID was empty")
-		log.WithFields(log.Fields{
+		fields := log.Fields{
 			"bucket":   bucketName,
 			"PolicyID": policyID,
-		}).Error(errMsg.Error())
+		}
 
-		span.RecordError(errMsg)
-		span.SetStatus(otelCodes.Error, errMsg.Error())
-
-		return nil, errMsg
+		return nil, logAndTraceError(log.WithFields(fields), span, ErrGeneratedPolicyIDIsEmpty.Error(), err, codes.Internal)
 	}
 
 	return &policyID, nil
