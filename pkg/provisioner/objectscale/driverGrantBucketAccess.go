@@ -54,62 +54,39 @@ var (
 	ErrGeneratedPolicyIDIsEmpty  = errors.New("generated PolicyID was empty")
 )
 
-// Check if bucketID is not empty.
-func isBucketIDEmpty(req *cosi.DriverGrantBucketAccessRequest) error {
-	if req.GetBucketId() == "" {
-		return ErrInvalidBucketID
+// DriverGrantBucketAccess provides access to Bucket on specific Object Storage Platform.
+func (s *Server) DriverGrantBucketAccess(
+	ctx context.Context,
+	req *cosi.DriverGrantBucketAccessRequest,
+) (*cosi.DriverGrantBucketAccessResponse, error) {
+	ctx, span := otel.Tracer("GrantBucketAccessRequest").Start(ctx, "ObjectscaleDriverGrantBucketAccess")
+	defer span.End()
+
+	// Check if bucketID is not empty.
+	if err := isBucketIDEmpty(req); err != nil {
+		return nil, logAndTraceError(log.WithFields(log.Fields{}), span, ErrInvalidBucketID.Error(), err, codes.InvalidArgument)
 	}
 
-	return nil
-}
-
-// Check if bucket access name is not empty.
-func isBucketAccessNameEmpty(req *cosi.DriverGrantBucketAccessRequest) error {
-	if req.GetName() == "" {
-		return ErrEmptyBucketAccessName
+	// Check if bucket access name is not empty.
+	if err := isBucketAccessNameEmpty(req); err != nil {
+		return nil, logAndTraceError(log.WithFields(log.Fields{}), span, ErrInvalidBucketID.Error(), err, codes.InvalidArgument)
 	}
 
-	return nil
-}
-
-// Construct common parameters for bucket requests.
-func constructParameters(req *cosi.DriverGrantBucketAccessRequest, s *Server) map[string]string {
-	parameters := ""
-	parametersCopy := make(map[string]string)
-
-	for key, value := range req.GetParameters() {
-		parameters += key + ":" + value + ";"
-		parametersCopy[key] = value
+	// Check if authentication type is not unknown.
+	if err := isAuthenticationTypeNotEmpty(req); err != nil {
+		return nil, logAndTraceError(log.WithFields(log.Fields{}), span, ErrInvalidBucketID.Error(), err, codes.InvalidArgument)
 	}
 
-	parametersCopy["namespace"] = s.namespace
-
-	return parametersCopy
-}
-
-// Check if authentication type is not unknown.
-func isAuthenticationTypeNotEmpty(req *cosi.DriverGrantBucketAccessRequest) error {
-	if req.GetAuthenticationType() == cosi.AuthenticationType_UnknownAuthenticationType {
-		return ErrInvalidAuthenticationType
+	// Now split the flow based on the type of authentication.
+	if req.AuthenticationType == cosi.AuthenticationType_IAM {
+		return handleIAMAuthentication(ctx, s, req)
 	}
 
-	return nil
-}
+	if req.AuthenticationType == cosi.AuthenticationType_Key {
+		return handleKeyAuthentication(ctx, s, req)
+	}
 
-// logAndTraceError is a helper function that logs an error with specified fields and records it in a span.
-func logAndTraceError(logger *logrus.Entry, span trace.Span, errMsg string, err error, code codes.Code) error {
-	logger.WithFields(logrus.Fields{
-		"error": err,
-	}).Error(errMsg)
-
-	span.RecordError(err)
-	span.SetStatus(otelCodes.Error, errMsg)
-
-	return status.Error(code, errMsg)
-}
-
-func handleIAMAuthentication(_ context.Context, _ *Server, _ *cosi.DriverGrantBucketAccessRequest) (*cosi.DriverGrantBucketAccessResponse, error) {
-	return nil, status.Error(codes.Unimplemented, "authentication type IAM not implemented")
+	return nil, logAndTraceError(log.WithFields(log.Fields{}), span, ErrUnknownAuthenticationType.Error(), ErrUnknownAuthenticationType, codes.Internal)
 }
 
 func handleKeyAuthentication(ctx context.Context, s *Server, req *cosi.DriverGrantBucketAccessRequest) (*cosi.DriverGrantBucketAccessResponse, error) {
@@ -193,8 +170,7 @@ func handleKeyAuthentication(ctx context.Context, s *Server, req *cosi.DriverGra
 		}).Info("ObjectScale IAM user was created")
 	}
 
-	// Check if policy for specific bucket exists.
-
+	// Check if policy for a specific bucket exists.
 	existingPolicy, err := s.mgmtClient.Buckets().GetPolicy(ctx, bucketName, parameters)
 	if err != nil && !errors.Is(err, model.Error{Code: model.CodeResourceNotFound}) {
 		fields := log.Fields{
@@ -246,7 +222,7 @@ func handleKeyAuthentication(ctx context.Context, s *Server, req *cosi.DriverGra
 		policyRequest.Version = bucketVersion
 	}
 
-	// Marshal the struct to JSON to confirm JSON validity
+	// Marshal the struct to JSON to confirm JSON validity.
 	updateBucketPolicyJSON, err := json.Marshal(policyRequest)
 	if err != nil {
 		fields := log.Fields{
@@ -282,42 +258,54 @@ func handleKeyAuthentication(ctx context.Context, s *Server, req *cosi.DriverGra
 	return &cosi.DriverGrantBucketAccessResponse{AccountId: userName, Credentials: credentials}, nil
 }
 
-// DriverGrantBucketAccess provides access to Bucket on specific Object Storage Platform.
-func (s *Server) DriverGrantBucketAccess(
-	ctx context.Context,
-	req *cosi.DriverGrantBucketAccessRequest,
-) (*cosi.DriverGrantBucketAccessResponse, error) {
-	ctx, span := otel.Tracer("GrantBucketAccessRequest").Start(ctx, "ObjectscaleDriverGrantBucketAccess")
-	defer span.End()
+// TODO: this function will be implemented if we decide to add the IAM authentication.
+func handleIAMAuthentication(_ context.Context, _ *Server, _ *cosi.DriverGrantBucketAccessRequest) (*cosi.DriverGrantBucketAccessResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "authentication type IAM not implemented")
+}
 
-	// Check if bucketID is not empty.
-	if err := isBucketIDEmpty(req); err != nil {
-		return nil, logAndTraceError(log.WithFields(log.Fields{}), span, ErrInvalidBucketID.Error(), err, codes.InvalidArgument)
+// Check if bucketID is not empty.
+func isBucketIDEmpty(req *cosi.DriverGrantBucketAccessRequest) error {
+	if req.GetBucketId() == "" {
+		return ErrInvalidBucketID
 	}
 
-	// Check if bucket access name is not empty.
-	if err := isBucketAccessNameEmpty(req); err != nil {
-		return nil, logAndTraceError(log.WithFields(log.Fields{}), span, ErrInvalidBucketID.Error(), err, codes.InvalidArgument)
+	return nil
+}
+
+// Check if bucket access name is not empty.
+func isBucketAccessNameEmpty(req *cosi.DriverGrantBucketAccessRequest) error {
+	if req.GetName() == "" {
+		return ErrEmptyBucketAccessName
 	}
 
-	// Check if authentication type is not unknown.
-	if err := isAuthenticationTypeNotEmpty(req); err != nil {
-		return nil, logAndTraceError(log.WithFields(log.Fields{}), span, ErrInvalidBucketID.Error(), err, codes.InvalidArgument)
+	return nil
+}
+
+// Check if authentication type is not unknown.
+func isAuthenticationTypeNotEmpty(req *cosi.DriverGrantBucketAccessRequest) error {
+	if req.GetAuthenticationType() == cosi.AuthenticationType_UnknownAuthenticationType {
+		return ErrInvalidAuthenticationType
 	}
 
-	if req.AuthenticationType == cosi.AuthenticationType_IAM {
-		return handleIAMAuthentication(ctx, s, req)
+	return nil
+}
+
+// Construct common parameters for bucket requests.
+func constructParameters(req *cosi.DriverGrantBucketAccessRequest, s *Server) map[string]string {
+	parameters := ""
+	parametersCopy := make(map[string]string)
+
+	for key, value := range req.GetParameters() {
+		parameters += key + ":" + value + ";"
+		parametersCopy[key] = value
 	}
 
-	if req.AuthenticationType == cosi.AuthenticationType_Key {
-		return handleKeyAuthentication(ctx, s, req)
-	}
+	parametersCopy["namespace"] = s.namespace
 
-	return nil, logAndTraceError(log.WithFields(log.Fields{}), span, ErrUnknownAuthenticationType.Error(), ErrUnknownAuthenticationType, codes.Internal)
+	return parametersCopy
 }
 
 // parsePolicyStatement generates new bucket policy statements array with updated resource and principal.
-// TODO: this probably has to be refactored in order to meet the gocognit requirements (complexity < 30).
 func parsePolicyStatement(
 	ctx context.Context,
 	inputStatements []policy.StatementEntry,
@@ -373,6 +361,7 @@ func parsePolicyStatement(
 	return outputStatements
 }
 
+// actionExists is a function used when parsing statements, which adds the Action field if none are found.
 func actionExists(statement *policy.StatementEntry) bool {
 	if statement.Action == nil {
 		statement.Action = []string{}
@@ -387,6 +376,7 @@ func actionExists(statement *policy.StatementEntry) bool {
 	return false
 }
 
+// principalExists is a function used when parsing statements, which adds the Principal field if none are found.
 func principalExists(statement *policy.StatementEntry, principalString string) bool {
 	if statement.Principal.AWS == nil {
 		statement.Principal.AWS = []string{}
@@ -401,6 +391,8 @@ func principalExists(statement *policy.StatementEntry, principalString string) b
 	return false
 }
 
+// awsBucketResourceArnExists is a function used when parsing statements,
+// which adds the awsBucketResourceARN field if none are found.
 func awsBucketResourceArnExists(statement *policy.StatementEntry, awsBucketResourceARN string) bool {
 	for _, r := range statement.Resource {
 		if r == awsBucketResourceARN {
@@ -474,4 +466,16 @@ func assembleCredentials(
 	span.AddEvent("access to the bucket for user successfully granted")
 
 	return credentials
+}
+
+// logAndTraceError is a helper function that logs an error with specified fields and records it in a span.
+func logAndTraceError(logger *logrus.Entry, span trace.Span, errMsg string, err error, code codes.Code) error {
+	logger.WithFields(logrus.Fields{
+		"error": err,
+	}).Error(errMsg)
+
+	span.RecordError(err)
+	span.SetStatus(otelCodes.Error, errMsg)
+
+	return status.Error(code, errMsg)
 }
