@@ -19,8 +19,6 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/iam"
 	"github.com/aws/aws-sdk-go/service/iam/iamiface"
-	"github.com/dell/goobjectscale/pkg/client/fake"
-	"github.com/dell/goobjectscale/pkg/client/model"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"google.golang.org/grpc/codes"
@@ -30,6 +28,8 @@ import (
 
 	"github.com/dell/cosi/pkg/iamfaketoo"
 	"github.com/dell/cosi/pkg/internal/testcontext"
+	"github.com/dell/goobjectscale/pkg/client/fake"
+	"github.com/dell/goobjectscale/pkg/client/model"
 )
 
 var _ iamiface.IAMAPI = (*iamfaketoo.IAMAPI)(nil)
@@ -152,7 +152,8 @@ func testInvalidUserCreation(t *testing.T) {
 	// That's how we can mock the objectscale IAM api client
 	IAMClient := iamfaketoo.NewIAMAPI(t)
 	IAMClient.On("GetUserWithContext", mock.Anything, mock.Anything).Return(&iam.GetUserOutput{}, nil).Once()
-	IAMClient.On("CreateUserWithContext", mock.Anything, mock.Anything).Return(nil, errors.New("failed to create user")).Once()
+	IAMClient.On("CreateUserWithContext", mock.Anything, mock.Anything).Return(
+		nil, errors.New(ErrFailedToCreateUser.Error())).Once()
 
 	server := Server{
 		mgmtClient: fake.NewClientSet(&model.Bucket{ // That's how we can mock the objectscale bucket api client
@@ -176,7 +177,7 @@ func testInvalidUserCreation(t *testing.T) {
 	}
 
 	response, err := server.DriverGrantBucketAccess(ctx, req)
-	assert.ErrorIs(t, err, status.Error(codes.Internal, "cannot create user namespace-user-valid"), err)
+	assert.ErrorIs(t, err, status.Error(codes.Internal, ErrFailedToCreateUser.Error()), err)
 	assert.Nil(t, response)
 }
 
@@ -280,7 +281,7 @@ func testEmptyBucketID(t *testing.T) {
 	}
 
 	response, err := server.DriverGrantBucketAccess(ctx, req)
-	assert.ErrorIs(t, err, status.Error(codes.InvalidArgument, "empty bucketID"), err)
+	assert.ErrorIs(t, err, status.Error(codes.InvalidArgument, ErrInvalidBucketID.Error()), err)
 	assert.Nil(t, response)
 }
 
@@ -310,7 +311,7 @@ func testEmptyName(t *testing.T) {
 	}
 
 	response, err := server.DriverGrantBucketAccess(ctx, req)
-	assert.ErrorIs(t, err, status.Error(codes.InvalidArgument, "empty bucket access name"), err)
+	assert.ErrorIs(t, err, status.Error(codes.InvalidArgument, ErrInvalidBucketID.Error()), err)
 	assert.Nil(t, response)
 }
 
@@ -402,7 +403,7 @@ func testFailToGetBucket(t *testing.T) {
 	}
 
 	response, err := server.DriverGrantBucketAccess(ctx, req)
-	assert.ErrorIs(t, err, status.Error(codes.Internal, "an unexpected error occurred"), err)
+	assert.ErrorIs(t, err, status.Error(codes.Internal, ErrFailedToCheckBucketExist.Error()), err)
 	assert.Nil(t, response)
 }
 
@@ -549,6 +550,6 @@ func testInvalidPolicyJSON(t *testing.T) {
 	}
 
 	response, err := server.DriverGrantBucketAccess(ctx, req)
-	assert.ErrorIs(t, err, status.Error(codes.Internal, "failed to decode existing bucket policy"), err)
+	assert.ErrorIs(t, err, status.Error(codes.Internal, ErrFailedToDecodePolicy.Error()), err)
 	assert.Nil(t, response)
 }

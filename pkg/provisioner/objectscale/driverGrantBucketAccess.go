@@ -47,7 +47,7 @@ var (
 	ErrFailedToCheckUserExist    = errors.New("failed to check for user existence")
 	ErrFailedToCreateUser        = errors.New("failed to create user")
 	ErrFailedToCheckPolicyExist  = errors.New("failed to check bucket policy existence")
-	ErrFailedToDecodePolicy      = errors.New("failed to decode bucket policy")
+	ErrFailedToDecodePolicy      = errors.New("failed to decode existing bucket policy")
 	ErrFailedToUpdatePolicy      = errors.New("failed to update bucket policy")
 	ErrFailedToCreateAccessKey   = errors.New("failed to create access key")
 	ErrFailedToMarshalPolicy     = errors.New("failed to marshal policy into JSON")
@@ -75,7 +75,7 @@ func (s *Server) DriverGrantBucketAccess(
 
 	// Check if authentication type is not unknown.
 	if err := isAuthenticationTypeNotEmpty(req); err != nil {
-		return nil, logAndTraceError(log.WithFields(log.Fields{}), span, ErrInvalidBucketID.Error(), err, codes.InvalidArgument)
+		return nil, logAndTraceError(log.WithFields(log.Fields{}), span, ErrInvalidAuthenticationType.Error(), err, codes.InvalidArgument)
 	}
 
 	// Now split the flow based on the type of authentication.
