@@ -6,13 +6,13 @@ set -e
 # Open the file for reading
 file="go.mod"
 
-GOPRIVATE="github.com/dell/objectscale"
+export GOPRIVATE="github.com/dell/objectscale"
 
 # Define flags
 in_require=0
 
 # Read the file line by line
-while read line
+while read -r line
 do
     # Check if the line contains "require ("
     if echo "$line" | grep -q "require ("

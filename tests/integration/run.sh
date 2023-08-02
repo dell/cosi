@@ -2,12 +2,12 @@
 
 set -aex
 
-if [ ! -z "${CI}" ]; then
+if [ -n "${CI}" ]; then
     NO_COLOR='--no-color'
 fi
 
 ginkgo \
-    ${NO_COLOR} \
+    "${NO_COLOR}" \
     -vv \
     --keep-going \
     --race \

@@ -75,6 +75,27 @@ jobs:
       - name: Run Hadolint
         uses: hadolint/hadolint-action@v3.1.0
 
+  shell-linter:
+    name: Run Shellcheck, Checkmake and Perl Critic
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout the code
+        uses: actions/checkout@v3
+      - name: Run ShellCheck
+        uses: ludeeus/action-shellcheck@master
+      - name: Perl Critic
+        uses: Difegue/action-perlcritic@master
+        with:
+          args: ./scripts/*
+      - uses: actions/setup-go@v4
+        with:
+          go-version: "1.20"
+          cache: false
+      - name: Install and run Checkmake
+        run: |
+          go install github.com/mrtazz/checkmake/cmd/checkmake@latest
+          checkmake Makefile
+
   tests:
     name: Run unit tests and check package coverage
     runs-on: ubuntu-latest
@@ -110,10 +131,10 @@ jobs:
         run: |
           git config --global url."https://csmbot:$TOKEN@github.com".insteadOf "https://github.com"
           echo "machine github.com login csmbot password $TOKEN" >> ~/.netrc
-      - uses: actions/setup-go@v2
+      - uses: actions/setup-go@v4
         with:
-          go-version: ^1.20
-          id: go
+          go-version: "1.20"
+          cache: false
       - name: Checkout the code
         uses: actions/checkout@v3.2.0
       - name: "Vendor packages"
