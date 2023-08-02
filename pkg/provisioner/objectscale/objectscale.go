@@ -240,7 +240,7 @@ func BuildPrincipalString(namespace, bucketName string) string {
 
 // GetBucketName splits BucketID by -, the first element is backendID, the second element is bucketName.
 func GetBucketName(bucketID string) (string, error) {
-	list := strings.SplitN(bucketID, "-", 2) //nolint:gomnd
+	list := strings.SplitN(bucketID, "-", splitNumber)
 
 	if len(list) != 2 || list[1] == "" { //nolint:gomnd
 		return "", errors.New("invalid bucketId")
