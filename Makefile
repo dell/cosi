@@ -16,14 +16,14 @@ COSI_BUILD_PATH  := ./cmd/
 # When developing docs, chage it so it points to the right file.
 CONFIGURATION_DOCS ?= ./docs/installation/configuration_file.md
 
+.PHONY: all
+all: clean codegen lint build
+
 include overrides.mk
 
 .PHONY: help
 help:	##show help
 	@fgrep --no-filename "##" $(MAKEFILE_LIST) | fgrep --invert-match fgrep | sed --expression='s/\\$$//' | sed --expression='s/##//'
-
-.PHONY: all
-all: clean codegen lint build
 
 .PHONY: clean
 clean:	##clean directory
