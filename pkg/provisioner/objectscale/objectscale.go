@@ -27,7 +27,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/iam"
 	"github.com/aws/aws-sdk-go/service/iam/iamiface"
 	"github.com/bombsimon/logrusr/v4"
-	"github.com/dell/goobjectscale/pkg/client/api"
 
 	internalLogger "github.com/dell/cosi/pkg/internal/logger"
 	driver "github.com/dell/cosi/pkg/provisioner/virtualdriver"
@@ -38,6 +37,7 @@ import (
 
 	"github.com/dell/cosi/pkg/config"
 	"github.com/dell/cosi/pkg/transport"
+	"github.com/dell/goobjectscale/pkg/client/api"
 )
 
 const (

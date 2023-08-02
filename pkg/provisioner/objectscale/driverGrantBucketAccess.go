@@ -20,19 +20,20 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/iam"
-	"github.com/dell/cosi/pkg/provisioner/policy"
-	"github.com/dell/goobjectscale/pkg/client/model"
 	"github.com/google/uuid"
+	"github.com/sirupsen/logrus"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/trace"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"sigs.k8s.io/container-object-storage-interface-provisioner-sidecar/pkg/consts"
 
-	"github.com/sirupsen/logrus"
 	log "github.com/sirupsen/logrus"
 	otelCodes "go.opentelemetry.io/otel/codes"
 	cosi "sigs.k8s.io/container-object-storage-interface-spec"
+
+	"github.com/dell/cosi/pkg/provisioner/policy"
+	"github.com/dell/goobjectscale/pkg/client/model"
 )
 
 // All errors that can be returned by DriverGrantBucketAccess.
