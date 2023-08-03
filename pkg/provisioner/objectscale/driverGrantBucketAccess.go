@@ -64,7 +64,7 @@ func (s *Server) DriverGrantBucketAccess(
 	defer span.End()
 
 	// Check if bucketID is not empty.
-	if err := isBucketIDEmpty(req); err != nil {
+	if err := isBucketIdEmpty(req); err != nil {
 		return nil, logAndTraceError(log.WithFields(log.Fields{}), span, ErrInvalidBucketID.Error(), err, codes.InvalidArgument)
 	}
 
