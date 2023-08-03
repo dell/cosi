@@ -90,6 +90,8 @@ func (s *Server) DriverGrantBucketAccess(
 	return nil, logAndTraceError(log.WithFields(log.Fields{}), span, ErrUnknownAuthenticationType.Error(), ErrUnknownAuthenticationType, codes.Internal)
 }
 
+// handleKeyAuthentication is a function providing the bucket access granting functionality,
+// which uses the key type authentication method.
 func handleKeyAuthentication(ctx context.Context, s *Server, req *cosi.DriverGrantBucketAccessRequest) (*cosi.DriverGrantBucketAccessResponse, error) {
 	ctx, span := otel.Tracer("GrantBucketAccessRequest").Start(ctx, "ObjectscaleHandleKeyAuthentication")
 	defer span.End()
@@ -156,7 +158,6 @@ func handleKeyAuthentication(ctx context.Context, s *Server, req *cosi.DriverGra
 		user, err := s.iamClient.CreateUserWithContext(ctx, &iam.CreateUserInput{
 			UserName: &userName,
 		})
-		// add idempotency case (user exists)
 		if err != nil {
 			fields := log.Fields{
 				"user": userName,
@@ -260,11 +261,13 @@ func handleKeyAuthentication(ctx context.Context, s *Server, req *cosi.DriverGra
 }
 
 // TODO: this function will be implemented if we decide to add the IAM authentication.
+// handleIAMAuthentication is a function providing the bucket access granting functionality,
+// which uses the IAM type authentication method.
 func handleIAMAuthentication(_ context.Context, _ *Server, _ *cosi.DriverGrantBucketAccessRequest) (*cosi.DriverGrantBucketAccessResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "authentication type IAM not implemented")
 }
 
-// Check if bucketID is not empty.
+// isBucketIDEmpty checks if bucketID is not empty.
 func isBucketIDEmpty(req *cosi.DriverGrantBucketAccessRequest) error {
 	if req.GetBucketId() == "" {
 		return ErrInvalidBucketID
@@ -273,7 +276,7 @@ func isBucketIDEmpty(req *cosi.DriverGrantBucketAccessRequest) error {
 	return nil
 }
 
-// Check if bucket access name is not empty.
+// isBucketAccessNameEmpty checks if bucket access name is not empty.
 func isBucketAccessNameEmpty(req *cosi.DriverGrantBucketAccessRequest) error {
 	if req.GetName() == "" {
 		return ErrEmptyBucketAccessName
@@ -282,7 +285,7 @@ func isBucketAccessNameEmpty(req *cosi.DriverGrantBucketAccessRequest) error {
 	return nil
 }
 
-// Check if authentication type is not unknown.
+// isAuthenticationTypeNotEmpty checks if authentication type is not unknown.
 func isAuthenticationTypeNotEmpty(req *cosi.DriverGrantBucketAccessRequest) error {
 	if req.GetAuthenticationType() == cosi.AuthenticationType_UnknownAuthenticationType {
 		return ErrInvalidAuthenticationType
@@ -291,7 +294,7 @@ func isAuthenticationTypeNotEmpty(req *cosi.DriverGrantBucketAccessRequest) erro
 	return nil
 }
 
-// Construct common parameters for bucket requests.
+// constructParameters builds common parameters for bucket requests.
 func constructParameters(req *cosi.DriverGrantBucketAccessRequest, s *Server) map[string]string {
 	parameters := ""
 	parametersCopy := make(map[string]string)
