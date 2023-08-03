@@ -34,6 +34,7 @@ import (
 	objectscaleClient "github.com/dell/goobjectscale/pkg/client/rest/client"
 	iamObjectscale "github.com/dell/goobjectscale/pkg/client/rest/iam"
 	log "github.com/sirupsen/logrus"
+	cosi "sigs.k8s.io/container-object-storage-interface-spec"
 
 	"github.com/dell/cosi/pkg/config"
 	"github.com/dell/cosi/pkg/transport"
@@ -50,8 +51,14 @@ const (
 	maxUsernameLength = 64
 )
 
-// defaultTimeout is default call length before context is getting canceled.
-var defaultTimeout = time.Second * 20
+var (
+	// ErrInvalidRequest is an edge case error, which should be returned when incoming request is not of type
+	// DriverCreateBucket, DriverDeleteBucketRequest, DriverGrantBucketAccessRequest or DriverRevokeBucketAccessRequest.
+	ErrInvalidRequest = errors.New("incoming request invalid")
+
+	// defaultTimeout is the default call length before context gets canceled.
+	defaultTimeout = time.Second * 20
+)
 
 // Server is implementation of driver.Driver interface for ObjectScale platform.
 type Server struct {
@@ -247,4 +254,23 @@ func GetBucketName(bucketID string) (string, error) {
 	}
 
 	return list[1], nil
+}
+
+// isBucketIDEmpty checks if bucketID is not empty.
+func isBucketIDEmpty(req interface{}) error {
+	gbaR, ok := req.(*cosi.DriverGrantBucketAccessRequest)
+	if ok {
+		if gbaR.GetBucketId() == "" {
+			return ErrInvalidBucketID
+		}
+	}
+
+	rbaR, ok := req.(*cosi.DriverRevokeBucketAccessRequest)
+	if ok {
+		if rbaR.GetBucketId() == "" {
+			return ErrInvalidBucketID
+		}
+	}
+
+	return ErrInvalidRequest
 }

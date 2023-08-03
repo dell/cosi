@@ -154,6 +154,9 @@ func handleKeyAuthentication(ctx context.Context, s *Server, req *cosi.DriverGra
 			"user": userName,
 		}).Warn("user already exists")
 	} else {
+		// ret internal
+
+		// move to errcodenosuchentity
 		// Case when user does not exist.
 		user, err := s.iamClient.CreateUserWithContext(ctx, &iam.CreateUserInput{
 			UserName: &userName,
@@ -265,15 +268,6 @@ func handleKeyAuthentication(ctx context.Context, s *Server, req *cosi.DriverGra
 // which uses the IAM type authentication method.
 func handleIAMAuthentication(_ context.Context, _ *Server, _ *cosi.DriverGrantBucketAccessRequest) (*cosi.DriverGrantBucketAccessResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "authentication type IAM not implemented")
-}
-
-// isBucketIDEmpty checks if bucketID is not empty.
-func isBucketIDEmpty(req *cosi.DriverGrantBucketAccessRequest) error {
-	if req.GetBucketId() == "" {
-		return ErrInvalidBucketID
-	}
-
-	return nil
 }
 
 // isBucketAccessNameEmpty checks if bucket access name is not empty.
