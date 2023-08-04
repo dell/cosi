@@ -108,7 +108,8 @@ func handleKeyAuthentication(ctx context.Context, s *Server, req *cosi.DriverGra
 	}).Info("bucket access for bucket is being created")
 
 	// Construct common parameters for bucket requests.
-	parameters := constructParameters(req, s)
+	parameters := make(map[string]string)
+	parameters["namespace"] = s.namespace
 
 	log.WithFields(log.Fields{
 		"parameters": parameters,
@@ -288,21 +289,6 @@ func isAuthenticationTypeNotEmpty(req *cosi.DriverGrantBucketAccessRequest) erro
 	}
 
 	return nil
-}
-
-// constructParameters builds common parameters for bucket requests.
-func constructParameters(req *cosi.DriverGrantBucketAccessRequest, s *Server) map[string]string {
-	parameters := ""
-	parametersCopy := make(map[string]string)
-
-	for key, value := range req.GetParameters() {
-		parameters += key + ":" + value + ";"
-		parametersCopy[key] = value
-	}
-
-	parametersCopy["namespace"] = s.namespace
-
-	return parametersCopy
 }
 
 // parsePolicyStatement generates new bucket policy statements array with updated resource and principal.
