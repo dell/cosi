@@ -257,7 +257,7 @@ func GetBucketName(bucketID string) (string, error) {
 }
 
 // isBucketIDEmpty checks if bucketID is not empty.
-func isBucketIdEmpty(req interface{}) error {
+func isBucketIDEmpty(req interface{}) error {
 	gbaR, ok := req.(*cosi.DriverGrantBucketAccessRequest)
 	if ok {
 		if gbaR.GetBucketId() == "" {
