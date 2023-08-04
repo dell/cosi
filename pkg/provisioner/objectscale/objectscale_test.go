@@ -28,6 +28,7 @@ import (
 
 	"github.com/dell/cosi/pkg/config"
 	"github.com/dell/cosi/pkg/internal/testcontext"
+	"github.com/dell/cosi/pkg/provisioner/policy"
 )
 
 type expected int
@@ -200,19 +201,19 @@ func testDriverID(t *testing.T) {
 func testParsePolicyStatement(t *testing.T) {
 	testCases := []struct {
 		description          string
-		inputStatements      []UpdateBucketPolicyStatement
+		inputStatements      []policy.StatementEntry
 		awsBucketResourceARN string
 		awsPrincipalString   string
-		expectedOutput       []UpdateBucketPolicyStatement
+		expectedOutput       []policy.StatementEntry
 	}{
 		{
 			description: "valid policy statement parsing",
-			inputStatements: []UpdateBucketPolicyStatement{
+			inputStatements: []policy.StatementEntry{
 				{
 					Resource: []string{"happyAwsBucketResourceARN"},
-					SID:      "GetObject_permission",
+					Sid:      "GetObject_permission",
 					Effect:   allowEffect,
-					Principal: Principal{
+					Principal: policy.PrincipalEntry{
 						AWS: []string{"happyAwsPrincipalString"},
 					},
 					Action: []string{"*"},
@@ -220,12 +221,12 @@ func testParsePolicyStatement(t *testing.T) {
 			},
 			awsBucketResourceARN: "happyAwsBucketResourceARN",
 			awsPrincipalString:   "happyAwsPrincipalString",
-			expectedOutput: []UpdateBucketPolicyStatement{
+			expectedOutput: []policy.StatementEntry{
 				{
 					Resource: []string{"happyAwsBucketResourceARN"},
-					SID:      "GetObject_permission",
+					Sid:      "GetObject_permission",
 					Effect:   allowEffect,
-					Principal: Principal{
+					Principal: policy.PrincipalEntry{
 						AWS: []string{"happyAwsPrincipalString"},
 					},
 					Action: []string{"*"},
@@ -234,12 +235,12 @@ func testParsePolicyStatement(t *testing.T) {
 		},
 		{
 			description: "policy needed update parsing",
-			inputStatements: []UpdateBucketPolicyStatement{
+			inputStatements: []policy.StatementEntry{
 				{
 					Resource: nil,
-					SID:      "GetObject_permission",
+					Sid:      "GetObject_permission",
 					Effect:   "",
-					Principal: Principal{
+					Principal: policy.PrincipalEntry{
 						AWS: []string{"urn:osc:iam::osai07c2ae318ae9d6f2:user/iam_user20230523061025118"},
 					},
 					Action: []string{"s3:GetObjectVersion"},
@@ -247,12 +248,12 @@ func testParsePolicyStatement(t *testing.T) {
 			},
 			awsBucketResourceARN: "happyAwsBucketResourceARN",
 			awsPrincipalString:   "happyAwsPrincipalString",
-			expectedOutput: []UpdateBucketPolicyStatement{
+			expectedOutput: []policy.StatementEntry{
 				{
 					Resource: []string{"happyAwsBucketResourceARN"},
-					SID:      "GetObject_permission",
+					Sid:      "GetObject_permission",
 					Effect:   allowEffect,
-					Principal: Principal{
+					Principal: policy.PrincipalEntry{
 						AWS: []string{"urn:osc:iam::osai07c2ae318ae9d6f2:user/iam_user20230523061025118", "happyAwsPrincipalString"},
 					},
 					Action: []string{"s3:GetObjectVersion", "*"},

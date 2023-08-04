@@ -20,13 +20,14 @@ import (
 )
 
 const (
-	testBucketName = "test_bucket"
-	testNamespace  = "namespace"
-	testID         = "test.id"
-	objectScaleID  = "gateway.objectscale.test"
-	objectStoreID  = "objectstore"
-	testPolicy     = `{"Id":"S3PolicyId1","Version":"2012-10-17","Statement":[{"Resource":["arn:aws:s3:osci5b022e718aa7e0ff:osti202e682782ebcbfd:lynxbucket/*"],"Sid":"GetObject_permission","Effect":"Allow","Principal":{"AWS":["urn:osc:iam::osai07c2ae318ae9d6f2:user/iam_user20230523061025118"]},"Action":["s3:GetObjectVersion"]}]}`
-	testUserName   = "test_user"
+	testBucketName    = "test_bucket"
+	testNamespace     = "namespace"
+	testID            = "test.id"
+	objectScaleID     = "gateway.objectscale.test"
+	objectStoreID     = "objectstore"
+	testPolicy        = `{"Id":"S3PolicyId1","Version":"2012-10-17","Statement":[{"Resource":["arn:aws:s3:osci5b022e718aa7e0ff:osti202e682782ebcbfd:lynxbucket/*"],"Sid":"GetObject_permission","Effect":"Allow","Principal":{"AWS":["urn:osc:iam::osai07c2ae318ae9d6f2:user/iam_user20230523061025118"]},"Action":["s3:GetObjectVersion"]}]}`
+	testInvalidPolicy = `{"Id":"S3PolicyId1","Version":"2012-10-17","Statement":[{"Resource":["arn:aws:s3:osci5b022e718aa7e0ff:osti202e682782ebcbfd:lynxbucket/*","Sid":"GetObject_permission","Effect":"Allow","Principal":{"AWS":["urn:osc:iam::osai07c2ae318ae9d6f2:user/iam_user20230523061025118"]},"Action":["s3:GetObjectVersion"]}]}`
+	testUserName      = "test_user"
 )
 
 var (
