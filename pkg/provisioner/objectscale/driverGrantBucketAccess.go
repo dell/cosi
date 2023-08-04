@@ -64,7 +64,7 @@ func (s *Server) DriverGrantBucketAccess(
 	defer span.End()
 
 	// Check if bucketID is not empty.
-	if err := isBucketIdEmpty(req); err != nil {
+	if err := isBucketIDEmpty(req); err != nil {
 		return nil, logAndTraceError(log.WithFields(log.Fields{}), span, ErrInvalidBucketID.Error(), err, codes.InvalidArgument)
 	}
 
@@ -127,8 +127,11 @@ func handleKeyAuthentication(ctx context.Context, s *Server, req *cosi.DriverGra
 		return nil, logAndTraceError(log.WithFields(fields), span, ErrFailedToCheckBucketExist.Error(), err, codes.Internal)
 	}
 
+	// This flow below will check for user existence; if user does not exist, it will create one. It will only fail
+	// in case of an unknown error, e.g. network issues, to adhere to idempotency requirement.
 	userName := BuildUsername(s.namespace, bucketName)
 
+	// Retrieve the user.
 	userGet, err := s.iamClient.GetUserWithContext(ctx, &iam.GetUserInput{UserName: &userName})
 	if err != nil {
 		fields := log.Fields{
@@ -138,11 +141,13 @@ func handleKeyAuthentication(ctx context.Context, s *Server, req *cosi.DriverGra
 		var myAwsErr awserr.Error
 
 		if errors.As(err, &myAwsErr) {
+			// If we got a known error, but it's not "user does not exist" error, we fail.
 			if myAwsErr.Code() != iam.ErrCodeNoSuchEntityException {
 				span.RecordError(myAwsErr)
 				return nil, logAndTraceError(log.WithFields(fields), span, ErrFailedToCheckUserExist.Error(), err, codes.Internal)
 			}
 		} else {
+			// If we got an unknown error, we fail.
 			return nil, logAndTraceError(log.WithFields(fields), span, ErrFailedToCheckUserExist.Error(), err, codes.Internal)
 		}
 	}
@@ -154,10 +159,7 @@ func handleKeyAuthentication(ctx context.Context, s *Server, req *cosi.DriverGra
 			"user": userName,
 		}).Warn("user already exists")
 	} else {
-		// ret internal
-
-		// move to errcodenosuchentity
-		// Case when user does not exist.
+		// Case when user does not exist- create one.
 		user, err := s.iamClient.CreateUserWithContext(ctx, &iam.CreateUserInput{
 			UserName: &userName,
 		})
