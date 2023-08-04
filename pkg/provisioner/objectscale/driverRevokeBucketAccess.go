@@ -19,6 +19,7 @@ import (
 	"fmt"
 
 	"github.com/aws/aws-sdk-go/service/iam"
+	"github.com/dell/cosi/pkg/provisioner/policy"
 	"github.com/dell/goobjectscale/pkg/client/model"
 	"go.opentelemetry.io/otel"
 	"google.golang.org/grpc/codes"
@@ -136,7 +137,7 @@ func (s *Server) DriverRevokeBucketAccess(ctx context.Context, //nolint:gocognit
 
 	if bucketExist {
 		// Get existing policy.
-		policy, err := s.mgmtClient.Buckets().GetPolicy(ctx, bucketName, parameters)
+		existingPolicy, err := s.mgmtClient.Buckets().GetPolicy(ctx, bucketName, parameters)
 		if err != nil && !errors.Is(err, model.Error{Code: model.CodeResourceNotFound}) {
 			errMsg := errors.New("failed to check bucket policy existence")
 			log.WithFields(log.Fields{
@@ -147,7 +148,7 @@ func (s *Server) DriverRevokeBucketAccess(ctx context.Context, //nolint:gocognit
 			span.SetStatus(otelCodes.Error, errMsg.Error())
 
 			return nil, status.Error(codes.Internal, errMsg.Error())
-		} else if err == nil && policy == "" {
+		} else if err == nil && existingPolicy == "" {
 			errMsg := errors.New("policy is empty")
 			log.WithFields(log.Fields{
 				"bucket": bucketName,
@@ -165,14 +166,14 @@ func (s *Server) DriverRevokeBucketAccess(ctx context.Context, //nolint:gocognit
 		// Unique ID, format: urn:osc:iam::<namespace>:user/<userName>.
 		awsPrincipalString := fmt.Sprintf("urn:osc:iam::%s:user/%s", s.namespace, req.AccountId)
 
-		jsonPolicy := UpdateBucketPolicyRequest{}
+		jsonPolicy := policy.Document{}
 
-		err = json.Unmarshal([]byte(policy), &jsonPolicy)
+		err = json.Unmarshal([]byte(existingPolicy), &jsonPolicy)
 		if err != nil {
 			errMsg := errors.New("failed to marshall policy")
 			log.WithFields(log.Fields{
 				"bucket":   bucketName,
-				"PolicyID": jsonPolicy.PolicyID,
+				"PolicyID": jsonPolicy.ID,
 				"error":    err,
 			}).Error(errMsg.Error())
 
@@ -199,7 +200,7 @@ func (s *Server) DriverRevokeBucketAccess(ctx context.Context, //nolint:gocognit
 			errMsg := errors.New("failed to marshal updatePolicy into JSON")
 			log.WithFields(log.Fields{
 				"bucket":   bucketName,
-				"PolicyID": jsonPolicy.PolicyID,
+				"PolicyID": jsonPolicy.ID,
 				"error":    err,
 			}).Error(errMsg.Error())
 
