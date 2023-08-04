@@ -263,6 +263,7 @@ func isBucketIDEmpty(req interface{}) error {
 		if gbaR.GetBucketId() == "" {
 			return ErrInvalidBucketID
 		}
+
 		return nil
 	}
 
@@ -271,6 +272,7 @@ func isBucketIDEmpty(req interface{}) error {
 		if rbaR.GetBucketId() == "" {
 			return ErrInvalidBucketID
 		}
+
 		return nil
 	}
 
