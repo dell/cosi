@@ -52,6 +52,13 @@ const (
 )
 
 var (
+	// All common errors that can be returned by
+	// DriverCreateBucket, DriverDeleteBucket, DriverGrantBucketAccess, DriverRevokeBucketAccess.
+	ErrInvalidBucketID           = errors.New("invalid bucketID")
+	ErrFailedToCheckBucketExists = errors.New("failed to check bucket existence")
+	ErrFailedToMarshalPolicy     = errors.New("failed to marshal policy into JSON")
+	ErrFailedToCheckPolicyExists = errors.New("failed to check bucket policy existence")
+	ErrFailedToCheckUserExists   = errors.New("failed to check for user existence")
 	// ErrInvalidRequest is an edge case error, which should be returned when incoming request is not of type
 	// DriverCreateBucket, DriverDeleteBucketRequest, DriverGrantBucketAccessRequest or DriverRevokeBucketAccessRequest.
 	ErrInvalidRequest = errors.New("incoming request invalid")

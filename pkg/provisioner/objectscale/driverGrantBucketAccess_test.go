@@ -235,7 +235,7 @@ func testInvalidUserRetrieval(t *testing.T) {
 	}
 
 	response, err := server.DriverGrantBucketAccess(ctx, req)
-	assert.ErrorIs(t, err, status.Error(codes.Internal, ErrFailedToCheckUserExist.Error()), err)
+	assert.ErrorIs(t, err, status.Error(codes.Internal, ErrFailedToCheckUserExists.Error()), err)
 	assert.Nil(t, response)
 }
 
@@ -422,7 +422,7 @@ func testFailToGetBucket(t *testing.T) {
 	}
 
 	response, err := server.DriverGrantBucketAccess(ctx, req)
-	assert.ErrorIs(t, err, status.Error(codes.Internal, ErrFailedToCheckBucketExist.Error()), err)
+	assert.ErrorIs(t, err, status.Error(codes.Internal, ErrFailedToCheckBucketExists.Error()), err)
 	assert.Nil(t, response)
 }
 
@@ -542,7 +542,7 @@ func testFailToGetExistingPolicy(t *testing.T) {
 	}
 
 	response, err := server.DriverGrantBucketAccess(ctx, req)
-	assert.ErrorIs(t, err, status.Error(codes.Internal, ErrFailedToCheckPolicyExist.Error()), err)
+	assert.ErrorIs(t, err, status.Error(codes.Internal, ErrFailedToCheckPolicyExists.Error()), err)
 	assert.Nil(t, response)
 }
 
