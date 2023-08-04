@@ -28,7 +28,7 @@ import (
 
 	"github.com/dell/cosi/pkg/iamfaketoo"
 	"github.com/dell/cosi/pkg/internal/testcontext"
-	"github.com/dell/goobjectscale/pkg/client/fake"
+	"github.com/dell/goobjectscale/pkg/client/api/mocks"
 	"github.com/dell/goobjectscale/pkg/client/model"
 )
 
@@ -78,11 +78,20 @@ func testValidAccessGranting(t *testing.T) {
 	IAMClient.On("GetUserWithContext", mock.Anything, mock.Anything).Return(&iam.GetUserOutput{}, nil).Once()
 	IAMClient.On("CreateAccessKey", mock.Anything).Return(&iam.CreateAccessKeyOutput{AccessKey: &iam.AccessKey{AccessKeyId: aws.String("acc"), SecretAccessKey: aws.String("sec")}}, nil).Once()
 
+	bucketsMock := &mocks.BucketsInterface{}
+	bucketsMock.On("Get", mock.Anything, mock.Anything, mock.Anything).Return(&model.Bucket{
+		Name:      "valid",
+		Namespace: testNamespace,
+	}, nil).Once()
+	bucketsMock.On("GetPolicy", mock.Anything, mock.Anything, mock.Anything).Return("", nil).Once()
+	bucketsMock.On("UpdatePolicy", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil).Once()
+
+	// Generic mock for the ClientSet interface, we care only about returning Buckets from it.
+	mgmtClientMock := &mocks.ClientSet{}
+	mgmtClientMock.On("Buckets").Return(bucketsMock)
+
 	server := Server{
-		mgmtClient: fake.NewClientSet(&model.Bucket{ // That's how we can mock the objectscale bucket api client
-			Name:      "valid", // This is based on "bucket-valid" BucketId from request
-			Namespace: testNamespace,
-		}),
+		mgmtClient:    mgmtClientMock,
 		iamClient:     IAMClient, // Inject mocked IAM client
 		namespace:     testNamespace,
 		backendID:     testID,
@@ -94,9 +103,6 @@ func testValidAccessGranting(t *testing.T) {
 		BucketId:           "bucket-valid",
 		Name:               "bucket-access-valid",
 		AuthenticationType: cosi.AuthenticationType_Key,
-		Parameters: map[string]string{
-			"X-TEST/Buckets/UpdatePolicy/force-success": "true", // This is mocking response from objectscale bucket api client
-		},
 	}
 
 	response, err := server.DriverGrantBucketAccess(ctx, req)
@@ -119,11 +125,20 @@ func testInvalidAccessKeyCreation(t *testing.T) {
 	IAMClient.On("GetUserWithContext", mock.Anything, mock.Anything).Return(&iam.GetUserOutput{}, nil).Once()
 	IAMClient.On("CreateAccessKey", mock.Anything).Return(nil, errors.New("failed to create access key")).Once()
 
+	bucketsMock := &mocks.BucketsInterface{}
+	bucketsMock.On("Get", mock.Anything, mock.Anything, mock.Anything).Return(&model.Bucket{
+		Name:      "valid",
+		Namespace: testNamespace,
+	}, nil).Once()
+	bucketsMock.On("GetPolicy", mock.Anything, mock.Anything, mock.Anything).Return("", nil).Once()
+	bucketsMock.On("UpdatePolicy", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil).Once()
+
+	// Generic mock for the ClientSet interface, we care only about returning Buckets from it.
+	mgmtClientMock := &mocks.ClientSet{}
+	mgmtClientMock.On("Buckets").Return(bucketsMock)
+
 	server := Server{
-		mgmtClient: fake.NewClientSet(&model.Bucket{ // That's how we can mock the objectscale bucket api client
-			Name:      "valid", // This is based on "bucket-valid" BucketId from request
-			Namespace: testNamespace,
-		}),
+		mgmtClient:    mgmtClientMock,
 		iamClient:     IAMClient, // Inject mocked IAM client
 		namespace:     testNamespace,
 		backendID:     testID,
@@ -135,13 +150,10 @@ func testInvalidAccessKeyCreation(t *testing.T) {
 		BucketId:           "bucket-valid",
 		Name:               "bucket-access-valid",
 		AuthenticationType: cosi.AuthenticationType_Key,
-		Parameters: map[string]string{
-			"X-TEST/Buckets/UpdatePolicy/force-success": "true", // This is mocking response from objectscale bucket api client
-		},
 	}
 
 	response, err := server.DriverGrantBucketAccess(ctx, req)
-	assert.ErrorIs(t, err, status.Error(codes.Internal, "failed to create access key"), err)
+	assert.ErrorIs(t, err, status.Error(codes.Internal, ErrFailedToCreateAccessKey.Error()), err)
 	assert.Nil(t, response)
 }
 
@@ -155,11 +167,20 @@ func testInvalidUserCreation(t *testing.T) {
 	IAMClient.On("CreateUserWithContext", mock.Anything, mock.Anything).Return(
 		nil, errors.New(ErrFailedToCreateUser.Error())).Once()
 
+	bucketsMock := &mocks.BucketsInterface{}
+	bucketsMock.On("Get", mock.Anything, mock.Anything, mock.Anything).Return(&model.Bucket{
+		Name:      "valid",
+		Namespace: testNamespace,
+	}, nil).Once()
+	bucketsMock.On("GetPolicy", mock.Anything, mock.Anything, mock.Anything).Return("", nil).Once()
+	bucketsMock.On("UpdatePolicy", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil).Once()
+
+	// Generic mock for the ClientSet interface, we care only about returning Buckets from it.
+	mgmtClientMock := &mocks.ClientSet{}
+	mgmtClientMock.On("Buckets").Return(bucketsMock)
+
 	server := Server{
-		mgmtClient: fake.NewClientSet(&model.Bucket{ // That's how we can mock the objectscale bucket api client
-			Name:      "valid", // This is based on "bucket-valid" BucketId from request
-			Namespace: testNamespace,
-		}),
+		mgmtClient:    mgmtClientMock,
 		iamClient:     IAMClient, // Inject mocked IAM client
 		namespace:     testNamespace,
 		backendID:     testID,
@@ -171,9 +192,6 @@ func testInvalidUserCreation(t *testing.T) {
 		BucketId:           "bucket-valid",
 		Name:               "bucket-access-valid",
 		AuthenticationType: cosi.AuthenticationType_Key,
-		Parameters: map[string]string{
-			"X-TEST/Buckets/UpdatePolicy/force-success": "true", // This is mocking response from objectscale bucket api client
-		},
 	}
 
 	response, err := server.DriverGrantBucketAccess(ctx, req)
@@ -189,11 +207,20 @@ func testInvalidUserRetrieval(t *testing.T) {
 	IAMClient := iamfaketoo.NewIAMAPI(t)
 	IAMClient.On("GetUserWithContext", mock.Anything, mock.Anything).Return(&iam.GetUserOutput{}, errors.New("failed to retrieve user")).Once()
 
+	bucketsMock := &mocks.BucketsInterface{}
+	bucketsMock.On("Get", mock.Anything, mock.Anything, mock.Anything).Return(&model.Bucket{
+		Name:      "valid",
+		Namespace: testNamespace,
+	}, nil).Once()
+	bucketsMock.On("GetPolicy", mock.Anything, mock.Anything, mock.Anything).Return("", nil).Once()
+	bucketsMock.On("UpdatePolicy", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil).Once()
+
+	// Generic mock for the ClientSet interface, we care only about returning Buckets from it.
+	mgmtClientMock := &mocks.ClientSet{}
+	mgmtClientMock.On("Buckets").Return(bucketsMock)
+
 	server := Server{
-		mgmtClient: fake.NewClientSet(&model.Bucket{ // That's how we can mock the objectscale bucket api client
-			Name:      "valid", // This is based on "bucket-valid" BucketId from request
-			Namespace: testNamespace,
-		}),
+		mgmtClient:    mgmtClientMock,
 		iamClient:     IAMClient, // Inject mocked IAM client
 		namespace:     testNamespace,
 		backendID:     testID,
@@ -205,13 +232,10 @@ func testInvalidUserRetrieval(t *testing.T) {
 		BucketId:           "bucket-valid",
 		Name:               "bucket-access-valid",
 		AuthenticationType: cosi.AuthenticationType_Key,
-		Parameters: map[string]string{
-			"X-TEST/Buckets/UpdatePolicy/force-success": "true", // This is mocking response from objectscale bucket api client
-		},
 	}
 
 	response, err := server.DriverGrantBucketAccess(ctx, req)
-	assert.ErrorIs(t, err, status.Error(codes.Internal, "failed to check for user existence"), err)
+	assert.ErrorIs(t, err, status.Error(codes.Internal, ErrFailedToCheckUserExist.Error()), err)
 	assert.Nil(t, response)
 }
 
@@ -229,11 +253,20 @@ func testInvalidBucketPolicyUpdate(t *testing.T) {
 			},
 		}, nil).Once()
 
+	bucketsMock := &mocks.BucketsInterface{}
+	bucketsMock.On("Get", mock.Anything, mock.Anything, mock.Anything).Return(&model.Bucket{
+		Name:      "valid",
+		Namespace: testNamespace,
+	}, nil).Once()
+	bucketsMock.On("GetPolicy", mock.Anything, mock.Anything, mock.Anything).Return("", nil).Once()
+	bucketsMock.On("UpdatePolicy", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(ErrInternalException).Once()
+
+	// Generic mock for the ClientSet interface, we care only about returning Buckets from it.
+	mgmtClientMock := &mocks.ClientSet{}
+	mgmtClientMock.On("Buckets").Return(bucketsMock)
+
 	server := Server{
-		mgmtClient: fake.NewClientSet(&model.Bucket{ // That's how we can mock the objectscale bucket api client
-			Name:      "valid", // This is based on "bucket-valid" BucketId from request
-			Namespace: testNamespace,
-		}),
+		mgmtClient:    mgmtClientMock,
 		iamClient:     IAMClient, // Inject mocked IAM client
 		namespace:     testNamespace,
 		backendID:     testID,
@@ -245,13 +278,10 @@ func testInvalidBucketPolicyUpdate(t *testing.T) {
 		BucketId:           "bucket-valid",
 		Name:               "bucket-access-valid",
 		AuthenticationType: cosi.AuthenticationType_Key,
-		Parameters: map[string]string{
-			"X-TEST/Buckets/UpdatePolicy/force-fail": "true", // This is mocking response from objectscale bucket api client
-		},
 	}
 
 	response, err := server.DriverGrantBucketAccess(ctx, req)
-	assert.ErrorIs(t, err, status.Error(codes.Internal, "failed to update bucket policy"), err)
+	assert.ErrorIs(t, err, status.Error(codes.Internal, ErrFailedToUpdatePolicy.Error()), err)
 	assert.Nil(t, response)
 }
 
@@ -259,12 +289,12 @@ func testEmptyBucketID(t *testing.T) {
 	ctx, cancel := testcontext.New(t)
 	defer cancel()
 
+	IAMClient := iamfaketoo.NewIAMAPI(t)
+	mgmtClientMock := &mocks.ClientSet{}
+
 	server := Server{
-		mgmtClient: fake.NewClientSet(&model.Bucket{ // That's how we can mock the objectscale bucket api client
-			Name:      "valid", // This is based on "bucket-valid" BucketId from request
-			Namespace: testNamespace,
-		}),
-		iamClient:     iamfaketoo.NewIAMAPI(t), // Inject mocked IAM client
+		mgmtClient:    mgmtClientMock,
+		iamClient:     IAMClient, // Inject mocked IAM client
 		namespace:     testNamespace,
 		backendID:     testID,
 		objectScaleID: objectScaleID,
@@ -275,9 +305,6 @@ func testEmptyBucketID(t *testing.T) {
 		BucketId:           "",
 		Name:               "bucket-access-valid",
 		AuthenticationType: cosi.AuthenticationType_Key,
-		Parameters: map[string]string{
-			"X-TEST/Buckets/UpdatePolicy/force-fail": "true", // This is mocking response from objectscale bucket api client
-		},
 	}
 
 	response, err := server.DriverGrantBucketAccess(ctx, req)
@@ -289,12 +316,12 @@ func testEmptyName(t *testing.T) {
 	ctx, cancel := testcontext.New(t)
 	defer cancel()
 
+	IAMClient := iamfaketoo.NewIAMAPI(t)
+	mgmtClientMock := &mocks.ClientSet{}
+
 	server := Server{
-		mgmtClient: fake.NewClientSet(&model.Bucket{ // That's how we can mock the objectscale bucket api client
-			Name:      "valid", // This is based on "bucket-valid" BucketId from request
-			Namespace: testNamespace,
-		}),
-		iamClient:     iamfaketoo.NewIAMAPI(t), // Inject mocked IAM client
+		mgmtClient:    mgmtClientMock,
+		iamClient:     IAMClient, // Inject mocked IAM client
 		namespace:     testNamespace,
 		backendID:     testID,
 		objectScaleID: objectScaleID,
@@ -305,13 +332,10 @@ func testEmptyName(t *testing.T) {
 		BucketId:           "bucket-valid",
 		Name:               "",
 		AuthenticationType: cosi.AuthenticationType_Key,
-		Parameters: map[string]string{
-			"X-TEST/Buckets/UpdatePolicy/force-fail": "true", // This is mocking response from objectscale bucket api client
-		},
 	}
 
 	response, err := server.DriverGrantBucketAccess(ctx, req)
-	assert.ErrorIs(t, err, status.Error(codes.InvalidArgument, ErrInvalidBucketID.Error()), err)
+	assert.ErrorIs(t, err, status.Error(codes.InvalidArgument, ErrEmptyBucketAccessName.Error()), err)
 	assert.Nil(t, response)
 }
 
@@ -319,12 +343,12 @@ func testInvalidAuthenticationType(t *testing.T) {
 	ctx, cancel := testcontext.New(t)
 	defer cancel()
 
+	IAMClient := iamfaketoo.NewIAMAPI(t)
+	mgmtClientMock := &mocks.ClientSet{}
+
 	server := Server{
-		mgmtClient: fake.NewClientSet(&model.Bucket{ // That's how we can mock the objectscale bucket api client
-			Name:      "valid", // This is based on "bucket-valid" BucketId from request
-			Namespace: testNamespace,
-		}),
-		iamClient:     iamfaketoo.NewIAMAPI(t), // Inject mocked IAM client
+		mgmtClient:    mgmtClientMock,
+		iamClient:     IAMClient, // Inject mocked IAM client
 		namespace:     testNamespace,
 		backendID:     testID,
 		objectScaleID: objectScaleID,
@@ -335,13 +359,10 @@ func testInvalidAuthenticationType(t *testing.T) {
 		BucketId:           "bucket-valid",
 		Name:               "bucket-access-valid",
 		AuthenticationType: cosi.AuthenticationType_UnknownAuthenticationType,
-		Parameters: map[string]string{
-			"X-TEST/Buckets/UpdatePolicy/force-fail": "true", // This is mocking response from objectscale bucket api client
-		},
 	}
 
 	response, err := server.DriverGrantBucketAccess(ctx, req)
-	assert.ErrorIs(t, err, status.Error(codes.InvalidArgument, "invalid authentication type"), err)
+	assert.ErrorIs(t, err, status.Error(codes.InvalidArgument, ErrInvalidAuthenticationType.Error()), err)
 	assert.Nil(t, response)
 }
 
@@ -349,12 +370,12 @@ func testIAMNotImplemented(t *testing.T) {
 	ctx, cancel := testcontext.New(t)
 	defer cancel()
 
+	IAMClient := iamfaketoo.NewIAMAPI(t)
+	mgmtClientMock := &mocks.ClientSet{}
+
 	server := Server{
-		mgmtClient: fake.NewClientSet(&model.Bucket{ // That's how we can mock the objectscale bucket api client
-			Name:      "valid", // This is based on "bucket-valid" BucketId from request
-			Namespace: testNamespace,
-		}),
-		iamClient:     iamfaketoo.NewIAMAPI(t), // Inject mocked IAM client
+		mgmtClient:    mgmtClientMock,
+		iamClient:     IAMClient, // Inject mocked IAM client
 		namespace:     testNamespace,
 		backendID:     testID,
 		objectScaleID: objectScaleID,
@@ -365,13 +386,10 @@ func testIAMNotImplemented(t *testing.T) {
 		BucketId:           "bucket-valid",
 		Name:               "bucket-access-valid",
 		AuthenticationType: cosi.AuthenticationType_IAM,
-		Parameters: map[string]string{
-			"X-TEST/Buckets/UpdatePolicy/force-fail": "true", // This is mocking response from objectscale bucket api client
-		},
 	}
 
 	response, err := server.DriverGrantBucketAccess(ctx, req)
-	assert.ErrorIs(t, err, status.Error(codes.Unimplemented, "authentication type IAM not implemented"), err)
+	assert.ErrorIs(t, err, status.Error(codes.Unimplemented, ErrAuthenticationTypeNotImplemented.Error()), err)
 	assert.Nil(t, response)
 }
 
@@ -379,14 +397,18 @@ func testFailToGetBucket(t *testing.T) {
 	ctx, cancel := testcontext.New(t)
 	defer cancel()
 
+	IAMClient := iamfaketoo.NewIAMAPI(t)
+
+	bucketsMock := &mocks.BucketsInterface{}
+	bucketsMock.On("Get", mock.Anything, mock.Anything, mock.Anything).Return(nil, ErrInternalException).Once()
+
+	// Generic mock for the ClientSet interface, we care only about returning Buckets from it.
+	mgmtClientMock := &mocks.ClientSet{}
+	mgmtClientMock.On("Buckets").Return(bucketsMock)
+
 	server := Server{
-		mgmtClient: fake.NewClientSet(
-			&model.Bucket{ // That's how we can mock the objectscale bucket api client
-				Name:      "valid", // This is based on "bucket-valid" BucketId from request
-				Namespace: testNamespace,
-			},
-		),
-		iamClient:     iamfaketoo.NewIAMAPI(t), // Inject mocked IAM client
+		mgmtClient:    mgmtClientMock,
+		iamClient:     IAMClient, // Inject mocked IAM client
 		namespace:     testNamespace,
 		backendID:     testID,
 		objectScaleID: objectScaleID,
@@ -397,9 +419,6 @@ func testFailToGetBucket(t *testing.T) {
 		BucketId:           "bucket-valid",
 		Name:               "bucket-access-valid",
 		AuthenticationType: cosi.AuthenticationType_Key,
-		Parameters: map[string]string{
-			"X-TEST/Buckets/Get/force-fail": "true", // This is mocking response from objectscale bucket api client
-		},
 	}
 
 	response, err := server.DriverGrantBucketAccess(ctx, req)
@@ -413,9 +432,16 @@ func testBucketNotFound(t *testing.T) {
 
 	IAMClient := iamfaketoo.NewIAMAPI(t)
 
+	bucketsMock := &mocks.BucketsInterface{}
+	bucketsMock.On("Get", mock.Anything, mock.Anything, mock.Anything).Return(nil, ErrParameterNotFound).Once()
+
+	// Generic mock for the ClientSet interface, we care only about returning Buckets from it.
+	mgmtClientMock := &mocks.ClientSet{}
+	mgmtClientMock.On("Buckets").Return(bucketsMock)
+
 	server := Server{
-		mgmtClient:    fake.NewClientSet(), // That's how we can mock the objectscale bucket api client
-		iamClient:     IAMClient,           // Inject mocked IAM client
+		mgmtClient:    mgmtClientMock,
+		iamClient:     IAMClient, // Inject mocked IAM client
 		namespace:     testNamespace,
 		backendID:     testID,
 		objectScaleID: objectScaleID,
@@ -426,11 +452,10 @@ func testBucketNotFound(t *testing.T) {
 		BucketId:           "bucket-invalid",
 		Name:               "bucket-access-valid",
 		AuthenticationType: cosi.AuthenticationType_Key,
-		Parameters:         map[string]string{},
 	}
 
 	response, err := server.DriverGrantBucketAccess(ctx, req)
-	assert.ErrorIs(t, err, status.Error(codes.NotFound, "bucket not found"), err)
+	assert.ErrorIs(t, err, status.Error(codes.NotFound, ErrBucketNotFound.Error()), err)
 	assert.Nil(t, response)
 }
 
@@ -446,11 +471,19 @@ func testValidButUserAlreadyExists(t *testing.T) {
 	}, nil).Once()
 	IAMClient.On("CreateAccessKey", mock.Anything).Return(&iam.CreateAccessKeyOutput{AccessKey: &iam.AccessKey{AccessKeyId: aws.String("acc"), SecretAccessKey: aws.String("sec")}}, nil).Once()
 
+	bucketsMock := &mocks.BucketsInterface{}
+	bucketsMock.On("Get", mock.Anything, mock.Anything, mock.Anything).Return(&model.Bucket{
+		Name:      "valid",
+		Namespace: testNamespace,
+	}, nil).Once()
+	bucketsMock.On("GetPolicy", mock.Anything, mock.Anything, mock.Anything).Return("", nil).Once()
+	bucketsMock.On("UpdatePolicy", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil).Once()
+
+	mgmtClientMock := &mocks.ClientSet{}
+	mgmtClientMock.On("Buckets").Return(bucketsMock)
+
 	server := Server{
-		mgmtClient: fake.NewClientSet(&model.Bucket{ // That's how we can mock the objectscale bucket api client
-			Name:      "valid", // This is based on "bucket-valid" BucketId from request
-			Namespace: testNamespace,
-		}),
+		mgmtClient:    mgmtClientMock,
 		iamClient:     IAMClient, // Inject mocked IAM client
 		namespace:     testNamespace,
 		backendID:     testID,
@@ -462,9 +495,6 @@ func testValidButUserAlreadyExists(t *testing.T) {
 		BucketId:           "bucket-valid",
 		Name:               "bucket-access-valid",
 		AuthenticationType: cosi.AuthenticationType_Key,
-		Parameters: map[string]string{
-			"X-TEST/Buckets/UpdatePolicy/force-success": "true", // This is mocking response from objectscale bucket api client
-		},
 	}
 
 	response, err := server.DriverGrantBucketAccess(ctx, req)
@@ -486,11 +516,18 @@ func testFailToGetExistingPolicy(t *testing.T) {
 		}, nil).Once()
 	IAMClient.On("GetUserWithContext", mock.Anything, mock.Anything).Return(&iam.GetUserOutput{}, nil).Once()
 
+	bucketsMock := &mocks.BucketsInterface{}
+	bucketsMock.On("Get", mock.Anything, mock.Anything, mock.Anything).Return(&model.Bucket{
+		Name:      "valid",
+		Namespace: testNamespace,
+	}, nil).Once()
+	bucketsMock.On("GetPolicy", mock.Anything, mock.Anything, mock.Anything).Return("", ErrInternalException).Once()
+
+	mgmtClientMock := &mocks.ClientSet{}
+	mgmtClientMock.On("Buckets").Return(bucketsMock)
+
 	server := Server{
-		mgmtClient: fake.NewClientSet(&model.Bucket{ // That's how we can mock the objectscale bucket api client
-			Name:      "valid", // This is based on "bucket-valid" BucketId from request
-			Namespace: testNamespace,
-		}),
+		mgmtClient:    mgmtClientMock,
 		iamClient:     IAMClient, // Inject mocked IAM client
 		namespace:     testNamespace,
 		backendID:     testID,
@@ -502,13 +539,10 @@ func testFailToGetExistingPolicy(t *testing.T) {
 		BucketId:           "bucket-valid",
 		Name:               "bucket-access-valid",
 		AuthenticationType: cosi.AuthenticationType_Key,
-		Parameters: map[string]string{
-			"X-TEST/Buckets/GetPolicy/force-fail": "true", // This is mocking response from objectscale bucket api client
-		},
 	}
 
 	response, err := server.DriverGrantBucketAccess(ctx, req)
-	assert.ErrorIs(t, err, status.Error(codes.Internal, "failed to check bucket policy existence"), err)
+	assert.ErrorIs(t, err, status.Error(codes.Internal, ErrFailedToCheckPolicyExist.Error()), err)
 	assert.Nil(t, response)
 }
 
@@ -526,15 +560,18 @@ func testInvalidPolicyJSON(t *testing.T) {
 		}, nil).Once()
 	IAMClient.On("GetUserWithContext", mock.Anything, mock.Anything).Return(&iam.GetUserOutput{}, nil).Once()
 
+	bucketsMock := &mocks.BucketsInterface{}
+	bucketsMock.On("Get", mock.Anything, mock.Anything, mock.Anything).Return(&model.Bucket{
+		Name:      "valid",
+		Namespace: testNamespace,
+	}, nil).Once()
+	bucketsMock.On("GetPolicy", mock.Anything, mock.Anything, mock.Anything).Return(testInvalidPolicy, nil).Once()
+
+	mgmtClientMock := &mocks.ClientSet{}
+	mgmtClientMock.On("Buckets").Return(bucketsMock)
+
 	server := Server{
-		mgmtClient: fake.NewClientSet(&model.Bucket{ // That's how we can mock the objectscale bucket api client
-			Name:      "valid", // This is based on "bucket-valid" BucketId from request
-			Namespace: testNamespace,
-		}, &fake.BucketPolicy{
-			BucketName: "valid",
-			Policy:     "}",
-			Namespace:  testNamespace,
-		}),
+		mgmtClient:    mgmtClientMock,
 		iamClient:     IAMClient, // Inject mocked IAM client
 		namespace:     testNamespace,
 		backendID:     testID,
@@ -546,7 +583,6 @@ func testInvalidPolicyJSON(t *testing.T) {
 		BucketId:           "bucket-valid",
 		Name:               "bucket-access-valid",
 		AuthenticationType: cosi.AuthenticationType_Key,
-		Parameters:         map[string]string{},
 	}
 
 	response, err := server.DriverGrantBucketAccess(ctx, req)

@@ -38,21 +38,22 @@ import (
 
 // All errors that can be returned by DriverGrantBucketAccess.
 var (
-	ErrInvalidBucketID           = errors.New("invalid bucketID")
-	ErrEmptyBucketAccessName     = errors.New("empty bucket access name")
-	ErrInvalidAuthenticationType = errors.New("invalid authentication type")
-	ErrUnknownAuthenticationType = errors.New("unknown authentication type")
-	ErrBucketNotFound            = errors.New("bucket not found")
-	ErrFailedToCheckBucketExist  = errors.New("failed to check bucket existence")
-	ErrFailedToCheckUserExist    = errors.New("failed to check for user existence")
-	ErrFailedToCreateUser        = errors.New("failed to create user")
-	ErrFailedToCheckPolicyExist  = errors.New("failed to check bucket policy existence")
-	ErrFailedToDecodePolicy      = errors.New("failed to decode existing bucket policy")
-	ErrFailedToUpdatePolicy      = errors.New("failed to update bucket policy")
-	ErrFailedToCreateAccessKey   = errors.New("failed to create access key")
-	ErrFailedToMarshalPolicy     = errors.New("failed to marshal policy into JSON")
-	ErrFailedToGeneratePolicyID  = errors.New("failed to generate PolicyID UUID")
-	ErrGeneratedPolicyIDIsEmpty  = errors.New("generated PolicyID was empty")
+	ErrInvalidBucketID                  = errors.New("invalid bucketID")
+	ErrEmptyBucketAccessName            = errors.New("empty bucket access name")
+	ErrInvalidAuthenticationType        = errors.New("invalid authentication type")
+	ErrUnknownAuthenticationType        = errors.New("unknown authentication type")
+	ErrBucketNotFound                   = errors.New("bucket not found")
+	ErrFailedToCheckBucketExist         = errors.New("failed to check bucket existence")
+	ErrFailedToCheckUserExist           = errors.New("failed to check for user existence")
+	ErrFailedToCreateUser               = errors.New("failed to create user")
+	ErrFailedToCheckPolicyExist         = errors.New("failed to check bucket policy existence")
+	ErrFailedToDecodePolicy             = errors.New("failed to decode bucket policy")
+	ErrFailedToUpdatePolicy             = errors.New("failed to update bucket policy")
+	ErrFailedToCreateAccessKey          = errors.New("failed to create access key")
+	ErrFailedToMarshalPolicy            = errors.New("failed to marshal policy into JSON")
+	ErrFailedToGeneratePolicyID         = errors.New("failed to generate PolicyID UUID")
+	ErrGeneratedPolicyIDIsEmpty         = errors.New("generated PolicyID was empty")
+	ErrAuthenticationTypeNotImplemented = errors.New("authentication type IAM not implemented")
 )
 
 // DriverGrantBucketAccess provides access to Bucket on specific Object Storage Platform.
@@ -70,7 +71,7 @@ func (s *Server) DriverGrantBucketAccess(
 
 	// Check if bucket access name is not empty.
 	if err := isBucketAccessNameEmpty(req); err != nil {
-		return nil, logAndTraceError(log.WithFields(log.Fields{}), span, ErrInvalidBucketID.Error(), err, codes.InvalidArgument)
+		return nil, logAndTraceError(log.WithFields(log.Fields{}), span, ErrEmptyBucketAccessName.Error(), err, codes.InvalidArgument)
 	}
 
 	// Check if authentication type is not unknown.
@@ -270,7 +271,7 @@ func handleKeyAuthentication(ctx context.Context, s *Server, req *cosi.DriverGra
 // handleIAMAuthentication is a function providing the bucket access granting functionality,
 // which uses the IAM type authentication method.
 func handleIAMAuthentication(_ context.Context, _ *Server, _ *cosi.DriverGrantBucketAccessRequest) (*cosi.DriverGrantBucketAccessResponse, error) {
-	return nil, status.Error(codes.Unimplemented, "authentication type IAM not implemented")
+	return nil, status.Error(codes.Unimplemented, ErrAuthenticationTypeNotImplemented.Error())
 }
 
 // isBucketAccessNameEmpty checks if bucket access name is not empty.
