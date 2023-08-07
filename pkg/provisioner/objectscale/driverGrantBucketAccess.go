@@ -213,7 +213,11 @@ func handleKeyAuthentication(ctx context.Context, s *Server, req *cosi.DriverGra
 	if policyRequest.ID == "" {
 		policyID, err := generatePolicyID(ctx, bucketName)
 		if err != nil {
-			return nil, status.Error(codes.Internal, err.Error())
+			fields := log.Fields{
+				"bucket":   bucketName,
+				"PolicyID": policyID,
+			}
+			return nil, logAndTraceError(log.WithFields(fields), span, err.Error(), err, codes.Internal)
 		}
 
 		log.WithFields(log.Fields{
@@ -392,20 +396,13 @@ func generatePolicyID(ctx context.Context, bucketName string) (*uuid.UUID, error
 
 	policyID, err := uuid.NewUUID()
 	if err != nil {
-		fields := log.Fields{
-			"bucket": bucketName,
-		}
 
-		return nil, logAndTraceError(log.WithFields(fields), span, ErrFailedToGeneratePolicyID.Error(), err, codes.Internal)
+		return nil, ErrFailedToGeneratePolicyID
 	}
 
 	if policyID.String() == "" {
-		fields := log.Fields{
-			"bucket":   bucketName,
-			"PolicyID": policyID,
-		}
 
-		return nil, logAndTraceError(log.WithFields(fields), span, ErrGeneratedPolicyIDIsEmpty.Error(), err, codes.Internal)
+		return nil, ErrGeneratedPolicyIDIsEmpty
 	}
 
 	return &policyID, nil
