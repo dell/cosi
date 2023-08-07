@@ -211,12 +211,13 @@ func handleKeyAuthentication(ctx context.Context, s *Server, req *cosi.DriverGra
 	}).Info("policy request statement was parsed")
 
 	if policyRequest.ID == "" {
-		policyID, err := generatePolicyID(ctx, bucketName)
+		policyID, err := generatePolicyID(ctx)
 		if err != nil {
 			fields := log.Fields{
 				"bucket":   bucketName,
 				"PolicyID": policyID,
 			}
+
 			return nil, logAndTraceError(log.WithFields(fields), span, err.Error(), err, codes.Internal)
 		}
 
@@ -390,18 +391,16 @@ func awsBucketResourceArnExists(statement *policy.StatementEntry, awsBucketResou
 }
 
 // generatePolicyID creates new policy for the bucket.
-func generatePolicyID(ctx context.Context, bucketName string) (*uuid.UUID, error) {
+func generatePolicyID(ctx context.Context) (*uuid.UUID, error) {
 	_, span := otel.Tracer("GrantBucketAccessRequest").Start(ctx, "ObjectscaleGeneratePolicyID")
 	defer span.End()
 
 	policyID, err := uuid.NewUUID()
 	if err != nil {
-
 		return nil, ErrFailedToGeneratePolicyID
 	}
 
 	if policyID.String() == "" {
-
 		return nil, ErrGeneratedPolicyIDIsEmpty
 	}
 

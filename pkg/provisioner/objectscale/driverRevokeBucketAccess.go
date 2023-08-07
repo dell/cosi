@@ -98,7 +98,7 @@ func (s *Server) DriverRevokeBucketAccess(ctx context.Context,
 	}
 
 	if bucketExists {
-		err := removeBucketPolicy(ctx, s, req, bucketName, parameters)
+		err := removeBucketPolicy(ctx, s, bucketName, parameters)
 		if err != nil {
 			fields := log.Fields{
 				"bucket": bucketName,
@@ -134,7 +134,7 @@ func (s *Server) DriverRevokeBucketAccess(ctx context.Context,
 // checkUserExistence checks if particual user exists on ObjectScale;
 // function returns boolean value: true if user exists, false if user does not exist.
 func checkUserExistence(ctx context.Context, s *Server, accountID string) (bool, error) {
-	ctx, span := otel.Tracer("RevokeBucketAccessRequest").Start(ctx, "ObjectscaleCheckUserExistence")
+	_, span := otel.Tracer("RevokeBucketAccessRequest").Start(ctx, "ObjectscaleCheckUserExistence")
 	defer span.End()
 
 	userExists := true
@@ -156,7 +156,7 @@ func checkUserExistence(ctx context.Context, s *Server, accountID string) (bool,
 }
 
 // checkBucketExistence checks if particual bucket exists on ObjectScale;
-// function returns boolean value: true if bucket exists, false if user does not exist.
+// function returns boolean value: true if bucket exists, false if bucket does not exist.
 func checkBucketExistence(ctx context.Context, s *Server, bucketName string, parameters map[string]string) (bool, error) {
 	ctx, span := otel.Tracer("RevokeBucketAccessRequest").Start(ctx, "ObjectscaleCheckBucketExistence")
 	defer span.End()
@@ -183,14 +183,12 @@ func checkBucketExistence(ctx context.Context, s *Server, bucketName string, par
 }
 
 // removeBucketPolicy is a function used when revoking a bucket access;
-// it's responsible for updating bucket policy and removing particualr right from it.
+// it's responsible for updating bucket policy and removing particular right from it.
 func removeBucketPolicy(
 	ctx context.Context,
 	s *Server,
-	req *cosi.DriverRevokeBucketAccessRequest,
 	bucketName string,
 	parameters map[string]string) error {
-
 	// Get existing policy.
 	existingPolicy, err := s.mgmtClient.Buckets().GetPolicy(ctx, bucketName, parameters)
 	if err != nil && !errors.Is(err, model.Error{Code: model.CodeResourceNotFound}) {
