@@ -188,7 +188,8 @@ func removeBucketPolicy(
 	ctx context.Context,
 	s *Server,
 	bucketName string,
-	parameters map[string]string) error {
+	parameters map[string]string,
+) error {
 	// Get existing policy.
 	existingPolicy, err := s.mgmtClient.Buckets().GetPolicy(ctx, bucketName, parameters)
 	if err != nil && !errors.Is(err, model.Error{Code: model.CodeResourceNotFound}) {
