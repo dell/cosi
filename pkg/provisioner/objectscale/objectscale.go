@@ -49,6 +49,11 @@ const (
 	allowEffect = "Allow"
 	// maxUsernameLength is used to trim the username to specific length.
 	maxUsernameLength = 64
+
+	CreateBucketTraceName       = "CreateBucketRequest"
+	DeleteBucketTraceName       = "DeleteBucketRequest"
+	GrantBucketAccessTraceName  = "GrantBucketAccessRequest"
+	RevokeBucketAccessTraceName = "RevokeBucketAccessRequest"
 )
 
 var (
@@ -258,7 +263,7 @@ func GetBucketName(bucketID string) (string, error) {
 	list := strings.SplitN(bucketID, "-", splitNumber)
 
 	if len(list) != 2 || list[1] == "" { //nolint:gomnd
-		return "", errors.New("invalid bucketId")
+		return "", ErrInvalidBucketID
 	}
 
 	return list[1], nil

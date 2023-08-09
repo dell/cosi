@@ -131,7 +131,7 @@ func testDriverCreateBucketEmptyBucketName(t *testing.T) {
 
 	_, err := server.DriverCreateBucket(ctx, &cosi.DriverCreateBucketRequest{})
 
-	assert.ErrorIs(t, err, status.Error(codes.InvalidArgument, "empty bucket name"))
+	assert.ErrorIs(t, err, status.Error(codes.InvalidArgument, ErrEmptyBucketName.Error()))
 }
 
 // testDriverCreateBucketCheckBucketFailed tests if error during checking bucket existence is handled correctly
@@ -156,7 +156,7 @@ func testDriverCreateBucketCheckBucketFailed(t *testing.T) {
 
 	_, err := server.DriverCreateBucket(ctx, testBucketCreationRequest)
 
-	assert.ErrorIs(t, err, status.Error(codes.Internal, "failed to check if bucket exists"))
+	assert.ErrorIs(t, err, status.Error(codes.Internal, ErrFailedToCheckBucketExists.Error()))
 }
 
 // testDriverCreateBucketBucketCreationFailed tests if error during creation of bucket is handled correctly
@@ -182,7 +182,7 @@ func testDriverCreateBucketBucketCreationFailed(t *testing.T) {
 
 	_, err := server.DriverCreateBucket(ctx, testBucketCreationRequest)
 
-	assert.ErrorIs(t, err, status.Error(codes.Internal, "failed to create bucket"))
+	assert.ErrorIs(t, err, status.Error(codes.Internal, ErrFailedToCreateBucket.Error()))
 }
 
 // TestGetBucket contains table tests for (*Server).getBucket method.

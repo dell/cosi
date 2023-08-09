@@ -56,7 +56,7 @@ func (s *Server) DriverGrantBucketAccess(
 	ctx context.Context,
 	req *cosi.DriverGrantBucketAccessRequest,
 ) (*cosi.DriverGrantBucketAccessResponse, error) {
-	ctx, span := otel.Tracer("GrantBucketAccessRequest").Start(ctx, "ObjectscaleDriverGrantBucketAccess")
+	ctx, span := otel.Tracer(GrantBucketAccessTraceName).Start(ctx, "ObjectscaleDriverGrantBucketAccess")
 	defer span.End()
 
 	// Check if bucketID is not empty.
@@ -89,7 +89,7 @@ func (s *Server) DriverGrantBucketAccess(
 // handleKeyAuthentication is a function providing the bucket access granting functionality,
 // which uses the key type authentication method.
 func handleKeyAuthentication(ctx context.Context, s *Server, req *cosi.DriverGrantBucketAccessRequest) (*cosi.DriverGrantBucketAccessResponse, error) {
-	ctx, span := otel.Tracer("GrantBucketAccessRequest").Start(ctx, "ObjectscaleHandleKeyAuthentication")
+	ctx, span := otel.Tracer(GrantBucketAccessTraceName).Start(ctx, "ObjectscaleHandleKeyAuthentication")
 	defer span.End()
 
 	// Get bucket name from bucketID.
@@ -299,7 +299,7 @@ func parsePolicyStatement(
 	awsBucketResourceARN,
 	awsPrincipalString string,
 ) []policy.StatementEntry {
-	_, span := otel.Tracer("GrantBucketAccessRequest").Start(ctx, "ObjectscaleParsePolicyStatement")
+	_, span := otel.Tracer(GrantBucketAccessTraceName).Start(ctx, "ObjectscaleParsePolicyStatement")
 	defer span.End()
 
 	outputStatements := []policy.StatementEntry{}
@@ -392,7 +392,7 @@ func awsBucketResourceArnExists(statement *policy.StatementEntry, awsBucketResou
 
 // generatePolicyID creates new policy for the bucket.
 func generatePolicyID(ctx context.Context) (*uuid.UUID, error) {
-	_, span := otel.Tracer("GrantBucketAccessRequest").Start(ctx, "ObjectscaleGeneratePolicyID")
+	_, span := otel.Tracer(GrantBucketAccessTraceName).Start(ctx, "ObjectscaleGeneratePolicyID")
 	defer span.End()
 
 	policyID, err := uuid.NewUUID()
@@ -415,7 +415,7 @@ func assembleCredentials(
 	userName,
 	bucketName string,
 ) map[string]*cosi.CredentialDetails {
-	_, span := otel.Tracer("GrantBucketAccessRequest").Start(ctx, "ObjectscaleAssembeCredentials")
+	_, span := otel.Tracer(GrantBucketAccessTraceName).Start(ctx, "ObjectscaleAssembeCredentials")
 	defer span.End()
 
 	secretsMap := make(map[string]string)

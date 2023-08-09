@@ -42,7 +42,7 @@ var (
 func (s *Server) DriverRevokeBucketAccess(ctx context.Context,
 	req *cosi.DriverRevokeBucketAccessRequest,
 ) (*cosi.DriverRevokeBucketAccessResponse, error) {
-	ctx, span := otel.Tracer("RevokeBucketAccessRequest").Start(ctx, "ObjectscaleDriverRevokeBucketAccess")
+	ctx, span := otel.Tracer(RevokeBucketAccessTraceName).Start(ctx, "ObjectscaleDriverRevokeBucketAccess")
 	defer span.End()
 
 	// Check if bucketID is not empty.
@@ -134,7 +134,7 @@ func (s *Server) DriverRevokeBucketAccess(ctx context.Context,
 // checkUserExistence checks if particual user exists on ObjectScale;
 // function returns boolean value: true if user exists, false if user does not exist.
 func checkUserExistence(ctx context.Context, s *Server, accountID string) (bool, error) {
-	_, span := otel.Tracer("RevokeBucketAccessRequest").Start(ctx, "ObjectscaleCheckUserExistence")
+	_, span := otel.Tracer(RevokeBucketAccessTraceName).Start(ctx, "ObjectscaleCheckUserExistence")
 	defer span.End()
 
 	userExists := true
@@ -158,7 +158,7 @@ func checkUserExistence(ctx context.Context, s *Server, accountID string) (bool,
 // checkBucketExistence checks if particual bucket exists on ObjectScale;
 // function returns boolean value: true if bucket exists, false if bucket does not exist.
 func checkBucketExistence(ctx context.Context, s *Server, bucketName string, parameters map[string]string) (bool, error) {
-	ctx, span := otel.Tracer("RevokeBucketAccessRequest").Start(ctx, "ObjectscaleCheckBucketExistence")
+	ctx, span := otel.Tracer(RevokeBucketAccessTraceName).Start(ctx, "ObjectscaleCheckBucketExistence")
 	defer span.End()
 
 	bucketExists := true

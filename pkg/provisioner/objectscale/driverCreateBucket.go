@@ -27,8 +27,6 @@ import (
 )
 
 var (
-	CreateBucketTraceName = "CreateBucketRequest"
-
 	ErrEmptyBucketName      = errors.New("empty bucket name")
 	ErrFailedToCreateBucket = errors.New("failed to create bucket")
 )
