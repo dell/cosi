@@ -23,9 +23,7 @@ import (
 	cosi "sigs.k8s.io/container-object-storage-interface-spec"
 )
 
-var (
-	ErrFailedToDeleteBucket = errors.New("bucket was not successfully deleted")
-)
+var ErrFailedToDeleteBucket = errors.New("bucket was not successfully deleted")
 
 // DriverDeleteBucket deletes Bucket on specific Object Storage Platform.
 func (s *Server) DriverDeleteBucket(ctx context.Context,
