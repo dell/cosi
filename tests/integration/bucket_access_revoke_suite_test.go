@@ -114,75 +114,57 @@ var _ = Describe("Bucket Access Revoke", Ordered, Label("revoke", "objectscale")
 			},
 		}
 
-		// STEP: Kubernetes cluster is up and running
 		By("Checking if the cluster is ready")
 		steps.CheckClusterAvailability(clientset)
 
-		// STEP: ObjectScale platform is installed on the cluster
 		By("Checking if the ObjectScale platform is ready")
 		steps.CheckObjectScaleInstallation(ctx, objectscale, Namespace)
 
-		// STEP: ObjectStore "${objectstoreId}" is created
 		By("Checking if the ObjectStore '${objectstoreId}' is created")
 		steps.CheckObjectStoreExists(ctx, objectscale, ObjectstoreID)
 
-		// STEP: Kubernetes namespace "cosi-driver" is created
 		By("Checking if namespace 'cosi-driver' is created")
 		steps.CreateNamespace(ctx, clientset, "cosi-driver")
 
-		// STEP: Kubernetes namespace "access-revoke-namespace" is created
 		By("Checking if namespace 'access-revoke-namespace' is created")
 		steps.CreateNamespace(ctx, clientset, "access-revoke-namespace")
 
-		// STEP: COSI controller "objectstorage-controller" is installed in namespace "default"
 		By("Checking if COSI controller 'objectstorage-controller' is installed in namespace 'default'")
 		steps.CheckCOSIControllerInstallation(ctx, clientset, "objectstorage-controller", "default")
 
-		// STEP: COSI driver "cosi-driver" is installed in namespace "cosi-driver"
 		By("Checking if COSI driver 'cosi-driver' is installed in namespace 'cosi-driver'")
 		steps.CheckCOSIDriverInstallation(ctx, clientset, "cosi-driver", "cosi-driver")
 
-		// STEP: BucketClass resource is created from specification "revoke-bucket-class"
 		By("Creating the BucketClass 'revoke-bucket-class'")
 		steps.CreateBucketClassResource(ctx, bucketClient, revokeBucketClass)
 
-		// STEP: BucketClaim resource is created from specification "revoke-bucket-claim"
 		By("Creating the BucketClaim 'revoke-bucket-claim'")
 		steps.CreateBucketClaimResource(ctx, bucketClient, revokeBucketClaim)
 
-		// STEP: Bucket resource referencing BucketClaim resource 'revoke-bucket-claim' is created
 		By("Checking if Bucket resource referencing BucketClaim resource 'revoke-bucket-claim' is created")
 		revokeBucket = steps.GetBucketResource(ctx, bucketClient, revokeBucketClaim)
 
-		// STEP: Bucket resource referencing BucketClaim resource "revoke-bucket-claim" is created in ObjectStore "${objectstoreName}"
 		By("Checking if the Bucket referencing 'revoke-bucket-claim' is created in ObjectStore '${objectstoreName}'")
 		steps.CheckBucketResourceInObjectStore(ctx, objectscale, Namespace, revokeBucket)
 
-		// STEP: BucketClaim resource "revoke-bucket-claim" in namespace "access-revoke-namespace" status "bucketReady" is "true"
 		By("Checking if the BucketClaim 'revoke-bucket-claim' in namespace 'access-revoke-namespace' status 'bucketReady' is 'true'")
 		steps.CheckBucketClaimStatus(ctx, bucketClient, revokeBucketClaim, true)
 
-		// STEP: Bucket resource referencing BucketClaim resource "revoke-bucket-claim" status "bucketReady" is "true"
 		By("Checking if the Bucket referencing 'revoke-bucket-claim' status 'bucketReady' is 'true'")
 		steps.CheckBucketStatus(revokeBucket, true)
 
-		// STEP: Bucket resource referencing BucketClaim resource "revoke-bucket-claim" bucketID is not empty
 		By("Checking if the Bucket referencing 'revoke-bucket-claim' bucketID is not empty")
 		steps.CheckBucketID(revokeBucket)
 
-		// STEP: BucketAccessClass resource is created from specification "revoke-bucket-access-class"
 		By("Creating the BucketAccessClass 'revoke-bucket-access-class'")
 		steps.CreateBucketAccessClassResource(ctx, bucketClient, revokeBucketAccessClass)
 
-		// STEP: BucketAccess resource is created from specification "revoke-bucket-access"
 		By("Creating the BucketAccess 'revoke-bucket-access'")
 		steps.CreateBucketAccessResource(ctx, bucketClient, revokeBucketAccess)
 
-		// STEP: BucketAccess resource "revoke-bucket-access" in namespace "access-revoke-namespace" status "accessGranted" is "true"
 		By("Checking if the BucketAccess 'revoke-bucket-access' has status 'accessGranted' set to 'true")
 		steps.CheckBucketAccessStatus(ctx, bucketClient, revokeBucketAccess, true)
 
-		// STEP: User "${user}" in account on ObjectScale platform is created
 		By("Creating User '${user}' in account on ObjectScale platform")
 		steps.CheckUser(ctx, IAMClient, revokeBucket.Name, Namespace)
 
@@ -225,30 +207,23 @@ var _ = Describe("Bucket Access Revoke", Ordered, Label("revoke", "objectscale")
 			},
 		}
 
-		// STEP: Policy "${policy}" on ObjectScale platform is created
 		By("Creating Policy '${policy}' on ObjectScale platform")
 		steps.CheckPolicy(ctx, objectscale, initialPolicy, revokeBucket, Namespace)
 
-		// STEP: BucketAccess resource "revoke-bucket-access" in namespace "access-revoke-namespace" status "accountID" is "${accountID}"
 		By("Checking if BucketAccess resource 'revoke-bucket-access' in namespace 'access-revoke-namespace' status 'accountID' is '${accountID}'")
 		steps.CheckBucketAccessAccountID(ctx, bucketClient, revokeBucketAccess, principalUsername)
 
-		// STEP: Secret "bucket-credentials-1" is created in namespace "access-revoke-namespace" and is not empty
 		By("Checking if Secret 'bucket-credentials-1' is created in namespace 'access-revoke-namespace'")
 		steps.CheckSecret(ctx, clientset, validSecret)
 	})
 
-	// STEP: Revoke access to bucket
 	It("Successfully revokes access to bucket", func(ctx context.Context) {
-		// STEP: BucketAccess resource "revoke-bucket-access" in namespace "access-revoke-namespace" is deleted
 		By("Deleting the BucketAccess 'revoke-bucket-access'")
 		steps.DeleteBucketAccessResource(ctx, bucketClient, revokeBucketAccess)
 
-		// STEP: Policy "${policy}" for Bucket resource referencing BucketClaim resource "revoke-bucket-claim" on ObjectScale platform is deleted
 		By("Deleting Policy for Bucket referencing BucketClaim 'revoke-bucket-claim' on ObjectScale platform")
 		steps.CheckPolicy(ctx, objectscale, finalPolicy, revokeBucket, Namespace)
 
-		// STEP: User "${user}" in account on ObjectScale platform is deleted
 		By("Deleting User '${user}' in account on ObjectScale platform")
 		steps.CheckUserDeleted(ctx, IAMClient, revokeBucket.Name, Namespace)
 
