@@ -21,11 +21,16 @@ import (
 	"github.com/dell/goobjectscale/pkg/client/model"
 	"go.opentelemetry.io/otel"
 	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 
 	log "github.com/sirupsen/logrus"
-	otelCodes "go.opentelemetry.io/otel/codes"
 	cosi "sigs.k8s.io/container-object-storage-interface-spec"
+)
+
+var (
+	CreateBucketTraceName = "CreateBucketRequest"
+
+	ErrEmptyBucketName      = errors.New("empty bucket name")
+	ErrFailedToCreateBucket = errors.New("failed to create bucket")
 )
 
 // DriverCreateBucket creates Bucket on specific Object Storage Platform.
@@ -33,7 +38,7 @@ func (s *Server) DriverCreateBucket(
 	ctx context.Context,
 	req *cosi.DriverCreateBucketRequest,
 ) (*cosi.DriverCreateBucketResponse, error) {
-	_, span := otel.Tracer("CreateBucketRequest").Start(ctx, "ObjectscaleDriverCreateBucket")
+	ctx, span := otel.Tracer(CreateBucketTraceName).Start(ctx, "ObjectscaleDriverCreateBucket")
 	defer span.End()
 
 	ctx, cancel := context.WithTimeout(ctx, defaultTimeout)
@@ -52,13 +57,7 @@ func (s *Server) DriverCreateBucket(
 
 	// Check if bucket name is not empty.
 	if bucket.Name == "" {
-		err := errors.New("empty bucket name")
-		log.Error(err.Error())
-
-		span.RecordError(err)
-		span.SetStatus(otelCodes.Error, err.Error())
-
-		return nil, status.Error(codes.InvalidArgument, err.Error())
+		return nil, logAndTraceError(log.WithFields(log.Fields{}), span, ErrEmptyBucketName.Error(), ErrEmptyBucketName, codes.InvalidArgument)
 	}
 
 	parameters := make(map[string]string)
@@ -71,16 +70,11 @@ func (s *Server) DriverCreateBucket(
 	// Get bucket.
 	existingBucket, err := s.getBucket(ctx, bucket.Name, parameters)
 	if err != nil && !errors.Is(err, ErrParameterNotFound) {
-		msg := "failed to check if bucket exists"
+		fields := log.Fields{
+			"bucket": bucket.Name,
+		}
 
-		log.WithFields(log.Fields{
-			"error": err,
-		}).Error(msg)
-
-		span.RecordError(err)
-		span.SetStatus(otelCodes.Error, msg)
-
-		return nil, status.Error(codes.Internal, msg)
+		return nil, logAndTraceError(log.WithFields(fields), span, ErrFailedToCheckBucketExists.Error(), err, codes.Internal)
 	} else if err == nil && existingBucket != nil {
 		return &cosi.DriverCreateBucketResponse{
 			BucketId: strings.Join([]string{s.backendID, bucket.Name}, "-"),
@@ -90,16 +84,11 @@ func (s *Server) DriverCreateBucket(
 	// Create bucket.
 	err = s.createBucket(ctx, bucket)
 	if err != nil {
-		msg := "failed to create bucket"
+		fields := log.Fields{
+			"bucket": bucket.Name,
+		}
 
-		log.WithFields(log.Fields{
-			"error": err,
-		}).Error(msg)
-
-		span.RecordError(err)
-		span.SetStatus(otelCodes.Error, msg)
-
-		return nil, status.Error(codes.Internal, msg)
+		return nil, logAndTraceError(log.WithFields(fields), span, ErrFailedToCreateBucket.Error(), err, codes.Internal)
 	}
 
 	// Return response.
@@ -110,7 +99,7 @@ func (s *Server) DriverCreateBucket(
 
 // getBucket is used to obtain bucket info from the Provisioner.
 func (s *Server) getBucket(ctx context.Context, bucketName string, parameters map[string]string) (*model.Bucket, error) {
-	_, span := otel.Tracer("CreateBucketRequest").Start(ctx, "ObjectscaleGetBucket")
+	ctx, span := otel.Tracer(CreateBucketTraceName).Start(ctx, "ObjectscaleGetBucket")
 	defer span.End()
 
 	// Check if bucket with specific name and parameters already exists.
@@ -133,24 +122,18 @@ func (s *Server) getBucket(ctx context.Context, bucketName string, parameters ma
 
 	// Final case, when we receive an unknown error.
 	default:
-		span.RecordError(err)
-		span.SetStatus(otelCodes.Error, "failed to check bucket existence")
-
-		return nil, fmt.Errorf("failed to check bucket existence: %w", err)
+		return nil, fmt.Errorf("%w: %w", ErrFailedToCheckBucketExists, err)
 	}
 }
 
 // createBucket is used to create bucket on the Provisioner.
 func (s *Server) createBucket(ctx context.Context, bucket *model.Bucket) error {
-	_, span := otel.Tracer("CreateBucketRequest").Start(ctx, "ObjectscaleCreateBucket")
+	ctx, span := otel.Tracer(CreateBucketTraceName).Start(ctx, "ObjectscaleCreateBucket")
 	defer span.End()
 
 	_, err := s.mgmtClient.Buckets().Create(ctx, *bucket)
 	if err != nil {
-		span.RecordError(err)
-		span.SetStatus(otelCodes.Error, "failed to create bucket")
-
-		return fmt.Errorf("failed to create bucket: %w", err)
+		return err
 	}
 
 	log.WithFields(log.Fields{

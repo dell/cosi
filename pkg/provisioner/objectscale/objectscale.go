@@ -63,6 +63,7 @@ var (
 	// DriverCreateBucket, DriverDeleteBucketRequest, DriverGrantBucketAccessRequest or DriverRevokeBucketAccessRequest.
 	ErrInvalidRequest = errors.New("incoming request invalid")
 
+	//TODO: is 20 a good number?
 	// defaultTimeout is the default call length before context gets canceled.
 	defaultTimeout = time.Second * 20
 )
