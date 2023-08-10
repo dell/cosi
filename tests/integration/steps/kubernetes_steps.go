@@ -31,7 +31,6 @@ import (
 	"k8s.io/client-go/kubernetes"
 	"sigs.k8s.io/container-object-storage-interface-api/apis/objectstorage/v1alpha1"
 
-	ginkgo "github.com/onsi/ginkgo/v2"
 	gomega "github.com/onsi/gomega"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -67,18 +66,6 @@ func CreateNamespace(ctx context.Context, clientset *kubernetes.Clientset, names
 	} else {
 		gomega.Expect(err).ToNot(gomega.HaveOccurred())
 	}
-}
-
-// DeleteNamespace Ensure that Kubernetes namespace is deleted.
-func DeleteNamespace(ctx context.Context, clientset *kubernetes.Clientset, namespace string) {
-	err := clientset.CoreV1().Namespaces().Delete(ctx, namespace, metav1.DeleteOptions{})
-	gomega.Expect(err).ToNot(gomega.HaveOccurred())
-}
-
-// CheckBucketClassSpec Ensure that specification of custom resource "my-bucket-class" is correct.
-func CheckBucketClassSpec(_ *kubernetes.Clientset, _ v1alpha1.BucketClaimSpec) {
-	// TODO: Implementation goes here
-	ginkgo.Fail("UNIMPLEMENTED")
 }
 
 // CheckSecret is used to check if secret exists.
@@ -177,20 +164,6 @@ func CheckBucketClaimEvents(ctx context.Context, clientset *kubernetes.Clientset
 	gomega.Expect(found).To(gomega.BeTrue())
 }
 
-func GetAccessKeyID(ctx context.Context, clientset *kubernetes.Clientset, validSecret *v1.Secret) string {
-	secret, err := clientset.CoreV1().Secrets(validSecret.Namespace).Get(ctx, validSecret.Name, metav1.GetOptions{})
-	gomega.Expect(err).ToNot(gomega.HaveOccurred())
-
-	var secretData cosiapi.BucketInfo
-
-	err = json.Unmarshal(secret.Data[bucketInfo], &secretData)
-	gomega.Expect(err).ToNot(gomega.HaveOccurred())
-
-	accessKey := secretData.Spec.S3.AccessKeyID
-
-	return accessKey
-}
-
 // CheckBucketAccessFromSecret Check if Bucket can be accessed with data from specified secret.
 func CheckBucketAccessFromSecret(ctx context.Context, clientset *kubernetes.Clientset, validSecret *v1.Secret) {
 	secret, err := clientset.CoreV1().Secrets(validSecret.Namespace).Get(ctx, validSecret.Name, metav1.GetOptions{})
@@ -235,20 +208,6 @@ func CheckBucketAccessFromSecret(ctx context.Context, clientset *kubernetes.Clie
 		Bucket: aws.String(bucketName),
 		Key:    aws.String(testObjectKey),
 	})
-	gomega.Expect(err).ToNot(gomega.HaveOccurred())
-}
-
-// DeleteSecret first removes the finalizers from secret and then deletes it.
-func DeleteSecret(ctx context.Context, clientset *kubernetes.Clientset, secret *v1.Secret) {
-	secret, err := clientset.CoreV1().Secrets(secret.Namespace).Get(ctx, secret.Name, metav1.GetOptions{})
-	gomega.Expect(err).ToNot(gomega.HaveOccurred())
-
-	secret.SetFinalizers([]string{})
-
-	_, err = clientset.CoreV1().Secrets(secret.Namespace).Update(ctx, secret, metav1.UpdateOptions{})
-	gomega.Expect(err).ToNot(gomega.HaveOccurred())
-
-	err = clientset.CoreV1().Secrets(secret.Namespace).Delete(ctx, secret.Name, metav1.DeleteOptions{})
 	gomega.Expect(err).ToNot(gomega.HaveOccurred())
 }
 
