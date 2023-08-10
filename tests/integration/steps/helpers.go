@@ -18,7 +18,7 @@ import (
 )
 
 const (
-	attempts = 5
+	attempts = 10
 	sleep    = 2 * time.Second //nolint:gomnd
 )
 

@@ -83,7 +83,7 @@ cd ~/repos/cosi-driver || exit 1
 
 # Let's install the driver
 helm install cosi-driver ./helm/cosi-driver \
---set provisioner.image.repository=${REGISTRY}/cosi-driver \
+--set provisioner.image.repository="${REGISTRY}"/cosi-driver \
 --set provisioner.image.tag="$(git rev-parse HEAD)" \
 --set provisioner.image.pullPolicy=Always \
 --set provisioner.logLevel=trace \
@@ -95,7 +95,7 @@ helm install cosi-driver ./helm/cosi-driver \
 --create-namespace
 
 
-kubectl wait --for=condition=available --timeout=60s deployment/cosi-driver -n=${DRIVER_NAMESPACE}
+kubectl wait --for=condition=available --timeout=60s deployment/cosi-driver -n="${DRIVER_NAMESPACE}"
 
 make integration-test
 )
