@@ -23,6 +23,7 @@ import (
 	cosi "sigs.k8s.io/container-object-storage-interface-spec"
 )
 
+// All errors that can be returned by DriverDeleteBucket.
 var ErrFailedToDeleteBucket = errors.New("bucket was not successfully deleted")
 
 // DriverDeleteBucket deletes Bucket on specific Object Storage Platform.

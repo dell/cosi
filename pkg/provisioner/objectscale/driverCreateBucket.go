@@ -26,6 +26,7 @@ import (
 	cosi "sigs.k8s.io/container-object-storage-interface-spec"
 )
 
+// All errors that can be returned by DriverCreateBucket.
 var (
 	ErrEmptyBucketName      = errors.New("empty bucket name")
 	ErrFailedToCreateBucket = errors.New("failed to create bucket")
