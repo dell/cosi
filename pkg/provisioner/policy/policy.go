@@ -30,7 +30,7 @@ type PrincipalEntry struct {
 
 type Document struct {
 	Version   string
-	ID        string
+	ID        string `json:"Id"`
 	Statement []StatementEntry
 }
 
