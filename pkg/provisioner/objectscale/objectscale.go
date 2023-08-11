@@ -49,6 +49,11 @@ const (
 	allowEffect = "Allow"
 	// maxUsernameLength is used to trim the username to specific length.
 	maxUsernameLength = 64
+
+	CreateBucketTraceName       = "CreateBucketRequest"
+	DeleteBucketTraceName       = "DeleteBucketRequest"
+	GrantBucketAccessTraceName  = "GrantBucketAccessRequest"
+	RevokeBucketAccessTraceName = "RevokeBucketAccessRequest"
 )
 
 var (
@@ -63,6 +68,7 @@ var (
 	// DriverCreateBucket, DriverDeleteBucketRequest, DriverGrantBucketAccessRequest or DriverRevokeBucketAccessRequest.
 	ErrInvalidRequest = errors.New("incoming request invalid")
 
+	// TODO: is 20 a good number?
 	// defaultTimeout is the default call length before context gets canceled.
 	defaultTimeout = time.Second * 20
 )
@@ -257,7 +263,7 @@ func GetBucketName(bucketID string) (string, error) {
 	list := strings.SplitN(bucketID, "-", splitNumber)
 
 	if len(list) != 2 || list[1] == "" { //nolint:gomnd
-		return "", errors.New("invalid bucketId")
+		return "", ErrInvalidBucketID
 	}
 
 	return list[1], nil

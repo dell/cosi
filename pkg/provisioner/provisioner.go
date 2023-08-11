@@ -25,6 +25,8 @@ import (
 	log "github.com/sirupsen/logrus"
 	otelCodes "go.opentelemetry.io/otel/codes"
 	cosi "sigs.k8s.io/container-object-storage-interface-spec"
+
+	"github.com/dell/cosi/pkg/provisioner/objectscale"
 )
 
 // Server is an implementation of a provisioner server.
@@ -49,7 +51,7 @@ func New(driverset *Driverset) *Server {
 func (s *Server) DriverCreateBucket(ctx context.Context,
 	req *cosi.DriverCreateBucketRequest,
 ) (*cosi.DriverCreateBucketResponse, error) {
-	tracedCtx, span := otel.Tracer("CreateBucketRequest").Start(ctx, "ProvisionerCreateBucket")
+	tracedCtx, span := otel.Tracer(objectscale.CreateBucketTraceName).Start(ctx, "ProvisionerCreateBucket")
 	defer span.End()
 
 	id := req.Parameters["id"]

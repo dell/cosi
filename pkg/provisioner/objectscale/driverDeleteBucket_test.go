@@ -123,7 +123,7 @@ func testDriverDeleteBucketEmptyBucketID(t *testing.T) {
 
 	_, err := server.DriverDeleteBucket(ctx, req)
 
-	assert.ErrorIs(t, err, status.Error(codes.InvalidArgument, "empty bucketID"))
+	assert.ErrorIs(t, err, status.Error(codes.InvalidArgument, ErrInvalidBucketID.Error()))
 }
 
 // testDriverDeleteBucketInvalidBucketID tests if bucket name is extracted correctly from bucket ID.
@@ -148,7 +148,7 @@ func testDriverDeleteBucketInvalidBucketID(t *testing.T) {
 
 	_, err := server.DriverDeleteBucket(ctx, req)
 
-	assert.ErrorIs(t, err, status.Error(codes.InvalidArgument, "invalid bucketId"))
+	assert.ErrorIs(t, err, status.Error(codes.InvalidArgument, ErrInvalidBucketID.Error()))
 }
 
 // testDriverDeleteBucketBucketDeletionFailed tests if error during deletion of bucket is handled correctly
