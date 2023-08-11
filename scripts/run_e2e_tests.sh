@@ -92,7 +92,6 @@ helm install cosi-driver ./helm/cosi-driver \
 --set provisioner.image.tag="$(git rev-parse HEAD)" \
 --set provisioner.image.pullPolicy=Always \
 --set provisioner.logLevel=trace \
---set provisioner.otelEndpoint='jaeger-aio-collector.observability:4317' \
 --set sidecar.verbosity=low \
 --set=provisioner.logFormat=json \
 --set-file configuration.data=/tmp/cosi-conf.yml \

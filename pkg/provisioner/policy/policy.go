@@ -29,9 +29,9 @@ type PrincipalEntry struct {
 }
 
 type Document struct {
-	Version   string
-	ID        string `json:"Id"`
-	Statement []StatementEntry
+	Version   string           `json:"Version"`
+	ID        string           `json:"Id"`
+	Statement []StatementEntry `json:"Statement"`
 }
 
 // To JSON to string.
