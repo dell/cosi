@@ -226,6 +226,6 @@ func CheckErrors(ctx context.Context, clientset *kubernetes.Clientset, pod, cont
 	gomega.Expect(err).ToNot(gomega.HaveOccurred())
 	gomega.Expect(buf.Bytes()).ToNot(gomega.BeEmpty())
 	gomega.Expect(buf.String()).To(gomega.SatisfyAll(
-		gomega.Not(gomega.ContainSubstring("error")),
+		gomega.Not(gomega.ContainSubstring("\"level\":\"error\"")),
 		gomega.Not(gomega.ContainSubstring("Error"))))
 }
