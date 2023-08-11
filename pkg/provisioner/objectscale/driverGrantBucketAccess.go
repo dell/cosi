@@ -38,19 +38,14 @@ import (
 
 // All errors that can be returned by DriverGrantBucketAccess.
 var (
-	ErrInvalidBucketID                  = errors.New("invalid bucketID")
 	ErrEmptyBucketAccessName            = errors.New("empty bucket access name")
 	ErrInvalidAuthenticationType        = errors.New("invalid authentication type")
 	ErrUnknownAuthenticationType        = errors.New("unknown authentication type")
 	ErrBucketNotFound                   = errors.New("bucket not found")
-	ErrFailedToCheckBucketExist         = errors.New("failed to check bucket existence")
-	ErrFailedToCheckUserExist           = errors.New("failed to check for user existence")
 	ErrFailedToCreateUser               = errors.New("failed to create user")
-	ErrFailedToCheckPolicyExist         = errors.New("failed to check bucket policy existence")
 	ErrFailedToDecodePolicy             = errors.New("failed to decode bucket policy")
 	ErrFailedToUpdatePolicy             = errors.New("failed to update bucket policy")
 	ErrFailedToCreateAccessKey          = errors.New("failed to create access key")
-	ErrFailedToMarshalPolicy            = errors.New("failed to marshal policy into JSON")
 	ErrFailedToGeneratePolicyID         = errors.New("failed to generate PolicyID UUID")
 	ErrGeneratedPolicyIDIsEmpty         = errors.New("generated PolicyID was empty")
 	ErrAuthenticationTypeNotImplemented = errors.New("authentication type IAM not implemented")
@@ -126,7 +121,7 @@ func handleKeyAuthentication(ctx context.Context, s *Server, req *cosi.DriverGra
 			return nil, logAndTraceError(log.WithFields(fields), span, ErrBucketNotFound.Error(), err, codes.NotFound)
 		}
 
-		return nil, logAndTraceError(log.WithFields(fields), span, ErrFailedToCheckBucketExist.Error(), err, codes.Internal)
+		return nil, logAndTraceError(log.WithFields(fields), span, ErrFailedToCheckBucketExists.Error(), err, codes.Internal)
 	}
 
 	// This flow below will check for user existence; if user does not exist, it will create one. It will only fail
@@ -146,11 +141,11 @@ func handleKeyAuthentication(ctx context.Context, s *Server, req *cosi.DriverGra
 			// If we got a known error, but it's not "user does not exist" error, we fail.
 			if myAwsErr.Code() != iam.ErrCodeNoSuchEntityException {
 				span.RecordError(myAwsErr)
-				return nil, logAndTraceError(log.WithFields(fields), span, ErrFailedToCheckUserExist.Error(), err, codes.Internal)
+				return nil, logAndTraceError(log.WithFields(fields), span, ErrFailedToCheckUserExists.Error(), err, codes.Internal)
 			}
 		} else {
 			// If we got an unknown error, we fail.
-			return nil, logAndTraceError(log.WithFields(fields), span, ErrFailedToCheckUserExist.Error(), err, codes.Internal)
+			return nil, logAndTraceError(log.WithFields(fields), span, ErrFailedToCheckUserExists.Error(), err, codes.Internal)
 		}
 	}
 
@@ -186,7 +181,7 @@ func handleKeyAuthentication(ctx context.Context, s *Server, req *cosi.DriverGra
 			"bucket": bucketName,
 		}
 
-		return nil, logAndTraceError(log.WithFields(fields), span, ErrFailedToCheckPolicyExist.Error(), err, codes.Internal)
+		return nil, logAndTraceError(log.WithFields(fields), span, ErrFailedToCheckPolicyExists.Error(), err, codes.Internal)
 	}
 
 	policyRequest := policy.Document{}
@@ -216,9 +211,14 @@ func handleKeyAuthentication(ctx context.Context, s *Server, req *cosi.DriverGra
 	}).Info("policy request statement was parsed")
 
 	if policyRequest.ID == "" {
-		policyID, err := generatePolicyID(ctx, bucketName)
+		policyID, err := generatePolicyID(ctx)
 		if err != nil {
-			return nil, status.Error(codes.Internal, err.Error())
+			fields := log.Fields{
+				"bucket":   bucketName,
+				"PolicyID": policyID,
+			}
+
+			return nil, logAndTraceError(log.WithFields(fields), span, err.Error(), err, codes.Internal)
 		}
 
 		log.WithFields(log.Fields{
@@ -391,26 +391,17 @@ func awsBucketResourceArnExists(statement *policy.StatementEntry, awsBucketResou
 }
 
 // generatePolicyID creates new policy for the bucket.
-func generatePolicyID(ctx context.Context, bucketName string) (*uuid.UUID, error) {
+func generatePolicyID(ctx context.Context) (*uuid.UUID, error) {
 	_, span := otel.Tracer("GrantBucketAccessRequest").Start(ctx, "ObjectscaleGeneratePolicyID")
 	defer span.End()
 
 	policyID, err := uuid.NewUUID()
 	if err != nil {
-		fields := log.Fields{
-			"bucket": bucketName,
-		}
-
-		return nil, logAndTraceError(log.WithFields(fields), span, ErrFailedToGeneratePolicyID.Error(), err, codes.Internal)
+		return nil, ErrFailedToGeneratePolicyID
 	}
 
 	if policyID.String() == "" {
-		fields := log.Fields{
-			"bucket":   bucketName,
-			"PolicyID": policyID,
-		}
-
-		return nil, logAndTraceError(log.WithFields(fields), span, ErrGeneratedPolicyIDIsEmpty.Error(), err, codes.Internal)
+		return nil, ErrGeneratedPolicyIDIsEmpty
 	}
 
 	return &policyID, nil

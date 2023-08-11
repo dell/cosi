@@ -43,4 +43,9 @@ var (
 	testBucketDeletionRequest = &cosi.DriverDeleteBucketRequest{
 		BucketId: strings.Join([]string{testID, testBucketName}, "-"),
 	}
+
+	testBucketRevokeAccessRequest = &cosi.DriverRevokeBucketAccessRequest{
+		BucketId:  strings.Join([]string{testID, testBucketName}, "-"),
+		AccountId: testUserName,
+	}
 )

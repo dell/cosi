@@ -16,62 +16,49 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"fmt"
 
 	"github.com/aws/aws-sdk-go/service/iam"
-	"github.com/dell/cosi/pkg/provisioner/policy"
-	"github.com/dell/goobjectscale/pkg/client/model"
 	"go.opentelemetry.io/otel"
 	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 
 	log "github.com/sirupsen/logrus"
-	otelCodes "go.opentelemetry.io/otel/codes"
 	cosi "sigs.k8s.io/container-object-storage-interface-spec"
+
+	"github.com/dell/cosi/pkg/provisioner/policy"
+	"github.com/dell/goobjectscale/pkg/client/model"
+)
+
+// All errors that can be returned by DriverRevokeBucketAccess.
+var (
+	ErrEmpyAccountID              = errors.New("empty accountID")
+	ErrExistingPolicyIsEmpty      = errors.New("existing policy is empty")
+	ErrFailedToUpdateBucketPolicy = errors.New("failed to update bucket policy")
+	ErrFailedToListAccessKeys     = errors.New("failed to list access keys")
+	ErrFailedToDeleteAccessKey    = errors.New("failed to delete access key")
+	ErrFailedToDeleteUser         = errors.New("failed to delete user")
 )
 
 // DriverRevokeBucketAccess revokes access from Bucket on specific Object Storage Platform.
-// TODO: this probably has to be refactored in order to meet the gocognit requirements (complexity < 30).
-func (s *Server) DriverRevokeBucketAccess(ctx context.Context, //nolint:gocognit
+func (s *Server) DriverRevokeBucketAccess(ctx context.Context,
 	req *cosi.DriverRevokeBucketAccessRequest,
 ) (*cosi.DriverRevokeBucketAccessResponse, error) {
 	ctx, span := otel.Tracer("RevokeBucketAccessRequest").Start(ctx, "ObjectscaleDriverRevokeBucketAccess")
 	defer span.End()
 
 	// Check if bucketID is not empty.
-	if req.GetBucketId() == "" {
-		err := errors.New("empty bucketID")
-		log.Error(err.Error())
-
-		span.RecordError(err)
-		span.SetStatus(otelCodes.Error, err.Error())
-
-		return nil, status.Error(codes.InvalidArgument, err.Error())
+	if err := isBucketIDEmpty(req); err != nil {
+		return nil, logAndTraceError(log.WithFields(log.Fields{}), span, ErrInvalidBucketID.Error(), err, codes.InvalidArgument)
 	}
 
 	// Check if accountID is not empty.
-	if req.GetAccountId() == "" {
-		err := errors.New("empty accountID")
-		log.Error(err.Error())
-
-		span.RecordError(err)
-		span.SetStatus(otelCodes.Error, err.Error())
-
-		return nil, status.Error(codes.InvalidArgument, err.Error())
+	if err := isAccountIDEmpty(req); err != nil {
+		return nil, logAndTraceError(log.WithFields(log.Fields{}), span, ErrEmpyAccountID.Error(), err, codes.InvalidArgument)
 	}
 
 	// Extract bucket name from bucketID.
-	bucketName, err := GetBucketName(req.BucketId)
+	bucketName, err := GetBucketName(req.GetBucketId())
 	if err != nil {
-		log.WithFields(log.Fields{
-			"bucketID": req.BucketId,
-			"error":    err,
-		}).Error(err.Error())
-
-		span.RecordError(err)
-		span.SetStatus(otelCodes.Error, err.Error())
-
-		return nil, status.Error(codes.InvalidArgument, err.Error())
+		return nil, logAndTraceError(log.WithFields(log.Fields{}), span, ErrInvalidBucketID.Error(), err, codes.InvalidArgument)
 	}
 
 	log.WithFields(log.Fields{
@@ -86,20 +73,102 @@ func (s *Server) DriverRevokeBucketAccess(ctx context.Context, //nolint:gocognit
 	}).Info("parameters of the bucket")
 
 	// Check if bucket for revoking access exists.
-	bucketExist := true
-
-	_, err = s.mgmtClient.Buckets().Get(ctx, bucketName, parameters)
-	if err != nil && !errors.Is(err, ErrParameterNotFound) {
-		errMsg := errors.New("failed to check bucket existence")
-		log.WithFields(log.Fields{
+	bucketExists, err := checkBucketExistence(ctx, s, bucketName, parameters)
+	if err != nil {
+		fields := log.Fields{
 			"bucket": bucketName,
-			"error":  err,
-		}).Error(errMsg.Error())
+		}
 
-		span.RecordError(err)
-		span.SetStatus(otelCodes.Error, errMsg.Error())
+		return nil, logAndTraceError(
+			log.WithFields(fields), span, err.Error(), err, codes.Internal,
+		)
+	}
 
-		return nil, status.Error(codes.Internal, errMsg.Error())
+	// Check user existence.
+	userExists, err := checkUserExistence(ctx, s, req.AccountId)
+	if err != nil {
+		fields := log.Fields{
+			"bucket": bucketName,
+			"user":   req.AccountId,
+		}
+
+		return nil, logAndTraceError(
+			log.WithFields(fields), span, err.Error(), err, codes.Internal,
+		)
+	}
+
+	if bucketExists {
+		err := removeBucketPolicy(ctx, s, bucketName, parameters)
+		if err != nil {
+			fields := log.Fields{
+				"bucket": bucketName,
+			}
+
+			return nil, logAndTraceError(
+				log.WithFields(fields), span, err.Error(), err, codes.Internal,
+			)
+		}
+	}
+
+	if userExists {
+		if err := deleteUser(s, req.AccountId); err != nil {
+			fields := log.Fields{
+				"bucket": bucketName,
+				"user":   req.AccountId,
+			}
+
+			return nil, logAndTraceError(
+				log.WithFields(fields), span, err.Error(), err, codes.Internal,
+			)
+		}
+	}
+
+	log.WithFields(log.Fields{
+		"userName": req.AccountId,
+		"bucket":   bucketName,
+	}).Infof("bucket access for bucket %v is revoked", bucketName)
+
+	return &cosi.DriverRevokeBucketAccessResponse{}, nil
+}
+
+// checkUserExistence checks if particual user exists on ObjectScale;
+// function returns boolean value: true if user exists, false if user does not exist.
+func checkUserExistence(ctx context.Context, s *Server, accountID string) (bool, error) {
+	_, span := otel.Tracer("RevokeBucketAccessRequest").Start(ctx, "ObjectscaleCheckUserExistence")
+	defer span.End()
+
+	userExists := true
+
+	_, err := s.iamClient.GetUser(&iam.GetUserInput{UserName: &accountID})
+	if err != nil && err.Error() != iam.ErrCodeNoSuchEntityException {
+		return false, ErrFailedToCheckUserExists
+	} else if err != nil {
+		warnMsg := "user does not exist"
+		log.WithFields(log.Fields{
+			"user":  accountID,
+			"error": err,
+		}).Warn(warnMsg)
+		span.AddEvent(warnMsg)
+		userExists = false
+	}
+
+	return userExists, nil
+}
+
+// checkBucketExistence checks if particual bucket exists on ObjectScale;
+// function returns boolean value: true if bucket exists, false if bucket does not exist.
+func checkBucketExistence(ctx context.Context, s *Server, bucketName string, parameters map[string]string) (bool, error) {
+	ctx, span := otel.Tracer("RevokeBucketAccessRequest").Start(ctx, "ObjectscaleCheckBucketExistence")
+	defer span.End()
+
+	bucketExists := true
+
+	_, err := s.mgmtClient.Buckets().Get(ctx, bucketName, parameters)
+
+	if err != nil && !errors.Is(err, ErrParameterNotFound) {
+		bucketExists = false
+
+		return bucketExists, ErrFailedToCheckBucketExists
 	} else if err != nil {
 		warnMsg := "bucket not found"
 		log.WithFields(log.Fields{
@@ -107,186 +176,98 @@ func (s *Server) DriverRevokeBucketAccess(ctx context.Context, //nolint:gocognit
 			"error":  err,
 		}).Warn(warnMsg)
 		span.AddEvent("bucket not found")
-		bucketExist = false
+		bucketExists = false
 	}
 
-	// Check user existence.
-	userExist := true
+	return bucketExists, nil
+}
 
-	_, err = s.iamClient.GetUser(&iam.GetUserInput{UserName: &req.AccountId})
-	if err != nil && err.Error() != iam.ErrCodeNoSuchEntityException {
-		errMsg := errors.New("failed to check for user existence")
-		log.WithFields(log.Fields{
-			"user":  req.AccountId,
-			"error": err,
-		}).Error(errMsg.Error())
-
-		span.RecordError(err)
-		span.SetStatus(otelCodes.Error, errMsg.Error())
-
-		return nil, status.Error(codes.Internal, errMsg.Error())
-	} else if err != nil {
-		warnMsg := "user does not exist"
-		log.WithFields(log.Fields{
-			"user":  req.AccountId,
-			"error": err,
-		}).Warn(warnMsg)
-		span.AddEvent("user does not exist")
-		userExist = false
+// removeBucketPolicy is a function used when revoking a bucket access;
+// it's responsible for updating bucket policy and removing particular right from it.
+func removeBucketPolicy(
+	ctx context.Context,
+	s *Server,
+	bucketName string,
+	parameters map[string]string,
+) error {
+	// Get existing policy.
+	existingPolicy, err := s.mgmtClient.Buckets().GetPolicy(ctx, bucketName, parameters)
+	if err != nil && !errors.Is(err, model.Error{Code: model.CodeResourceNotFound}) {
+		return ErrFailedToCheckPolicyExists
+	} else if err == nil && existingPolicy == "" {
+		return ErrExistingPolicyIsEmpty
 	}
 
-	if bucketExist {
-		// Get existing policy.
-		existingPolicy, err := s.mgmtClient.Buckets().GetPolicy(ctx, bucketName, parameters)
-		if err != nil && !errors.Is(err, model.Error{Code: model.CodeResourceNotFound}) {
-			errMsg := errors.New("failed to check bucket policy existence")
-			log.WithFields(log.Fields{
-				"bucket": bucketName,
-			}).Error(errMsg.Error())
+	// Amazon Resource Name, format: arn:aws:s3:<objectScaleID>:<objectStoreID>:<bucketName>/*.
+	// To see more: https://docs.aws.amazon.com/IAM/latest/UserGuide/reference-arns.html.
+	awsBucketResourceARN := BuildResourceString(s.objectScaleID, s.objectStoreID, bucketName)
+	// Unique ID, format: urn:osc:iam::<namespace>:user/<userName>.
+	awsPrincipalString := BuildPrincipalString(s.namespace, bucketName)
 
-			span.RecordError(err)
-			span.SetStatus(otelCodes.Error, errMsg.Error())
+	jsonPolicy := policy.Document{}
 
-			return nil, status.Error(codes.Internal, errMsg.Error())
-		} else if err == nil && existingPolicy == "" {
-			errMsg := errors.New("policy is empty")
-			log.WithFields(log.Fields{
-				"bucket": bucketName,
-			}).Error(errMsg.Error())
-
-			span.RecordError(err)
-			span.SetStatus(otelCodes.Error, errMsg.Error())
-
-			return nil, status.Error(codes.Internal, errMsg.Error())
-		}
-
-		// Amazon Resource Name, format: arn:aws:s3:<objectScaleID>:<objectStoreID>:<bucketName>/*.
-		// To see more: https://docs.aws.amazon.com/IAM/latest/UserGuide/reference-arns.html.
-		awsBucketResourceARN := fmt.Sprintf("arn:aws:s3:%s:%s:%s/*", s.objectScaleID, s.objectStoreID, bucketName)
-		// Unique ID, format: urn:osc:iam::<namespace>:user/<userName>.
-		awsPrincipalString := fmt.Sprintf("urn:osc:iam::%s:user/%s", s.namespace, req.AccountId)
-
-		jsonPolicy := policy.Document{}
-
-		err = json.Unmarshal([]byte(existingPolicy), &jsonPolicy)
-		if err != nil {
-			errMsg := errors.New("failed to marshall policy")
-			log.WithFields(log.Fields{
-				"bucket":   bucketName,
-				"PolicyID": jsonPolicy.ID,
-				"error":    err,
-			}).Error(errMsg.Error())
-
-			span.RecordError(err)
-			span.SetStatus(otelCodes.Error, errMsg.Error())
-
-			return nil, status.Error(codes.Internal, errMsg.Error())
-		}
-
-		for k, statement := range jsonPolicy.Statement {
-			log.WithFields(log.Fields{
-				"k":         k,
-				"statement": statement,
-			}).Debug("processing next statement")
-
-			statement.Principal.AWS = remove(statement.Principal.AWS, awsPrincipalString)
-			statement.Resource = remove(statement.Resource, awsBucketResourceARN)
-
-			jsonPolicy.Statement[k] = statement
-		}
-
-		updatedPolicy, err := json.Marshal(jsonPolicy)
-		if err != nil {
-			errMsg := errors.New("failed to marshal updatePolicy into JSON")
-			log.WithFields(log.Fields{
-				"bucket":   bucketName,
-				"PolicyID": jsonPolicy.ID,
-				"error":    err,
-			}).Error(errMsg.Error())
-
-			span.RecordError(err)
-			span.SetStatus(otelCodes.Error, errMsg.Error())
-
-			return nil, status.Error(codes.Internal, errMsg.Error())
-		}
-
-		log.WithFields(log.Fields{
-			"policy":    jsonPolicy,
-			"rawPolicy": string(updatedPolicy),
-		}).Debug("updating policy")
-
-		// Update policy.
-		err = s.mgmtClient.Buckets().UpdatePolicy(ctx, bucketName, string(updatedPolicy), parameters)
-		if err != nil {
-			errMsg := errors.New("failed to update bucket policy")
-			log.WithFields(log.Fields{
-				"bucket": bucketName,
-				"policy": updatedPolicy,
-				"error":  err,
-			}).Error(errMsg.Error())
-
-			span.RecordError(err)
-			span.SetStatus(otelCodes.Error, errMsg.Error())
-
-			return nil, status.Error(codes.Internal, errMsg.Error())
-		}
+	err = json.Unmarshal([]byte(existingPolicy), &jsonPolicy)
+	if err != nil {
+		return ErrFailedToMarshalPolicy
 	}
 
-	if userExist {
-		// Get access keys list.
-		accessKeyList, err := s.iamClient.ListAccessKeys(&iam.ListAccessKeysInput{UserName: &req.AccountId})
-		if err != nil {
-			errMsg := errors.New("failed to get access key list")
-			log.WithFields(log.Fields{
-				"userName": req.AccountId,
-				"error":    err,
-			}).Error(errMsg.Error())
+	for k, statement := range jsonPolicy.Statement {
+		log.WithFields(log.Fields{
+			"k":         k,
+			"statement": statement,
+		}).Debug("processing next statement")
 
-			span.RecordError(err)
-			span.SetStatus(otelCodes.Error, errMsg.Error())
+		statement.Principal.AWS = remove(statement.Principal.AWS, awsPrincipalString)
+		statement.Resource = remove(statement.Resource, awsBucketResourceARN)
 
-			return nil, status.Error(codes.Internal, errMsg.Error())
-		}
-		// Delete all access keys for particular user.
-		for _, accessKey := range accessKeyList.AccessKeyMetadata {
-			_, err = s.iamClient.DeleteAccessKey(&iam.DeleteAccessKeyInput{AccessKeyId: accessKey.AccessKeyId, UserName: &req.AccountId})
-			if err != nil {
-				errMsg := errors.New("failed to delete access key")
-				log.WithFields(log.Fields{
-					"userName":  req.AccountId,
-					"accessKey": accessKey.AccessKeyId,
-					"error":     err,
-				}).Error(errMsg.Error())
+		jsonPolicy.Statement[k] = statement
+	}
 
-				span.RecordError(err)
-				span.SetStatus(otelCodes.Error, errMsg.Error())
-
-				return nil, status.Error(codes.Internal, errMsg.Error())
-			}
-		}
-
-		// Delete user.
-		_, err = s.iamClient.DeleteUser(&iam.DeleteUserInput{UserName: &req.AccountId})
-		if err != nil {
-			errMsg := errors.New("failed to delete user")
-			log.WithFields(log.Fields{
-				"userName": req.AccountId,
-				"error":    err,
-			}).Error(errMsg.Error())
-
-			span.RecordError(err)
-			span.SetStatus(otelCodes.Error, errMsg.Error())
-
-			return nil, status.Error(codes.Internal, errMsg.Error())
-		}
+	updatedPolicy, err := json.Marshal(jsonPolicy)
+	if err != nil {
+		return ErrFailedToMarshalPolicy
 	}
 
 	log.WithFields(log.Fields{
-		"userName": req.AccountId,
-		"bucket":   bucketName,
-	}).Info("bucket access for bucket is revoked")
+		"policy":    jsonPolicy,
+		"rawPolicy": string(updatedPolicy),
+	}).Debug("updating policy")
 
-	return &cosi.DriverRevokeBucketAccessResponse{}, nil
+	// Update policy.
+	err = s.mgmtClient.Buckets().UpdatePolicy(ctx, bucketName, string(updatedPolicy), parameters)
+	if err != nil {
+		return ErrFailedToUpdateBucketPolicy
+	}
+
+	return nil
+}
+
+// removeUser is a function used when revoking a bucket access;
+// it's responsible for removing users tied to a specific Bucket Access through an accountID.
+func deleteUser(s *Server, accountID string) error {
+	// Get access keys list.
+	accessKeyList, err := s.iamClient.ListAccessKeys(&iam.ListAccessKeysInput{UserName: &accountID})
+	if err != nil {
+		return ErrFailedToListAccessKeys
+	}
+
+	// Delete all access keys for particular user.
+	for _, accessKey := range accessKeyList.AccessKeyMetadata {
+		_, err = s.iamClient.DeleteAccessKey(&iam.DeleteAccessKeyInput{
+			AccessKeyId: accessKey.AccessKeyId, UserName: &accountID,
+		})
+		if err != nil {
+			return ErrFailedToDeleteAccessKey
+		}
+	}
+
+	// Delete user.
+	_, err = s.iamClient.DeleteUser(&iam.DeleteUserInput{UserName: &accountID})
+	if err != nil {
+		return ErrFailedToDeleteUser
+	}
+
+	return nil
 }
 
 // remove is a generic function that removes all occurrences of an item.
@@ -300,4 +281,13 @@ func remove[T comparable](from []T, item T) []T {
 	}
 
 	return output
+}
+
+// isAccountIDEmpty checks if Account ID is not empty.
+func isAccountIDEmpty(req *cosi.DriverRevokeBucketAccessRequest) error {
+	if req.GetAccountId() == "" {
+		return ErrEmptyBucketAccessName
+	}
+
+	return nil
 }

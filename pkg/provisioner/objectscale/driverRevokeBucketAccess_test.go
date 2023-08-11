@@ -108,12 +108,7 @@ func testValidAccessRevoking(t *testing.T) {
 		objectStoreID: objectStoreID,
 	}
 
-	req := &cosi.DriverRevokeBucketAccessRequest{
-		BucketId:  "bucket-valid",
-		AccountId: testUserName,
-	}
-
-	response, err := server.DriverRevokeBucketAccess(ctx, req)
+	response, err := server.DriverRevokeBucketAccess(ctx, testBucketRevokeAccessRequest)
 	assert.ErrorIs(t, err, nil, err)
 	assert.NotNil(t, response)
 }
@@ -144,12 +139,7 @@ func testNothingToChange(t *testing.T) {
 		objectStoreID: objectStoreID,
 	}
 
-	req := &cosi.DriverRevokeBucketAccessRequest{
-		BucketId:  "bucket-valid",
-		AccountId: testUserName,
-	}
-
-	response, err := server.DriverRevokeBucketAccess(ctx, req)
+	response, err := server.DriverRevokeBucketAccess(ctx, testBucketRevokeAccessRequest)
 	assert.ErrorIs(t, err, nil, err)
 	assert.NotNil(t, response)
 }
@@ -179,7 +169,7 @@ func testEmptyBucketIDRevoke(t *testing.T) {
 
 	_, err := server.DriverRevokeBucketAccess(ctx, req)
 
-	assert.ErrorIs(t, err, status.Error(codes.InvalidArgument, "empty bucketID"))
+	assert.ErrorIs(t, err, status.Error(codes.InvalidArgument, ErrInvalidBucketID.Error()))
 }
 
 func testInvalidBucketID(t *testing.T) {
@@ -206,7 +196,7 @@ func testInvalidBucketID(t *testing.T) {
 
 	_, err := server.DriverRevokeBucketAccess(ctx, req)
 
-	assert.ErrorIs(t, err, status.Error(codes.InvalidArgument, "invalid bucketId"))
+	assert.ErrorIs(t, err, status.Error(codes.InvalidArgument, ErrInvalidBucketID.Error()))
 }
 
 // testEmptyAccountID tests if error handling for empty AccountID in the (*Server).DriverRevokeBucketAccess method.
@@ -234,7 +224,7 @@ func testEmptyAccountID(t *testing.T) {
 
 	_, err := server.DriverRevokeBucketAccess(ctx, req)
 
-	assert.ErrorIs(t, err, status.Error(codes.InvalidArgument, "empty accountID"))
+	assert.ErrorIs(t, err, status.Error(codes.InvalidArgument, ErrEmpyAccountID.Error()))
 }
 
 // testGetBucketUnknownError tests if the unexpected error returned from mocked API,
@@ -257,14 +247,9 @@ func testGetBucketUnexpectedError(t *testing.T) {
 		objectStoreID: objectStoreID,
 	}
 
-	req := &cosi.DriverRevokeBucketAccessRequest{
-		BucketId:  "bucket-valid",
-		AccountId: testUserName,
-	}
+	_, err := server.DriverRevokeBucketAccess(ctx, testBucketRevokeAccessRequest)
 
-	_, err := server.DriverRevokeBucketAccess(ctx, req)
-
-	assert.ErrorIs(t, err, status.Error(codes.Internal, "failed to check bucket existence"))
+	assert.ErrorIs(t, err, status.Error(codes.Internal, ErrFailedToCheckBucketExists.Error()))
 }
 
 // testGetBucketFailToCheckUser tests if user non-existence during revoking access is handled correctly
@@ -295,14 +280,9 @@ func testGetBucketFailToCheckUser(t *testing.T) {
 		objectStoreID: objectStoreID,
 	}
 
-	req := &cosi.DriverRevokeBucketAccessRequest{
-		BucketId:  "bucket-valid",
-		AccountId: testUserName,
-	}
+	_, err := server.DriverRevokeBucketAccess(ctx, testBucketRevokeAccessRequest)
 
-	_, err := server.DriverRevokeBucketAccess(ctx, req)
-
-	assert.ErrorIs(t, err, status.Error(codes.Internal, "failed to check for user existence"))
+	assert.ErrorIs(t, err, status.Error(codes.Internal, ErrFailedToCheckUserExists.Error()))
 }
 
 // testFailToGetAccessKeysList tests if failing to get access keys for a user during revoking access is handled correctly
@@ -336,14 +316,9 @@ func testFailToGetAccessKeysList(t *testing.T) {
 		objectStoreID: objectStoreID,
 	}
 
-	req := &cosi.DriverRevokeBucketAccessRequest{
-		BucketId:  "bucket-valid",
-		AccountId: testUserName,
-	}
+	_, err := server.DriverRevokeBucketAccess(ctx, testBucketRevokeAccessRequest)
 
-	_, err := server.DriverRevokeBucketAccess(ctx, req)
-
-	assert.ErrorIs(t, err, status.Error(codes.Internal, "failed to get access key list"))
+	assert.ErrorIs(t, err, status.Error(codes.Internal, ErrFailedToListAccessKeys.Error()))
 }
 
 // testFailToDeleteAccessKey tests if failing to delete access keys for a user during revoking access is handled correctly
@@ -386,14 +361,9 @@ func testFailToDeleteAccessKey(t *testing.T) {
 		objectStoreID: objectStoreID,
 	}
 
-	req := &cosi.DriverRevokeBucketAccessRequest{
-		BucketId:  "bucket-valid",
-		AccountId: testUserName,
-	}
+	_, err := server.DriverRevokeBucketAccess(ctx, testBucketRevokeAccessRequest)
 
-	_, err := server.DriverRevokeBucketAccess(ctx, req)
-
-	assert.ErrorIs(t, err, status.Error(codes.Internal, "failed to delete access key"))
+	assert.ErrorIs(t, err, status.Error(codes.Internal, ErrFailedToDeleteAccessKey.Error()))
 }
 
 // testFailToCheckBucketPolicyExistence tests if failing to check for policy existence during revoking access is handled correctly
@@ -434,14 +404,9 @@ func testFailToCheckBucketPolicyExistence(t *testing.T) {
 		objectStoreID: objectStoreID,
 	}
 
-	req := &cosi.DriverRevokeBucketAccessRequest{
-		BucketId:  "bucket-valid",
-		AccountId: testUserName,
-	}
+	_, err := server.DriverRevokeBucketAccess(ctx, testBucketRevokeAccessRequest)
 
-	_, err := server.DriverRevokeBucketAccess(ctx, req)
-
-	assert.ErrorIs(t, err, status.Error(codes.Internal, "failed to check bucket policy existence"))
+	assert.ErrorIs(t, err, status.Error(codes.Internal, ErrFailedToCheckPolicyExists.Error()))
 }
 
 // testEmptyPolicy tests if policy emptiness during revoking access is handled correctly
@@ -483,14 +448,9 @@ func testEmptyPolicy(t *testing.T) {
 		objectStoreID: objectStoreID,
 	}
 
-	req := &cosi.DriverRevokeBucketAccessRequest{
-		BucketId:  "bucket-valid",
-		AccountId: testUserName,
-	}
+	_, err := server.DriverRevokeBucketAccess(ctx, testBucketRevokeAccessRequest)
 
-	_, err := server.DriverRevokeBucketAccess(ctx, req)
-
-	assert.ErrorIs(t, err, status.Error(codes.Internal, "policy is empty"))
+	assert.ErrorIs(t, err, status.Error(codes.Internal, ErrExistingPolicyIsEmpty.Error()))
 }
 
 // testFailedToDeleteUser tests if failing to delete user during revoking access is handled correctly
@@ -534,14 +494,9 @@ func testFailedToDeleteUser(t *testing.T) {
 		objectStoreID: objectStoreID,
 	}
 
-	req := &cosi.DriverRevokeBucketAccessRequest{
-		BucketId:  "bucket-valid",
-		AccountId: testUserName,
-	}
+	_, err := server.DriverRevokeBucketAccess(ctx, testBucketRevokeAccessRequest)
 
-	_, err := server.DriverRevokeBucketAccess(ctx, req)
-
-	assert.ErrorIs(t, err, status.Error(codes.Internal, "failed to delete user"))
+	assert.ErrorIs(t, err, status.Error(codes.Internal, ErrFailedToDeleteUser.Error()))
 }
 
 // testFailedToUpdateBucketPolicy tests if failing to update policy during revoking access is handled correctly
@@ -583,14 +538,9 @@ func testFailedToUpdateBucketPolicy(t *testing.T) {
 		objectStoreID: objectStoreID,
 	}
 
-	req := &cosi.DriverRevokeBucketAccessRequest{
-		BucketId:  "bucket-valid",
-		AccountId: testUserName,
-	}
+	_, err := server.DriverRevokeBucketAccess(ctx, testBucketRevokeAccessRequest)
 
-	_, err := server.DriverRevokeBucketAccess(ctx, req)
-
-	assert.ErrorIs(t, err, status.Error(codes.Internal, "failed to update bucket policy"))
+	assert.ErrorIs(t, err, status.Error(codes.Internal, ErrFailedToUpdateBucketPolicy.Error()))
 }
 
 func TestRemove(t *testing.T) {
