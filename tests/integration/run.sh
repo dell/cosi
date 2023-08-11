@@ -6,8 +6,9 @@ if [ -n "${CI}" ]; then
     NO_COLOR='--no-color'
 fi
 
+# shellcheck disable=SC2086
 ginkgo \
-    "${NO_COLOR}" \
+    ${NO_COLOR} \
     -vv \
     --keep-going \
     --race \

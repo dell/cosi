@@ -21,13 +21,11 @@ import (
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/iam"
 	"github.com/dell/goobjectscale/pkg/client/model"
-	"k8s.io/client-go/kubernetes"
 	"sigs.k8s.io/container-object-storage-interface-api/apis/objectstorage/v1alpha1"
 
 	objscl "github.com/dell/cosi/pkg/provisioner/objectscale"
 	objectscaleRest "github.com/dell/goobjectscale/pkg/client/rest"
 	gomega "github.com/onsi/gomega"
-	v1 "k8s.io/api/core/v1"
 
 	"github.com/dell/cosi/pkg/provisioner/policy"
 )
@@ -83,14 +81,6 @@ func CheckBucketDeletionInObjectStore(ctx context.Context, objectscale *objectsc
 	gomega.Expect(err).ToNot(gomega.HaveOccurred())
 }
 
-// CreatePolicy Function for creating policy in ObjectScale.
-func CreatePolicy(ctx context.Context, objectscale *objectscaleRest.ClientSet, policy policy.Document, myBucket *v1alpha1.Bucket) {
-	policyString, err := policy.ToJSON()
-	gomega.Expect(err).ToNot(gomega.HaveOccurred())
-	err = objectscale.Buckets().UpdatePolicy(ctx, myBucket.Name, policyString, nil)
-	gomega.Expect(err).ToNot(gomega.HaveOccurred())
-}
-
 // CheckPolicy checks  if policy exists in ObjectScale.
 func CheckPolicy(ctx context.Context, objectscale *objectscaleRest.ClientSet, expectedPolicyDocument policy.Document, myBucket *v1alpha1.Bucket, namespace string) {
 	var actualPolicyDocument policy.Document
@@ -126,30 +116,6 @@ func CheckPolicy(ctx context.Context, objectscale *objectscaleRest.ClientSet, ex
 	gomega.Expect(expectedPolicyDocument).To(gomega.BeEquivalentTo(actualPolicyDocument))
 }
 
-// DeletePolicy is a function deleting a policy from the ObjectStore.
-func DeletePolicy(ctx context.Context, objectscale *objectscaleRest.ClientSet, bucket *v1alpha1.Bucket, namespace string) {
-	param := make(map[string]string)
-	param["namespace"] = namespace
-	existing, err := objectscale.Buckets().GetPolicy(ctx, bucket.Name, param)
-	gomega.Expect(err).ToNot(gomega.HaveOccurred())
-	gomega.Expect(existing).NotTo(gomega.BeNil())
-
-	err = objectscale.Buckets().DeletePolicy(ctx, bucket.Name, param)
-
-	gomega.Expect(err).ToNot(gomega.HaveOccurred())
-}
-
-// CreateUser creates user in ObjectScale.
-func CreateUser(ctx context.Context, iamClient *iam.IAM, user string, arn string) {
-	// TODO: verify it's working correctly once all the steps are integrated
-	userOut, err := iamClient.CreateUserWithContext(ctx, &iam.CreateUserInput{
-		UserName:            &user,
-		PermissionsBoundary: &arn,
-	})
-	gomega.Expect(err).ToNot(gomega.HaveOccurred())
-	gomega.Expect(userOut.User).NotTo(gomega.BeNil())
-}
-
 // CheckUser checks if user exists in ObjectScale.
 func CheckUser(ctx context.Context, iamClient *iam.IAM, user string, namespace string) {
 	username := objscl.BuildUsername(namespace, user)
@@ -173,16 +139,6 @@ func CheckUserDeleted(ctx context.Context, iamClient *iam.IAM, user string, name
 	gomega.Expect(iam.ErrCodeNoSuchEntityException).To(gomega.Equal(myAwsErr.Code()))
 }
 
-// DeleteUser Function for deleting user from ObjectScale.
-func DeleteUser(ctx context.Context, iamClient *iam.IAM, user string) {
-	existing, err := iamClient.GetUserWithContext(ctx, &iam.GetUserInput{UserName: &user})
-	gomega.Expect(err).ToNot(gomega.HaveOccurred())
-	gomega.Expect(existing.User).NotTo(gomega.BeNil())
-	// TODO: verify it's working correctly once all the steps are integrated
-	_, err = iamClient.DeleteUser(&iam.DeleteUserInput{UserName: existing.User.UserName})
-	gomega.Expect(err).ToNot(gomega.HaveOccurred())
-}
-
 // CheckBucketNotInObjectStore Function for checking if bucket is not in objectstore.
 func CheckBucketNotInObjectStore(ctx context.Context, objectscale *objectscaleRest.ClientSet, bucketClaim *v1alpha1.BucketClaim) {
 	bucket, err := objectscale.Buckets().Get(ctx, bucketClaim.Status.BucketName, map[string]string{})
@@ -190,23 +146,8 @@ func CheckBucketNotInObjectStore(ctx context.Context, objectscale *objectscaleRe
 	gomega.Expect(bucket).To(gomega.BeNil())
 }
 
-// CheckBucketInObjectStore Function for checking if the bucket object is in the objectstore.
-func CheckBucketInObjectStore(ctx context.Context, objectscale *objectscaleRest.ClientSet, bucketClaim *v1alpha1.BucketClaim) {
-	bucket, err := objectscale.Buckets().Get(ctx, bucketClaim.Status.BucketName, map[string]string{})
-	gomega.Expect(err).ToNot(gomega.HaveOccurred())
-	gomega.Expect(bucket).NotTo(gomega.BeNil())
-}
-
 // DeleteBucket Function for deleting existing from ObjectScale (useful if BucketClaim deletionPolicy is set to "retain").
 func DeleteBucket(ctx context.Context, objectscale *objectscaleRest.ClientSet, namespace string, bucket *v1alpha1.Bucket) {
 	err := objectscale.Buckets().Delete(ctx, bucket.Name, namespace, false)
-	gomega.Expect(err).ToNot(gomega.HaveOccurred())
-}
-
-func DeleteAccessKey(ctx context.Context, iamClient *iam.IAM, clientset *kubernetes.Clientset, secret *v1.Secret) {
-	accessKeyID := GetAccessKeyID(ctx, clientset, secret)
-	_, err := iamClient.DeleteAccessKeyWithContext(ctx, &iam.DeleteAccessKeyInput{
-		AccessKeyId: &accessKeyID,
-	})
 	gomega.Expect(err).ToNot(gomega.HaveOccurred())
 }
