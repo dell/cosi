@@ -32,7 +32,7 @@ jobs:
           go-version: "1.20"
           cache: false
       - name: Checkout the code
-        uses: actions/checkout@v3.2.0
+        uses: actions/checkout@v3.5.3
       - name: Vendor packages
         run: |
           go mod vendor
@@ -48,7 +48,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout the code
-        uses: actions/checkout@v3.2.0
+        uses: actions/checkout@v3.5.3
       - name: Malware Scanner
         uses: dell/common-github-actions/malware-scanner@main
         with:
@@ -60,7 +60,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout the code
-        uses: actions/checkout@v3.2.0
+        uses: actions/checkout@v3.5.3
       - name: Run the forbidden words scan
         uses: dell/common-github-actions/code-sanitizer@main
         with:
@@ -71,7 +71,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout the code
-        uses: actions/checkout@v3.2.0
+        uses: actions/checkout@v3.5.3
       - name: Run Hadolint
         uses: hadolint/hadolint-action@v3.1.0
 
@@ -105,7 +105,7 @@ jobs:
           git config --global url."https://csmbot:$TOKEN@github.com".insteadOf "https://github.com"
           echo "machine github.com login csmbot password $TOKEN" >> ~/.netrc
       - name: Checkout the code
-        uses: actions/checkout@v3.2.0
+        uses: actions/checkout@v3.5.3
       - name: Vendor packages
         run: |
           go mod vendor
@@ -136,7 +136,7 @@ jobs:
           go-version: "1.20"
           cache: false
       - name: Checkout the code
-        uses: actions/checkout@v3.2.0
+        uses: actions/checkout@v3.5.3
       - name: "Vendor packages"
         run: |
           go mod vendor
