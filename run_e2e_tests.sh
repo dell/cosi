@@ -8,7 +8,7 @@ NS=("access-namespace" "access-grant-namespace" "access-revoke-namespace" "creat
 # delete all finalizers and then objects from those namespaces
 for n in "${NS[@]}";
 do
-  # first check if namesapce exists
+  # first check if namespace exists
   if kubectl get namespace "${n}" > /dev/null 2>&1; then
     echo "Cleaning namespace $n"
   else
@@ -57,7 +57,11 @@ do
   kubectl delete namespace "${n}" 
 done
 
+# uninstall driver
+helm uninstall cosi-driver -n="$DRIVER_NAMESPACE" || true
+kubectl delete leases -n="$DRIVER_NAMESPACE" cosi-dellemc-com-cosi || true
 
+# save driver configuration values in a file
 cat > /tmp/cosi-conf.yml <<EOF
 connections:
 - objectscale:
@@ -79,9 +83,10 @@ connections:
       insecure: true
 EOF
 
-cd ~/repos/cosi-driver || exit 1
+# go to the cosi-driver folder 
+cd "${DRIVER_REPO_PATH}" || exit 1
 
-# Let's install the driver
+# install the driver
 helm install cosi-driver ./helm/cosi-driver \
 --set provisioner.image.repository="${REGISTRY}"/cosi-driver \
 --set provisioner.image.tag="$(git rev-parse HEAD)" \
@@ -94,8 +99,9 @@ helm install cosi-driver ./helm/cosi-driver \
 --namespace=cosi-driver \
 --create-namespace
 
-
+# check if the driver is installed correctly 
 kubectl wait --for=condition=available --timeout=60s deployment/cosi-driver -n="${DRIVER_NAMESPACE}"
 
+# start e2e tests
 make integration-test
 )
