@@ -57,7 +57,7 @@ build:	##build project
 docker: vendor	##build the docker container
 	@echo "Base Images is set to: $(BASEIMAGE)"
 	@echo "Building: $(IMAGENAME):$(IMAGETAG)"
-	docker build -t "$(IMAGENAME):$(IMAGETAG)" --build-arg BASEIMAGE=$(BASEIMAGE) --build-arg GOVERSION=$(GOVERSION) --build-arg DIGEST=$(DIGEST) .
+	docker build --pull -t "$(IMAGENAME):$(IMAGETAG)" --build-arg BASEIMAGE=$(BASEIMAGE) --build-arg GOVERSION=$(GOVERSION) --build-arg DIGEST=$(DIGEST) .
 
 .PHONY: push
 push: docker	##build and push the docker container to repository

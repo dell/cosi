@@ -18,18 +18,19 @@ import (
 
 	"go.opentelemetry.io/otel"
 	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 
 	log "github.com/sirupsen/logrus"
-	otelCodes "go.opentelemetry.io/otel/codes"
 	cosi "sigs.k8s.io/container-object-storage-interface-spec"
 )
+
+// All errors that can be returned by DriverDeleteBucket.
+var ErrFailedToDeleteBucket = errors.New("bucket was not successfully deleted")
 
 // DriverDeleteBucket deletes Bucket on specific Object Storage Platform.
 func (s *Server) DriverDeleteBucket(ctx context.Context,
 	req *cosi.DriverDeleteBucketRequest,
 ) (*cosi.DriverDeleteBucketResponse, error) {
-	_, span := otel.Tracer("DeleteBucketRequest").Start(ctx, "ObjectscaleDriverDeleteBucket")
+	ctx, span := otel.Tracer(DeleteBucketTraceName).Start(ctx, "ObjectscaleDriverDeleteBucket")
 	defer span.End()
 
 	log.WithFields(log.Fields{
@@ -40,27 +41,17 @@ func (s *Server) DriverDeleteBucket(ctx context.Context,
 
 	// Check if bucketID is not empty.
 	if req.GetBucketId() == "" {
-		err := errors.New("empty bucketID")
-		log.Error(err.Error())
-
-		span.RecordError(err)
-		span.SetStatus(otelCodes.Error, err.Error())
-
-		return nil, status.Error(codes.InvalidArgument, err.Error())
+		return nil, logAndTraceError(log.WithFields(log.Fields{}), span, ErrInvalidBucketID.Error(), ErrInvalidBucketID, codes.InvalidArgument)
 	}
 
 	// Extract bucket name from bucketID.
 	bucketName, err := GetBucketName(req.BucketId)
 	if err != nil {
-		log.WithFields(log.Fields{
+		fields := log.Fields{
 			"bucketID": req.BucketId,
-			"error":    err,
-		}).Error(err.Error())
+		}
 
-		span.RecordError(err)
-		span.SetStatus(otelCodes.Error, err.Error())
-
-		return nil, status.Error(codes.InvalidArgument, err.Error())
+		return nil, logAndTraceError(log.WithFields(fields), span, ErrInvalidBucketID.Error(), err, codes.InvalidArgument)
 	}
 
 	// Delete bucket.
@@ -77,15 +68,11 @@ func (s *Server) DriverDeleteBucket(ctx context.Context,
 	}
 
 	if err != nil {
-		log.WithFields(log.Fields{
+		fields := log.Fields{
 			"bucket": bucketName,
-			"error":  err,
-		}).Error("failed to delete bucket")
+		}
 
-		span.RecordError(err)
-		span.SetStatus(otelCodes.Error, "failed to delete bucket")
-
-		return nil, status.Error(codes.Internal, "bucket was not successfully deleted")
+		return nil, logAndTraceError(log.WithFields(fields), span, ErrFailedToDeleteBucket.Error(), err, codes.Internal)
 	}
 
 	log.WithFields(log.Fields{

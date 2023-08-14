@@ -92,61 +92,47 @@ var _ = Describe("Bucket Creation", Ordered, Label("create", "objectscale"), fun
 		// 	Message: "BucketClassName not defined",
 		// }
 
-		// STEP: Kubernetes cluster is up and running
 		By("Checking if the cluster is ready")
 		steps.CheckClusterAvailability(clientset)
 
-		// STEP: ObjectScale platform is installed on the cluster
 		By("Checking if the ObjectScale platform is ready")
 		steps.CheckObjectScaleInstallation(ctx, objectscale, Namespace)
 
-		// STEP: ObjectStore "${objectstoreId}" is created
 		By("Checking if the ObjectStore '${objectstoreId}' is created")
 		steps.CheckObjectStoreExists(ctx, objectscale, ObjectstoreID)
 
-		// STEP: Kubernetes namespace "cosi-driver" is created
 		By("Checking if namespace 'cosi-driver' is created")
 		steps.CreateNamespace(ctx, clientset, "cosi-driver")
 
-		// STEP: Kubernetes namespace "creation-namespace" is created
 		By("Checking if namespace 'creation-namespace' is created")
 		steps.CreateNamespace(ctx, clientset, "creation-namespace")
 
-		// STEP: COSI controller "objectstorage-controller" is installed in namespace "default"
 		By("Checking if COSI controller 'objectstorage-controller' is installed in namespace 'default'")
 		steps.CheckCOSIControllerInstallation(ctx, clientset, "objectstorage-controller", "default")
 
-		// STEP: COSI driver "cosi-driver" is installed in namespace "cosi-driver"
 		By("Checking if COSI driver 'cosi-driver' is installed in namespace 'cosi-driver'")
 		steps.CheckCOSIDriverInstallation(ctx, clientset, "cosi-driver", "cosi-driver")
 
-		// STEP: BucketClass resource is created from specification "create-bucket-class"
 		By("Creating the BucketClass 'create-bucket-class'")
 		steps.CreateBucketClassResource(ctx, bucketClient, createClass)
 	})
 
-	// STEP: Scenario: Successfull bucket creation
 	It("Successfully creates bucket", func(ctx context.Context) {
-		// STEP: BucketClaim resource is created from specification "bucket-claim-valid"
 		By("creating a BucketClaim resource from specification 'bucket-claim-valid'")
 		steps.CreateBucketClaimResource(ctx, bucketClient, validBucketClaim)
 
-		// STEP: Bucket resource referencing BucketClaim resource 'bucket-claim-valid' is created
 		By("checking if Bucket resource referencing BucketClaim resource 'bucket-claim-valid' is created")
 		validBucket = steps.GetBucketResource(ctx, bucketClient, validBucketClaim)
-		// STEP: Bucket resource referencing BucketClaim resource "bucket-claim-valid" is created in ObjectStore "${objectstoreName}""
+
 		By("checking if Bucket resource referencing BucketClaim resource 'bucket-claim-valid' is created in ObjectStore '${objectstoreName}'")
 		steps.CheckBucketResourceInObjectStore(ctx, objectscale, Namespace, validBucket)
 
-		// STEP: BucketClaim resource "bucket-claim-valid" in namespace "creation-namespace" status "bucketReady" is "true"
 		By("checking if the status 'bucketReady' of BucketClaim resource 'bucket-claim-valid' in namespace 'creation-namespace' is 'true'")
 		steps.CheckBucketClaimStatus(ctx, bucketClient, validBucketClaim, true)
 
-		// STEP: Bucket resource referencing BucketClaim resource "bucket-claim-valid" status "bucketReady" is "true" and bucketID is not empty
 		By("checking the status 'bucketReady' of Bucket resource referencing BucketClaim resource 'bucket-claim-valid'  is 'true'")
 		steps.CheckBucketStatus(validBucket, true)
 
-		// STEP: Bucket resource referencing BucketClaim resource "bucket-claim-valid" status "bucketID" is not empty
 		By("checking the status 'bucketID' of Bucket resource referencing BucketClaim resource 'bucket-claim-valid' is not empty")
 		steps.CheckBucketID(validBucket)
 
@@ -156,26 +142,20 @@ var _ = Describe("Bucket Creation", Ordered, Label("create", "objectscale"), fun
 		})
 	})
 
-	// STEP: Scenario: Unsuccessfull bucket creation
 	It("Unsuccessfully tries to create bucket", func(ctx context.Context) {
-		// STEP: BucketClaim resource is created from specification "bucket-claim-invalid"
 		By("creating a BucketClaim resource from specification 'bucket-claim-invalid'")
 		steps.CreateBucketClaimResource(ctx, bucketClient, invalidBucketClaim)
 
-		// STEP: Bucket resource referencing BucketClaim resource 'bucket-claim-invalid' is created
 		By("checking if Bucket status in BucketClaim resource is empty")
 		steps.CheckBucketStatusEmpty(ctx, bucketClient, invalidBucketClaim)
 
-		// STEP: Bucket resource referencing BucketClaim resource "bucket-claim-invalid" is not created in ObjectStore "${objectstoreName}"
 		By("checking if Bucket resource referencing BucketClaim resource 'bucket-claim-invalid' is not created in ObjectStore '${objectstoreName}'")
 		steps.CheckBucketNotInObjectStore(ctx, objectscale, invalidBucketClaim)
 
-		// STEP: BucketClaim resource "bucket-claim-invalid" in namespace "creation-namespace" status "bucketReady" is "false"
 		By("checking if the status 'bucketReady' of BucketClaim resource 'bucket-claim-invalid' in namespace 'creation-namespace' is 'false'")
 		steps.CheckBucketClaimStatus(ctx, bucketClient, invalidBucketClaim, false)
 
 		// NOTE: commented for now until changes introduced to provisioner sidecar
-		// STEP: BucketClaim events contains an error: "Cannot create Bucket: BucketClass does not exist"
 		// By("checking if the BucketClaim events contains an error: 'Cannot create Bucket: BucketClass does not exist'")
 		// steps.CheckBucketClaimEvents(ctx, clientset, invalidBucketClaim, myEvent)
 

@@ -113,59 +113,45 @@ var _ = Describe("Bucket Access Grant", Ordered, Label("grant", "objectscale"), 
 			},
 		}
 
-		// STEP: Kubernetes cluster is up and running
 		By("Checking if the cluster is ready")
 		steps.CheckClusterAvailability(clientset)
 
-		// STEP: ObjectScale platform is installed on the cluster
 		By("Checking if the ObjectScale platform is ready")
 		steps.CheckObjectScaleInstallation(ctx, objectscale, Namespace)
 
-		// STEP: ObjectStore "${objectstoreId}" is created
 		By("Checking if the ObjectStore '${objectstoreId}' is created")
 		steps.CheckObjectStoreExists(ctx, objectscale, ObjectstoreID)
 
-		// STEP: Kubernetes namespace "cosi-driver" is created
 		By("Checking if namespace 'cosi-driver' is created")
 		steps.CreateNamespace(ctx, clientset, "cosi-driver")
 
-		// STEP: Kubernetes namespace "access-grant-namespace" is created
 		By("Checking if namespace 'access-grant-namespace' is created")
 		steps.CreateNamespace(ctx, clientset, "access-grant-namespace")
 
-		// STEP: COSI controller "objectstorage-controller" is installed in namespace "default"
 		By("Checking if COSI controller 'objectstorage-controller' is installed in namespace 'default'")
 		steps.CheckCOSIControllerInstallation(ctx, clientset, "objectstorage-controller", "default")
 
-		// STEP: COSI driver "cosi-driver" is installed in namespace "cosi-driver"
 		By("Checking if COSI driver 'cosi-driver' is installed in namespace 'cosi-driver'")
 		steps.CheckCOSIDriverInstallation(ctx, clientset, "cosi-driver", "cosi-driver")
 
-		// STEP: BucketClass resource is created from specification "grant-bucket-class"
 		By("Creating the BucketClass 'grant-bucket-class' is created")
 		grantBucketClass = steps.CreateBucketClassResource(ctx, bucketClient, grantBucketClass)
 
-		// STEP: BucketClaim resource is created from specification "grant-bucket-claim"
 		By("Creating the BucketClaim 'grant-bucket-claim'")
 		steps.CreateBucketClaimResource(ctx, bucketClient, grantBucketClaim)
 
-		// STEP: Bucket resource referencing BucketClaim resource 'grant-bucket-access-class' is created
 		By("Checking if Bucket resource referencing BucketClaim resource 'grant-bucket-access-class' is created")
 		grantBucket = steps.GetBucketResource(ctx, bucketClient, grantBucketClaim)
 
-		// STEP: Bucket resource referencing BucketClaim resource "grant-bucket-claim" is created in ObjectStore "${objectstoreName}"
 		By("Checking if bucket referencing 'grant-bucket-claim' is created in ObjectStore '${objectstoreName}'")
 		steps.CheckBucketResourceInObjectStore(ctx, objectscale, Namespace, grantBucket)
 
-		// STEP: BucketClaim resource "grant-bucket-claim" in namespace "access-grant-namespace" status "bucketReady" is "true"
 		By("Checking if BucketClaim resource 'grant-bucket-claim' status 'bucketReady' is 'true'")
 		steps.CheckBucketClaimStatus(ctx, bucketClient, grantBucketClaim, true)
 
-		// STEP: Bucket resource referencing BucketClaim resource "grant-bucket-claim" status "bucketReady" is "true"
 		By("Checking if Bucket resource referencing 'grant-bucket-claim' status 'bucketReady' is 'true'")
 		steps.CheckBucketStatus(grantBucket, true)
 
-		// STEP: Bucket resource referencing BucketClaim resource "grant-bucket" bucketID is not empty
 		By("Checking if Bucket resource 'grant-bucket' status 'bucketID' is not empty")
 		steps.CheckBucketID(grantBucket)
 
@@ -194,37 +180,28 @@ var _ = Describe("Bucket Access Grant", Ordered, Label("grant", "objectscale"), 
 		}
 	})
 
-	// STEP: Scenario: BucketAccess creation with KEY authorization mechanism
 	It("Creates BucketAccess with KEY authorization mechanism", func(ctx context.Context) {
-		// STEP: BucketAccessClass resource is created from specification "grant-bucket-access-class"
 		By("Creating BucketAccessClass resource 'grant-bucket-access-class'")
 		steps.CreateBucketAccessClassResource(ctx, bucketClient, grantBucketAccessClass)
 
-		// STEP: BucketAccess resource is created from specification "grant-bucket-access"
 		By("Creating BucketAccess resource 'grant-bucket-access'")
 		steps.CreateBucketAccessResource(ctx, bucketClient, grantBucketAccess)
 
-		// STEP: BucketAccess resource "grant-bucket-access" status "accessGranted" is "true"
 		By("Checking if BucketAccess resource 'grant-bucket-access' in namespace 'access-grant-namespace' status 'accessGranted' is 'true'")
 		grantBucketAccess = steps.CheckBucketAccessStatus(ctx, bucketClient, grantBucketAccess, true)
 
-		// STEP: User "user-1" in account on ObjectScale platform is created
 		By("Checking if User 'user-1' in account on ObjectScale platform is created")
 		steps.CheckUser(ctx, IAMClient, grantBucket.Name, Namespace)
 
-		// STEP: Policy "${policy}" for Bucket resource referencing BucketClaim resource "grant-bucket-claim" on ObjectScale platform is created
 		By("Checking if Policy for Bucket resource referencing BucketClaim resource 'grant-bucket-claim' is created")
 		steps.CheckPolicy(ctx, objectscale, grantBucketPolicy, grantBucket, Namespace)
 
-		// STEP: BucketAccess resource "grant-bucket-access" in namespace "access-grant-namespace" status "accountID" is "${accountID}"
 		By("Checking if BucketAccess resource 'grant-bucket-access' in namespace 'access-grant-namespace' status 'accountID' is '${accountID}'")
 		steps.CheckBucketAccessAccountID(ctx, bucketClient, grantBucketAccess, principalUsername)
 
-		// STEP: Secret "bucket-credentials-1" is created in namespace "access-grant-namespace" and is not empty
 		By("Checking if Secret 'bucket-credentials-1' in namespace 'access-grant-namespace' is not empty")
 		steps.CheckSecret(ctx, clientset, validSecret)
 
-		// STEP: Bucket resource referencing BucketClaim resource "bucket-claim-delete" is accessible from Secret "bucket-credentials-1"
 		By("Checking if Bucket resource referencing BucketClaim resource 'grant-bucket-claim' is accessible from Secret 'bucket-credentials-1'")
 		steps.CheckBucketAccessFromSecret(ctx, clientset, validSecret)
 

@@ -17,21 +17,21 @@ package policy
 import "encoding/json"
 
 type StatementEntry struct {
-	Effect    string
-	Action    []string
-	Resource  []string
-	Principal PrincipalEntry
-	Sid       string
+	Effect    string         `json:"Effect"`
+	Action    []string       `json:"Action"`
+	Resource  []string       `json:"Resource"`
+	Principal PrincipalEntry `json:"Principal"`
+	Sid       string         `json:"Sid"`
 }
 
 type PrincipalEntry struct {
-	AWS []string
+	AWS []string `json:"AWS"`
 }
 
 type Document struct {
-	Version   string
-	ID        string
-	Statement []StatementEntry
+	Version   string           `json:"Version"`
+	ID        string           `json:"Id"`
+	Statement []StatementEntry `json:"Statement"`
 }
 
 // To JSON to string.
