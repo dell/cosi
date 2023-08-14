@@ -25,13 +25,13 @@ provisioner:
   # Possible values: "json" "text".
   logFormat: "text"
   # otelEndpoint specifies the endpoint on which the OTEL Collector is set up and to which data is sent over gRPC.
-  otelEndpoint: "grpc://10.247.103.53/collector"
+  otelEndpoint: "otel-collector.namespace:4317"
   # image specifies the COSI driver provisioner container image.
   image:
     # repository is the COSI driver provisioner container image repository.
-    repository: "amaas-eos-mw1.cec.lab.emc.com:5046/cosi-driver"
+    repository: "docker.io/dell/cosi"
     # tag is the COSI driver provisioner container image tag.
-    tag: "d0a99d809e0bb6f98ef02d5e95dc2254a9398df3"
+    tag: "v0.1.0"
     # pullPolicy is the COSI driver provisioner container image pull policy.
     pullPolicy: "IfNotPresent"
 
@@ -65,7 +65,7 @@ configuration:
   annotations: {}
   # name can be used to specify an existing secret name to use for the driver configuration or override the generated name (default `cosi-driver`).
   secretName: ""
-  # data should provided when installing chart, it will be used to create the Secret with the driver configuration.
+  # data should be provided when installing chart, it will be used to create the Secret with the driver configuration.
   # `configuration.create` must be set to `true` for this to work.
   data: ""
 

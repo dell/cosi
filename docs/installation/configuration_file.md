@@ -188,9 +188,11 @@ connections:
       # Base64 encoded content of the root certificate authority file.
       #
       # How To:
-      #   Considering RootCA file is named 'root.crt', you can obtain the data using the following commands:
+      #   1. Fetch the certificate from the ObjectScale:
+      #     $ openssl s_client -showcerts -connect [ObjectScale IP] </dev/null 2>/dev/null | openssl x509 -outform PEM > root.crt
+      #   2. Encode the data using the following commands:
       #     $ cat root.crt | base64 > root.crt.b64
-      #   You can then open the 'root.crt.b64' file, copy it contents, and paste to the configuration file
+      #   3. Open the 'root.crt.b64' file, copy it contents, and paste to the configuration file
       #
       # REQUIRED:
       # + if insecure is set to false
