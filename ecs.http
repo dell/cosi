@@ -1,0 +1,114 @@
+@baseUrl = https://
+@authToken = 
+@bucketName = bucket-1
+@namespace =
+@username =
+@accessKeyId =
+
+# @name login
+GET {{baseUrl}}/login
+Authorization: Basic Root:ChangeMe
+
+###
+
+GET {{baseUrl}}/object/baseurl
+X-SDS-AUTH-TOKEN: {{authToken}}
+
+###
+
+# @name createBucket
+POST {{baseUrl}}/object/bucket.json HTTP/1.1
+X-SDS-AUTH-TOKEN: {{authToken}}
+Content-Type: application/json
+
+{
+  "name": "{{bucketName}}",
+  "namespace": "{{namespace}}"
+}
+
+###
+
+# @name listBucket
+GET {{baseUrl}}/object/bucket?namespace=cosi
+X-SDS-AUTH-TOKEN: {{authToken}}
+Accept: application/json
+
+###
+# @name getBucket
+GET {{baseUrl}}/object/bucket/{{bucketName}}/info?namespace={{namespace}}
+X-SDS-AUTH-TOKEN: {{authToken}}
+Accept: application/json
+
+###
+
+# @name deleteBucket
+POST {{baseUrl}}/object/bucket/{{bucketName}}/deactivate?namespace={{namespace}}
+X-SDS-AUTH-TOKEN: {{authToken}}
+
+###
+
+# @name createPolicy/update
+PUT {{baseUrl}}/object/bucket/{{bucketName}}/policy?namespace={{namespace}}
+X-SDS-AUTH-TOKEN: {{authToken}}
+Accept: application/json
+{
+   "Id" : "S3PolicyId1",
+   "Version" : "2012-10-17",
+   "Statement" : [ {
+   "Resource" : [ "arn:aws:s3:::bucket-1/*" ],
+   "Sid" : "GetObject_permission",
+   "Effect" : "Allow",
+   "Principal" : {
+      "AWS" : [ "urn:ecs:iam::cosi:user/test" ]
+    },
+    "Action" : [ "s3:GetObjectVersion" ]
+} ]
+ }
+
+###
+
+# @name createIAMUser
+POST  {{baseUrl}}/iam?Action=CreateUser&UserName={{username}}
+X-SDS-AUTH-TOKEN: {{authToken}}
+X-EMC-NAMESPACE: {{namespace}}
+Accept: application/json
+
+###
+
+# @name listIAMUsers
+POST {{baseUrl}}/iam?Action=ListUsers
+X-SDS-AUTH-TOKEN: {{authToken}}
+X-EMC-NAMESPACE: {{namespace}}
+Accept: application/json
+
+###
+
+# @name deleteUser
+POST {{baseUrl}}/iam?Action=DeleteUser&UserName={{username}}
+X-SDS-AUTH-TOKEN: {{authToken}}
+X-EMC-NAMESPACE: {{namespace}}
+Accept: application/json
+
+###
+
+# @name createAccessKey
+POST {{baseUrl}}/iam?Action=CreateAccessKey&UserName={{username}}
+X-SDS-AUTH-TOKEN: {{authToken}}
+X-EMC-NAMESPACE: {{namespace}}
+Accept: application/json
+
+###
+
+# @name listAccessKeys
+POST {{baseUrl}}/iam?Action=ListAccessKeys&UserName={{username}}
+X-SDS-AUTH-TOKEN: {{authToken}}
+X-EMC-NAMESPACE: {{namespace}}
+Accept: application/json
+
+###
+
+# @name deleteAccessKey
+POST {{baseUrl}}/iam?Action=DeleteAccessKey&AccessKeyId={{accessKeyId}}
+X-SDS-AUTH-TOKEN: {{authToken}}
+X-EMC-NAMESPACE: {{namespace}}
+Accept: application/json
