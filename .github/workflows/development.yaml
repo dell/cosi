@@ -146,7 +146,7 @@ jobs:
         with:
           image-ref: ${{ env.IMAGENAME }}:${{ env.IMAGETAG }}
       - name: Run dockle action
-        uses: erzz/dockle-action@v1.3.2
+        uses: erzz/dockle-action@v1.4.0
         env:
           DOCKER_CONTENT_TRUST: 1
         with:
