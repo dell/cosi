@@ -24,15 +24,15 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
+	iamapimock "github.com/dell/cosi/pkg/internal/iamapi/mock"
 	cosi "sigs.k8s.io/container-object-storage-interface-spec"
 
-	"github.com/dell/cosi/pkg/iamfaketoo"
 	"github.com/dell/cosi/pkg/internal/testcontext"
 	"github.com/dell/goobjectscale/pkg/client/api/mocks"
 	"github.com/dell/goobjectscale/pkg/client/model"
 )
 
-var _ iamiface.IAMAPI = (*iamfaketoo.IAMAPI)(nil)
+var _ iamiface.IAMAPI = (*iamapimock.MockIAMAPI)(nil)
 
 func TestServerBucketAccessGrant(t *testing.T) {
 	t.Parallel()
@@ -68,7 +68,7 @@ func testValidAccessGranting(t *testing.T) {
 	defer cancel()
 
 	// That's how we can mock the objectscale IAM api client
-	IAMClient := iamfaketoo.NewIAMAPI(t)
+	IAMClient := iamapimock.NewMockIAMAPI(t)
 	IAMClient.On("CreateUserWithContext", mock.Anything, mock.Anything).Return(
 		&iam.CreateUserOutput{
 			User: &iam.User{
@@ -115,7 +115,7 @@ func testInvalidAccessKeyCreation(t *testing.T) {
 	defer cancel()
 
 	// That's how we can mock the objectscale IAM api client
-	IAMClient := iamfaketoo.NewIAMAPI(t)
+	IAMClient := iamapimock.NewMockIAMAPI(t)
 	IAMClient.On("CreateUserWithContext", mock.Anything, mock.Anything).Return(
 		&iam.CreateUserOutput{
 			User: &iam.User{
@@ -162,7 +162,7 @@ func testInvalidUserCreation(t *testing.T) {
 	defer cancel()
 
 	// That's how we can mock the objectscale IAM api client
-	IAMClient := iamfaketoo.NewIAMAPI(t)
+	IAMClient := iamapimock.NewMockIAMAPI(t)
 	IAMClient.On("GetUserWithContext", mock.Anything, mock.Anything).Return(&iam.GetUserOutput{}, nil).Once()
 	IAMClient.On("CreateUserWithContext", mock.Anything, mock.Anything).Return(
 		nil, errors.New(ErrFailedToCreateUser.Error())).Once()
@@ -204,7 +204,7 @@ func testInvalidUserRetrieval(t *testing.T) {
 	defer cancel()
 
 	// That's how we can mock the objectscale IAM api client
-	IAMClient := iamfaketoo.NewIAMAPI(t)
+	IAMClient := iamapimock.NewMockIAMAPI(t)
 	IAMClient.On("GetUserWithContext", mock.Anything, mock.Anything).Return(&iam.GetUserOutput{}, errors.New("failed to retrieve user")).Once()
 
 	bucketsMock := &mocks.BucketsInterface{}
@@ -244,7 +244,7 @@ func testInvalidBucketPolicyUpdate(t *testing.T) {
 	defer cancel()
 
 	// That's how we can mock the objectscale IAM api client
-	IAMClient := iamfaketoo.NewIAMAPI(t)
+	IAMClient := iamapimock.NewMockIAMAPI(t)
 	IAMClient.On("GetUserWithContext", mock.Anything, mock.Anything).Return(&iam.GetUserOutput{}, nil).Once()
 	IAMClient.On("CreateUserWithContext", mock.Anything, mock.Anything).Return(
 		&iam.CreateUserOutput{
@@ -289,7 +289,7 @@ func testEmptyBucketID(t *testing.T) {
 	ctx, cancel := testcontext.New(t)
 	defer cancel()
 
-	IAMClient := iamfaketoo.NewIAMAPI(t)
+	IAMClient := iamapimock.NewMockIAMAPI(t)
 	mgmtClientMock := &mocks.ClientSet{}
 
 	server := Server{
@@ -316,7 +316,7 @@ func testEmptyName(t *testing.T) {
 	ctx, cancel := testcontext.New(t)
 	defer cancel()
 
-	IAMClient := iamfaketoo.NewIAMAPI(t)
+	IAMClient := iamapimock.NewMockIAMAPI(t)
 	mgmtClientMock := &mocks.ClientSet{}
 
 	server := Server{
@@ -343,7 +343,7 @@ func testInvalidAuthenticationType(t *testing.T) {
 	ctx, cancel := testcontext.New(t)
 	defer cancel()
 
-	IAMClient := iamfaketoo.NewIAMAPI(t)
+	IAMClient := iamapimock.NewMockIAMAPI(t)
 	mgmtClientMock := &mocks.ClientSet{}
 
 	server := Server{
@@ -370,7 +370,7 @@ func testIAMNotImplemented(t *testing.T) {
 	ctx, cancel := testcontext.New(t)
 	defer cancel()
 
-	IAMClient := iamfaketoo.NewIAMAPI(t)
+	IAMClient := iamapimock.NewMockIAMAPI(t)
 	mgmtClientMock := &mocks.ClientSet{}
 
 	server := Server{
@@ -397,7 +397,7 @@ func testFailToGetBucket(t *testing.T) {
 	ctx, cancel := testcontext.New(t)
 	defer cancel()
 
-	IAMClient := iamfaketoo.NewIAMAPI(t)
+	IAMClient := iamapimock.NewMockIAMAPI(t)
 
 	bucketsMock := &mocks.BucketsInterface{}
 	bucketsMock.On("Get", mock.Anything, mock.Anything, mock.Anything).Return(nil, ErrInternalException).Once()
@@ -430,7 +430,7 @@ func testBucketNotFound(t *testing.T) {
 	ctx, cancel := testcontext.New(t)
 	defer cancel()
 
-	IAMClient := iamfaketoo.NewIAMAPI(t)
+	IAMClient := iamapimock.NewMockIAMAPI(t)
 
 	bucketsMock := &mocks.BucketsInterface{}
 	bucketsMock.On("Get", mock.Anything, mock.Anything, mock.Anything).Return(nil, ErrParameterNotFound).Once()
@@ -463,7 +463,7 @@ func testValidButUserAlreadyExists(t *testing.T) {
 	ctx, cancel := testcontext.New(t)
 	defer cancel()
 
-	IAMClient := iamfaketoo.NewIAMAPI(t)
+	IAMClient := iamapimock.NewMockIAMAPI(t)
 	IAMClient.On("GetUserWithContext", mock.Anything, mock.Anything).Return(&iam.GetUserOutput{
 		User: &iam.User{
 			UserName: aws.String("namespace-user-valid"),
@@ -507,7 +507,7 @@ func testFailToGetExistingPolicy(t *testing.T) {
 	defer cancel()
 
 	// That's how we can mock the objectscale IAM api client
-	IAMClient := iamfaketoo.NewIAMAPI(t)
+	IAMClient := iamapimock.NewMockIAMAPI(t)
 	IAMClient.On("CreateUserWithContext", mock.Anything, mock.Anything).Return(
 		&iam.CreateUserOutput{
 			User: &iam.User{
@@ -551,7 +551,7 @@ func testInvalidPolicyJSON(t *testing.T) {
 	defer cancel()
 
 	// That's how we can mock the objectscale IAM api client
-	IAMClient := iamfaketoo.NewIAMAPI(t)
+	IAMClient := iamapimock.NewMockIAMAPI(t)
 	IAMClient.On("CreateUserWithContext", mock.Anything, mock.Anything).Return(
 		&iam.CreateUserOutput{
 			User: &iam.User{
