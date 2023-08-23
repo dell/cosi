@@ -19,20 +19,20 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/iam"
 	"github.com/aws/aws-sdk-go/service/iam/iamiface"
-	"github.com/dell/cosi/pkg/iamfaketoo"
 	"github.com/dell/cosi/pkg/internal/testcontext"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
+	iamapimock "github.com/dell/cosi/pkg/internal/iamapi/mock"
 	cosi "sigs.k8s.io/container-object-storage-interface-spec"
 
 	"github.com/dell/goobjectscale/pkg/client/api/mocks"
 	"github.com/dell/goobjectscale/pkg/client/model"
 )
 
-var _ iamiface.IAMAPI = (*iamfaketoo.IAMAPI)(nil)
+var _ iamiface.IAMAPI = (*iamapimock.MockIAMAPI)(nil)
 
 func TestServerBucketAccessRevoke(t *testing.T) {
 	t.Parallel()
@@ -68,7 +68,7 @@ func testValidAccessRevoking(t *testing.T) {
 	defer cancel()
 
 	// That's how we can mock the objectscale IAM api client
-	IAMClient := iamfaketoo.NewIAMAPI(t)
+	IAMClient := iamapimock.NewMockIAMAPI(t)
 
 	accessKeyList := make([]*iam.AccessKeyMetadata, 1)
 	accessKeyList[0] = &iam.AccessKeyMetadata{
@@ -119,7 +119,7 @@ func testNothingToChange(t *testing.T) {
 	defer cancel()
 
 	// skip deleting access keys
-	IAMClient := iamfaketoo.NewIAMAPI(t)
+	IAMClient := iamapimock.NewMockIAMAPI(t)
 	IAMClient.On("GetUser", mock.Anything).Return(nil, errors.New("NoSuchEntity")).Once()
 
 	// skip updating policy
@@ -265,7 +265,7 @@ func testGetBucketFailToCheckUser(t *testing.T) {
 		Namespace: testNamespace,
 	}, nil).Once()
 
-	IAMClient := iamfaketoo.NewIAMAPI(t)
+	IAMClient := iamapimock.NewMockIAMAPI(t)
 	IAMClient.On("GetUser", mock.Anything).Return(nil, ErrInternalException).Once()
 
 	mgmtClientMock := &mocks.ClientSet{}
@@ -296,7 +296,7 @@ func testFailToGetAccessKeysList(t *testing.T) {
 	// skip updating policy
 	bucketsMock.On("Get", mock.Anything, mock.Anything, mock.Anything).Return(nil, ErrParameterNotFound).Once()
 
-	IAMClient := iamfaketoo.NewIAMAPI(t)
+	IAMClient := iamapimock.NewMockIAMAPI(t)
 	IAMClient.On("GetUser", mock.Anything).Return(&iam.GetUserOutput{
 		User: &iam.User{
 			UserName: aws.String(testUserName),
@@ -332,7 +332,7 @@ func testFailToDeleteAccessKey(t *testing.T) {
 	// skip updating policy
 	bucketsMock.On("Get", mock.Anything, mock.Anything, mock.Anything).Return(nil, ErrParameterNotFound).Once()
 
-	IAMClient := iamfaketoo.NewIAMAPI(t)
+	IAMClient := iamapimock.NewMockIAMAPI(t)
 	IAMClient.On("GetUser", mock.Anything).Return(&iam.GetUserOutput{
 		User: &iam.User{
 			UserName: aws.String(testUserName),
@@ -380,7 +380,7 @@ func testFailToCheckBucketPolicyExistence(t *testing.T) {
 	}, nil).Once()
 	bucketsMock.On("GetPolicy", mock.Anything, mock.Anything, mock.Anything).Return("", ErrInternalException).Once()
 
-	IAMClient := iamfaketoo.NewIAMAPI(t)
+	IAMClient := iamapimock.NewMockIAMAPI(t)
 	IAMClient.On("GetUser", mock.Anything).Return(&iam.GetUserOutput{
 		User: &iam.User{
 			UserName: aws.String(testUserName),
@@ -423,7 +423,7 @@ func testEmptyPolicy(t *testing.T) {
 	}, nil).Once()
 	bucketsMock.On("GetPolicy", mock.Anything, mock.Anything, mock.Anything).Return("", nil).Once()
 
-	IAMClient := iamfaketoo.NewIAMAPI(t)
+	IAMClient := iamapimock.NewMockIAMAPI(t)
 	IAMClient.On("GetUser", mock.Anything).Return(&iam.GetUserOutput{
 		User: &iam.User{
 			UserName: aws.String(testUserName),
@@ -459,7 +459,7 @@ func testFailedToDeleteUser(t *testing.T) {
 	ctx, cancel := testcontext.New(t)
 	defer cancel()
 
-	IAMClient := iamfaketoo.NewIAMAPI(t)
+	IAMClient := iamapimock.NewMockIAMAPI(t)
 
 	accessKeyList := make([]*iam.AccessKeyMetadata, 1)
 	accessKeyList[0] = &iam.AccessKeyMetadata{
@@ -505,7 +505,7 @@ func testFailedToUpdateBucketPolicy(t *testing.T) {
 	ctx, cancel := testcontext.New(t)
 	defer cancel()
 
-	IAMClient := iamfaketoo.NewIAMAPI(t)
+	IAMClient := iamapimock.NewMockIAMAPI(t)
 	accessKeyList := make([]*iam.AccessKeyMetadata, 1)
 	accessKeyList[0] = &iam.AccessKeyMetadata{
 		AccessKeyId: aws.String("abc"),

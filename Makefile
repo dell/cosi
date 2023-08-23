@@ -28,8 +28,7 @@ help:	##show help
 .PHONY: clean
 clean:	##clean directory
 	rm --force pkg/config/*.gen.go
-	rm --force core/core.gen.go
-	rm --force semver.mk
+	rm --force pkg/internal/iamapi/mock/*.gen.go
 	go clean
 
 ########################################################################
