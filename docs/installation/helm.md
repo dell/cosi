@@ -30,7 +30,7 @@ Installing any of the CSI Driver components using Helm requires a few utilities 
 
 **Steps**
 1. Run `git clone -b v2.4.0 https://github.com/dell/csi-powerscale.git` to clone the git repository.
-2. Ensure that you have created the namespace where you want to install the driver. You can run `kubectl create namespace isilon` to create a new one. The use of _dell-cosi_  as the namespace is just an example. You can choose any name for the namespace.
+2. Ensure that you have created the namespace where you want to install the driver. You can run `kubectl create namespace dell-cosi` to create a new one. The use of _dell-cosi_  as the namespace is just an example. You can choose any name for the namespace.
 3. Collect information from the PowerScale Systems like IP address, IsiPath, username, and password. Make a note of the value for these parameters as they must be entered in the *secret.yaml*.
 4. Copy the _charts/cosi/values.yaml_ into a new location with name _my-cosi-values.yaml_, to customize settings for installation.
 5. Create new file called _my-cosi-configuration.yaml_, and copy the settings available in the [Configuration File](./configuration_file.md) page.
