@@ -37,7 +37,7 @@ import (
 	cosi "sigs.k8s.io/container-object-storage-interface-spec"
 
 	"github.com/dell/cosi/pkg/config"
-	"github.com/dell/cosi/pkg/transport"
+	"github.com/dell/cosi/pkg/internal/transport"
 	"github.com/dell/goobjectscale/pkg/client/api"
 )
 

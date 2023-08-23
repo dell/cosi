@@ -1,0 +1,9 @@
+with-expecter: true
+packages:
+  github.com/dell/cosi/pkg/internal/iamapi:
+    config:
+      filename: "{{.InterfaceName}}_mock.gen.go"
+      dir: "mock"
+      outpkg: "mock"
+    interfaces:
+      IAMAPI:

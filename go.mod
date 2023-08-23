@@ -3,7 +3,7 @@ module github.com/dell/cosi
 go 1.21
 
 require (
-	github.com/aws/aws-sdk-go v1.44.271
+	github.com/aws/aws-sdk-go v1.44.329
 	github.com/bombsimon/logrusr/v4 v4.0.0
 	github.com/dell/goobjectscale v0.0.0-20230704080749-d4e5ff4691b0
 	github.com/go-logr/logr v1.2.4
@@ -58,6 +58,7 @@ require (
 	go.opentelemetry.io/otel/exporters/otlp/otlptrace v1.16.0 // indirect
 	go.opentelemetry.io/otel/metric v1.16.0 // indirect
 	go.opentelemetry.io/proto/otlp v0.19.0 // indirect
+	golang.org/x/mod v0.11.0 // indirect
 	golang.org/x/net v0.13.0 // indirect
 	golang.org/x/oauth2 v0.8.0 // indirect
 	golang.org/x/sys v0.10.0 // indirect
