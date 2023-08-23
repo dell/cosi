@@ -29,13 +29,12 @@ Installing any of the CSI Driver components using Helm requires a few utilities 
 ## Install the Driver
 
 **Steps**
-1. Run `git clone -b v2.4.0 https://github.com/dell/csi-powerscale.git` to clone the git repository.
+1. Run `git clone -b main https://github.com/dell/helm-charts.git` to clone the git repository.
 2. Ensure that you have created the namespace where you want to install the driver. You can run `kubectl create namespace dell-cosi` to create a new one. The use of _dell-cosi_  as the namespace is just an example. You can choose any name for the namespace.
-3. Collect information from the PowerScale Systems like IP address, IsiPath, username, and password. Make a note of the value for these parameters as they must be entered in the *secret.yaml*.
-4. Copy the _charts/cosi/values.yaml_ into a new location with name _my-cosi-values.yaml_, to customize settings for installation.
-5. Create new file called _my-cosi-configuration.yaml_, and copy the settings available in the [Configuration File](./configuration_file.md) page.
-6. Edit *my-cosi-values.yaml* to set the following parameters for your installation:
-   The following table lists the primary configurable parameters of the COSI driver Helm chart and their default values. More detailed information can be found in the  [`values.yaml`](https://github.com/dell/helm-charts/blob/master/charts/cosi/values.yaml) file in this repository.
+3. Copy the _charts/cosi/values.yaml_ into a new location with name _my-cosi-values.yaml_, to customize settings for installation.
+4. Create new file called _my-cosi-configuration.yaml_, and copy the settings available in the [Configuration File](./configuration_file.md) page.
+5. Edit *my-cosi-values.yaml* to set the following parameters for your installation:
+   The following table lists the primary configurable parameters of the COSI driver Helm chart and their default values. More detailed information can be found in the [`values.yaml`](https://github.com/dell/helm-charts/blob/master/charts/cosi/values.yaml) file in this repository.
 
    | Parameter                    | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                             | Required | Default                                                                        |
    |------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|----------|--------------------------------------------------------------------------------|
@@ -56,14 +55,13 @@ Installing any of the CSI Driver components using Helm requires a few utilities 
    - Whenever the *configuration.secretName* parameter changes in *my-cosi-values.yaml* user needs to reinstall the driver.
    - Whenever the *configuration.data* parameter changes in *my-cosi-values.yaml* user needs to reinstall the driver.
 
-6. Install the driver using `csi-install.sh` bash script by running `helm install dell-cosi ./cosi --namespace=dell-cosi --create-namespace --values ./my-cosi-values.yaml --set-file configuration.data=./my-cosi-configuration.yaml` (assuming that the current working directory is _charts_ and _my-cosi-settings.yaml_ is also present under _helm_ directory).
+6. Install the driver by running `helm install dell-cosi ./cosi --namespace=dell-cosi --create-namespace --values ./my-cosi-values.yaml --set-file configuration.data=./my-cosi-configuration.yaml` (assuming that the current working directory is _charts_ and _my-cosi-settings.yaml_ is also present under _helm_ directory).
 
 
 ```sh
 helm install dell-cosi ./helm/cosi --namespace=dell-cosi --values ./my-cosi-values.yaml --set-file configuration.data=./my-cosi-configuration.yaml
 ```
 
-## Storage Classes
+## Bucket Classes, Bucket Access Classes
 
-The COSI driver for Dell ObjectScale version 1.2 and later, `dell-csi-helm-installer` does not create any _Bucket Classes_ nor _Bucket Access Classes_ as part of the driver installation. A sample class manifests are available at `samples/bucketclass/objectscale.yaml` and `samples/bucketaccessclass/objectscale.yaml`. Use this sample manifest to create a _Bucket Classes_ to provision storage. Remember to uncomment/update the manifest as per the requirements.
-
+The COSI driver for Dell ObjectScale version 1.2, `dell-csi-helm-installer` does not create any _Bucket Classes_ nor _Bucket Access Classes_ as part of the driver installation. A sample class manifests are available at `samples/bucketclass/objectscale.yaml` and `samples/bucketaccessclass/objectscale.yaml`. Use this sample manifest to create a _Bucket Classes_ to provision storage. Remember to uncomment/update the manifest as per the requirements.
