@@ -2,7 +2,7 @@ target-branch: main
 chart-dirs:
   - helm
 charts:
-  - helm/cosi-driver
+  - helm/cosi
 check-version-increment: true
 validate-chart-schema: false
 validate-maintainers: false
