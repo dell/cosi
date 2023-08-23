@@ -12,10 +12,10 @@ require (
 	github.com/onsi/gomega v1.27.6
 	github.com/sirupsen/logrus v1.9.0
 	github.com/stretchr/testify v1.8.4
-	go.opentelemetry.io/otel v1.14.0
-	go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc v1.14.0
-	go.opentelemetry.io/otel/sdk v1.14.0
-	go.opentelemetry.io/otel/trace v1.14.0
+	go.opentelemetry.io/otel v1.16.0
+	go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc v1.16.0
+	go.opentelemetry.io/otel/sdk v1.16.0
+	go.opentelemetry.io/otel/trace v1.16.0
 	google.golang.org/grpc v1.54.0
 	gopkg.in/yaml.v3 v3.0.1
 	k8s.io/api v0.28.0
