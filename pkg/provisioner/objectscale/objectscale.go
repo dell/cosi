@@ -10,8 +10,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// Package objectscale ...
-// TODO: write documentation comment for objectscale package
+// Package objectscale implements custom server for communication with Objectscale.
 package objectscale
 
 import (

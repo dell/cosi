@@ -10,8 +10,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// Package logger ...
-// TODO: write documentation comment for logger package
+// Package logger contains interface for logger
+// which lets for easy switching between logger implementation.
 package logger
 
 import (
