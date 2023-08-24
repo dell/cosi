@@ -11,7 +11,7 @@
 // limitations under the License.
 
 // Package logger contains interface for logger
-// which lets for easy switching between logger implementation.
+// which allows easy switching between logger implementations.
 package logger
 
 import (
