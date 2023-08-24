@@ -11,7 +11,7 @@
 // limitations under the License.
 
 // Package provisioner implements main COSI driver functionality
-// namely creating/deleing buckets and granting/revoking access to them.
+// namely creating/deleting buckets and granting/revoking access to them.
 package provisioner
 
 import (
