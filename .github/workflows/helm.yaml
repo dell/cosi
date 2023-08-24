@@ -20,7 +20,7 @@ jobs:
           git config --global url."https://csmbot:$TOKEN@github.com".insteadOf "https://github.com"
           echo "machine github.com login csmbot password $TOKEN" >> ~/.netrc
       - name: Checkout the code
-        uses: actions/checkout@v3.5.3
+        uses: actions/checkout@v3.6.0
       - name: "Vendor packages"
         run: |
           go mod vendor
@@ -39,7 +39,7 @@ jobs:
           git config --global url."https://csmbot:$TOKEN@github.com".insteadOf "https://github.com"
           echo "machine github.com login csmbot password $TOKEN" >> ~/.netrc
       - name: Checkout the code
-        uses: actions/checkout@v3.5.3
+        uses: actions/checkout@v3.6.0
       - name: "Vendor packages"
         run: |
           go mod vendor
