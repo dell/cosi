@@ -10,8 +10,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// Package config ...
-// TODO: write documentation comment for config package
+// Package config creates configuration structures based on provided json or yaml file.
 package config
 
 import (
