@@ -10,7 +10,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// Package objectscale implements custom server for communication with Objectscale.
+// Package objectscale implements custom server handlers for communication with Dell ObjectScale platform.
 package objectscale
 
 import (
