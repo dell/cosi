@@ -11,7 +11,7 @@
 // limitations under the License.
 
 // Package policy exists for handling operations on AWS Policies,
-// t defines structures and functions for processing and comparing policies.
+// defines structures and functions for processing and comparing policies.
 package policy
 
 import "encoding/json"
