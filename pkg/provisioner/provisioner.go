@@ -10,8 +10,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// Package provisioner ...
-// TODO: write documentation comment for provisioner package
+// Package provisioner implements main COSI driver functionality
+// namely creating/deleting buckets and granting/revoking access to them.
 package provisioner
 
 import (

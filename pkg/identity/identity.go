@@ -10,8 +10,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// Package identity ...
-// TODO: write documentation comment for identity package
+// Package identity implements server for handling identity requests to a driver instance.
 package identity
 
 import (
