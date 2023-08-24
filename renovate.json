@@ -7,13 +7,6 @@
     "gomodTidyE",
     "gomodUpdateImportPaths"
   ],
-  "postUpgradeTasks": {
-    "commands": [
-      "make codegen"
-    ],
-    "fileFilters": [],
-    "executionMode": "update"
-  },
   "packageRules": [
     {
       "groupName": "Onsi packages grouping - Ginkgo and Gomega",
