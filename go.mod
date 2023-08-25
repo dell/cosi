@@ -23,7 +23,7 @@ require (
 	k8s.io/client-go v0.28.1
 	sigs.k8s.io/container-object-storage-interface-api v0.1.0
 	sigs.k8s.io/container-object-storage-interface-provisioner-sidecar v0.1.1-0.20230130215648-c0cf9951ffc6
-	sigs.k8s.io/container-object-storage-interface-spec v0.1.1-0.20221006174327-ec782953b8ac
+	sigs.k8s.io/container-object-storage-interface-spec v0.1.1-0.20230824172359-684d40bf7217
 )
 
 require (
