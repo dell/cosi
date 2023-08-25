@@ -130,7 +130,7 @@ func Run(ctx context.Context, config *config.ConfigSchemaJson, socket, name stri
 		return nil, err
 	}
 
-	log.Info("gRPC server started")
+	log.V(4).Info("gRPC server started")
 
 	return driver.start(ctx), nil
 }
@@ -147,7 +147,7 @@ func RunBlocking(ctx context.Context, config *config.ConfigSchemaJson, socket, n
 		return err
 	}
 
-	log.Info("gRPC server started")
+	log.V(4).Info("gRPC server started")
 	// Block until driver is ready
 	<-driver.start(ctx)
 
