@@ -34,12 +34,13 @@ import (
 	"github.com/dell/cosi/pkg/config"
 	"github.com/dell/cosi/pkg/driver"
 	logger "github.com/dell/cosi/pkg/logger"
+	"github.com/go-logr/logr"
 )
 
-var log *logger.Logger
+var log logr.Logger
 
 var (
-	logLevel     = flag.String("log-level", "debug", "Log level (debug, info, warn, error, fatal, panic)")
+	logLevel     = flag.Int("log-level", 4, "Log level (0-10)")
 	logFormat    = flag.String("log-format", "text", "Log format (text, json)")
 	otelEndpoint = flag.String("otel-endpoint", "",
 		"OTEL collector endpoint for collecting observability data")
@@ -80,26 +81,23 @@ func runMain() error {
 		return err
 	}
 
-	log.Info("Config successfully loaded", "configFilePath", *configFile)
+	log.V(4).Info("Config successfully loaded", "configFilePath", *configFile)
 
 	// Create TracerProvider with exporter to Open Telemetry Collector.
 	var tp *sdktrace.TracerProvider
 	if *otelEndpoint != "" {
 		tp, err = tracerProvider(ctx, *otelEndpoint)
 		if err != nil {
-			log.Warn("Failed to connect to Jaeger", "error", err) // is this acceptable when we want warning with error logged?
-			// log.WithFields(log.Fields{
-			// 	"error": err,
-			// }).Warn("failed to connect to Jaeger")
+			log.V(0).Info("Failed to connect to Jaeger", "error", err)
 		} else {
 			// Set global TracerProvider.
 			otel.SetTracerProvider(tp)
 			// set global propagator to tracecontext (the default is no-op).
 			otel.SetTextMapPropagator(propagation.TraceContext{})
-			log.Info("Tracing started successfully", "collector", *otelEndpoint)
+			log.V(4).Info("Tracing started successfully", "collector", *otelEndpoint)
 		}
 	} else {
-		log.Warn("OTEL endpoint is empty, disabling tracing; please refer to helm's values.yaml")
+		log.V(0).Info("OTEL endpoint is empty, disabling tracing")
 	}
 
 	// Create a channel to listen for signals.
@@ -112,14 +110,14 @@ func runMain() error {
 		// Wait for a signal.
 		sig := <-sigs
 		// Log that a signal was received.
-		log.Info("Signal received", "type", sig)
+		log.V(4).Info("Signal received", "type", sig)
 		// Cancel the context.
 		cancel()
 		// Exit the program with an error.
 		os.Exit(1)
 	}()
 
-	log.Info("COSI driver is starting")
+	log.V(4).Info("COSI driver is starting")
 	// Run the driver.
 	return driver.RunBlocking(ctx, cfg, driver.COSISocket, tracedServiceName)
 }
@@ -178,6 +176,6 @@ func (e *errorHandler) Handle(err error) {
 
 // setOtelLogger is used to set the custom logger from OpenTelemetry.
 func setOtelLogger() {
-	otel.SetLogger(log.Logger)
+	otel.SetLogger(log)
 	otel.SetErrorHandler(&errorHandler{})
 }
