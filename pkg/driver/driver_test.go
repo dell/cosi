@@ -14,15 +14,12 @@ package driver
 
 import (
 	"context"
-	"io"
 	"os"
 	"path"
 	"testing"
 	"time"
 
 	"github.com/stretchr/testify/assert"
-
-	log "github.com/sirupsen/logrus"
 
 	"github.com/dell/cosi/pkg/config"
 )
@@ -121,7 +118,6 @@ var (
 )
 
 func TestMain(m *testing.M) {
-	log.SetOutput(io.Discard)
 	os.Exit(m.Run())
 }
 
