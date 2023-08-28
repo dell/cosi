@@ -21,10 +21,10 @@ DEFAULT_BASEIMAGE=registry.access.redhat.com/ubi9/ubi-micro
 DEFAULT_DIGEST=sha256:630cf7bdef807f048cadfe7180d6c27eb3aaa99323ffc3628811da230ed3322a
 # GOVERSION is a build version for driver.
 DEFAULT_GOVERSION:=$(shell sed -En 's/^go (.*)$$/\1/p' go.mod)
-# REGISTRY in which COSI-Driver image resides.
+# REGISTRY in which COSI image resides.
 DEFAULT_REGISTRY=sample_registry
-# IMAGENAME is COSI-Driver image name.
-DEFAULT_IMAGENAME=cosi-driver
+# IMAGENAME is COSI image name.
+DEFAULT_IMAGENAME=cosi
 # IMAGETAG by default is latest commit SHA.
 DEFAULT_IMAGETAG:=$(shell git rev-parse HEAD)
 
