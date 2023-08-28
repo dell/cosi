@@ -16,7 +16,6 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"strings"
 
 	"github.com/aws/aws-sdk-go/aws/awserr"
@@ -182,11 +181,8 @@ func handleKeyAuthentication(ctx context.Context, s *Server, req *cosi.DriverGra
 			return nil, logAndTraceError(span, err.Error(), err, codes.Internal, "bucket", bucketName, "PolicyID", policyID)
 		}
 
-		//TODO: I'm sure there is a smarter way to do it.
-		log.V(4).Info(fmt.Sprintf("policyID %v was generated.", policyID), "policy", policyRequest)
-		//log.WithFields(log.Fields{
-		//	"policy": policyRequest,
-		//}).Infof("policyID %v was generated", policyID)
+		log.V(4).Info("policyID was generated.", "policy", policyRequest)
+
 		span.AddEvent("policyID was generated")
 	}
 
