@@ -16,19 +16,18 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"strings"
 
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/iam"
 	"github.com/google/uuid"
-	"github.com/sirupsen/logrus"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/trace"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"sigs.k8s.io/container-object-storage-interface-provisioner-sidecar/pkg/consts"
 
-	log "github.com/sirupsen/logrus"
 	otelCodes "go.opentelemetry.io/otel/codes"
 	cosi "sigs.k8s.io/container-object-storage-interface-spec"
 
@@ -61,17 +60,17 @@ func (s *Server) DriverGrantBucketAccess(
 
 	// Check if bucketID is not empty.
 	if err := isBucketIDEmpty(req); err != nil {
-		return nil, logAndTraceError(log.WithFields(log.Fields{}), span, ErrInvalidBucketID.Error(), err, codes.InvalidArgument)
+		return nil, logAndTraceError(span, ErrInvalidBucketID.Error(), err, codes.InvalidArgument)
 	}
 
 	// Check if bucket access name is not empty.
 	if err := isBucketAccessNameEmpty(req); err != nil {
-		return nil, logAndTraceError(log.WithFields(log.Fields{}), span, ErrEmptyBucketAccessName.Error(), err, codes.InvalidArgument)
+		return nil, logAndTraceError(span, ErrEmptyBucketAccessName.Error(), err, codes.InvalidArgument)
 	}
 
 	// Check if authentication type is not unknown.
 	if err := isAuthenticationTypeNotEmpty(req); err != nil {
-		return nil, logAndTraceError(log.WithFields(log.Fields{}), span, ErrInvalidAuthenticationType.Error(), err, codes.InvalidArgument)
+		return nil, logAndTraceError(span, ErrInvalidAuthenticationType.Error(), err, codes.InvalidArgument)
 	}
 
 	// Now split the flow based on the type of authentication.
@@ -83,7 +82,7 @@ func (s *Server) DriverGrantBucketAccess(
 		return handleKeyAuthentication(ctx, s, req)
 	}
 
-	return nil, logAndTraceError(log.WithFields(log.Fields{}), span, ErrUnknownAuthenticationType.Error(), ErrUnknownAuthenticationType, codes.Internal)
+	return nil, logAndTraceError(span, ErrUnknownAuthenticationType.Error(), ErrUnknownAuthenticationType, codes.Internal)
 }
 
 // handleKeyAuthentication is a function providing the bucket access granting functionality,
@@ -95,33 +94,25 @@ func handleKeyAuthentication(ctx context.Context, s *Server, req *cosi.DriverGra
 	// Get bucket name from bucketID.
 	bucketName, err := GetBucketName(req.GetBucketId())
 	if err != nil {
-		return nil, logAndTraceError(log.WithFields(log.Fields{}), span, ErrInvalidBucketID.Error(), err, codes.InvalidArgument)
+		return nil, logAndTraceError(span, ErrInvalidBucketID.Error(), err, codes.InvalidArgument)
 	}
 
-	log.WithFields(log.Fields{
-		"bucket":        bucketName,
-		"bucket_access": req.Name,
-	}).Info("bucket access for bucket is being created")
+	log.V(4).Info("Bucket access for bucket is being created.", "bucket", bucketName, "bucket_access", req.Name)
 
 	// Construct common parameters for bucket requests.
 	parameters := make(map[string]string)
 	parameters["namespace"] = s.namespace
 
-	log.WithFields(log.Fields{
-		"parameters": parameters,
-	}).Info("parameters of the bucket")
+	log.V(4).Info("Parameters of the bucket.", "parameters", parameters)
 
 	// Check if bucket for granting access exists.
 	_, err = s.mgmtClient.Buckets().Get(ctx, bucketName, parameters)
 	if err != nil {
-		fields := log.Fields{
-			"bucket": bucketName,
-		}
 		if errors.Is(err, ErrParameterNotFound) {
-			return nil, logAndTraceError(log.WithFields(fields), span, ErrBucketNotFound.Error(), err, codes.NotFound)
+			return nil, logAndTraceError(span, ErrBucketNotFound.Error(), err, codes.NotFound, "bucket", bucketName)
 		}
 
-		return nil, logAndTraceError(log.WithFields(fields), span, ErrFailedToCheckBucketExists.Error(), err, codes.Internal)
+		return nil, logAndTraceError(span, ErrFailedToCheckBucketExists.Error(), err, codes.Internal, "bucket", bucketName)
 	}
 
 	// This flow below will check for user existence; if user does not exist, it will create one. It will only fail
@@ -131,9 +122,6 @@ func handleKeyAuthentication(ctx context.Context, s *Server, req *cosi.DriverGra
 	// Retrieve the user.
 	userGet, err := s.iamClient.GetUserWithContext(ctx, &iam.GetUserInput{UserName: &userName})
 	if err != nil {
-		fields := log.Fields{
-			"user": userName,
-		}
 
 		var myAwsErr awserr.Error
 
@@ -141,59 +129,41 @@ func handleKeyAuthentication(ctx context.Context, s *Server, req *cosi.DriverGra
 			// If we got a known error, but it's not "user does not exist" error, we fail.
 			if myAwsErr.Code() != iam.ErrCodeNoSuchEntityException {
 				span.RecordError(myAwsErr)
-				return nil, logAndTraceError(log.WithFields(fields), span, ErrFailedToCheckUserExists.Error(), err, codes.Internal)
+				return nil, logAndTraceError(span, ErrFailedToCheckUserExists.Error(), err, codes.Internal, "user", userName)
 			}
 		} else {
 			// If we got an unknown error, we fail.
-			return nil, logAndTraceError(log.WithFields(fields), span, ErrFailedToCheckUserExists.Error(), err, codes.Internal)
+			return nil, logAndTraceError(span, ErrFailedToCheckUserExists.Error(), err, codes.Internal, "user", userName)
 		}
 	}
 
 	// Check if IAM user exists.
 	if userGet.User != nil {
 		// Case when user exists.
-		log.WithFields(log.Fields{
-			"user": userName,
-		}).Warn("user already exists")
+		log.V(0).Info("User already exists.", "user", userName)
 	} else {
-		// Case when user does not exist- create one.
+		// Case when user does not exist - create one.
 		user, err := s.iamClient.CreateUserWithContext(ctx, &iam.CreateUserInput{
 			UserName: &userName,
 		})
 		if err != nil {
-			fields := log.Fields{
-				"user": userName,
-			}
-
-			return nil, logAndTraceError(log.WithFields(fields), span, ErrFailedToCreateUser.Error(), err, codes.Internal)
+			return nil, logAndTraceError(span, ErrFailedToCreateUser.Error(), err, codes.Internal, "user", userName)
 		}
 
-		log.WithFields(log.Fields{
-			"user":   userName,
-			"userId": user.User.UserId,
-		}).Info("ObjectScale IAM user was created")
+		log.V(4).Info("ObjectScale IAM user was created.", "user", userName, "userID", user.User.UserId)
 	}
 
 	// Check if policy for a specific bucket exists.
 	existingPolicy, err := s.mgmtClient.Buckets().GetPolicy(ctx, bucketName, parameters)
 	if err != nil && !errors.Is(err, model.Error{Code: model.CodeResourceNotFound}) {
-		fields := log.Fields{
-			"bucket": bucketName,
-		}
-
-		return nil, logAndTraceError(log.WithFields(fields), span, ErrFailedToCheckPolicyExists.Error(), err, codes.Internal)
+		return nil, logAndTraceError(span, ErrFailedToCheckPolicyExists.Error(), err, codes.Internal, "bucket", bucketName)
 	}
 
 	policyRequest := policy.Document{}
 	if existingPolicy != "" {
 		err = json.NewDecoder(strings.NewReader(existingPolicy)).Decode(&policyRequest)
 		if err != nil {
-			fields := log.Fields{
-				"bucket": bucketName,
-				"policy": existingPolicy,
-			}
-
-			return nil, logAndTraceError(log.WithFields(fields), span, ErrFailedToDecodePolicy.Error(), err, codes.Internal)
+			return nil, logAndTraceError(span, ErrFailedToDecodePolicy.Error(), err, codes.Internal, "bucket", bucketName, "policy", existingPolicy)
 		}
 	}
 
@@ -204,26 +174,19 @@ func handleKeyAuthentication(ctx context.Context, s *Server, req *cosi.DriverGra
 		ctx, policyRequest.Statement, awsBucketResourceARN, awsPrincipalString,
 	)
 
-	log.WithFields(log.Fields{
-		"awsBucketResourceARN": awsBucketResourceARN,
-		"awsPrincipalString":   awsPrincipalString,
-		"statement":            policyRequest.Statement,
-	}).Info("policy request statement was parsed")
+	log.V(4).Info("Policy request statement was parsed.", "awsBucketResourceARN", awsBucketResourceARN, "awsPrincipalString", awsPrincipalString, "statement", policyRequest.Statement)
 
 	if policyRequest.ID == "" {
 		policyID, err := generatePolicyID(ctx)
 		if err != nil {
-			fields := log.Fields{
-				"bucket":   bucketName,
-				"PolicyID": policyID,
-			}
-
-			return nil, logAndTraceError(log.WithFields(fields), span, err.Error(), err, codes.Internal)
+			return nil, logAndTraceError(span, err.Error(), err, codes.Internal, "bucket", bucketName, "PolicyID", policyID)
 		}
 
-		log.WithFields(log.Fields{
-			"policy": policyRequest,
-		}).Infof("policyID %v was generated", policyID)
+		//TODO: I'm sure there is a smarter way to do it.
+		log.V(4).Info(fmt.Sprintf("policyID %v was generated.", policyID), "policy", policyRequest)
+		//log.WithFields(log.Fields{
+		//	"policy": policyRequest,
+		//}).Infof("policyID %v was generated", policyID)
 		span.AddEvent("policyID was generated")
 	}
 
@@ -234,31 +197,17 @@ func handleKeyAuthentication(ctx context.Context, s *Server, req *cosi.DriverGra
 	// Marshal the struct to JSON to confirm JSON validity.
 	updateBucketPolicyJSON, err := json.Marshal(policyRequest)
 	if err != nil {
-		fields := log.Fields{
-			"bucket":   bucketName,
-			"PolicyID": policyRequest.ID,
-		}
-
-		return nil, logAndTraceError(log.WithFields(fields), span, ErrFailedToMarshalPolicy.Error(), err, codes.Internal)
+		return nil, logAndTraceError(span, ErrFailedToMarshalPolicy.Error(), err, codes.Internal, "bucket", bucketName, "PolicyID", policyRequest.ID)
 	}
 
 	err = s.mgmtClient.Buckets().UpdatePolicy(ctx, bucketName, string(updateBucketPolicyJSON), parameters)
 	if err != nil {
-		fields := log.Fields{
-			"bucket": bucketName,
-			"policy": updateBucketPolicyJSON,
-		}
-
-		return nil, logAndTraceError(log.WithFields(fields), span, ErrFailedToUpdatePolicy.Error(), err, codes.Internal)
+		return nil, logAndTraceError(span, ErrFailedToUpdatePolicy.Error(), err, codes.Internal, "bucket", bucketName, "policy", updateBucketPolicyJSON)
 	}
 
 	accessKey, err := s.iamClient.CreateAccessKey(&iam.CreateAccessKeyInput{UserName: &userName})
 	if err != nil {
-		fields := log.Fields{
-			"user": userName,
-		}
-
-		return nil, logAndTraceError(log.WithFields(fields), span, ErrFailedToCreateAccessKey.Error(), err, codes.Internal)
+		return nil, logAndTraceError(span, ErrFailedToCreateAccessKey.Error(), err, codes.Internal, "user", userName)
 	}
 
 	// TODO: can credentials have empty values? if no, should we check any specific fields for non-emptiness?
@@ -424,11 +373,7 @@ func assembleCredentials(
 	secretsMap[consts.S3Endpoint] = s3Endpoint
 	secretsMap["bucketName"] = bucketName
 
-	log.WithFields(log.Fields{
-		"user":        userName,
-		"secretKeyId": *accessKey.AccessKey.AccessKeyId,
-		"endpoint":    s3Endpoint,
-	}).Info("secret access key for user with endpoint was created")
+	log.V(4).Info("Secret access key for user with endpoint was created.", "user", userName, "secretKeyId", *accessKey.AccessKey.AccessKeyId, "endpoint", s3Endpoint)
 
 	span.AddEvent("secret access key for user with endpoint was created")
 
@@ -436,10 +381,7 @@ func assembleCredentials(
 	credentials := make(map[string]*cosi.CredentialDetails)
 	credentials[consts.S3Key] = &credentialDetails
 
-	log.WithFields(log.Fields{
-		"bucket": bucketName,
-		"user":   userName,
-	}).Info("access to the bucket for user successfully granted")
+	log.V(4).Info("Access to the bucket for user successfully granted.", "bucket", bucketName, "user", userName)
 
 	span.AddEvent("access to the bucket for user successfully granted")
 
@@ -447,10 +389,8 @@ func assembleCredentials(
 }
 
 // logAndTraceError is a helper function that logs an error with specified fields and records it in a span.
-func logAndTraceError(logger *logrus.Entry, span trace.Span, errMsg string, err error, code codes.Code) error {
-	logger.WithFields(logrus.Fields{
-		"error": err,
-	}).Error(errMsg)
+func logAndTraceError(span trace.Span, errMsg string, err error, code codes.Code, keysAndValues ...interface{}) error {
+	log.Error(err, errMsg, keysAndValues)
 
 	span.RecordError(err)
 	span.SetStatus(otelCodes.Error, errMsg)
