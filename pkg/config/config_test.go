@@ -13,8 +13,6 @@
 package config
 
 import (
-	"io"
-	"log"
 	"os"
 	"path"
 	"regexp"
@@ -118,7 +116,6 @@ var (
 )
 
 func TestMain(m *testing.M) {
-	log.SetOutput(io.Discard)
 	os.Exit(m.Run())
 }
 
