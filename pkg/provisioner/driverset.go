@@ -18,7 +18,6 @@ import (
 	"sync"
 
 	driver "github.com/dell/cosi/pkg/provisioner/virtualdriver"
-	log "github.com/sirupsen/logrus"
 )
 
 // Driverset is a structure holding list of Drivers, that can be added or extracted based on the ID.
@@ -48,9 +47,7 @@ func (ds *Driverset) Get(id string) (driver.Driver, error) {
 
 	switch d := d.(type) {
 	case driver.Driver:
-		log.WithFields(log.Fields{
-			"id": id,
-		}).Debug("driver exists")
+		log.V(6).Info("Driver exists.", "id", id)
 
 		return d, nil
 	default:

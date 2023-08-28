@@ -22,12 +22,14 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	log "github.com/sirupsen/logrus"
 	otelCodes "go.opentelemetry.io/otel/codes"
 	cosi "sigs.k8s.io/container-object-storage-interface-spec"
 
+	"github.com/dell/cosi/pkg/logger"
 	"github.com/dell/cosi/pkg/provisioner/objectscale"
 )
+
+var log = logger.GetLogger()
 
 // Server is an implementation of a provisioner server.
 type Server struct {
@@ -60,20 +62,14 @@ func (s *Server) DriverCreateBucket(ctx context.Context,
 	// if there is no correct driver, log error, and return standard error message
 	d, err := s.driverset.Get(id)
 	if err != nil {
-		log.WithFields(log.Fields{
-			"id":    id,
-			"error": err,
-		}).Error(invalidBackendErr)
-
+		log.Error(err, invalidBackendErr, "id", id)
 		span.RecordError(err)
 		span.SetStatus(otelCodes.Error, invalidBackendErr)
 
 		return nil, status.Error(codes.InvalidArgument, invalidBackendErr)
 	}
 
-	log.WithFields(log.Fields{
-		"id": id,
-	}).Debug("valid backend ID")
+	log.V(6).Info("Valid backend ID.", "id", id)
 
 	// execute DriverCreateBucket from correct driver
 	return d.DriverCreateBucket(tracedCtx, req)
@@ -92,10 +88,7 @@ func (s *Server) DriverDeleteBucket(ctx context.Context,
 	// if there is no correct driver, log error, and return standard error message
 	d, err := s.driverset.Get(id)
 	if err != nil {
-		log.WithFields(log.Fields{
-			"id":    id,
-			"error": err,
-		}).Error(invalidBackendErr)
+		log.Error(err, invalidBackendErr, "id", id)
 
 		span.RecordError(err)
 		span.SetStatus(otelCodes.Error, invalidBackendErr)
@@ -103,9 +96,7 @@ func (s *Server) DriverDeleteBucket(ctx context.Context,
 		return nil, status.Error(codes.InvalidArgument, invalidBackendErr)
 	}
 
-	log.WithFields(log.Fields{
-		"id": id,
-	}).Debug("valid backend ID")
+	log.V(6).Info("Valid backend ID.", "id", id)
 
 	// execute DriverDeleteBucket from correct driver
 	return d.DriverDeleteBucket(tracedCtx, req)
@@ -124,10 +115,7 @@ func (s *Server) DriverGrantBucketAccess(ctx context.Context,
 	// if there is no correct driver, log error, and return standard error message
 	d, err := s.driverset.Get(id)
 	if err != nil {
-		log.WithFields(log.Fields{
-			"id":    id,
-			"error": err,
-		}).Error(invalidBackendErr)
+		log.Error(err, invalidBackendErr, "id", id)
 
 		span.RecordError(err)
 		span.SetStatus(otelCodes.Error, invalidBackendErr)
@@ -135,9 +123,7 @@ func (s *Server) DriverGrantBucketAccess(ctx context.Context,
 		return nil, status.Error(codes.InvalidArgument, invalidBackendErr)
 	}
 
-	log.WithFields(log.Fields{
-		"id": id,
-	}).Debug("valid backend ID")
+	log.V(6).Info("Valid backend ID.", "id", id)
 
 	// execute DriverGrantBucketAccess from correct driver
 	return d.DriverGrantBucketAccess(tracedCtx, req)
@@ -156,10 +142,7 @@ func (s *Server) DriverRevokeBucketAccess(ctx context.Context,
 	// if there is no correct driver, log error, and return standard error message
 	d, err := s.driverset.Get(id)
 	if err != nil {
-		log.WithFields(log.Fields{
-			"id":    id,
-			"error": err,
-		}).Error(invalidBackendErr)
+		log.Error(err, invalidBackendErr, "id", id)
 
 		span.RecordError(err)
 		span.SetStatus(otelCodes.Error, invalidBackendErr)
@@ -167,9 +150,7 @@ func (s *Server) DriverRevokeBucketAccess(ctx context.Context,
 		return nil, status.Error(codes.InvalidArgument, invalidBackendErr)
 	}
 
-	log.WithFields(log.Fields{
-		"id": id,
-	}).Debug("valid backend ID")
+	log.V(6).Info("Valid backend ID.", "id", id)
 
 	// execute DriverRevokeBucketAccess from correct driver
 	return d.DriverRevokeBucketAccess(tracedCtx, req)

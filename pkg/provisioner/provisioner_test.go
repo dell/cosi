@@ -15,7 +15,6 @@ package provisioner
 import (
 	"fmt"
 	"io"
-	"log"
 	"os"
 	"testing"
 
@@ -43,7 +42,8 @@ func TestNew(t *testing.T) {
 
 	err := fakeDriverset.Add(&fake.Driver{FakeID: "fake"})
 	if err != nil {
-		log.Fatalf("Failed to create fakedriverset: %v", err)
+		log.Error(err, "failed to create fakedriverset")
+		os.Exit(1)
 	}
 
 	testServer := New(fakeDriverset)
