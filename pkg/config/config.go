@@ -23,8 +23,10 @@ import (
 
 	"gopkg.in/yaml.v3"
 
-	log "github.com/sirupsen/logrus"
+	"github.com/dell/cosi/pkg/logger"
 )
+
+var log = logger.GetLogger()
 
 //go:generate go run github.com/atombender/go-jsonschema/cmd/gojsonschema@main --package=config --output=config.gen.go config.schema.json --extra-imports
 
@@ -61,7 +63,7 @@ func NewJSON(bytes []byte) (*ConfigSchemaJson, error) {
 		return nil, err
 	}
 
-	log.Debug("JSON document unmarshalled")
+	log.V(6).Info("JSON document unmarshalled.")
 
 	return cfg, nil
 }
@@ -78,7 +80,7 @@ func NewYAML(bytes []byte) (*ConfigSchemaJson, error) {
 		return nil, err
 	}
 
-	log.Debug("YAML document unmarshalled")
+	log.V(6).Info("YAML document unmarshalled.")
 	// we ignore the error, as the config was previously successfully Unmarshaled from YAML.
 	// and there is no case, when the Marshaling will fail.
 	b, _ := json.Marshal(body)
@@ -97,11 +99,9 @@ func readFile(filename string) ([]byte, error) {
 		return nil, err
 	}
 
-	log.WithFields(log.Fields{
-		"configFilePath": filename,
-	}).Debug("config file opened")
+	log.V(6).Info("Config file opened.", "configFilePath", filename)
 
-	// limit reader is used, so the we will read only 20MB of the file.
+	// limit reader is used, so we will read only 20MB of the file.
 	maxFileSize := 20000000
 	lr := io.LimitReader(f, int64(maxFileSize))
 
