@@ -16,14 +16,17 @@ package identity
 
 import (
 	"context"
+	"errors"
 
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	log "github.com/sirupsen/logrus"
-
 	cosi "sigs.k8s.io/container-object-storage-interface-spec"
+
+	"github.com/dell/cosi/pkg/logger"
 )
+
+var log = logger.GetLogger()
 
 // Server is an implementation of COSI identity server.
 type Server struct {
@@ -44,7 +47,7 @@ func (srv *Server) DriverGetInfo(_ context.Context,
 	_ *cosi.DriverGetInfoRequest,
 ) (*cosi.DriverGetInfoResponse, error) {
 	if srv.name == "" {
-		log.Error("driver name is empty")
+		log.Error(errors.New("driver name is empty"), "driver name is empty")
 
 		return nil, status.Error(codes.InvalidArgument, "DriverName is empty")
 	}
