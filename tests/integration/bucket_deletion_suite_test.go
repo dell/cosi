@@ -109,8 +109,8 @@ var _ = Describe("Bucket Deletion", Ordered, Label("delete", "objectscale"), fun
 		By("Checking if the ObjectStore '${objectstoreId}' is created")
 		steps.CheckObjectStoreExists(ctx, objectscale, ObjectstoreID)
 
-		By("Checking if namespace 'cosi' is created")
-		steps.CreateNamespace(ctx, clientset, "cosi")
+		By("Checking if namespace 'cosi-test-ns' is created")
+		steps.CreateNamespace(ctx, clientset, "cosi-test-ns")
 
 		By("Checking if namespace 'deletion-namespace' is created")
 		steps.CreateNamespace(ctx, clientset, "deletion-namespace")
@@ -118,8 +118,8 @@ var _ = Describe("Bucket Deletion", Ordered, Label("delete", "objectscale"), fun
 		By("Checking if COSI controller objectstorage-controller is installed in namespace 'default'")
 		steps.CheckCOSIControllerInstallation(ctx, clientset, "objectstorage-controller", "default")
 
-		By("Checking if COSI driver 'cosi' is installed in namespace 'cosi'")
-		steps.CheckCOSIDriverInstallation(ctx, clientset, "cosi", "cosi")
+		By("Checking if COSI driver 'cosi' is installed in namespace 'cosi-test-ns'")
+		steps.CheckCOSIDriverInstallation(ctx, clientset, "cosi", "cosi-test-ns")
 	})
 
 	It("Deletes the bucket when deletionPolicy is set to 'delete'", func(ctx context.Context) {

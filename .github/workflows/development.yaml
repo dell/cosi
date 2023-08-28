@@ -124,7 +124,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       IMAGETAG: "${{ github.sha }}"
-      IMAGENAME: "cosi"
+      IMAGENAME: "dell/cosi"
       REGISTRY: "sample_registry"
     steps:
       - name: Configure git for private modules
