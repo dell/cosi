@@ -18,8 +18,6 @@ import (
 
 	"go.opentelemetry.io/otel"
 	"google.golang.org/grpc/codes"
-
-	log "github.com/sirupsen/logrus"
 	cosi "sigs.k8s.io/container-object-storage-interface-spec"
 )
 
@@ -33,34 +31,26 @@ func (s *Server) DriverDeleteBucket(ctx context.Context,
 	ctx, span := otel.Tracer(DeleteBucketTraceName).Start(ctx, "ObjectscaleDriverDeleteBucket")
 	defer span.End()
 
-	log.WithFields(log.Fields{
-		"bucketID": req.BucketId,
-	}).Info("bucket is being deleted")
+	log.V(4).Info("Bucket id being deleted.", "bucketID", req.BucketId)
 
 	span.AddEvent("bucket is being deleted")
 
 	// Check if bucketID is not empty.
 	if req.GetBucketId() == "" {
-		return nil, logAndTraceError(log.WithFields(log.Fields{}), span, ErrInvalidBucketID.Error(), ErrInvalidBucketID, codes.InvalidArgument)
+		return nil, logAndTraceError(span, ErrInvalidBucketID.Error(), ErrInvalidBucketID, codes.InvalidArgument)
 	}
 
 	// Extract bucket name from bucketID.
 	bucketName, err := GetBucketName(req.BucketId)
 	if err != nil {
-		fields := log.Fields{
-			"bucketID": req.BucketId,
-		}
-
-		return nil, logAndTraceError(log.WithFields(fields), span, ErrInvalidBucketID.Error(), err, codes.InvalidArgument)
+		return nil, logAndTraceError(span, ErrInvalidBucketID.Error(), err, codes.InvalidArgument, "bucketID", req.BucketId)
 	}
 
 	// Delete bucket.
 	err = s.mgmtClient.Buckets().Delete(ctx, bucketName, s.namespace, s.emptyBucket)
 
 	if errors.Is(err, ErrParameterNotFound) {
-		log.WithFields(log.Fields{
-			"bucket": bucketName,
-		}).Warn("bucket does not exist")
+		log.V(0).Info("Bucket does not exist.", "bucket", bucketName)
 
 		span.AddEvent("bucket does not exist")
 
@@ -68,16 +58,10 @@ func (s *Server) DriverDeleteBucket(ctx context.Context,
 	}
 
 	if err != nil {
-		fields := log.Fields{
-			"bucket": bucketName,
-		}
-
-		return nil, logAndTraceError(log.WithFields(fields), span, ErrFailedToDeleteBucket.Error(), err, codes.Internal)
+		return nil, logAndTraceError(span, ErrFailedToDeleteBucket.Error(), err, codes.Internal, "bucket", bucketName)
 	}
 
-	log.WithFields(log.Fields{
-		"bucket": bucketName,
-	}).Info("bucket successfully deleted")
+	log.V(4).Info("Bucket successfully deleted.", "bucket", bucketName)
 
 	span.AddEvent("bucket successfully deleted")
 

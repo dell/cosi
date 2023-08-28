@@ -33,7 +33,7 @@ import (
 
 	"github.com/dell/cosi/pkg/config"
 	"github.com/dell/cosi/pkg/driver"
-	logger "github.com/dell/cosi/pkg/logger"
+	"github.com/dell/cosi/pkg/logger"
 	"github.com/go-logr/logr"
 )
 
@@ -81,23 +81,23 @@ func runMain() error {
 		return err
 	}
 
-	log.V(4).Info("Config successfully loaded", "configFilePath", *configFile)
+	log.V(4).Info("Config successfully loaded.", "configFilePath", *configFile)
 
 	// Create TracerProvider with exporter to Open Telemetry Collector.
 	var tp *sdktrace.TracerProvider
 	if *otelEndpoint != "" {
 		tp, err = tracerProvider(ctx, *otelEndpoint)
 		if err != nil {
-			log.V(0).Info("Failed to connect to Jaeger", "error", err)
+			log.V(0).Info("Failed to connect to Jaeger.", "error", err)
 		} else {
 			// Set global TracerProvider.
 			otel.SetTracerProvider(tp)
 			// set global propagator to tracecontext (the default is no-op).
 			otel.SetTextMapPropagator(propagation.TraceContext{})
-			log.V(4).Info("Tracing started successfully", "collector", *otelEndpoint)
+			log.V(4).Info("Tracing started successfully.", "collector", *otelEndpoint)
 		}
 	} else {
-		log.V(0).Info("OTEL endpoint is empty, disabling tracing")
+		log.V(0).Info("OTEL endpoint is empty, disabling tracing.")
 	}
 
 	// Create a channel to listen for signals.
@@ -110,14 +110,14 @@ func runMain() error {
 		// Wait for a signal.
 		sig := <-sigs
 		// Log that a signal was received.
-		log.V(4).Info("Signal received", "type", sig)
+		log.V(4).Info("Signal received.", "type", sig)
 		// Cancel the context.
 		cancel()
 		// Exit the program with an error.
 		os.Exit(1)
 	}()
 
-	log.V(4).Info("COSI driver is starting")
+	log.V(4).Info("COSI driver is starting.")
 	// Run the driver.
 	return driver.RunBlocking(ctx, cfg, driver.COSISocket, tracedServiceName)
 }
