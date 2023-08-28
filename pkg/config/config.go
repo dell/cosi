@@ -21,9 +21,8 @@ import (
 	"os"
 	"path"
 
-	"gopkg.in/yaml.v3"
-
 	"github.com/dell/cosi/pkg/logger"
+	"gopkg.in/yaml.v3"
 )
 
 var log = logger.GetLogger()
@@ -63,7 +62,7 @@ func NewJSON(bytes []byte) (*ConfigSchemaJson, error) {
 		return nil, err
 	}
 
-	log.V(6).Info("JSON document unmarshalled.")
+	log.V(6).Info("JSON document unmarshalled.", "config", cfg)
 
 	return cfg, nil
 }
@@ -80,7 +79,7 @@ func NewYAML(bytes []byte) (*ConfigSchemaJson, error) {
 		return nil, err
 	}
 
-	log.V(6).Info("YAML document unmarshalled.")
+	log.V(6).Info("YAML document unmarshalled.", "config", body)
 	// we ignore the error, as the config was previously successfully Unmarshaled from YAML.
 	// and there is no case, when the Marshaling will fail.
 	b, _ := json.Marshal(body)
