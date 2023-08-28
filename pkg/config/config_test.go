@@ -14,14 +14,13 @@ package config
 
 import (
 	"io"
+	"log"
 	"os"
 	"path"
 	"regexp"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-
-	log "github.com/sirupsen/logrus"
 )
 
 var (
