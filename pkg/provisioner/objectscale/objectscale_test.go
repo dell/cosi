@@ -14,7 +14,6 @@ package objectscale
 
 import (
 	"context"
-	"io"
 	"os"
 	"regexp"
 	"strings"
@@ -23,8 +22,6 @@ import (
 
 	"github.com/dell/goobjectscale/pkg/client/fake"
 	"github.com/stretchr/testify/assert"
-
-	log "github.com/sirupsen/logrus"
 
 	"github.com/dell/cosi/pkg/config"
 	"github.com/dell/cosi/pkg/internal/testcontext"
@@ -46,7 +43,6 @@ var (
 )
 
 func TestMain(m *testing.M) {
-	log.SetOutput(io.Discard)
 	os.Exit(m.Run())
 }
 
