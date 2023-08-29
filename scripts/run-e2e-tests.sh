@@ -1,16 +1,28 @@
 #!/usr/bin/env bash
 
+# When this option is on, if a simple command fails for any of the reasons listed in
+# Consequences of Shell Errors or returns an exit status value >0, and is not part of the
+# compound list following a while, until, or if keyword, and is not a part of an AND or
+# OR list, and is not a pipeline preceded by the ! reserved word, then the shell shall
+# immediately exit.
 set -e
 
 if [ -n "${DEBUG}" ]; then
+  # The  shell shall write to standard error a trace for each command after it expands
+  # the command and before it executes it.
   set -x
 fi
 
-# VARIABLES:
+#########################################################################################
+# Configuration:
+# - The shell shall write a message to standard error when it tries to expand a variable
+#   that is  not set and immediately exit.
+#----------------------------------------------------------------------------------------
 set -u
 
 # Helm specific
 export DRIVER_NAMESPACE="${DRIVER_NAMESPACE:-cosi-test-ns}"
+export HELM_RELEASE_NAME="${HELM_RELEASE_NAME:=dell-cosi}"
 
 # Image specific
 export REGISTRY="${REGISTRY:-docker.io}"
@@ -27,7 +39,10 @@ export OBJECTSCALE_GATEWAY="${OBJECTSCALE_GATEWAY}"
 export OBJECTSCALE_OBJECTSTORE_GATEWAY="${OBJECTSCALE_OBJECTSTORE_GATEWAY}"
 export OBJECTSCALE_S3_ENDPOINT="${OBJECTSCALE_S3_ENDPOINT}"
 
-# subshell execution
+#########################################################################################
+# Main:
+# - subshell execution
+#----------------------------------------------------------------------------------------
 (
 
 NS=("access-namespace" "access-grant-namespace" "access-revoke-namespace" "creation-namespace" "deletion-namespace")
@@ -44,34 +59,34 @@ do
   fi
 
   # delete all finalizers and then objects from those namespaces
-  for s in $(kubectl get secret -n "${n}" -o jsonpath='{.items[*].metadata.name}');
+  for s in $(kubectl get secret -n="${n}" -o=jsonpath='{.items[*].metadata.name}');
   do
-    kubectl patch secret -n "${n}" "${s}" -p '{"metadata":{"finalizers":null}}' --type=merge
+    kubectl patch secret -n="${n}" "${s}" -p='{"metadata":{"finalizers":null}}' --type=merge
   done
 
-  for b in $(kubectl get bucketclaim.objectstorage.k8s.io -n "${n}" -o jsonpath='{.items[*].metadata.name}');
+  for b in $(kubectl get bucketclaim.objectstorage.k8s.io -n="${n}" -o=jsonpath='{.items[*].metadata.name}');
   do
-    kubectl patch bucketclaim.objectstorage.k8s.io -n "${n}" "{$b}" -p '{"metadata":{"finalizers":null}}' --type=merge
+    kubectl patch bucketclaim.objectstorage.k8s.io -n="${n}" "{$b}" -p='{"metadata":{"finalizers":null}}' --type=merge
   done
 
-  for b in $(kubectl get bucketaccess.objectstorage.k8s.io -n "${n}" -o jsonpath='{.items[*].metadata.name}');
+  for b in $(kubectl get bucketaccess.objectstorage.k8s.io -n="${n}" -o=jsonpath='{.items[*].metadata.name}');
   do
-    kubectl patch bucketaccess.objectstorage.k8s.io -n "${n}" "{$b}" -p '{"metadata":{"finalizers":null}}' --type=merge
+    kubectl patch bucketaccess.objectstorage.k8s.io -n="${n}" "{$b}" -p='{"metadata":{"finalizers":null}}' --type=merge
   done
 
-  for b in $(kubectl get bucket.objectstorage.k8s.io -n "${n}" -o jsonpath='{.items[*].metadata.name}');
+  for b in $(kubectl get bucket.objectstorage.k8s.io -n="${n}" -o=jsonpath='{.items[*].metadata.name}');
   do
-    kubectl patch bucket.objectstorage.k8s.io -n "${n}" "{$b}" -p '{"metadata":{"finalizers":null}}' --type=merge
+    kubectl patch bucket.objectstorage.k8s.io -n="${n}" "{$b}" -p='{"metadata":{"finalizers":null}}' --type=merge
   done
 
-  for b in $(kubectl get bucketaccessclass.objectstorage.k8s.io -n "${n}" -o jsonpath='{.items[*].metadata.name}');
+  for b in $(kubectl get bucketaccessclass.objectstorage.k8s.io -n="${n}" -o=jsonpath='{.items[*].metadata.name}');
   do
-    kubectl patch bucketaccessclass.objectstorage.k8s.io -n "${n}" "{$b}" -p '{"metadata":{"finalizers":null}}' --type=merge
+    kubectl patch bucketaccessclass.objectstorage.k8s.io -n="${n}" "{$b}" -p='{"metadata":{"finalizers":null}}' --type=merge
   done
 
-  for b in $(kubectl get bucketclass.objectstorage.k8s.io -n "${n}" -o jsonpath='{.items[*].metadata.name}');
+  for b in $(kubectl get bucketclass.objectstorage.k8s.io -n="${n}" -o=jsonpath='{.items[*].metadata.name}');
   do
-    kubectl patch bucketclass.objectstorage.k8s.io -n "${n}" "${b}" -p '{"metadata":{"finalizers":null}}' --type=merge
+    kubectl patch bucketclass.objectstorage.k8s.io -n="${n}" "${b}" -p='{"metadata":{"finalizers":null}}' --type=merge
   done
 
   # delete all objects from those namespaces
@@ -80,12 +95,12 @@ do
   kubectl delete bucketaccessclasses.objectstorage.k8s.io --all
   kubectl delete bucketclasses.objectstorage.k8s.io --all
   kubectl delete buckets.objectstorage.k8s.io --all
-  kubectl delete secret -n "${n}" --all
-  kubectl delete namespace "${n}" 
+  kubectl delete secret -n="${n}" --all
+  kubectl delete namespace "${n}"
 done
 
 # uninstall driver
-helm uninstall cosi-driver -n="${DRIVER_NAMESPACE}" || true
+helm uninstall "${HELM_RELEASE_NAME}" -n="${DRIVER_NAMESPACE}" || true
 kubectl delete leases -n="${DRIVER_NAMESPACE}" cosi-dellemc-com-cosi || true
 
 # save driver configuration values in a file
@@ -117,7 +132,7 @@ git clone \
   https://github.com/dell/helm-charts.git helm
 
 # install the driver
-helm install cosi-driver ./helm/charts/cosi \
+helm install "${HELM_RELEASE_NAME}" ./helm/charts/cosi \
   --set=provisioner.image.repository="${REGISTRY}/${IMAGENAME}" \
   --set=provisioner.image.tag="$(git rev-parse HEAD)" \
   --set=provisioner.image.pullPolicy=Always \
@@ -133,7 +148,7 @@ kubectl wait \
   --for=condition=available \
   --timeout=60s \
   --namespace="${DRIVER_NAMESPACE}" \
-  deployments cosi-driver
+  deployments "${HELM_RELEASE_NAME}"
 
 # start e2e tests
 make integration-test
