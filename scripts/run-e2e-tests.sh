@@ -1,5 +1,32 @@
 #!/usr/bin/env bash
 
+set -e
+
+if [ -n "${DEBUG}" ]; then
+  set -x
+fi
+
+# VARIABLES:
+set -u
+
+# Helm specific
+export DRIVER_NAMESPACE="${DRIVER_NAMESPACE:-cosi-test-ns}"
+
+# Image specific
+export REGISTRY="${REGISTRY:-docker.io}"
+export IMAGENAME="${IMAGENAME:-dell/cosi}"
+export CHART_BRANCH="${CHART_BRANCH:-main}"
+
+# ObjectScale specific
+export OBJECTSCALE_NAMESPACE="${OBJECTSCALE_NAMESPACE}"
+export OBJECTSCALE_ID="${OBJECTSCALE_ID}"
+export OBJECTSCALE_OBJECTSTORE_ID="${OBJECTSCALE_OBJECTSTORE_ID}"
+export OBJECTSCALE_USER="${OBJECTSCALE_USER}"
+export OBJECTSCALE_PASSWORD="${OBJECTSCALE_PASSWORD}"
+export OBJECTSCALE_GATEWAY="${OBJECTSCALE_GATEWAY}"
+export OBJECTSCALE_OBJECTSTORE_GATEWAY="${OBJECTSCALE_OBJECTSTORE_GATEWAY}"
+export OBJECTSCALE_S3_ENDPOINT="${OBJECTSCALE_S3_ENDPOINT}"
+
 # subshell execution
 (
 
@@ -58,8 +85,8 @@ do
 done
 
 # uninstall driver
-helm uninstall cosi-driver -n="$DRIVER_NAMESPACE" || true
-kubectl delete leases -n="$DRIVER_NAMESPACE" cosi-dellemc-com-cosi || true
+helm uninstall cosi-driver -n="${DRIVER_NAMESPACE}" || true
+kubectl delete leases -n="${DRIVER_NAMESPACE}" cosi-dellemc-com-cosi || true
 
 # save driver configuration values in a file
 cat > /tmp/cosi-conf.yml <<EOF
@@ -83,23 +110,30 @@ connections:
       insecure: true
 EOF
 
-# go to the cosi-driver folder 
-cd "${DRIVER_REPO_PATH}" || exit 1
+rm -rf helm
+git clone \
+  --branch "${CHART_BRANCH}" \
+  --single-branch \
+  https://github.com/dell/helm-charts.git helm
 
 # install the driver
-helm install cosi-driver ./helm/cosi-driver \
---set provisioner.image.repository="${REGISTRY}"/cosi-driver \
---set provisioner.image.tag="$(git rev-parse HEAD)" \
---set provisioner.image.pullPolicy=Always \
---set provisioner.logLevel=trace \
---set sidecar.verbosity=low \
---set=provisioner.logFormat=json \
---set-file configuration.data=/tmp/cosi-conf.yml \
---namespace=cosi-driver \
---create-namespace
+helm install cosi-driver ./helm/charts/cosi \
+  --set=provisioner.image.repository="${REGISTRY}/${IMAGENAME}" \
+  --set=provisioner.image.tag="$(git rev-parse HEAD)" \
+  --set=provisioner.image.pullPolicy=Always \
+  --set=provisioner.logLevel=trace \
+  --set=sidecar.verbosity=low \
+  --set=provisioner.logFormat=json \
+  --set-file=configuration.data=/tmp/cosi-conf.yml \
+  --namespace="${DRIVER_NAMESPACE}" \
+  --create-namespace
 
 # check if the driver is installed correctly 
-kubectl wait --for=condition=available --timeout=60s deployment/cosi-driver -n="${DRIVER_NAMESPACE}"
+kubectl wait \
+  --for=condition=available \
+  --timeout=60s \
+  --namespace="${DRIVER_NAMESPACE}" \
+  deployments cosi-driver
 
 # start e2e tests
 make integration-test
