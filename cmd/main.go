@@ -88,7 +88,7 @@ func runMain() error {
 	if *otelEndpoint != "" {
 		tp, err = tracerProvider(ctx, *otelEndpoint)
 		if err != nil {
-			log.V(0).Info("Failed to connect to Jaeger.", "error", err)
+			log.Error(err, "Failed to connect to Jaeger.")
 		} else {
 			// Set global TracerProvider.
 			otel.SetTracerProvider(tp)

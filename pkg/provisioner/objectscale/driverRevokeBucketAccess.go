@@ -110,7 +110,7 @@ func checkUserExistence(ctx context.Context, s *Server, accountID string) (bool,
 		return false, ErrFailedToCheckUserExists
 	} else if err != nil {
 		warnMsg := "user does not exist"
-		log.V(0).Info(warnMsg, "user", accountID, "error", err)
+		log.Error(err, warnMsg, "user", accountID)
 		span.AddEvent(warnMsg)
 		userExists = false
 	}
@@ -134,7 +134,7 @@ func checkBucketExistence(ctx context.Context, s *Server, bucketName string, par
 		return bucketExists, ErrFailedToCheckBucketExists
 	} else if err != nil {
 		warnMsg := "bucket not found"
-		log.V(0).Info(warnMsg, "bucket", bucketName, "error", err)
+		log.Error(err, warnMsg, "bucket", bucketName)
 		span.AddEvent(warnMsg)
 		bucketExists = false
 	}
