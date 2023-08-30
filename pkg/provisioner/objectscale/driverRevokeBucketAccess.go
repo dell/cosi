@@ -113,7 +113,7 @@ func checkUserExistence(ctx context.Context, s *Server, accountID string) (bool,
 	_, err := s.iamClient.GetUser(&iam.GetUserInput{UserName: &accountID})
 
 	// User is not found - return false. It's a valid scenario.
-	if err.Error() == iam.ErrCodeNoSuchEntityException {
+	if errors.Is(err, errors.New(iam.ErrCodeNoSuchEntityException)) {
 		log.V(0).Info(WarnUserNotFound, "user", accountID)
 		span.AddEvent(WarnUserNotFound)
 
