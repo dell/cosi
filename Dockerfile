@@ -44,15 +44,15 @@ RUN make build
 # Second stage: building final environment for running the driver.
 FROM ${BASEIMAGE}@${DIGEST} AS final
 
-WORKDIR /cosi-driver
+WORKDIR /cosi
 
-COPY --from=builder /workspace/build/cosi-driver .
+COPY --from=builder /workspace/build/cosi .
 
 # Create a non-root user and set permissions on the binary
 RUN echo "cosi:*:1001:cosi-user" >> /etc/group && \
-    echo "cosi-user:*:1001:1001::/cosi-driver:/bin/false" >> /etc/passwd && \
-    chown 1001:1001 ./cosi-driver && \
-    chmod 0550 ./cosi-driver && \
+    echo "cosi-user:*:1001:1001::/cosi:/bin/false" >> /etc/passwd && \
+    chown 1001:1001 ./cosi && \
+    chmod 0550 ./cosi && \
     mkdir -p /var/lib/cosi /cosi && \
     chown -R 1001:1001 /var/lib/cosi /cosi
 
@@ -65,4 +65,4 @@ VOLUME [ "/var/lib/cosi", "/cosi" ]
 # Disable healthcheck
 HEALTHCHECK NONE
 
-ENTRYPOINT ["./cosi-driver"]
+ENTRYPOINT ["./cosi"]

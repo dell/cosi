@@ -14,11 +14,9 @@ package provisioner
 
 import (
 	"fmt"
-	"io"
 	"os"
 	"testing"
 
-	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -30,7 +28,6 @@ import (
 )
 
 func TestMain(m *testing.M) {
-	logrus.SetOutput(io.Discard)
 	os.Exit(m.Run())
 }
 

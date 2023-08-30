@@ -10,8 +10,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// Package policy ...
-// TODO: write documentation comment for policy package
+// Package policy exists for handling operations on AWS Policies,
+// defines structures and functions for processing and comparing policies.
 package policy
 
 import "encoding/json"

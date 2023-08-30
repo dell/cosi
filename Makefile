@@ -46,7 +46,7 @@ vendor:	##generate the vendor directory
 
 .PHONY: build
 build:	##build project
-	GOOS=linux CGO_ENABLED=0 go build -ldflags="-s -w" -o ${COSI_BUILD_DIR}/cosi-driver ${COSI_BUILD_PATH}
+	GOOS=linux CGO_ENABLED=0 go build -ldflags="-s -w" -o ${COSI_BUILD_DIR}/cosi ${COSI_BUILD_PATH}
 
 ########################################################################
 ##                             CONTAINER                              ##

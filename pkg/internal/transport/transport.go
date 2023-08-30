@@ -10,8 +10,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// Package transport ...
-// TODO: write documentation comment for transport package
+// Package transport implements transport for HTTP client
+// which is used further in custom client from goobjectscale.
 package transport
 
 import (
