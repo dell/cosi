@@ -77,8 +77,7 @@ func runMain() error {
 
 	cfg, err := config.New(*configFile)
 	if err != nil {
-		log.Error(err, "failed to create configuration")
-		return err
+		return fmt.Errorf("failed to create configuration: %w", err)
 	}
 
 	log.V(4).Info("Config successfully loaded.", "configFilePath", *configFile)

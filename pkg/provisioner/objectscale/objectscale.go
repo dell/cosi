@@ -26,7 +26,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/iam"
 	"github.com/aws/aws-sdk-go/service/iam/iamiface"
 
-	internalLogger "github.com/dell/cosi/pkg/logger"
 	driver "github.com/dell/cosi/pkg/provisioner/virtualdriver"
 	objectscaleRest "github.com/dell/goobjectscale/pkg/client/rest"
 	objectscaleClient "github.com/dell/goobjectscale/pkg/client/rest/client"
@@ -192,7 +191,7 @@ func New(config *config.Objectscale) (*Server, error) {
 				Endpoint:                      aws.String(objectscaleGateway + "/iam"),
 				Region:                        region,
 				HTTPClient:                    &x509Client,
-				Logger:                        internalLogger.NewAWSLogger(log),
+				Logger:                        logger.NewAWSLogger(log),
 			},
 		},
 	)

@@ -29,7 +29,7 @@ const (
 	timestampFormat = "2006-01-02 15:04:05.000"
 )
 
-// Logger implements aws.Logger interface.
+// AWSLogger implements aws.Logger interface.
 type AWSLogger struct {
 	impl logr.Logger
 }

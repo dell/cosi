@@ -178,7 +178,7 @@ func handleKeyAuthentication(ctx context.Context, s *Server, req *cosi.DriverGra
 	if policyRequest.ID == "" {
 		policyID, err := generatePolicyID(ctx)
 		if err != nil {
-			return nil, logAndTraceError(span, err.Error(), err, codes.Internal, "bucket", bucketName, "PolicyID", policyID)
+			return nil, logAndTraceError(span, ErrFailedToGeneratePolicyID.Error(), err, codes.Internal, "bucket", bucketName, "PolicyID", policyID)
 		}
 
 		log.V(4).Info("policyID was generated.", "policy", policyRequest)

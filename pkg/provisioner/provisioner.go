@@ -39,7 +39,7 @@ type Server struct {
 var _ cosi.ProvisionerServer = (*Server)(nil)
 
 const (
-	invalidBackendErr = "invalid backend ID"
+	ErrInvalidBackendID = "invalid backend ID"
 )
 
 // New initializes Server based on the config file.
@@ -62,11 +62,11 @@ func (s *Server) DriverCreateBucket(ctx context.Context,
 	// if there is no correct driver, log error, and return standard error message
 	d, err := s.driverset.Get(id)
 	if err != nil {
-		log.Error(err, invalidBackendErr, "id", id)
+		log.Error(err, ErrInvalidBackendID, "id", id)
 		span.RecordError(err)
-		span.SetStatus(otelCodes.Error, invalidBackendErr)
+		span.SetStatus(otelCodes.Error, ErrInvalidBackendID)
 
-		return nil, status.Error(codes.InvalidArgument, invalidBackendErr)
+		return nil, status.Error(codes.InvalidArgument, ErrInvalidBackendID)
 	}
 
 	log.V(6).Info("Valid backend ID.", "id", id)
@@ -88,12 +88,12 @@ func (s *Server) DriverDeleteBucket(ctx context.Context,
 	// if there is no correct driver, log error, and return standard error message
 	d, err := s.driverset.Get(id)
 	if err != nil {
-		log.Error(err, invalidBackendErr, "id", id)
+		log.Error(err, ErrInvalidBackendID, "id", id)
 
 		span.RecordError(err)
-		span.SetStatus(otelCodes.Error, invalidBackendErr)
+		span.SetStatus(otelCodes.Error, ErrInvalidBackendID)
 
-		return nil, status.Error(codes.InvalidArgument, invalidBackendErr)
+		return nil, status.Error(codes.InvalidArgument, ErrInvalidBackendID)
 	}
 
 	log.V(6).Info("Valid backend ID.", "id", id)
@@ -115,12 +115,12 @@ func (s *Server) DriverGrantBucketAccess(ctx context.Context,
 	// if there is no correct driver, log error, and return standard error message
 	d, err := s.driverset.Get(id)
 	if err != nil {
-		log.Error(err, invalidBackendErr, "id", id)
+		log.Error(err, ErrInvalidBackendID, "id", id)
 
 		span.RecordError(err)
-		span.SetStatus(otelCodes.Error, invalidBackendErr)
+		span.SetStatus(otelCodes.Error, ErrInvalidBackendID)
 
-		return nil, status.Error(codes.InvalidArgument, invalidBackendErr)
+		return nil, status.Error(codes.InvalidArgument, ErrInvalidBackendID)
 	}
 
 	log.V(6).Info("Valid backend ID.", "id", id)
@@ -142,12 +142,12 @@ func (s *Server) DriverRevokeBucketAccess(ctx context.Context,
 	// if there is no correct driver, log error, and return standard error message
 	d, err := s.driverset.Get(id)
 	if err != nil {
-		log.Error(err, invalidBackendErr, "id", id)
+		log.Error(err, ErrInvalidBackendID, "id", id)
 
 		span.RecordError(err)
-		span.SetStatus(otelCodes.Error, invalidBackendErr)
+		span.SetStatus(otelCodes.Error, ErrInvalidBackendID)
 
-		return nil, status.Error(codes.InvalidArgument, invalidBackendErr)
+		return nil, status.Error(codes.InvalidArgument, ErrInvalidBackendID)
 	}
 
 	log.V(6).Info("Valid backend ID.", "id", id)

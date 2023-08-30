@@ -29,12 +29,18 @@ import (
 
 // All errors that can be returned by DriverRevokeBucketAccess.
 var (
-	ErrEmpyAccountID              = errors.New("empty accountID")
+	ErrEmptyAccountID             = errors.New("empty accountID")
 	ErrExistingPolicyIsEmpty      = errors.New("existing policy is empty")
 	ErrFailedToUpdateBucketPolicy = errors.New("failed to update bucket policy")
 	ErrFailedToListAccessKeys     = errors.New("failed to list access keys")
 	ErrFailedToDeleteAccessKey    = errors.New("failed to delete access key")
 	ErrFailedToDeleteUser         = errors.New("failed to delete user")
+	ErrFailedToRemovePolicy       = errors.New("failed to remove bucket policy")
+)
+
+var (
+	WarnBucketNotFound = "bucket not found"
+	WarnUserNotFound   = "user not found"
 )
 
 // DriverRevokeBucketAccess revokes access from Bucket on specific Object Storage Platform.
@@ -51,7 +57,7 @@ func (s *Server) DriverRevokeBucketAccess(ctx context.Context,
 
 	// Check if accountID is not empty.
 	if err := isAccountIDEmpty(req); err != nil {
-		return nil, logAndTraceError(span, ErrEmpyAccountID.Error(), err, codes.InvalidArgument)
+		return nil, logAndTraceError(span, ErrEmptyAccountID.Error(), err, codes.InvalidArgument)
 	}
 
 	// Extract bucket name from bucketID.
@@ -70,25 +76,25 @@ func (s *Server) DriverRevokeBucketAccess(ctx context.Context,
 	// Check if bucket for revoking access exists.
 	bucketExists, err := checkBucketExistence(ctx, s, bucketName, parameters)
 	if err != nil {
-		return nil, logAndTraceError(span, err.Error(), err, codes.Internal, "bucket", bucketName)
+		return nil, logAndTraceError(span, ErrFailedToCheckBucketExists.Error(), err, codes.Internal, "bucket", bucketName)
 	}
 
 	// Check user existence.
 	userExists, err := checkUserExistence(ctx, s, req.AccountId)
 	if err != nil {
-		return nil, logAndTraceError(span, err.Error(), err, codes.Internal, "bucket", bucketName, "user", req.AccountId)
+		return nil, logAndTraceError(span, ErrFailedToCheckUserExists.Error(), err, codes.Internal, "bucket", bucketName, "user", req.AccountId)
 	}
 
 	if bucketExists {
 		err := removeBucketPolicy(ctx, s, bucketName, parameters)
 		if err != nil {
-			return nil, logAndTraceError(span, err.Error(), err, codes.Internal, "bucket", bucketName)
+			return nil, logAndTraceError(span, ErrFailedToRemovePolicy.Error(), err, codes.Internal, "bucket", bucketName)
 		}
 	}
 
 	if userExists {
 		if err := deleteUser(s, req.AccountId); err != nil {
-			return nil, logAndTraceError(span, err.Error(), err, codes.Internal, "bucket", bucketName, "user", req.AccountId)
+			return nil, logAndTraceError(span, ErrFailedToDeleteUser.Error(), err, codes.Internal, "bucket", bucketName, "user", req.AccountId)
 		}
 	}
 
@@ -103,19 +109,23 @@ func checkUserExistence(ctx context.Context, s *Server, accountID string) (bool,
 	_, span := otel.Tracer(RevokeBucketAccessTraceName).Start(ctx, "ObjectscaleCheckUserExistence")
 	defer span.End()
 
-	userExists := true
-
 	_, err := s.iamClient.GetUser(&iam.GetUserInput{UserName: &accountID})
-	if err != nil && err.Error() != iam.ErrCodeNoSuchEntityException {
-		return false, ErrFailedToCheckUserExists
-	} else if err != nil {
-		warnMsg := "user does not exist"
-		log.Error(err, warnMsg, "user", accountID)
-		span.AddEvent(warnMsg)
-		userExists = false
+
+	// User is not found - return false. It's a valid scenario.
+	if err.Error() == iam.ErrCodeNoSuchEntityException {
+		log.V(0).Info(WarnUserNotFound, "user", accountID)
+		span.AddEvent(WarnUserNotFound)
+
+		return false, nil
 	}
 
-	return userExists, nil
+	// Connection error probably, failed to check if user exists - return error.
+	if err != nil {
+		return false, ErrFailedToCheckUserExists
+	}
+	
+	// No errors - user exists.
+	return true, nil
 }
 
 // checkBucketExistence checks if particual bucket exists on ObjectScale;
@@ -124,22 +134,23 @@ func checkBucketExistence(ctx context.Context, s *Server, bucketName string, par
 	ctx, span := otel.Tracer(RevokeBucketAccessTraceName).Start(ctx, "ObjectscaleCheckBucketExistence")
 	defer span.End()
 
-	bucketExists := true
-
 	_, err := s.mgmtClient.Buckets().Get(ctx, bucketName, parameters)
 
-	if err != nil && !errors.Is(err, ErrParameterNotFound) {
-		bucketExists = false
+	// Bucket is not found - return false. It's a valid scenario.
+	if errors.Is(err, ErrParameterNotFound) {
+		log.V(0).Info(WarnBucketNotFound, "bucket", bucketName)
+		span.AddEvent(WarnBucketNotFound)
 
-		return bucketExists, ErrFailedToCheckBucketExists
-	} else if err != nil {
-		warnMsg := "bucket not found"
-		log.Error(err, warnMsg, "bucket", bucketName)
-		span.AddEvent(warnMsg)
-		bucketExists = false
+		return false, nil
 	}
 
-	return bucketExists, nil
+	// Connection error probably, failed to check if bucket exists - return error.
+	if err != nil {
+		return false, ErrFailedToCheckBucketExists
+	}
+
+	// No errors - bucket exists.
+	return true, nil
 }
 
 // removeBucketPolicy is a function used when revoking a bucket access;
