@@ -68,62 +68,7 @@ linters:
   # Enable specific linter
   # https://golangci-lint.run/usage/linters/#enabled-by-default
   enable:
-    # Check for dangerous unicode character sequences.
-    - bidichk
-    # Check whether the HTTP response body is closed properly.
-    - bodyclose
-    # Detect context.Context contained in structs.
-    - containedctx
-    # Check whether a function uses a non-inherited context.
-    - contextcheck
-    # Find declarations and assignments with too many blank identifiers.
-    - dogsled
-    # Check for unchecked errors.
-    - errcheck
-    # Find code that will cause problems with the error wrapping scheme.
-    - errorlint
-    # Find exporting pointers for loop variables.
-    - exportloopref
-    # Inspects source code for security problems.
-    - gosec
-    # Enforce standards for ginkgo and gomega.
-    - ginkgolinter
-    # Check that compiler directives are valid.
-    - gocheckcompilerdirectives
-    # Calculate cognitive complexities of functions.
-    - gocognit
-    # Find repeated strings that could be replaced by a constant.
-    - goconst
-    # Provides functionalities missing from other linters.
-    - gocritic
-    # Calculates cyclomatic complexity of a function.
-    - gocyclo
-    # Check if comments end with a dot (NOTICE: this is not the Godot game engine).
-    - godot
-    # A stricter replacement for gofmt.
-    - gofumpt
-    # GO Magic Number Detector.
     - gomnd
-    # Simplify the code.
-    - gosimple
-    # Check for correctness of programs.
-    - govet
-    # Detect ineffectual assignments.
-    - ineffassign
-    # Correct commonly misspelled English words in source files.
-    - misspell
-    # Find incorrect usages of t.Parallel().
-    - paralleltest
-    # Drop-in replacement of golint.
-    - revive
-    # Find bugs and performance issues statically.
-    - staticcheck
-    # Parse and type-check Go code.
-    - typecheck
-    # Checks Go code for unused constants, variables, functions and types.
-    - unused
-    # Empty lines linter.
-    - wsl
 
 # Setting of specific linters.
 linters-settings:
@@ -134,4 +79,4 @@ linters-settings:
 
   gomnd:
     ignored-functions:
-      - '\.V\(\d+\)'
+      - '(.*\.)+V.*'

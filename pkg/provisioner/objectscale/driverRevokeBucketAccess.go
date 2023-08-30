@@ -38,6 +38,7 @@ var (
 	ErrFailedToRemovePolicy       = errors.New("failed to remove bucket policy")
 )
 
+// All warnings that can be returned by DriverRevokeBucketAccess.
 var (
 	WarnBucketNotFound = "bucket not found"
 	WarnUserNotFound   = "user not found"
@@ -123,7 +124,7 @@ func checkUserExistence(ctx context.Context, s *Server, accountID string) (bool,
 	if err != nil {
 		return false, ErrFailedToCheckUserExists
 	}
-	
+
 	// No errors - user exists.
 	return true, nil
 }
@@ -138,8 +139,8 @@ func checkBucketExistence(ctx context.Context, s *Server, bucketName string, par
 
 	// Bucket is not found - return false. It's a valid scenario.
 	if errors.Is(err, ErrParameterNotFound) {
-		log.V(0).Info(WarnBucketNotFound, "bucket", bucketName)
 		span.AddEvent(WarnBucketNotFound)
+		log.V(0).Info(WarnBucketNotFound, "bucket", bucketName)
 
 		return false, nil
 	}
