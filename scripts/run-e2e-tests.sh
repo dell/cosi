@@ -39,6 +39,9 @@ export OBJECTSCALE_GATEWAY="${OBJECTSCALE_GATEWAY}"
 export OBJECTSCALE_OBJECTSTORE_GATEWAY="${OBJECTSCALE_OBJECTSTORE_GATEWAY}"
 export OBJECTSCALE_S3_ENDPOINT="${OBJECTSCALE_S3_ENDPOINT}"
 
+# Tests specific
+export DRIVER_CONTAINER_NAME="${DRIVER_CONTAINER_NAME:-objectstorage-provisioner}"
+
 #########################################################################################
 # Main:
 # - subshell execution
