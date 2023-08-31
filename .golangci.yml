@@ -29,7 +29,7 @@ issues:
   exclude-rules:
     - linters:
         - gomnd
-      text: '(.*\.)+V.*'
+      text: '\.V\((\d+)\)'
 
   # Set to 0 to not skip any issues.
   max-issues-per-linter: 0
