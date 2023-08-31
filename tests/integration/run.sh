@@ -9,7 +9,6 @@ fi
 # shellcheck disable=SC2086
 ginkgo \
     ${NO_COLOR} \
-    -vv \
     --keep-going \
     --race \
     --trace \

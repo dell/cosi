@@ -41,7 +41,7 @@ export DRIVER_CONTAINER_NAME="${DRIVER_CONTAINER_NAME:-objectstorage-provisioner
 #----------------------------------------------------------------------------------------
 (
 
-NS=("access-namespace" "access-grant-namespace" "access-revoke-namespace" "creation-namespace" "deletion-namespace")
+NS=("access-namespace" "access-grant-namespace" "access-grant-namespace-greenfield" "access-grant-namespace-brownfield" "access-revoke-namespace" "creation-namespace" "deletion-namespace")
 
 # delete all finalizers and then objects from those namespaces
 for n in "${NS[@]}";

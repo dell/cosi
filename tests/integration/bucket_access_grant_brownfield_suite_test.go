@@ -19,23 +19,25 @@ import (
 
 	"sigs.k8s.io/container-object-storage-interface-api/apis/objectstorage/v1alpha1"
 
-	objscl "github.com/dell/cosi/pkg/provisioner/objectscale"
 	. "github.com/onsi/ginkgo/v2"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
+	objscl "github.com/dell/cosi/pkg/provisioner/objectscale"
 	"github.com/dell/cosi/pkg/provisioner/policy"
 	"github.com/dell/cosi/tests/integration/steps"
 )
 
-var _ = Describe("Bucket Access Grant", Ordered, Label("grant", "objectscale"), func() {
+var _ = Describe("Bucket Access Grant for Brownfield Bucket", Ordered, Label("grant", "brownfield", "objectscale"), func() {
 	// Resources for scenarios
+	const (
+		namespace string = "access-grant-namespace-brownfield"
+	)
+
 	var (
 		grantBucketClass       *v1alpha1.BucketClass
 		grantBucketClaim       *v1alpha1.BucketClaim
-		brownfieldBucketClaim  *v1alpha1.BucketClaim
 		grantBucket            *v1alpha1.Bucket
-		brownfieldBucket       *v1alpha1.Bucket
 		grantBucketAccessClass *v1alpha1.BucketAccessClass
 		grantBucketAccess      *v1alpha1.BucketAccess
 		validSecret            *v1.Secret
@@ -46,13 +48,33 @@ var _ = Describe("Bucket Access Grant", Ordered, Label("grant", "objectscale"), 
 	// Background
 	BeforeEach(func(ctx context.Context) {
 		// Initialize variables
+		grantBucket = &v1alpha1.Bucket{
+			TypeMeta: metav1.TypeMeta{
+				Kind:       "Bucket",
+				APIVersion: "objectstorage.k8s.io/v1alpha1",
+			},
+			ObjectMeta: metav1.ObjectMeta{
+				Name: "brownfield-bucket",
+			},
+			Spec: v1alpha1.BucketSpec{
+				BucketClaim:      &v1.ObjectReference{},
+				BucketClassName:  "grant-bucket-class-brownfield",
+				DriverName:       "cosi.dellemc.com",
+				DeletionPolicy:   "Retain",
+				ExistingBucketID: "my-brownfield-bucket",
+				Parameters: map[string]string{
+					"id": DriverID,
+				},
+				Protocols: []v1alpha1.Protocol{v1alpha1.ProtocolS3},
+			},
+		}
 		grantBucketClass = &v1alpha1.BucketClass{
 			TypeMeta: metav1.TypeMeta{
 				Kind:       "BucketClass",
 				APIVersion: "objectstorage.k8s.io/v1alpha1",
 			},
 			ObjectMeta: metav1.ObjectMeta{
-				Name: "grant-bucket-class",
+				Name: "grant-bucket-class-brownfield",
 			},
 			DriverName:     "cosi.dellemc.com",
 			DeletionPolicy: v1alpha1.DeletionPolicyDelete,
@@ -66,11 +88,12 @@ var _ = Describe("Bucket Access Grant", Ordered, Label("grant", "objectscale"), 
 				APIVersion: "objectstorage.k8s.io/v1alpha1",
 			},
 			ObjectMeta: metav1.ObjectMeta{
-				Name:      "grant-bucket-claim",
-				Namespace: "access-grant-namespace",
+				Name:      "brownfield-grant-bucket-claim",
+				Namespace: namespace,
 			},
 			Spec: v1alpha1.BucketClaimSpec{
-				BucketClassName: "grant-bucket-class",
+				BucketClassName:    "grant-bucket-class-brownfield",
+				ExistingBucketName: "my-brownfield-bucket",
 				Protocols: []v1alpha1.Protocol{
 					v1alpha1.ProtocolS3,
 				},
@@ -97,7 +120,7 @@ var _ = Describe("Bucket Access Grant", Ordered, Label("grant", "objectscale"), 
 			},
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      "grant-bucket-access",
-				Namespace: "access-grant-namespace",
+				Namespace: namespace,
 			},
 			Spec: v1alpha1.BucketAccessSpec{
 				BucketAccessClassName: "grant-bucket-access-class",
@@ -108,7 +131,7 @@ var _ = Describe("Bucket Access Grant", Ordered, Label("grant", "objectscale"), 
 		validSecret = &v1.Secret{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      "grant-bucket-credentials",
-				Namespace: "access-grant-namespace",
+				Namespace: namespace,
 			},
 			Data: map[string][]byte{
 				"BucketInfo": []byte(`{"metadata":{"name":""},"spec":{"bucketName":"","authenticationType":"","secretS3":{"endpoint":"","region":"","accessKeyID":"","accessSecretKey":""},"protocols":[]}}`),
@@ -128,7 +151,7 @@ var _ = Describe("Bucket Access Grant", Ordered, Label("grant", "objectscale"), 
 		steps.CreateNamespace(ctx, clientset, "cosi-test-ns")
 
 		By("Checking if namespace 'access-grant-namespace' is created")
-		steps.CreateNamespace(ctx, clientset, "access-grant-namespace")
+		steps.CreateNamespace(ctx, clientset, namespace)
 
 		By("Checking if COSI controller 'objectstorage-controller' is installed in namespace 'default'")
 		steps.CheckCOSIControllerInstallation(ctx, clientset, "objectstorage-controller", "default")
@@ -138,64 +161,16 @@ var _ = Describe("Bucket Access Grant", Ordered, Label("grant", "objectscale"), 
 
 		By("Creating the BucketClass 'grant-bucket-class' is created")
 		grantBucketClass = steps.CreateBucketClassResource(ctx, bucketClient, grantBucketClass)
-	})
 
-	It("Creates BucketAccess with KEY authorization mechanism", func(ctx context.Context) {
+		By("Creating bucket on the Objectscale platform")
+		steps.CreateBucket(ctx, objectscale, grantBucketClaim.Namespace, grantBucket)
+
+		By("Creating Bucket")
+		steps.CreateBucketResource(ctx, bucketClient, grantBucket)
+
 		By("Creating the BucketClaim 'grant-bucket-claim'")
 		steps.CreateBucketClaimResource(ctx, bucketClient, grantBucketClaim)
-	})
 
-	It("Brownfield BucketAccess with KEY authorization mechanism", func(ctx context.Context) {
-		brownfieldBucket = &v1alpha1.Bucket{
-			TypeMeta: metav1.TypeMeta{
-				Kind:       "Bucket",
-				APIVersion: "objectstorage.k8s.io/v1alpha1",
-			},
-			ObjectMeta: metav1.ObjectMeta{
-				Name: "brownfield-bucket",
-			},
-			Spec: v1alpha1.BucketSpec{
-				BucketClaim:      &v1.ObjectReference{},
-				BucketClassName:  "grant-bucket-class",
-				DriverName:       "cosi.dellemc.com",
-				DeletionPolicy:   "Retain",
-				ExistingBucketID: "my-brownfield-bucket",
-				Parameters: map[string]string{
-					"id": DriverID,
-				},
-				Protocols: []v1alpha1.Protocol{v1alpha1.ProtocolS3},
-			},
-		}
-
-		brownfieldBucketClaim = &v1alpha1.BucketClaim{
-			TypeMeta: metav1.TypeMeta{
-				Kind:       "BucketClaim",
-				APIVersion: "objectstorage.k8s.io/v1alpha1",
-			},
-			ObjectMeta: metav1.ObjectMeta{
-				Name:      "brownfield-grant-bucket-claim",
-				Namespace: "access-grant-namespace",
-			},
-			Spec: v1alpha1.BucketClaimSpec{
-				BucketClassName:    "grant-bucket-class",
-				ExistingBucketName: "my-brownfield-bucket",
-				Protocols: []v1alpha1.Protocol{
-					v1alpha1.ProtocolS3,
-				},
-			},
-		}
-		grantBucketClaim = brownfieldBucketClaim
-		By("Creating bucket on the Objectscale platform")
-		steps.CreateBucket(ctx, objectscale, grantBucketClaim.Namespace, brownfieldBucket)
-
-		By("Creating bucket resource on the K8s")
-		steps.CreateBucketResource(ctx, bucketClient, brownfieldBucket)
-
-		By("Creating bucket claim on the K8s")
-		steps.CreateBucketClaimResource(ctx, bucketClient, grantBucketClaim)
-	})
-
-	AfterEach(func(ctx context.Context) {
 		By("Checking if Bucket resource referencing BucketClaim resource 'grant-bucket-access-class' is created")
 		grantBucket = steps.GetBucketResource(ctx, bucketClient, grantBucketClaim)
 
@@ -207,9 +182,6 @@ var _ = Describe("Bucket Access Grant", Ordered, Label("grant", "objectscale"), 
 
 		By("Checking if Bucket resource referencing 'grant-bucket-claim' status 'bucketReady' is 'true'")
 		steps.CheckBucketStatus(grantBucket, true)
-
-		By("Checking if Bucket resource 'grant-bucket' status 'bucketID' is not empty")
-		steps.CheckBucketID(grantBucket)
 
 		// I need bucket name here that is generated by one of the steps above, I think. Maybe there is a better way to do this.
 		resourceARN := objscl.BuildResourceString(ObjectscaleID, ObjectstoreID, grantBucket.Name)
@@ -234,7 +206,9 @@ var _ = Describe("Bucket Access Grant", Ordered, Label("grant", "objectscale"), 
 				},
 			},
 		}
+	})
 
+	It("Creates BucketAccess with KEY authorization mechanism", func(ctx context.Context) {
 		By("Creating BucketAccessClass resource 'grant-bucket-access-class'")
 		steps.CreateBucketAccessClassResource(ctx, bucketClient, grantBucketAccessClass)
 
@@ -284,7 +258,6 @@ var _ = Describe("Bucket Access Grant", Ordered, Label("grant", "objectscale"), 
 
 			steps.DeleteBucketClaimResource(ctx, bucketClient, grantBucketClaim)
 			steps.DeleteBucketClassResource(ctx, bucketClient, grantBucketClass)
-			steps.DeleteBucket(ctx, objectscale, Namespace, brownfieldBucket)
 		})
 	})
 })

@@ -27,13 +27,14 @@ import (
 
 var _ = Describe("Bucket Creation", Ordered, Label("create", "objectscale"), func() {
 	// Resources for scenarios
+	const (
+		namespace string = "creation-namespace"
+	)
 	var (
 		createClass        *v1alpha1.BucketClass
 		validBucketClaim   *v1alpha1.BucketClaim
 		invalidBucketClaim *v1alpha1.BucketClaim
 		validBucket        *v1alpha1.Bucket
-		// TODO: waiting for event PR merge to sidecar
-		// myEvent            *v1.Event
 	)
 
 	// Background
@@ -60,7 +61,7 @@ var _ = Describe("Bucket Creation", Ordered, Label("create", "objectscale"), fun
 			},
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      "creation-bucket-claim-valid",
-				Namespace: "creation-namespace",
+				Namespace: namespace,
 			},
 			Spec: v1alpha1.BucketClaimSpec{
 				BucketClassName: "creation-bucket-class",
@@ -77,7 +78,7 @@ var _ = Describe("Bucket Creation", Ordered, Label("create", "objectscale"), fun
 			},
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      "creation-bucket-claim-invalid",
-				Namespace: "creation-namespace",
+				Namespace: namespace,
 			},
 			Spec: v1alpha1.BucketClaimSpec{
 				BucketClassName: "creation-bucket-class-invalid",
@@ -86,12 +87,6 @@ var _ = Describe("Bucket Creation", Ordered, Label("create", "objectscale"), fun
 				},
 			},
 		}
-		// TODO: waiting for event PR merge to sidecar
-		// myEvent = &v1.Event{
-		// 	Type:    v1.EventTypeWarning,
-		// 	Reason:  "MissingBucketClassName",
-		// 	Message: "BucketClassName not defined",
-		// }
 
 		By("Checking if the cluster is ready")
 		steps.CheckClusterAvailability(clientset)
@@ -106,7 +101,7 @@ var _ = Describe("Bucket Creation", Ordered, Label("create", "objectscale"), fun
 		steps.CreateNamespace(ctx, clientset, "cosi-test-ns")
 
 		By("Checking if namespace 'creation-namespace' is created")
-		steps.CreateNamespace(ctx, clientset, "creation-namespace")
+		steps.CreateNamespace(ctx, clientset, namespace)
 
 		By("Checking if COSI controller 'objectstorage-controller' is installed in namespace 'default'")
 		steps.CheckCOSIControllerInstallation(ctx, clientset, "objectstorage-controller", "default")
@@ -139,7 +134,6 @@ var _ = Describe("Bucket Creation", Ordered, Label("create", "objectscale"), fun
 
 		DeferCleanup(func(ctx context.Context) {
 			steps.DeleteBucketClaimResource(ctx, bucketClient, validBucketClaim)
-			// steps.DeleteBucket(ctx, objectscale, Namespace, validBucket)
 		})
 	})
 
@@ -155,10 +149,6 @@ var _ = Describe("Bucket Creation", Ordered, Label("create", "objectscale"), fun
 
 		By("checking if the status 'bucketReady' of BucketClaim resource 'bucket-claim-invalid' in namespace 'creation-namespace' is 'false'")
 		steps.CheckBucketClaimStatus(ctx, bucketClient, invalidBucketClaim, false)
-
-		// NOTE: commented for now until changes introduced to provisioner sidecar
-		// By("checking if the BucketClaim events contains an error: 'Cannot create Bucket: BucketClass does not exist'")
-		// steps.CheckBucketClaimEvents(ctx, clientset, invalidBucketClaim, myEvent)
 
 		DeferCleanup(func(ctx context.Context) {
 			steps.DeleteBucketClaimResource(ctx, bucketClient, invalidBucketClaim)

@@ -30,6 +30,10 @@ import (
 
 var _ = Describe("Bucket Access Revoke", Ordered, Label("revoke", "objectscale"), func() {
 	// Resources for scenarios
+	const (
+		namespace string = "access-revoke-namespace"
+	)
+
 	var (
 		revokeBucketClass       *v1alpha1.BucketClass
 		revokeBucketClaim       *v1alpha1.BucketClaim
@@ -66,7 +70,7 @@ var _ = Describe("Bucket Access Revoke", Ordered, Label("revoke", "objectscale")
 			},
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      "revoke-bucket-claim",
-				Namespace: "access-revoke-namespace",
+				Namespace: namespace,
 			},
 			Spec: v1alpha1.BucketClaimSpec{
 				BucketClassName: "revoke-bucket-class",
@@ -96,7 +100,7 @@ var _ = Describe("Bucket Access Revoke", Ordered, Label("revoke", "objectscale")
 			},
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      "revoke-bucket-access",
-				Namespace: "access-revoke-namespace",
+				Namespace: namespace,
 			},
 			Spec: v1alpha1.BucketAccessSpec{
 				BucketAccessClassName: "revoke-bucket-access-class",
@@ -107,7 +111,7 @@ var _ = Describe("Bucket Access Revoke", Ordered, Label("revoke", "objectscale")
 		validSecret = &v1.Secret{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      "revoke-bucket-credentials",
-				Namespace: "access-revoke-namespace",
+				Namespace: namespace,
 			},
 			Data: map[string][]byte{
 				"BucketInfo": []byte(`{"metadata":{"name":""},"spec":{"bucketName":"","authenticationType":"","secretS3":{"endpoint":"","region":"","accessKeyID":"","accessSecretKey":""},"protocols":[]}}`),
@@ -127,7 +131,7 @@ var _ = Describe("Bucket Access Revoke", Ordered, Label("revoke", "objectscale")
 		steps.CreateNamespace(ctx, clientset, "cosi-test-ns")
 
 		By("Checking if namespace 'access-revoke-namespace' is created")
-		steps.CreateNamespace(ctx, clientset, "access-revoke-namespace")
+		steps.CreateNamespace(ctx, clientset, namespace)
 
 		By("Checking if COSI controller 'objectstorage-controller' is installed in namespace 'default'")
 		steps.CheckCOSIControllerInstallation(ctx, clientset, "objectstorage-controller", "default")

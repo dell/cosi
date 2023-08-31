@@ -27,6 +27,9 @@ import (
 
 var _ = Describe("Bucket Deletion", Ordered, Label("delete", "objectscale"), func() {
 	// Resources for scenarios
+	const (
+		namespace string = "deletion-namespace"
+	)
 	var (
 		bucketClassDelete *v1alpha1.BucketClass
 		bucketClassRetain *v1alpha1.BucketClass
@@ -74,7 +77,7 @@ var _ = Describe("Bucket Deletion", Ordered, Label("delete", "objectscale"), fun
 			},
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      "deletion-bucket-claim-delete",
-				Namespace: "deletion-namespace",
+				Namespace: namespace,
 			},
 			Spec: v1alpha1.BucketClaimSpec{
 				BucketClassName: "deletion-bucket-class-delete",
@@ -90,7 +93,7 @@ var _ = Describe("Bucket Deletion", Ordered, Label("delete", "objectscale"), fun
 			},
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      "deletion-bucket-claim-retain",
-				Namespace: "deletion-namespace",
+				Namespace: namespace,
 			},
 			Spec: v1alpha1.BucketClaimSpec{
 				BucketClassName: "deletion-bucket-class-retain",
@@ -113,7 +116,7 @@ var _ = Describe("Bucket Deletion", Ordered, Label("delete", "objectscale"), fun
 		steps.CreateNamespace(ctx, clientset, "cosi-test-ns")
 
 		By("Checking if namespace 'deletion-namespace' is created")
-		steps.CreateNamespace(ctx, clientset, "deletion-namespace")
+		steps.CreateNamespace(ctx, clientset, namespace)
 
 		By("Checking if COSI controller objectstorage-controller is installed in namespace 'default'")
 		steps.CheckCOSIControllerInstallation(ctx, clientset, "objectstorage-controller", "default")
