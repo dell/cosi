@@ -151,3 +151,14 @@ func DeleteBucket(ctx context.Context, objectscale *objectscaleRest.ClientSet, n
 	err := objectscale.Buckets().Delete(ctx, bucket.Name, namespace, false)
 	gomega.Expect(err).ToNot(gomega.HaveOccurred())
 }
+
+// CreateBucket Function for creating bucket on Objectscale.
+func CreateBucket(ctx context.Context, objectscale *objectscaleRest.ClientSet, namespace string, bucket *v1alpha1.Bucket) {
+	model := model.Bucket{
+		Name:      bucket.Name,
+		Namespace: namespace,
+	}
+	nbucket, err := objectscale.Buckets().Create(ctx, model)
+	gomega.Expect(nbucket).ToNot(gomega.BeNil())
+	gomega.Expect(err).ToNot(gomega.HaveOccurred())
+}

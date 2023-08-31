@@ -33,7 +33,9 @@ var _ = Describe("Bucket Access Grant", Ordered, Label("grant", "objectscale"), 
 	var (
 		grantBucketClass       *v1alpha1.BucketClass
 		grantBucketClaim       *v1alpha1.BucketClaim
+		brownfieldBucketClaim  *v1alpha1.BucketClaim
 		grantBucket            *v1alpha1.Bucket
+		brownfieldBucket       *v1alpha1.Bucket
 		grantBucketAccessClass *v1alpha1.BucketAccessClass
 		grantBucketAccess      *v1alpha1.BucketAccess
 		validSecret            *v1.Secret
@@ -137,9 +139,48 @@ var _ = Describe("Bucket Access Grant", Ordered, Label("grant", "objectscale"), 
 		By("Creating the BucketClass 'grant-bucket-class' is created")
 		grantBucketClass = steps.CreateBucketClassResource(ctx, bucketClient, grantBucketClass)
 
+	})
+
+	It("Creates BucketAccess with KEY authorization mechanism", func(ctx context.Context) {
 		By("Creating the BucketClaim 'grant-bucket-claim'")
 		steps.CreateBucketClaimResource(ctx, bucketClient, grantBucketClaim)
+	})
 
+	It("Brownfield BucketAccess with KEY authorization mechanism", func(ctx context.Context) {
+
+		brownfieldBucket = 
+
+		brownfieldBucketClaim = &v1alpha1.BucketClaim{
+			TypeMeta: metav1.TypeMeta{
+				Kind:       "BucketClaim",
+				APIVersion: "objectstorage.k8s.io/v1alpha1",
+			},
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "brownfield-grant-bucket-claim",
+				Namespace: "access-grant-namespace",
+			},
+			Spec: v1alpha1.BucketClaimSpec{
+				BucketClassName:    "grant-bucket-class",
+				ExistingBucketName: "my-brownfield-bucket",
+				Protocols: []v1alpha1.Protocol{
+					v1alpha1.ProtocolS3,
+				},
+			},
+		}
+		grantBucketClaim = brownfieldBucketClaim
+		By("Creating bucket on the Objectscale platform")
+		steps.CreateBucket(ctx, objectscale, grantBucketClaim.Namespace, brownfieldBucket)
+
+		By("Creating bucket resource on the K8s")
+		// TODO: create step for k8s bucket creation
+		bucketClient.ObjectstorageV1alpha1().Buckets().Create()
+
+		By("Creating bucket claim on the K8s")
+		steps.CreateBucketClaimResource(ctx, bucketClient, grantBucketClaim)
+
+	})
+
+	AfterEach(func(ctx context.Context) {
 		By("Checking if Bucket resource referencing BucketClaim resource 'grant-bucket-access-class' is created")
 		grantBucket = steps.GetBucketResource(ctx, bucketClient, grantBucketClaim)
 
@@ -178,9 +219,7 @@ var _ = Describe("Bucket Access Grant", Ordered, Label("grant", "objectscale"), 
 				},
 			},
 		}
-	})
 
-	It("Creates BucketAccess with KEY authorization mechanism", func(ctx context.Context) {
 		By("Creating BucketAccessClass resource 'grant-bucket-access-class'")
 		steps.CreateBucketAccessClassResource(ctx, bucketClient, grantBucketAccessClass)
 

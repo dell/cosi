@@ -28,12 +28,10 @@ import (
 var _ = Describe("Bucket Creation", Ordered, Label("create", "objectscale"), func() {
 	// Resources for scenarios
 	var (
-		createClass           *v1alpha1.BucketClass
-		validBucketClaim      *v1alpha1.BucketClaim
-		brownfieldBucketClaim *v1alpha1.BucketClaim
-		invalidBucketClaim    *v1alpha1.BucketClaim
-		validBucket           *v1alpha1.Bucket
-		brownfieldBucket      *v1alpha1.Bucket
+		createClass        *v1alpha1.BucketClass
+		validBucketClaim   *v1alpha1.BucketClaim
+		invalidBucketClaim *v1alpha1.BucketClaim
+		validBucket        *v1alpha1.Bucket
 		// TODO: waiting for event PR merge to sidecar
 		// myEvent            *v1.Event
 	)
@@ -71,22 +69,7 @@ var _ = Describe("Bucket Creation", Ordered, Label("create", "objectscale"), fun
 				},
 			},
 		}
-		brownfieldBucketClaim = &v1alpha1.BucketClaim{
-			TypeMeta: metav1.TypeMeta{
-				Kind:       "BucketClaim",
-				APIVersion: "objectstorage.k8s.io/v1alpha1",
-			},
-			ObjectMeta: metav1.ObjectMeta{
-				Name:      "creation-bucket-claim-brownfield",
-				Namespace: "creation-namespace",
-			},
-			Spec: v1alpha1.BucketClaimSpec{
-				BucketClassName: "creation-bucket-class",
-				Protocols: []v1alpha1.Protocol{
-					v1alpha1.ProtocolS3,
-				},
-			},
-		}
+
 		invalidBucketClaim = &v1alpha1.BucketClaim{
 			TypeMeta: metav1.TypeMeta{
 				Kind:       "BucketClaim",
@@ -156,28 +139,6 @@ var _ = Describe("Bucket Creation", Ordered, Label("create", "objectscale"), fun
 
 		DeferCleanup(func(ctx context.Context) {
 			steps.DeleteBucketClaimResource(ctx, bucketClient, validBucketClaim)
-			// steps.DeleteBucket(ctx, objectscale, Namespace, validBucket)
-		})
-	})
-
-	It("Brownfield creates bucket", func(ctx context.Context) {
-		By("checking if Bucket resource referencing BucketClaim resource 'bucket-claim-brownfield' is created")
-		brownfieldBucket = steps.GetBucketResource(ctx, bucketClient, brownfieldBucketClaim)
-
-		By("checking if Bucket resource referencing BucketClaim resource 'bucket-claim-brownfield' is created in ObjectStore '${objectstoreName}'")
-		steps.CheckBucketResourceInObjectStore(ctx, objectscale, Namespace, brownfieldBucket)
-
-		By("checking if the status 'bucketReady' of BucketClaim resource 'bucket-claim-brownfield' in namespace 'creation-namespace' is 'true'")
-		steps.CheckBucketClaimStatus(ctx, bucketClient, brownfieldBucketClaim, true)
-
-		By("checking the status 'bucketReady' of Bucket resource referencing BucketClaim resource 'bucket-claim-brownfield'  is 'true'")
-		steps.CheckBucketStatus(brownfieldBucket, true)
-
-		By("checking the status 'bucketID' of Bucket resource referencing BucketClaim resource 'bucket-claim-brownfield' is not empty")
-		steps.CheckBucketID(brownfieldBucket)
-
-		DeferCleanup(func(ctx context.Context) {
-			steps.DeleteBucketClaimResource(ctx, bucketClient, brownfieldBucketClaim)
 			// steps.DeleteBucket(ctx, objectscale, Namespace, validBucket)
 		})
 	})
