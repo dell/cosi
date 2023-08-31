@@ -21,6 +21,7 @@ import (
 	"syscall"
 	"time"
 
+	l "github.com/dell/cosi/pkg/logger"
 	sdktrace "go.opentelemetry.io/otel/sdk/trace"
 	semconv "go.opentelemetry.io/otel/semconv/v1.17.0"
 
@@ -33,11 +34,7 @@ import (
 
 	"github.com/dell/cosi/pkg/config"
 	"github.com/dell/cosi/pkg/driver"
-	"github.com/dell/cosi/pkg/logger"
-	"github.com/go-logr/logr"
 )
-
-var log logr.Logger
 
 var (
 	logLevel     = flag.Int("log-level", 4, "Log level (0-10)")
@@ -56,8 +53,7 @@ func init() {
 	// Parse command line flags.
 	flag.Parse()
 	// Create logger instance.
-	logger.New(*logLevel, *logFormat)
-	log = logger.GetLogger()
+	l.New(*logLevel, *logFormat)
 	// Set the custom logger for OpenTelemetry.
 	setOtelLogger()
 }
@@ -65,7 +61,7 @@ func init() {
 func main() {
 	err := runMain()
 	if err != nil {
-		log.Error(err, "failed to start application")
+		l.Log().Error(err, "failed to start application")
 		os.Exit(1)
 	}
 }
@@ -80,23 +76,23 @@ func runMain() error {
 		return fmt.Errorf("failed to create configuration: %w", err)
 	}
 
-	log.V(4).Info("Config successfully loaded.", "configFilePath", *configFile)
+	l.Log().V(4).Info("Config successfully loaded.", "configFilePath", *configFile)
 
 	// Create TracerProvider with exporter to Open Telemetry Collector.
 	var tp *sdktrace.TracerProvider
 	if *otelEndpoint != "" {
 		tp, err = tracerProvider(ctx, *otelEndpoint)
 		if err != nil {
-			log.Error(err, "Failed to connect to Jaeger.")
+			l.Log().Error(err, "Failed to connect to Jaeger.")
 		} else {
 			// Set global TracerProvider.
 			otel.SetTracerProvider(tp)
 			// set global propagator to tracecontext (the default is no-op).
 			otel.SetTextMapPropagator(propagation.TraceContext{})
-			log.V(4).Info("Tracing started successfully.", "collector", *otelEndpoint)
+			l.Log().V(4).Info("Tracing started successfully.", "collector", *otelEndpoint)
 		}
 	} else {
-		log.V(0).Info("OTEL endpoint is empty, disabling tracing.")
+		l.Log().V(0).Info("OTEL endpoint is empty, disabling tracing.")
 	}
 
 	// Create a channel to listen for signals.
@@ -109,14 +105,14 @@ func runMain() error {
 		// Wait for a signal.
 		sig := <-sigs
 		// Log that a signal was received.
-		log.V(4).Info("Signal received.", "type", sig)
+		l.Log().V(4).Info("Signal received.", "type", sig)
 		// Cancel the context.
 		cancel()
 		// Exit the program with an error.
 		os.Exit(1)
 	}()
 
-	log.V(4).Info("COSI driver is starting.")
+	l.Log().V(4).Info("COSI driver is starting.")
 	// Run the driver.
 	return driver.RunBlocking(ctx, cfg, driver.COSISocket, tracedServiceName)
 }
@@ -170,11 +166,11 @@ type errorHandler struct{}
 
 // Handle is used to handle errors from OpenTelemetry.
 func (e *errorHandler) Handle(err error) {
-	log.Error(err, "error occurred in OpenTelemetry")
+	l.Log().Error(err, "error occurred in OpenTelemetry")
 }
 
 // setOtelLogger is used to set the custom logger from OpenTelemetry.
 func setOtelLogger() {
-	otel.SetLogger(log)
+	otel.SetLogger(l.Log())
 	otel.SetErrorHandler(&errorHandler{})
 }

@@ -18,10 +18,12 @@ import (
 	"fmt"
 	"strings"
 
+	l "github.com/dell/cosi/pkg/logger"
+	cosi "sigs.k8s.io/container-object-storage-interface-spec"
+
 	"github.com/dell/goobjectscale/pkg/client/model"
 	"go.opentelemetry.io/otel"
 	"google.golang.org/grpc/codes"
-	cosi "sigs.k8s.io/container-object-storage-interface-spec"
 )
 
 // All errors that can be returned by DriverCreateBucket.
@@ -41,7 +43,7 @@ func (s *Server) DriverCreateBucket(
 	ctx, cancel := context.WithTimeout(ctx, defaultTimeout)
 	defer cancel()
 
-	log.V(4).Info("Bucket is being created.", "bucket", req.GetName())
+	l.Log().V(4).Info("Bucket is being created.", "bucket", req.GetName())
 
 	span.AddEvent("bucket is being created")
 
@@ -58,7 +60,7 @@ func (s *Server) DriverCreateBucket(
 	parameters := make(map[string]string)
 	parameters["namespace"] = s.namespace
 
-	log.V(4).Info("Parameters of the bucket.", "parameters", parameters)
+	l.Log().V(4).Info("Parameters of the bucket.", "parameters", parameters)
 
 	// Get bucket.
 	existingBucket, err := s.getBucket(ctx, bucket.Name, parameters)
@@ -97,7 +99,7 @@ func (s *Server) getBucket(ctx context.Context, bucketName string, parameters ma
 
 	// Second case is the error is nil, which means we actually found a bucket.
 	case err == nil:
-		log.V(4).Info("Bucket already exists.", "bucket", bucketName)
+		l.Log().V(4).Info("Bucket already exists.", "bucket", bucketName)
 
 		span.AddEvent("bucket already exists")
 
@@ -119,7 +121,7 @@ func (s *Server) createBucket(ctx context.Context, bucket *model.Bucket) error {
 		return err
 	}
 
-	log.V(4).Info("Bucket successfully created.", "bucket", bucket.Name)
+	l.Log().V(4).Info("Bucket successfully created.", "bucket", bucket.Name)
 
 	span.AddEvent("bucket successfully created")
 

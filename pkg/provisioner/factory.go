@@ -15,6 +15,7 @@ package provisioner
 import (
 	"errors"
 
+	l "github.com/dell/cosi/pkg/logger"
 	driver "github.com/dell/cosi/pkg/provisioner/virtualdriver"
 
 	"github.com/dell/cosi/pkg/config"
@@ -30,7 +31,7 @@ func NewVirtualDriver(config config.Configuration) (driver.Driver, error) {
 	}
 
 	if config.Objectscale != nil {
-		log.V(6).Info("ObjectScale config created.")
+		l.Log().V(6).Info("ObjectScale config created.")
 		return objectscale.New(config.Objectscale)
 	}
 

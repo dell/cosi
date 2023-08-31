@@ -17,11 +17,12 @@ import (
 	"os"
 	"testing"
 
+	l "github.com/dell/cosi/pkg/logger"
+	cosi "sigs.k8s.io/container-object-storage-interface-spec"
+
 	"github.com/stretchr/testify/assert"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
-
-	cosi "sigs.k8s.io/container-object-storage-interface-spec"
 
 	"github.com/dell/cosi/pkg/internal/testcontext"
 	"github.com/dell/cosi/pkg/provisioner/virtualdriver/fake"
@@ -39,7 +40,7 @@ func TestNew(t *testing.T) {
 
 	err := fakeDriverset.Add(&fake.Driver{FakeID: "fake"})
 	if err != nil {
-		log.Error(err, "failed to create fakedriverset")
+		l.Log().Error(err, "failed to create fakedriverset")
 		os.Exit(1)
 	}
 

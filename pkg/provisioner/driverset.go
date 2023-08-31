@@ -17,6 +17,7 @@ import (
 	"fmt"
 	"sync"
 
+	l "github.com/dell/cosi/pkg/logger"
 	driver "github.com/dell/cosi/pkg/provisioner/virtualdriver"
 )
 
@@ -47,7 +48,7 @@ func (ds *Driverset) Get(id string) (driver.Driver, error) {
 
 	switch d := d.(type) {
 	case driver.Driver:
-		log.V(6).Info("Driver exists.", "id", id)
+		l.Log().V(6).Info("Driver exists.", "id", id)
 
 		return d, nil
 	default:

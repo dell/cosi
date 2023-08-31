@@ -26,6 +26,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/iam"
 	"github.com/aws/aws-sdk-go/service/iam/iamiface"
 
+	l "github.com/dell/cosi/pkg/logger"
 	driver "github.com/dell/cosi/pkg/provisioner/virtualdriver"
 	objectscaleRest "github.com/dell/goobjectscale/pkg/client/rest"
 	objectscaleClient "github.com/dell/goobjectscale/pkg/client/rest/client"
@@ -34,11 +35,8 @@ import (
 
 	"github.com/dell/cosi/pkg/config"
 	"github.com/dell/cosi/pkg/internal/transport"
-	"github.com/dell/cosi/pkg/logger"
 	"github.com/dell/goobjectscale/pkg/client/api"
 )
-
-var log = logger.GetLogger()
 
 const (
 	splitNumber = 2
@@ -153,7 +151,7 @@ func New(config *config.Objectscale) (*Server, error) {
 	if strings.Contains(id, "-") {
 		id = strings.ReplaceAll(id, "-", "_")
 
-		log.V(0).Info("ID in config contains hyphens, which will be replaced with underscores.", "id", id, "config.id", config.Id)
+		l.Log().V(0).Info("ID in config contains hyphens, which will be replaced with underscores.", "id", id, "config.id", config.Id)
 	}
 
 	transport, err := transport.New(config.Tls)
@@ -191,7 +189,7 @@ func New(config *config.Objectscale) (*Server, error) {
 				Endpoint:                      aws.String(objectscaleGateway + "/iam"),
 				Region:                        region,
 				HTTPClient:                    &x509Client,
-				Logger:                        logger.NewAWSLogger(log),
+				Logger:                        l.NewAWSLogger(l.Log()),
 			},
 		},
 	)

@@ -27,6 +27,7 @@ import (
 	"google.golang.org/grpc/status"
 	"sigs.k8s.io/container-object-storage-interface-provisioner-sidecar/pkg/consts"
 
+	l "github.com/dell/cosi/pkg/logger"
 	otelCodes "go.opentelemetry.io/otel/codes"
 	cosi "sigs.k8s.io/container-object-storage-interface-spec"
 
@@ -96,13 +97,13 @@ func handleKeyAuthentication(ctx context.Context, s *Server, req *cosi.DriverGra
 		return nil, logAndTraceError(span, ErrInvalidBucketID.Error(), err, codes.InvalidArgument)
 	}
 
-	log.V(4).Info("Bucket access for bucket is being created.", "bucket", bucketName, "bucket_access", req.Name)
+	l.Log().V(4).Info("Bucket access for bucket is being created.", "bucket", bucketName, "bucket_access", req.Name)
 
 	// Construct common parameters for bucket requests.
 	parameters := make(map[string]string)
 	parameters["namespace"] = s.namespace
 
-	log.V(4).Info("Parameters of the bucket.", "parameters", parameters)
+	l.Log().V(4).Info("Parameters of the bucket.", "parameters", parameters)
 
 	// Check if bucket for granting access exists.
 	_, err = s.mgmtClient.Buckets().Get(ctx, bucketName, parameters)
@@ -139,7 +140,7 @@ func handleKeyAuthentication(ctx context.Context, s *Server, req *cosi.DriverGra
 	// Check if IAM user exists.
 	if userGet.User != nil {
 		// Case when user exists.
-		log.V(0).Info("User already exists.", "user", userName)
+		l.Log().V(0).Info("User already exists.", "user", userName)
 	} else {
 		// Case when user does not exist - create one.
 		user, err := s.iamClient.CreateUserWithContext(ctx, &iam.CreateUserInput{
@@ -149,7 +150,7 @@ func handleKeyAuthentication(ctx context.Context, s *Server, req *cosi.DriverGra
 			return nil, logAndTraceError(span, ErrFailedToCreateUser.Error(), err, codes.Internal, "user", userName)
 		}
 
-		log.V(4).Info("ObjectScale IAM user was created.", "user", userName, "userID", user.User.UserId)
+		l.Log().V(4).Info("ObjectScale IAM user was created.", "user", userName, "userID", user.User.UserId)
 	}
 
 	// Check if policy for a specific bucket exists.
@@ -173,7 +174,7 @@ func handleKeyAuthentication(ctx context.Context, s *Server, req *cosi.DriverGra
 		ctx, policyRequest.Statement, awsBucketResourceARN, awsPrincipalString,
 	)
 
-	log.V(4).Info("Policy request statement was parsed.", "awsBucketResourceARN", awsBucketResourceARN, "awsPrincipalString", awsPrincipalString, "statement", policyRequest.Statement)
+	l.Log().V(4).Info("Policy request statement was parsed.", "awsBucketResourceARN", awsBucketResourceARN, "awsPrincipalString", awsPrincipalString, "statement", policyRequest.Statement)
 
 	if policyRequest.ID == "" {
 		policyID, err := generatePolicyID(ctx)
@@ -181,7 +182,7 @@ func handleKeyAuthentication(ctx context.Context, s *Server, req *cosi.DriverGra
 			return nil, logAndTraceError(span, ErrFailedToGeneratePolicyID.Error(), err, codes.Internal, "bucket", bucketName, "PolicyID", policyID)
 		}
 
-		log.V(4).Info("policyID was generated.", "policy", policyRequest)
+		l.Log().V(4).Info("policyID was generated.", "policy", policyRequest)
 
 		span.AddEvent("policyID was generated")
 	}
@@ -369,7 +370,7 @@ func assembleCredentials(
 	secretsMap[consts.S3Endpoint] = s3Endpoint
 	secretsMap["bucketName"] = bucketName
 
-	log.V(4).Info("Secret access key for user with endpoint was created.", "user", userName, "secretKeyId", *accessKey.AccessKey.AccessKeyId, "endpoint", s3Endpoint)
+	l.Log().V(4).Info("Secret access key for user with endpoint was created.", "user", userName, "secretKeyId", *accessKey.AccessKey.AccessKeyId, "endpoint", s3Endpoint)
 
 	span.AddEvent("secret access key for user with endpoint was created")
 
@@ -377,7 +378,7 @@ func assembleCredentials(
 	credentials := make(map[string]*cosi.CredentialDetails)
 	credentials[consts.S3Key] = &credentialDetails
 
-	log.V(4).Info("Access to the bucket for user successfully granted.", "bucket", bucketName, "user", userName)
+	l.Log().V(4).Info("Access to the bucket for user successfully granted.", "bucket", bucketName, "user", userName)
 
 	span.AddEvent("access to the bucket for user successfully granted")
 
@@ -386,7 +387,7 @@ func assembleCredentials(
 
 // logAndTraceError is a helper function that logs an error with specified fields and records it in a span.
 func logAndTraceError(span trace.Span, errMsg string, err error, code codes.Code, keysAndValues ...interface{}) error {
-	log.Error(err, errMsg, keysAndValues)
+	l.Log().Error(err, errMsg, keysAndValues)
 
 	span.RecordError(err)
 	span.SetStatus(otelCodes.Error, errMsg)

@@ -93,6 +93,6 @@ func New(level int, formatter string) {
 	log = logrusr.New(logrusInstance)
 }
 
-func GetLogger() logr.Logger {
+func Log() logr.Logger {
 	return log
 }

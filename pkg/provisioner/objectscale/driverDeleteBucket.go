@@ -16,9 +16,11 @@ import (
 	"context"
 	"errors"
 
+	l "github.com/dell/cosi/pkg/logger"
+	cosi "sigs.k8s.io/container-object-storage-interface-spec"
+
 	"go.opentelemetry.io/otel"
 	"google.golang.org/grpc/codes"
-	cosi "sigs.k8s.io/container-object-storage-interface-spec"
 )
 
 // All errors that can be returned by DriverDeleteBucket.
@@ -31,7 +33,7 @@ func (s *Server) DriverDeleteBucket(ctx context.Context,
 	ctx, span := otel.Tracer(DeleteBucketTraceName).Start(ctx, "ObjectscaleDriverDeleteBucket")
 	defer span.End()
 
-	log.V(4).Info("Bucket id being deleted.", "bucketID", req.BucketId)
+	l.Log().V(4).Info("Bucket id being deleted.", "bucketID", req.BucketId)
 
 	span.AddEvent("bucket is being deleted")
 
@@ -50,7 +52,7 @@ func (s *Server) DriverDeleteBucket(ctx context.Context,
 	err = s.mgmtClient.Buckets().Delete(ctx, bucketName, s.namespace, s.emptyBucket)
 
 	if errors.Is(err, ErrParameterNotFound) {
-		log.V(0).Info("Bucket does not exist.", "bucket", bucketName)
+		l.Log().V(0).Info("Bucket does not exist.", "bucket", bucketName)
 
 		span.AddEvent("bucket does not exist")
 
@@ -61,7 +63,7 @@ func (s *Server) DriverDeleteBucket(ctx context.Context,
 		return nil, logAndTraceError(span, ErrFailedToDeleteBucket.Error(), err, codes.Internal, "bucket", bucketName)
 	}
 
-	log.V(4).Info("Bucket successfully deleted.", "bucket", bucketName)
+	l.Log().V(4).Info("Bucket successfully deleted.", "bucket", bucketName)
 
 	span.AddEvent("bucket successfully deleted")
 

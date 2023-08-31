@@ -21,6 +21,7 @@ import (
 	"go.opentelemetry.io/otel"
 	"google.golang.org/grpc/codes"
 
+	l "github.com/dell/cosi/pkg/logger"
 	cosi "sigs.k8s.io/container-object-storage-interface-spec"
 
 	"github.com/dell/cosi/pkg/provisioner/policy"
@@ -35,13 +36,12 @@ var (
 	ErrFailedToListAccessKeys     = errors.New("failed to list access keys")
 	ErrFailedToDeleteAccessKey    = errors.New("failed to delete access key")
 	ErrFailedToDeleteUser         = errors.New("failed to delete user")
-	ErrFailedToRemovePolicy       = errors.New("failed to remove bucket policy")
 )
 
 // All warnings that can be returned by DriverRevokeBucketAccess.
 var (
-	WarnBucketNotFound = "bucket not found"
-	WarnUserNotFound   = "user not found"
+	WarnBucketNotFound = "Bucket not found."
+	WarnUserNotFound   = "User not found."
 )
 
 // DriverRevokeBucketAccess revokes access from Bucket on specific Object Storage Platform.
@@ -67,12 +67,12 @@ func (s *Server) DriverRevokeBucketAccess(ctx context.Context,
 		return nil, logAndTraceError(span, ErrInvalidBucketID.Error(), err, codes.InvalidArgument)
 	}
 
-	log.V(4).Info("Bucket access for bucket is being revoked.")
+	l.Log().V(4).Info("Bucket access for bucket is being revoked.")
 
 	parameters := make(map[string]string)
 	parameters["namespace"] = s.namespace
 
-	log.V(4).Info("Parameters of the bucket.", "parameters", parameters)
+	l.Log().V(4).Info("Parameters of the bucket.", "parameters", parameters)
 
 	// Check if bucket for revoking access exists.
 	bucketExists, err := checkBucketExistence(ctx, s, bucketName, parameters)
@@ -99,7 +99,7 @@ func (s *Server) DriverRevokeBucketAccess(ctx context.Context,
 		}
 	}
 
-	log.V(4).Info("Bucket access revoked.", "userName", req.AccountId, "bucket", bucketName)
+	l.Log().V(4).Info("Bucket access revoked.", "userName", req.AccountId, "bucket", bucketName)
 
 	return &cosi.DriverRevokeBucketAccessResponse{}, nil
 }
@@ -114,7 +114,7 @@ func checkUserExistence(ctx context.Context, s *Server, accountID string) (bool,
 
 	// User is not found - return false. It's a valid scenario.
 	if err != nil && err.Error() == iam.ErrCodeNoSuchEntityException {
-		log.V(0).Info(WarnUserNotFound, "user", accountID)
+		l.Log().V(0).Info(WarnUserNotFound, "user", accountID)
 		span.AddEvent(WarnUserNotFound)
 
 		return false, nil
@@ -140,7 +140,7 @@ func checkBucketExistence(ctx context.Context, s *Server, bucketName string, par
 	// Bucket is not found - return false. It's a valid scenario.
 	if errors.Is(err, ErrParameterNotFound) {
 		span.AddEvent(WarnBucketNotFound)
-		log.V(0).Info(WarnBucketNotFound, "bucket", bucketName)
+		l.Log().V(0).Info(WarnBucketNotFound, "bucket", bucketName)
 
 		return false, nil
 	}
@@ -184,7 +184,7 @@ func removeBucketPolicy(
 	}
 
 	for k, statement := range jsonPolicy.Statement {
-		log.V(6).Info("Processing next statement.", "k", k, "statement", statement)
+		l.Log().V(6).Info("Processing next statement.", "k", k, "statement", statement)
 
 		statement.Principal.AWS = remove(statement.Principal.AWS, awsPrincipalString)
 		statement.Resource = remove(statement.Resource, awsBucketResourceARN)
@@ -197,7 +197,7 @@ func removeBucketPolicy(
 		return ErrFailedToMarshalPolicy
 	}
 
-	log.V(6).Info("Updating policy.", "policy", jsonPolicy, "rawPolicy", string(updatedPolicy))
+	l.Log().V(6).Info("Updating policy.", "policy", jsonPolicy, "rawPolicy", string(updatedPolicy))
 
 	// Update policy.
 	err = s.mgmtClient.Buckets().UpdatePolicy(ctx, bucketName, string(updatedPolicy), parameters)

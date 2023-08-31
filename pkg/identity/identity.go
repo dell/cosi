@@ -22,10 +22,8 @@ import (
 
 	cosi "sigs.k8s.io/container-object-storage-interface-spec"
 
-	"github.com/dell/cosi/pkg/logger"
+	l "github.com/dell/cosi/pkg/logger"
 )
-
-var log = logger.GetLogger()
 
 var ErrEmptyDriverName = errors.New("driver name is empty")
 
@@ -48,7 +46,7 @@ func (srv *Server) DriverGetInfo(_ context.Context,
 	_ *cosi.DriverGetInfoRequest,
 ) (*cosi.DriverGetInfoResponse, error) {
 	if srv.name == "" {
-		log.Error(ErrEmptyDriverName, "driver name is empty")
+		l.Log().Error(ErrEmptyDriverName, "driver name is empty")
 
 		return nil, status.Error(codes.InvalidArgument, "DriverName is empty")
 	}

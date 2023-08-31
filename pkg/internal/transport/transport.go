@@ -22,11 +22,10 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/dell/cosi/pkg/config"
-	"github.com/dell/cosi/pkg/logger"
-)
+	l "github.com/dell/cosi/pkg/logger"
 
-var log = logger.GetLogger()
+	"github.com/dell/cosi/pkg/config"
+)
 
 var (
 	// ErrClientCertMissing indicates that one of client-cert or client-key is missing.
@@ -43,7 +42,7 @@ func New(cfg config.Tls) (*http.Transport, error) {
 		/* #nosec */
 		tlsConfig = &tls.Config{InsecureSkipVerify: true}
 
-		log.V(4).Info("Insecure connection applied.", "insecure", cfg.Insecure)
+		l.Log().V(4).Info("Insecure connection applied.", "insecure", cfg.Insecure)
 	} else {
 		cert, err := clientCert(cfg.ClientCert, cfg.ClientKey)
 		if err != nil {
@@ -69,7 +68,7 @@ func New(cfg config.Tls) (*http.Transport, error) {
 			RootCAs:            caCertPool,
 		}
 
-		log.V(6).Info("Secure connection applied.", "insecure", cfg.Insecure)
+		l.Log().V(6).Info("Secure connection applied.", "insecure", cfg.Insecure)
 	}
 
 	return &http.Transport{
@@ -79,25 +78,25 @@ func New(cfg config.Tls) (*http.Transport, error) {
 
 func clientCert(certData, keyData *string) ([]tls.Certificate, error) {
 	if certData == nil && keyData == nil {
-		log.V(6).Info("Default certificate created.", "certData", certData == nil, "keyData", keyData == nil)
+		l.Log().V(6).Info("Default certificate created.", "certData", certData == nil, "keyData", keyData == nil)
 
 		// no certificates and key is a valid option
 		return []tls.Certificate{}, nil
 	} else if certData == nil || keyData == nil {
 		// only one of those two is missing, it is not a valid option
-		log.V(6).Info("client-cert or client-key missing.", "certData", certData == nil, "keyData", keyData == nil)
+		l.Log().V(6).Info("client-cert or client-key missing.", "certData", certData == nil, "keyData", keyData == nil)
 
 		return nil, ErrClientCertMissing
 	}
 
 	if *certData == "" && *keyData == "" {
 		// both certificate and key are empty, this is also a valid option
-		log.V(6).Info("Default certificate created.", "certData", *certData == "", "keyData", *keyData == "")
+		l.Log().V(6).Info("Default certificate created.", "certData", *certData == "", "keyData", *keyData == "")
 
 		return []tls.Certificate{}, nil
 	} else if *certData == "" || *keyData == "" {
 		// only one of those two is empty, it is not a valid option
-		log.V(6).Info("client-cert or client-key missing.", "certData", *certData == "", "keyData", *keyData == "")
+		l.Log().V(6).Info("client-cert or client-key missing.", "certData", *certData == "", "keyData", *keyData == "")
 
 		return nil, ErrClientCertMissing
 	}
@@ -119,7 +118,7 @@ func clientCert(certData, keyData *string) ([]tls.Certificate, error) {
 		return nil, fmt.Errorf("unable to parse a public/private key pair: %w", err)
 	}
 
-	log.V(8).Info("X509 key pair created")
+	l.Log().V(8).Info("X509 key pair created")
 
 	return []tls.Certificate{x509}, nil
 }
