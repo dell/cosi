@@ -25,6 +25,12 @@ run:
   go: ""
 
 issues:
+  # Exclude verbosity level from gomnd
+  exclude-rules:
+    - linters:
+        - gomnd
+      text: '(.*\.)+V.*'
+
   # Set to 0 to not skip any issues.
   max-issues-per-linter: 0
 
@@ -76,7 +82,3 @@ linters-settings:
     # Ignore missing calls to `t.Parallel()` and only report incorrect uses of it.
     # Default: false
     ignore-missing: false
-
-  gomnd:
-    ignored-functions:
-      - '(.*\.)+V.*'
