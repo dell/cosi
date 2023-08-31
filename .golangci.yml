@@ -81,4 +81,4 @@ linters-settings:
   gomnd:
     ignored-functions:
       - "V"
-      - "flag.Int"
+      - "flag\.Int"
