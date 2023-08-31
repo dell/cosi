@@ -26,12 +26,11 @@ run:
 
 issues:
   # Exclude verbosity level from gomnd
-  issues:
-    exclude-rules:
-      - linters:
-          - gomnd
-        path: .*\.go
-        text: 'V\((\d+)\)'
+  exclude-rules:
+    - linters:
+        - gomnd
+      path: .*\.go
+      text: 'V\((\d+)\)'
 
   # Set to 0 to not skip any issues.
   max-issues-per-linter: 0
