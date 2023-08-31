@@ -24,6 +24,12 @@ import (
 )
 
 // CreateBucketClaimResource Function creating a BucketClaim resource from specification.
+func CreateBucketResource(ctx context.Context, bucketClient *bucketclientset.Clientset, bucket *v1alpha1.Bucket) {
+	_, err := bucketClient.ObjectstorageV1alpha1().Buckets().Create(ctx, bucket, v1.CreateOptions{})
+	gomega.Expect(err).ToNot(gomega.HaveOccurred())
+}
+
+// CreateBucketClaimResource Function creating a BucketClaim resource from specification.
 func CreateBucketClaimResource(ctx context.Context, bucketClient *bucketclientset.Clientset, bucketClaim *v1alpha1.BucketClaim) {
 	_, err := bucketClient.ObjectstorageV1alpha1().BucketClaims(bucketClaim.Namespace).Create(ctx, bucketClaim, v1.CreateOptions{})
 	gomega.Expect(err).ToNot(gomega.HaveOccurred())

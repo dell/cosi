@@ -138,7 +138,6 @@ var _ = Describe("Bucket Access Grant", Ordered, Label("grant", "objectscale"), 
 
 		By("Creating the BucketClass 'grant-bucket-class' is created")
 		grantBucketClass = steps.CreateBucketClassResource(ctx, bucketClient, grantBucketClass)
-
 	})
 
 	It("Creates BucketAccess with KEY authorization mechanism", func(ctx context.Context) {
@@ -147,8 +146,26 @@ var _ = Describe("Bucket Access Grant", Ordered, Label("grant", "objectscale"), 
 	})
 
 	It("Brownfield BucketAccess with KEY authorization mechanism", func(ctx context.Context) {
-
-		brownfieldBucket = 
+		brownfieldBucket = &v1alpha1.Bucket{
+			TypeMeta: metav1.TypeMeta{
+				Kind:       "Bucket",
+				APIVersion: "objectstorage.k8s.io/v1alpha1",
+			},
+			ObjectMeta: metav1.ObjectMeta{
+				Name: "brownfield-bucket",
+			},
+			Spec: v1alpha1.BucketSpec{
+				BucketClaim:      &v1.ObjectReference{},
+				BucketClassName:  "grant-bucket-class",
+				DriverName:       "cosi.dellemc.com",
+				DeletionPolicy:   "Retain",
+				ExistingBucketID: "my-brownfield-bucket",
+				Parameters: map[string]string{
+					"id": DriverID,
+				},
+				Protocols: []v1alpha1.Protocol{v1alpha1.ProtocolS3},
+			},
+		}
 
 		brownfieldBucketClaim = &v1alpha1.BucketClaim{
 			TypeMeta: metav1.TypeMeta{
@@ -172,12 +189,10 @@ var _ = Describe("Bucket Access Grant", Ordered, Label("grant", "objectscale"), 
 		steps.CreateBucket(ctx, objectscale, grantBucketClaim.Namespace, brownfieldBucket)
 
 		By("Creating bucket resource on the K8s")
-		// TODO: create step for k8s bucket creation
-		bucketClient.ObjectstorageV1alpha1().Buckets().Create()
+		steps.CreateBucketResource(ctx, bucketClient, brownfieldBucket)
 
 		By("Creating bucket claim on the K8s")
 		steps.CreateBucketClaimResource(ctx, bucketClient, grantBucketClaim)
-
 	})
 
 	AfterEach(func(ctx context.Context) {
@@ -269,6 +284,7 @@ var _ = Describe("Bucket Access Grant", Ordered, Label("grant", "objectscale"), 
 
 			steps.DeleteBucketClaimResource(ctx, bucketClient, grantBucketClaim)
 			steps.DeleteBucketClassResource(ctx, bucketClient, grantBucketClass)
+			steps.DeleteBucket(ctx, objectscale, Namespace, brownfieldBucket)
 		})
 	})
 })
