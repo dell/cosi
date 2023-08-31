@@ -30,6 +30,7 @@ issues:
     exclude-rules:
       - linters:
           - gomnd
+        path: .*\.go
         text: '\.V\((\d+)\)'
 
   # Set to 0 to not skip any issues.
