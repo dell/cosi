@@ -83,19 +83,19 @@ func (s *Server) DriverRevokeBucketAccess(ctx context.Context,
 	// Check user existence.
 	userExists, err := checkUserExistence(ctx, s, req.AccountId)
 	if err != nil {
-		return nil, logAndTraceError(span, ErrFailedToCheckUserExists.Error(), err, codes.Internal, "bucket", bucketName, "user", req.AccountId)
+		return nil, logAndTraceError(span, err.Error(), err, codes.Internal, "bucket", bucketName, "user", req.AccountId)
 	}
 
 	if bucketExists {
 		err := removeBucketPolicy(ctx, s, bucketName, parameters)
 		if err != nil {
-			return nil, logAndTraceError(span, ErrFailedToRemovePolicy.Error(), err, codes.Internal, "bucket", bucketName)
+			return nil, logAndTraceError(span, err.Error(), err, codes.Internal, "bucket", bucketName)
 		}
 	}
 
 	if userExists {
 		if err := deleteUser(s, req.AccountId); err != nil {
-			return nil, logAndTraceError(span, ErrFailedToDeleteUser.Error(), err, codes.Internal, "bucket", bucketName, "user", req.AccountId)
+			return nil, logAndTraceError(span, err.Error(), err, codes.Internal, "bucket", bucketName, "user", req.AccountId)
 		}
 	}
 
@@ -113,7 +113,7 @@ func checkUserExistence(ctx context.Context, s *Server, accountID string) (bool,
 	_, err := s.iamClient.GetUser(&iam.GetUserInput{UserName: &accountID})
 
 	// User is not found - return false. It's a valid scenario.
-	if errors.Is(err, errors.New(iam.ErrCodeNoSuchEntityException)) {
+	if err != nil && err.Error() == iam.ErrCodeNoSuchEntityException {
 		log.V(0).Info(WarnUserNotFound, "user", accountID)
 		span.AddEvent(WarnUserNotFound)
 
