@@ -122,7 +122,6 @@ func handleKeyAuthentication(ctx context.Context, s *Server, req *cosi.DriverGra
 	// Retrieve the user.
 	userGet, err := s.iamClient.GetUserWithContext(ctx, &iam.GetUserInput{UserName: &userName})
 	if err != nil {
-
 		var myAwsErr awserr.Error
 
 		if errors.As(err, &myAwsErr) {
