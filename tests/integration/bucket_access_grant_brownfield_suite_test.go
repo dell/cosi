@@ -258,6 +258,7 @@ var _ = Describe("Bucket Access Grant for Brownfield Bucket", Ordered, Label("gr
 
 			steps.DeleteBucketClaimResource(ctx, bucketClient, grantBucketClaim)
 			steps.DeleteBucketClassResource(ctx, bucketClient, grantBucketClass)
+			steps.DeleteBucket(ctx, objectscale, Namespace, grantBucket)
 		})
 	})
 })
