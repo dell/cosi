@@ -54,7 +54,7 @@ var _ = Describe("Bucket Access Grant for Greenfield Bucket", Ordered, Label("gr
 				APIVersion: "objectstorage.k8s.io/v1alpha1",
 			},
 			ObjectMeta: metav1.ObjectMeta{
-				Name: "grant-bucket-class-greenfield",
+				Name: "greenfield-grant-bucket-class",
 			},
 			DriverName:     "cosi.dellemc.com",
 			DeletionPolicy: v1alpha1.DeletionPolicyDelete,
@@ -68,11 +68,11 @@ var _ = Describe("Bucket Access Grant for Greenfield Bucket", Ordered, Label("gr
 				APIVersion: "objectstorage.k8s.io/v1alpha1",
 			},
 			ObjectMeta: metav1.ObjectMeta{
-				Name:      "grant-bucket-claim",
+				Name:      "greenfield-grant-bucket-claim",
 				Namespace: namespace,
 			},
 			Spec: v1alpha1.BucketClaimSpec{
-				BucketClassName: "grant-bucket-class-greenfield",
+				BucketClassName: "greenfield-grant-bucket-class",
 				Protocols: []v1alpha1.Protocol{
 					v1alpha1.ProtocolS3,
 				},
@@ -84,7 +84,7 @@ var _ = Describe("Bucket Access Grant for Greenfield Bucket", Ordered, Label("gr
 				APIVersion: "objectstorage.k8s.io/v1alpha1",
 			},
 			ObjectMeta: metav1.ObjectMeta{
-				Name: "grant-bucket-access-class",
+				Name: "greenfield-grant-bucket-access-class",
 			},
 			DriverName:         "cosi.dellemc.com",
 			AuthenticationType: v1alpha1.AuthenticationTypeKey,
@@ -98,18 +98,18 @@ var _ = Describe("Bucket Access Grant for Greenfield Bucket", Ordered, Label("gr
 				APIVersion: "objectstorage.k8s.io/v1alpha1",
 			},
 			ObjectMeta: metav1.ObjectMeta{
-				Name:      "grant-bucket-access",
+				Name:      "greenfield-grant-bucket-access",
 				Namespace: namespace,
 			},
 			Spec: v1alpha1.BucketAccessSpec{
-				BucketAccessClassName: "grant-bucket-access-class",
-				BucketClaimName:       "grant-bucket-claim",
-				CredentialsSecretName: "grant-bucket-credentials",
+				BucketAccessClassName: "greenfield-grant-bucket-access-class",
+				BucketClaimName:       "greenfield-grant-bucket-claim",
+				CredentialsSecretName: "greenfield-grant-bucket-credentials",
 			},
 		}
 		validSecret = &v1.Secret{
 			ObjectMeta: metav1.ObjectMeta{
-				Name:      "grant-bucket-credentials",
+				Name:      "greenfield-grant-bucket-credentials",
 				Namespace: namespace,
 			},
 			Data: map[string][]byte{
@@ -127,7 +127,7 @@ var _ = Describe("Bucket Access Grant for Greenfield Bucket", Ordered, Label("gr
 		steps.CheckObjectStoreExists(ctx, objectscale, ObjectstoreID)
 
 		By("Checking if namespace 'cosi-test-ns' is created")
-		steps.CreateNamespace(ctx, clientset, "cosi-test-ns")
+		steps.CreateNamespace(ctx, clientset, DriverNamespace)
 
 		By("Checking if namespace 'access-grant-namespace' is created")
 		steps.CreateNamespace(ctx, clientset, namespace)
@@ -136,7 +136,7 @@ var _ = Describe("Bucket Access Grant for Greenfield Bucket", Ordered, Label("gr
 		steps.CheckCOSIControllerInstallation(ctx, clientset, "objectstorage-controller", "default")
 
 		By("Checking if COSI driver 'cosi' is installed in namespace 'cosi-test-ns'")
-		steps.CheckCOSIDriverInstallation(ctx, clientset, "dell-cosi", "cosi-test-ns")
+		steps.CheckCOSIDriverInstallation(ctx, clientset, DeploymentName, DriverNamespace)
 
 		By("Creating the BucketClass 'grant-bucket-class' is created")
 		grantBucketClass = steps.CreateBucketClassResource(ctx, bucketClient, grantBucketClass)

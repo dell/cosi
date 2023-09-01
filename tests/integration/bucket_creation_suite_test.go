@@ -98,7 +98,7 @@ var _ = Describe("Bucket Creation", Ordered, Label("create", "objectscale"), fun
 		steps.CheckObjectStoreExists(ctx, objectscale, ObjectstoreID)
 
 		By("Checking if namespace 'cos-test-ns' is created")
-		steps.CreateNamespace(ctx, clientset, "cosi-test-ns")
+		steps.CreateNamespace(ctx, clientset, DriverNamespace)
 
 		By("Checking if namespace 'creation-namespace' is created")
 		steps.CreateNamespace(ctx, clientset, namespace)
@@ -107,7 +107,7 @@ var _ = Describe("Bucket Creation", Ordered, Label("create", "objectscale"), fun
 		steps.CheckCOSIControllerInstallation(ctx, clientset, "objectstorage-controller", "default")
 
 		By("Checking if COSI driver 'cosi' is installed in namespace 'cosi-test-ns'")
-		steps.CheckCOSIDriverInstallation(ctx, clientset, "dell-cosi", "cosi-test-ns")
+		steps.CheckCOSIDriverInstallation(ctx, clientset, DeploymentName, DriverNamespace)
 
 		By("Creating the BucketClass 'create-bucket-class'")
 		steps.CreateBucketClassResource(ctx, bucketClient, createClass)

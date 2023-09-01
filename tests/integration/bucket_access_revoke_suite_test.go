@@ -128,7 +128,7 @@ var _ = Describe("Bucket Access Revoke", Ordered, Label("revoke", "objectscale")
 		steps.CheckObjectStoreExists(ctx, objectscale, ObjectstoreID)
 
 		By("Checking if namespace 'cosi-test-ns' is created")
-		steps.CreateNamespace(ctx, clientset, "cosi-test-ns")
+		steps.CreateNamespace(ctx, clientset, DriverNamespace)
 
 		By("Checking if namespace 'access-revoke-namespace' is created")
 		steps.CreateNamespace(ctx, clientset, namespace)
@@ -137,7 +137,7 @@ var _ = Describe("Bucket Access Revoke", Ordered, Label("revoke", "objectscale")
 		steps.CheckCOSIControllerInstallation(ctx, clientset, "objectstorage-controller", "default")
 
 		By("Checking if COSI driver 'cosi' is installed in namespace 'cosi-test-ns'")
-		steps.CheckCOSIDriverInstallation(ctx, clientset, "dell-cosi", "cosi-test-ns")
+		steps.CheckCOSIDriverInstallation(ctx, clientset, DeploymentName, DriverNamespace)
 
 		By("Creating the BucketClass 'revoke-bucket-class'")
 		steps.CreateBucketClassResource(ctx, bucketClient, revokeBucketClass)

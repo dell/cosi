@@ -54,14 +54,14 @@ var _ = Describe("Bucket Access Grant for Brownfield Bucket", Ordered, Label("gr
 				APIVersion: "objectstorage.k8s.io/v1alpha1",
 			},
 			ObjectMeta: metav1.ObjectMeta{
-				Name: "brownfield-bucket",
+				Name: "my-brownfield-bucket",
 			},
 			Spec: v1alpha1.BucketSpec{
 				BucketClaim:      &v1.ObjectReference{},
-				BucketClassName:  "grant-bucket-class-brownfield",
+				BucketClassName:  "brownfield-grant-bucket-class",
 				DriverName:       "cosi.dellemc.com",
 				DeletionPolicy:   "Retain",
-				ExistingBucketID: "my-brownfield-bucket",
+				ExistingBucketID: DriverID + "-my-brownfield-bucket",
 				Parameters: map[string]string{
 					"id": DriverID,
 				},
@@ -74,7 +74,7 @@ var _ = Describe("Bucket Access Grant for Brownfield Bucket", Ordered, Label("gr
 				APIVersion: "objectstorage.k8s.io/v1alpha1",
 			},
 			ObjectMeta: metav1.ObjectMeta{
-				Name: "grant-bucket-class-brownfield",
+				Name: "brownfield-grant-bucket-class",
 			},
 			DriverName:     "cosi.dellemc.com",
 			DeletionPolicy: v1alpha1.DeletionPolicyDelete,
@@ -92,7 +92,7 @@ var _ = Describe("Bucket Access Grant for Brownfield Bucket", Ordered, Label("gr
 				Namespace: namespace,
 			},
 			Spec: v1alpha1.BucketClaimSpec{
-				BucketClassName:    "grant-bucket-class-brownfield",
+				BucketClassName:    "brownfield-grant-bucket-class",
 				ExistingBucketName: "my-brownfield-bucket",
 				Protocols: []v1alpha1.Protocol{
 					v1alpha1.ProtocolS3,
@@ -105,7 +105,7 @@ var _ = Describe("Bucket Access Grant for Brownfield Bucket", Ordered, Label("gr
 				APIVersion: "objectstorage.k8s.io/v1alpha1",
 			},
 			ObjectMeta: metav1.ObjectMeta{
-				Name: "grant-bucket-access-class",
+				Name: "brownfield-grant-bucket-access-class",
 			},
 			DriverName:         "cosi.dellemc.com",
 			AuthenticationType: v1alpha1.AuthenticationTypeKey,
@@ -123,14 +123,14 @@ var _ = Describe("Bucket Access Grant for Brownfield Bucket", Ordered, Label("gr
 				Namespace: namespace,
 			},
 			Spec: v1alpha1.BucketAccessSpec{
-				BucketAccessClassName: "grant-bucket-access-class",
-				BucketClaimName:       "grant-bucket-claim",
-				CredentialsSecretName: "grant-bucket-credentials",
+				BucketAccessClassName: "brownfield-grant-bucket-access-class",
+				BucketClaimName:       "brownfield-grant-bucket-claim",
+				CredentialsSecretName: "brownfield-grant-bucket-credentials",
 			},
 		}
 		validSecret = &v1.Secret{
 			ObjectMeta: metav1.ObjectMeta{
-				Name:      "grant-bucket-credentials",
+				Name:      "brownfield-grant-bucket-credentials",
 				Namespace: namespace,
 			},
 			Data: map[string][]byte{
@@ -148,7 +148,7 @@ var _ = Describe("Bucket Access Grant for Brownfield Bucket", Ordered, Label("gr
 		steps.CheckObjectStoreExists(ctx, objectscale, ObjectstoreID)
 
 		By("Checking if namespace 'cosi-test-ns' is created")
-		steps.CreateNamespace(ctx, clientset, "cosi-test-ns")
+		steps.CreateNamespace(ctx, clientset, DriverNamespace)
 
 		By("Checking if namespace 'access-grant-namespace' is created")
 		steps.CreateNamespace(ctx, clientset, namespace)
@@ -157,13 +157,13 @@ var _ = Describe("Bucket Access Grant for Brownfield Bucket", Ordered, Label("gr
 		steps.CheckCOSIControllerInstallation(ctx, clientset, "objectstorage-controller", "default")
 
 		By("Checking if COSI driver 'cosi' is installed in namespace 'cosi-test-ns'")
-		steps.CheckCOSIDriverInstallation(ctx, clientset, "dell-cosi", "cosi-test-ns")
+		steps.CheckCOSIDriverInstallation(ctx, clientset, DeploymentName, DriverNamespace)
 
 		By("Creating the BucketClass 'grant-bucket-class' is created")
 		grantBucketClass = steps.CreateBucketClassResource(ctx, bucketClient, grantBucketClass)
 
 		By("Creating bucket on the Objectscale platform")
-		steps.CreateBucket(ctx, objectscale, grantBucketClaim.Namespace, grantBucket)
+		steps.CreateBucket(ctx, objectscale, Namespace, grantBucket)
 
 		By("Creating Bucket")
 		steps.CreateBucketResource(ctx, bucketClient, grantBucket)

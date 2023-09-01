@@ -40,14 +40,16 @@ import (
 
 // place for storing global variables like specs.
 var (
-	clientset     *kubernetes.Clientset
-	bucketClient  *bucketclientset.Clientset
-	objectscale   *objectscaleRest.ClientSet
-	IAMClient     *iam.IAM
+	clientset    *kubernetes.Clientset
+	bucketClient *bucketclientset.Clientset
+	objectscale  *objectscaleRest.ClientSet
+	IAMClient    *iam.IAM
+
 	Namespace     string
 	ObjectstoreID string
 	ObjectscaleID string
 
+	DeploymentName      string
 	DriverNamespace     string
 	DriverContainerName string
 )
@@ -67,6 +69,10 @@ var _ = BeforeSuite(func() {
 	// Load environment variables
 
 	exists := false
+
+	DeploymentName, exists = os.LookupEnv("HELM_RELEASE_NAME")
+	Expect(exists).To(BeTrue())
+
 	DriverNamespace, exists = os.LookupEnv("DRIVER_NAMESPACE")
 	Expect(exists).To(BeTrue())
 

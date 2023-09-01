@@ -159,6 +159,6 @@ func CreateBucket(ctx context.Context, objectscale *objectscaleRest.ClientSet, n
 		Namespace: namespace,
 	}
 	nbucket, err := objectscale.Buckets().Create(ctx, model)
-	gomega.Expect(nbucket).ToNot(gomega.BeNil())
 	gomega.Expect(err).ToNot(gomega.HaveOccurred())
+	gomega.Expect(nbucket).ToNot(gomega.BeNil())
 }
