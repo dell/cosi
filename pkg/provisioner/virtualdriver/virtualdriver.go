@@ -18,7 +18,7 @@ import (
 	cosi "sigs.k8s.io/container-object-storage-interface-spec"
 )
 
-// Driver is a interface extending cosi.ProvisionerServer interface by ID method
+// Driver is an interface extending cosi.ProvisionerServer interface by ID method
 //
 // ProvisionerServer is the server API for Provisioner service, which controls the full lifecycle of
 // buckets and bucket accesses on object storage provider.

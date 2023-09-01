@@ -13,15 +13,12 @@
 package config
 
 import (
-	"io"
 	"os"
 	"path"
 	"regexp"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-
-	log "github.com/sirupsen/logrus"
 )
 
 var (
@@ -119,7 +116,6 @@ var (
 )
 
 func TestMain(m *testing.M) {
-	log.SetOutput(io.Discard)
 	os.Exit(m.Run())
 }
 

@@ -18,12 +18,12 @@ import (
 	"fmt"
 	"strings"
 
+	l "github.com/dell/cosi/pkg/logger"
+	cosi "sigs.k8s.io/container-object-storage-interface-spec"
+
 	"github.com/dell/goobjectscale/pkg/client/model"
 	"go.opentelemetry.io/otel"
 	"google.golang.org/grpc/codes"
-
-	log "github.com/sirupsen/logrus"
-	cosi "sigs.k8s.io/container-object-storage-interface-spec"
 )
 
 // All errors that can be returned by DriverCreateBucket.
@@ -43,9 +43,7 @@ func (s *Server) DriverCreateBucket(
 	ctx, cancel := context.WithTimeout(ctx, defaultTimeout)
 	defer cancel()
 
-	log.WithFields(log.Fields{
-		"bucket": req.GetName(),
-	}).Info("bucket is being created")
+	l.Log().V(4).Info("Bucket is being created.", "bucket", req.GetName())
 
 	span.AddEvent("bucket is being created")
 
@@ -56,24 +54,18 @@ func (s *Server) DriverCreateBucket(
 
 	// Check if bucket name is not empty.
 	if bucket.Name == "" {
-		return nil, logAndTraceError(log.WithFields(log.Fields{}), span, ErrEmptyBucketName.Error(), ErrEmptyBucketName, codes.InvalidArgument)
+		return nil, logAndTraceError(span, ErrEmptyBucketName.Error(), ErrEmptyBucketName, codes.InvalidArgument)
 	}
 
 	parameters := make(map[string]string)
 	parameters["namespace"] = s.namespace
 
-	log.WithFields(log.Fields{
-		"parameters": parameters,
-	}).Info("parameters of the bucket")
+	l.Log().V(4).Info("Parameters of the bucket.", "parameters", parameters)
 
 	// Get bucket.
 	existingBucket, err := s.getBucket(ctx, bucket.Name, parameters)
 	if err != nil && !errors.Is(err, ErrParameterNotFound) {
-		fields := log.Fields{
-			"bucket": bucket.Name,
-		}
-
-		return nil, logAndTraceError(log.WithFields(fields), span, ErrFailedToCheckBucketExists.Error(), err, codes.Internal)
+		return nil, logAndTraceError(span, ErrFailedToCheckBucketExists.Error(), err, codes.Internal, "bucket", bucket.Name)
 	} else if err == nil && existingBucket != nil {
 		return &cosi.DriverCreateBucketResponse{
 			BucketId: strings.Join([]string{s.backendID, bucket.Name}, "-"),
@@ -83,11 +75,7 @@ func (s *Server) DriverCreateBucket(
 	// Create bucket.
 	err = s.createBucket(ctx, bucket)
 	if err != nil {
-		fields := log.Fields{
-			"bucket": bucket.Name,
-		}
-
-		return nil, logAndTraceError(log.WithFields(fields), span, ErrFailedToCreateBucket.Error(), err, codes.Internal)
+		return nil, logAndTraceError(span, ErrFailedToCreateBucket.Error(), err, codes.Internal, "bucket", bucket.Name)
 	}
 
 	// Return response.
@@ -111,9 +99,7 @@ func (s *Server) getBucket(ctx context.Context, bucketName string, parameters ma
 
 	// Second case is the error is nil, which means we actually found a bucket.
 	case err == nil:
-		log.WithFields(log.Fields{
-			"bucket": bucketName,
-		}).Info("bucket already exists")
+		l.Log().V(4).Info("Bucket already exists.", "bucket", bucketName)
 
 		span.AddEvent("bucket already exists")
 
@@ -135,9 +121,7 @@ func (s *Server) createBucket(ctx context.Context, bucket *model.Bucket) error {
 		return err
 	}
 
-	log.WithFields(log.Fields{
-		"bucket": bucket.Name,
-	}).Info("bucket successfully created")
+	l.Log().V(4).Info("Bucket successfully created.", "bucket", bucket.Name)
 
 	span.AddEvent("bucket successfully created")
 

@@ -224,7 +224,7 @@ func testEmptyAccountID(t *testing.T) {
 
 	_, err := server.DriverRevokeBucketAccess(ctx, req)
 
-	assert.ErrorIs(t, err, status.Error(codes.InvalidArgument, ErrEmpyAccountID.Error()))
+	assert.ErrorIs(t, err, status.Error(codes.InvalidArgument, ErrEmptyAccountID.Error()))
 }
 
 // testGetBucketUnknownError tests if the unexpected error returned from mocked API,

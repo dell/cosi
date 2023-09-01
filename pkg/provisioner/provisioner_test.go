@@ -14,24 +14,21 @@ package provisioner
 
 import (
 	"fmt"
-	"io"
-	"log"
 	"os"
 	"testing"
 
-	"github.com/sirupsen/logrus"
+	l "github.com/dell/cosi/pkg/logger"
+	cosi "sigs.k8s.io/container-object-storage-interface-spec"
+
 	"github.com/stretchr/testify/assert"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
-
-	cosi "sigs.k8s.io/container-object-storage-interface-spec"
 
 	"github.com/dell/cosi/pkg/internal/testcontext"
 	"github.com/dell/cosi/pkg/provisioner/virtualdriver/fake"
 )
 
 func TestMain(m *testing.M) {
-	logrus.SetOutput(io.Discard)
 	os.Exit(m.Run())
 }
 
@@ -43,7 +40,8 @@ func TestNew(t *testing.T) {
 
 	err := fakeDriverset.Add(&fake.Driver{FakeID: "fake"})
 	if err != nil {
-		log.Fatalf("Failed to create fakedriverset: %v", err)
+		l.Log().Error(err, "failed to create fakedriverset")
+		os.Exit(1)
 	}
 
 	testServer := New(fakeDriverset)

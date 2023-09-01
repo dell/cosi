@@ -21,11 +21,10 @@ import (
 	"syscall"
 	"time"
 
-	log "github.com/sirupsen/logrus"
+	l "github.com/dell/cosi/pkg/logger"
 	sdktrace "go.opentelemetry.io/otel/sdk/trace"
 	semconv "go.opentelemetry.io/otel/semconv/v1.17.0"
 
-	"github.com/bombsimon/logrusr/v4"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc"
 	"go.opentelemetry.io/otel/propagation"
@@ -38,7 +37,7 @@ import (
 )
 
 var (
-	logLevel     = flag.String("log-level", "debug", "Log level (debug, info, warn, error, fatal, panic)")
+	logLevel     = flag.Int("log-level", 4, "Log level (0-10)")
 	logFormat    = flag.String("log-format", "text", "Log format (text, json)")
 	otelEndpoint = flag.String("otel-endpoint", "",
 		"OTEL collector endpoint for collecting observability data")
@@ -53,11 +52,8 @@ const (
 func init() {
 	// Parse command line flags.
 	flag.Parse()
-	// Set the log format.
-	// This must be done before the log level is set, so if any errors occur, they are logged in proper format.
-	setLogFormatter(*logFormat)
-	// Set the log level.
-	setLogLevel(*logLevel)
+	// Create logger instance.
+	l.New(*logLevel, *logFormat)
 	// Set the custom logger for OpenTelemetry.
 	setOtelLogger()
 }
@@ -65,9 +61,8 @@ func init() {
 func main() {
 	err := runMain()
 	if err != nil {
-		log.WithFields(log.Fields{
-			"error": err,
-		}).Fatal("failed to start application")
+		l.Log().Error(err, "failed to start application")
+		os.Exit(1)
 	}
 }
 
@@ -78,34 +73,26 @@ func runMain() error {
 
 	cfg, err := config.New(*configFile)
 	if err != nil {
-		log.WithFields(log.Fields{
-			"error": err,
-		}).Fatal("failed to create configuration")
+		return fmt.Errorf("failed to create configuration: %w", err)
 	}
 
-	log.WithFields(log.Fields{
-		"configFilePath": *configFile,
-	}).Info("config successfully loaded")
+	l.Log().V(4).Info("Config successfully loaded.", "configFilePath", *configFile)
 
 	// Create TracerProvider with exporter to Open Telemetry Collector.
 	var tp *sdktrace.TracerProvider
 	if *otelEndpoint != "" {
 		tp, err = tracerProvider(ctx, *otelEndpoint)
 		if err != nil {
-			log.WithFields(log.Fields{
-				"error": err,
-			}).Warn("failed to connect to Jaeger")
+			l.Log().Error(err, "Failed to connect to Jaeger.")
 		} else {
 			// Set global TracerProvider.
 			otel.SetTracerProvider(tp)
 			// set global propagator to tracecontext (the default is no-op).
 			otel.SetTextMapPropagator(propagation.TraceContext{})
-			log.WithFields(log.Fields{
-				"collector": *otelEndpoint,
-			}).Info("tracing started successfully")
+			l.Log().V(4).Info("Tracing started successfully.", "collector", *otelEndpoint)
 		}
 	} else {
-		log.Warn("OTEL endpoint is empty, disabling tracing; please refer to helm's values.yaml")
+		l.Log().V(0).Info("OTEL endpoint is empty, disabling tracing.")
 	}
 
 	// Create a channel to listen for signals.
@@ -118,16 +105,14 @@ func runMain() error {
 		// Wait for a signal.
 		sig := <-sigs
 		// Log that a signal was received.
-		log.WithFields(log.Fields{
-			"type": sig,
-		}).Info("signal received")
+		l.Log().V(4).Info("Signal received.", "type", sig)
 		// Cancel the context.
 		cancel()
 		// Exit the program with an error.
 		os.Exit(1)
 	}()
 
-	log.Info("COSI driver is starting")
+	l.Log().V(4).Info("COSI driver is starting.")
 	// Run the driver.
 	return driver.RunBlocking(ctx, cfg, driver.COSISocket, tracedServiceName)
 }
@@ -176,94 +161,16 @@ func tracerProvider(ctx context.Context, url string) (*sdktrace.TracerProvider, 
 	return tp, nil
 }
 
-// setLogLevel sets the log level based on the logLevel string.
-func setLogLevel(logLevel string) {
-	log.SetReportCaller(false)
-
-	switch logLevel {
-	case "trace":
-		log.SetLevel(log.TraceLevel)
-		// SetReportCaller adds the calling method as a field.
-		log.SetReportCaller(true)
-	case "debug":
-		log.SetLevel(log.DebugLevel)
-	case "info":
-		log.SetLevel(log.InfoLevel)
-	case "warn":
-		log.SetLevel(log.WarnLevel)
-	case "error":
-		log.SetLevel(log.ErrorLevel)
-	case "fatal":
-		log.SetLevel(log.FatalLevel)
-	case "panic":
-		log.SetLevel(log.PanicLevel)
-	default:
-		log.WithFields(log.Fields{
-			"logLevel":    logLevel,
-			"newLogLevel": "debug",
-		}).Error("unknown log level, setting to debug")
-		log.SetLevel(log.DebugLevel)
-
-		return
-	}
-
-	log.WithFields(log.Fields{
-		"logLevel": logLevel,
-	}).Info("log level set")
-}
-
-// setLogFormatter set is used to set proper formatter for logs.
-func setLogFormatter(logFormat string) {
-	timestampFormat := "2006-01-02 15:04:05.000"
-
-	switch logFormat {
-	case "json":
-		log.SetFormatter(&log.JSONFormatter{
-			TimestampFormat: timestampFormat,
-			PrettyPrint:     false, // do not indent JSON logs, print each log entry on one line
-		})
-
-	case "text":
-		log.SetFormatter(&log.TextFormatter{
-			TimestampFormat: timestampFormat,
-			FullTimestamp:   true, // always print full timestamp
-			DisableColors:   true, // never use colors in logs, even if the terminal supports it
-		})
-
-	case "pretty":
-		log.SetFormatter(&log.TextFormatter{
-			TimestampFormat: timestampFormat,
-			FullTimestamp:   false, // do not print full timestamps
-			DisableColors:   false, // do not disable colors
-		})
-
-	default:
-		log.SetFormatter(&log.TextFormatter{
-			TimestampFormat: timestampFormat,
-			FullTimestamp:   true, // always print full timestamp
-			DisableColors:   true, // never use colors in logs, even if the terminal supports it
-		})
-
-		log.WithFields(log.Fields{
-			"logFormat":    logFormat,
-			"newLogFormat": "text",
-		}).Error("unknown log format, setting to text")
-	}
-}
-
 // errorHandler implements otel.ErrorHandler interface.
 type errorHandler struct{}
 
 // Handle is used to handle errors from OpenTelemetry.
 func (e *errorHandler) Handle(err error) {
-	log.WithFields(log.Fields{
-		"error": err,
-	}).Error("error occurred in OpenTelemetry")
+	l.Log().Error(err, "error occurred in OpenTelemetry")
 }
 
 // setOtelLogger is used to set the custom logger from OpenTelemetry.
 func setOtelLogger() {
-	logger := logrusr.New(log.StandardLogger())
-	otel.SetLogger(logger)
+	otel.SetLogger(l.Log())
 	otel.SetErrorHandler(&errorHandler{})
 }

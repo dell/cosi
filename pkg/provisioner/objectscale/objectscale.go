@@ -25,14 +25,12 @@ import (
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/iam"
 	"github.com/aws/aws-sdk-go/service/iam/iamiface"
-	"github.com/bombsimon/logrusr/v4"
 
-	internalLogger "github.com/dell/cosi/pkg/internal/logger"
+	l "github.com/dell/cosi/pkg/logger"
 	driver "github.com/dell/cosi/pkg/provisioner/virtualdriver"
 	objectscaleRest "github.com/dell/goobjectscale/pkg/client/rest"
 	objectscaleClient "github.com/dell/goobjectscale/pkg/client/rest/client"
 	iamObjectscale "github.com/dell/goobjectscale/pkg/client/rest/iam"
-	log "github.com/sirupsen/logrus"
 	cosi "sigs.k8s.io/container-object-storage-interface-spec"
 
 	"github.com/dell/cosi/pkg/config"
@@ -153,10 +151,7 @@ func New(config *config.Objectscale) (*Server, error) {
 	if strings.Contains(id, "-") {
 		id = strings.ReplaceAll(id, "-", "_")
 
-		log.WithFields(log.Fields{
-			"id":        id,
-			"config.id": config.Id,
-		}).Warn("id in config contains hyphens, which will be replaced with underscores")
+		l.Log().V(0).Info("ID in config contains hyphens, which will be replaced with underscores.", "id", id, "config.id", config.Id)
 	}
 
 	transport, err := transport.New(config.Tls)
@@ -194,7 +189,7 @@ func New(config *config.Objectscale) (*Server, error) {
 				Endpoint:                      aws.String(objectscaleGateway + "/iam"),
 				Region:                        region,
 				HTTPClient:                    &x509Client,
-				Logger:                        internalLogger.New(logrusr.New(log.StandardLogger())),
+				Logger:                        l.NewAWSLogger(l.Log()),
 			},
 		},
 	)

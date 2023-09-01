@@ -15,8 +15,8 @@ package provisioner
 import (
 	"errors"
 
+	l "github.com/dell/cosi/pkg/logger"
 	driver "github.com/dell/cosi/pkg/provisioner/virtualdriver"
-	log "github.com/sirupsen/logrus"
 
 	"github.com/dell/cosi/pkg/config"
 	"github.com/dell/cosi/pkg/provisioner/objectscale"
@@ -31,14 +31,14 @@ func NewVirtualDriver(config config.Configuration) (driver.Driver, error) {
 	}
 
 	if config.Objectscale != nil {
-		log.Debug("ObjectScale config created")
+		l.Log().V(6).Info("ObjectScale config created.")
 		return objectscale.New(config.Objectscale)
 	}
 
 	panic("programming error")
 }
 
-// exactlyOne checks if exactly one of it's arguments is not nil.
+// exactlyOne checks if exactly one of its arguments is not nil.
 //
 // It takes in a variadic argument list of nillable values (interfaces that can either be nil or non-nil).
 // The function then counts the number of non-nil values and returns a boolean indicating whether

@@ -131,3 +131,11 @@ linters-settings:
     # Ignore missing calls to `t.Parallel()` and only report incorrect uses of it.
     # Default: false
     ignore-missing: false
+
+  # Exclude verbosity level from gomnd
+  gomnd:
+    ignored-numbers:
+      - '2'
+      - '4'
+      - '6'
+      - '8'
