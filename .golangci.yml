@@ -80,5 +80,4 @@ linters-settings:
   # Exclude verbosity level from gomnd
   gomnd:
     ignored-functions:
-      - 'V'
-      - 'flag.Int'
+      - '^V\.'
