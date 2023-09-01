@@ -35,7 +35,7 @@ import (
 var _ iamiface.IAMAPI = (*iamapimock.MockIAMAPI)(nil)
 
 func TestServerBucketAccessRevoke(t *testing.T) {
-	// t.Parallel()
+	t.Parallel()
 
 	for scenario, fn := range map[string]func(t *testing.T){
 		"testValidAccessRevoking":              testValidAccessRevoking,
@@ -55,7 +55,7 @@ func TestServerBucketAccessRevoke(t *testing.T) {
 		fn := fn
 
 		t.Run(scenario, func(t *testing.T) {
-			// t.Parallel()
+			t.Parallel()
 
 			fn(t)
 		})
