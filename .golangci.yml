@@ -79,5 +79,8 @@ linters-settings:
 
   # Exclude verbosity level from gomnd
   gomnd:
-    ignored-functions:
-      - '^V\('
+    ignored-numbers:
+      - '2'
+      - '4'
+      - '6'
+      - '8'
