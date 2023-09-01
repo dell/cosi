@@ -140,7 +140,7 @@ helm install "${HELM_RELEASE_NAME}" ./helm/charts/cosi \
   --set=provisioner.image.tag="$(git rev-parse HEAD)" \
   --set=provisioner.image.pullPolicy=Always \
   --set=provisioner.logFormat=json \
-  --set=provisioner.logLevel=0 \
+  --set=provisioner.logLevel=10 \
   --set=provisioner.otelEndpoint='' \
   --set=sidecar.verbosity=10 \
   --set-file=configuration.data=/tmp/cosi-conf.yml \
