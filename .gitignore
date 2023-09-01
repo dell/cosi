@@ -16,6 +16,7 @@ build/
 
 # Dependency directories (remove the comment below to include it)
 vendor/
+helm/
 
 # Go workspace file
 go.work

@@ -22,9 +22,9 @@ DEFAULT_DIGEST=sha256:630cf7bdef807f048cadfe7180d6c27eb3aaa99323ffc3628811da230e
 # GOVERSION is a build version for driver.
 DEFAULT_GOVERSION:=$(shell sed -En 's/^go (.*)$$/\1/p' go.mod)
 # REGISTRY in which COSI image resides.
-DEFAULT_REGISTRY=sample_registry
+DEFAULT_REGISTRY=docker.io
 # IMAGENAME is COSI image name.
-DEFAULT_IMAGENAME=cosi
+DEFAULT_IMAGENAME=dell/cosi
 # IMAGETAG by default is latest commit SHA.
 DEFAULT_IMAGETAG:=$(shell git rev-parse HEAD)
 
