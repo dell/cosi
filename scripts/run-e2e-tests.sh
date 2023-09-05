@@ -1,12 +1,5 @@
 #!/usr/bin/env bash
 
-# When this option is on, if a simple command fails for any of the reasons listed in
-# Consequences of Shell Errors or returns an exit status value >0, and is not part of the
-# compound list following a while, until, or if keyword, and is not a part of an AND or
-# OR list, and is not a pipeline preceded by the ! reserved word, then the shell shall
-# immediately exit.
-set -e
-
 if [ -n "${DEBUG}" ]; then
   # The  shell shall write to standard error a trace for each command after it expands
   # the command and before it executes it.
@@ -48,7 +41,7 @@ export DRIVER_CONTAINER_NAME="${DRIVER_CONTAINER_NAME:-objectstorage-provisioner
 #----------------------------------------------------------------------------------------
 (
 
-NS=("access-namespace" "access-grant-namespace" "access-revoke-namespace" "creation-namespace" "deletion-namespace")
+NS=("access-namespace" "access-grant-namespace" "access-grant-namespace-greenfield" "access-grant-namespace-brownfield" "access-revoke-namespace" "creation-namespace" "deletion-namespace")
 
 # delete all finalizers and then objects from those namespaces
 for n in "${NS[@]}";
@@ -128,6 +121,13 @@ connections:
       insecure: true
 EOF
 
+# When this option is on, if a simple command fails for any of the reasons listed in
+# Consequences of Shell Errors or returns an exit status value >0, and is not part of the
+# compound list following a while, until, or if keyword, and is not a part of an AND or
+# OR list, and is not a pipeline preceded by the ! reserved word, then the shell shall
+# immediately exit.
+set -e
+
 rm -rf helm
 git clone \
   --branch "${CHART_BRANCH}" \
@@ -139,9 +139,10 @@ helm install "${HELM_RELEASE_NAME}" ./helm/charts/cosi \
   --set=provisioner.image.repository="${REGISTRY}/${IMAGENAME}" \
   --set=provisioner.image.tag="$(git rev-parse HEAD)" \
   --set=provisioner.image.pullPolicy=Always \
-  --set=provisioner.logLevel=0 \
-  --set=sidecar.verbosity=low \
   --set=provisioner.logFormat=json \
+  --set=provisioner.logLevel=10 \
+  --set=provisioner.otelEndpoint='' \
+  --set=sidecar.verbosity=10 \
   --set-file=configuration.data=/tmp/cosi-conf.yml \
   --namespace="${DRIVER_NAMESPACE}" \
   --create-namespace

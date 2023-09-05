@@ -19,17 +19,21 @@ import (
 
 	"sigs.k8s.io/container-object-storage-interface-api/apis/objectstorage/v1alpha1"
 
-	objscl "github.com/dell/cosi/pkg/provisioner/objectscale"
 	. "github.com/onsi/ginkgo/v2"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
+	objscl "github.com/dell/cosi/pkg/provisioner/objectscale"
 	"github.com/dell/cosi/pkg/provisioner/policy"
 	"github.com/dell/cosi/tests/integration/steps"
 )
 
-var _ = Describe("Bucket Access Grant", Ordered, Label("grant", "objectscale"), func() {
+var _ = Describe("Bucket Access Grant for Brownfield Bucket", Ordered, Label("grant", "brownfield", "objectscale"), func() {
 	// Resources for scenarios
+	const (
+		namespace string = "access-grant-namespace-brownfield"
+	)
+
 	var (
 		grantBucketClass       *v1alpha1.BucketClass
 		grantBucketClaim       *v1alpha1.BucketClaim
@@ -44,13 +48,33 @@ var _ = Describe("Bucket Access Grant", Ordered, Label("grant", "objectscale"), 
 	// Background
 	BeforeEach(func(ctx context.Context) {
 		// Initialize variables
+		grantBucket = &v1alpha1.Bucket{
+			TypeMeta: metav1.TypeMeta{
+				Kind:       "Bucket",
+				APIVersion: "objectstorage.k8s.io/v1alpha1",
+			},
+			ObjectMeta: metav1.ObjectMeta{
+				Name: "my-brownfield-bucket",
+			},
+			Spec: v1alpha1.BucketSpec{
+				BucketClaim:      &v1.ObjectReference{},
+				BucketClassName:  "brownfield-grant-bucket-class",
+				DriverName:       "cosi.dellemc.com",
+				DeletionPolicy:   "Retain",
+				ExistingBucketID: DriverID + "-my-brownfield-bucket",
+				Parameters: map[string]string{
+					"id": DriverID,
+				},
+				Protocols: []v1alpha1.Protocol{v1alpha1.ProtocolS3},
+			},
+		}
 		grantBucketClass = &v1alpha1.BucketClass{
 			TypeMeta: metav1.TypeMeta{
 				Kind:       "BucketClass",
 				APIVersion: "objectstorage.k8s.io/v1alpha1",
 			},
 			ObjectMeta: metav1.ObjectMeta{
-				Name: "grant-bucket-class",
+				Name: "brownfield-grant-bucket-class",
 			},
 			DriverName:     "cosi.dellemc.com",
 			DeletionPolicy: v1alpha1.DeletionPolicyDelete,
@@ -64,11 +88,12 @@ var _ = Describe("Bucket Access Grant", Ordered, Label("grant", "objectscale"), 
 				APIVersion: "objectstorage.k8s.io/v1alpha1",
 			},
 			ObjectMeta: metav1.ObjectMeta{
-				Name:      "grant-bucket-claim",
-				Namespace: "access-grant-namespace",
+				Name:      "brownfield-grant-bucket-claim",
+				Namespace: namespace,
 			},
 			Spec: v1alpha1.BucketClaimSpec{
-				BucketClassName: "grant-bucket-class",
+				BucketClassName:    "brownfield-grant-bucket-class",
+				ExistingBucketName: "my-brownfield-bucket",
 				Protocols: []v1alpha1.Protocol{
 					v1alpha1.ProtocolS3,
 				},
@@ -80,7 +105,7 @@ var _ = Describe("Bucket Access Grant", Ordered, Label("grant", "objectscale"), 
 				APIVersion: "objectstorage.k8s.io/v1alpha1",
 			},
 			ObjectMeta: metav1.ObjectMeta{
-				Name: "grant-bucket-access-class",
+				Name: "brownfield-grant-bucket-access-class",
 			},
 			DriverName:         "cosi.dellemc.com",
 			AuthenticationType: v1alpha1.AuthenticationTypeKey,
@@ -95,18 +120,18 @@ var _ = Describe("Bucket Access Grant", Ordered, Label("grant", "objectscale"), 
 			},
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      "grant-bucket-access",
-				Namespace: "access-grant-namespace",
+				Namespace: namespace,
 			},
 			Spec: v1alpha1.BucketAccessSpec{
-				BucketAccessClassName: "grant-bucket-access-class",
-				BucketClaimName:       "grant-bucket-claim",
-				CredentialsSecretName: "grant-bucket-credentials",
+				BucketAccessClassName: "brownfield-grant-bucket-access-class",
+				BucketClaimName:       "brownfield-grant-bucket-claim",
+				CredentialsSecretName: "brownfield-grant-bucket-credentials",
 			},
 		}
 		validSecret = &v1.Secret{
 			ObjectMeta: metav1.ObjectMeta{
-				Name:      "grant-bucket-credentials",
-				Namespace: "access-grant-namespace",
+				Name:      "brownfield-grant-bucket-credentials",
+				Namespace: namespace,
 			},
 			Data: map[string][]byte{
 				"BucketInfo": []byte(`{"metadata":{"name":""},"spec":{"bucketName":"","authenticationType":"","secretS3":{"endpoint":"","region":"","accessKeyID":"","accessSecretKey":""},"protocols":[]}}`),
@@ -123,19 +148,25 @@ var _ = Describe("Bucket Access Grant", Ordered, Label("grant", "objectscale"), 
 		steps.CheckObjectStoreExists(ctx, objectscale, ObjectstoreID)
 
 		By("Checking if namespace 'cosi-test-ns' is created")
-		steps.CreateNamespace(ctx, clientset, "cosi-test-ns")
+		steps.CreateNamespace(ctx, clientset, DriverNamespace)
 
 		By("Checking if namespace 'access-grant-namespace' is created")
-		steps.CreateNamespace(ctx, clientset, "access-grant-namespace")
+		steps.CreateNamespace(ctx, clientset, namespace)
 
 		By("Checking if COSI controller 'objectstorage-controller' is installed in namespace 'default'")
 		steps.CheckCOSIControllerInstallation(ctx, clientset, "objectstorage-controller", "default")
 
 		By("Checking if COSI driver 'cosi' is installed in namespace 'cosi-test-ns'")
-		steps.CheckCOSIDriverInstallation(ctx, clientset, "cosi", "cosi-test-ns")
+		steps.CheckCOSIDriverInstallation(ctx, clientset, DeploymentName, DriverNamespace)
 
 		By("Creating the BucketClass 'grant-bucket-class' is created")
 		grantBucketClass = steps.CreateBucketClassResource(ctx, bucketClient, grantBucketClass)
+
+		By("Creating bucket on the Objectscale platform")
+		steps.CreateBucket(ctx, objectscale, Namespace, grantBucket)
+
+		By("Creating Bucket")
+		steps.CreateBucketResource(ctx, bucketClient, grantBucket)
 
 		By("Creating the BucketClaim 'grant-bucket-claim'")
 		steps.CreateBucketClaimResource(ctx, bucketClient, grantBucketClaim)
@@ -151,9 +182,6 @@ var _ = Describe("Bucket Access Grant", Ordered, Label("grant", "objectscale"), 
 
 		By("Checking if Bucket resource referencing 'grant-bucket-claim' status 'bucketReady' is 'true'")
 		steps.CheckBucketStatus(grantBucket, true)
-
-		By("Checking if Bucket resource 'grant-bucket' status 'bucketID' is not empty")
-		steps.CheckBucketID(grantBucket)
 
 		// I need bucket name here that is generated by one of the steps above, I think. Maybe there is a better way to do this.
 		resourceARN := objscl.BuildResourceString(ObjectscaleID, ObjectstoreID, grantBucket.Name)
@@ -230,6 +258,7 @@ var _ = Describe("Bucket Access Grant", Ordered, Label("grant", "objectscale"), 
 
 			steps.DeleteBucketClaimResource(ctx, bucketClient, grantBucketClaim)
 			steps.DeleteBucketClassResource(ctx, bucketClient, grantBucketClass)
+			steps.DeleteBucket(ctx, objectscale, Namespace, grantBucket)
 		})
 	})
 })

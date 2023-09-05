@@ -24,6 +24,12 @@ import (
 )
 
 // CreateBucketClaimResource Function creating a BucketClaim resource from specification.
+func CreateBucketResource(ctx context.Context, bucketClient *bucketclientset.Clientset, bucket *v1alpha1.Bucket) {
+	_, err := bucketClient.ObjectstorageV1alpha1().Buckets().Create(ctx, bucket, v1.CreateOptions{})
+	gomega.Expect(err).ToNot(gomega.HaveOccurred())
+}
+
+// CreateBucketClaimResource Function creating a BucketClaim resource from specification.
 func CreateBucketClaimResource(ctx context.Context, bucketClient *bucketclientset.Clientset, bucketClaim *v1alpha1.BucketClaim) {
 	_, err := bucketClient.ObjectstorageV1alpha1().BucketClaims(bucketClaim.Namespace).Create(ctx, bucketClaim, v1.CreateOptions{})
 	gomega.Expect(err).ToNot(gomega.HaveOccurred())
@@ -138,25 +144,39 @@ func GetBucketResource(ctx context.Context, bucketClient *bucketclientset.Client
 			return err
 		}
 
-		if myBucketClaim.Status.BucketName == "" {
-			return fmt.Errorf("BucketName is empty")
+		if myBucketClaim.Status.BucketName == "" && myBucketClaim.Spec.ExistingBucketName == "" {
+			return fmt.Errorf("BucketName and ExistingBucketName are empty")
 		}
 		return nil
 	})
 
 	gomega.Expect(err).ToNot(gomega.HaveOccurred())
-	gomega.Expect(myBucketClaim.Status.BucketName).NotTo(gomega.BeEmpty())
 
 	var bucket *v1alpha1.Bucket
 
 	err = retry(ctx, attempts, sleep, func() error {
 		var err error
-		bucket, err = bucketClient.ObjectstorageV1alpha1().Buckets().Get(ctx, myBucketClaim.Status.BucketName, v1.GetOptions{})
+		name := ""
+		if myBucketClaim.Spec.ExistingBucketName != "" {
+			name = myBucketClaim.Spec.ExistingBucketName
+		} else {
+			name = myBucketClaim.Status.BucketName
+		}
+
+		bucket, err = bucketClient.ObjectstorageV1alpha1().Buckets().Get(ctx, name, v1.GetOptions{})
+		if err != nil {
+			return err
+		}
+
+		if bucket.Spec.ExistingBucketID != "" {
+			return nil
+		}
+
 		if !bucket.Status.BucketReady {
 			return fmt.Errorf("bucket %s is not ready", bucket.Name)
 		}
 
-		return err
+		return nil
 	})
 
 	gomega.Expect(err).ToNot(gomega.HaveOccurred())
