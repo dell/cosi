@@ -234,6 +234,7 @@ var _ = Describe("Bucket Access Revoke", Ordered, Label("revoke", "objectscale")
 		DeferCleanup(func(ctx context.Context) {
 			steps.DeleteBucketClaimResource(ctx, bucketClient, revokeBucketClaim)
 			steps.DeleteBucketClassResource(ctx, bucketClient, revokeBucketClass)
+			steps.DeleteBucketAccessClassResource(ctx, bucketClient, revokeBucketAccessClass)
 		})
 	})
 })
