@@ -20,8 +20,11 @@ import (
 	"fmt"
 	"io/fs"
 	"net"
+	"net/http"
 	"os"
 
+	grpc_prometheus "github.com/grpc-ecosystem/go-grpc-prometheus"
+	"go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc"
 	"google.golang.org/grpc"
 
 	spec "sigs.k8s.io/container-object-storage-interface-spec"
@@ -30,6 +33,7 @@ import (
 	"github.com/dell/cosi/pkg/identity"
 	l "github.com/dell/cosi/pkg/logger"
 	"github.com/dell/cosi/pkg/provisioner"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
 const (
@@ -70,13 +74,16 @@ func New(config *config.ConfigSchemaJson, socket, name string) (*Driver, error) 
 
 	provisionerServer := provisioner.New(driverset)
 	// Some options for gRPC server may be needed.
-	options := []grpc.ServerOption{}
+	options := []grpc.ServerOption{
+		grpc.UnaryInterceptor(otelgrpc.UnaryServerInterceptor()),
+		grpc.StreamInterceptor(otelgrpc.StreamServerInterceptor()),
+	}
 	// Create new gRPC server.
 	server := grpc.NewServer(options...)
 	// Register identity and provisioner servers, so they will handle gRPC requests to the driver.
 	spec.RegisterIdentityServer(server, identityServer)
 	spec.RegisterProvisionerServer(server, provisionerServer)
-
+	grpc_prometheus.Register(server)
 	// Remove socket file if it already exists
 	// so we can start a new driver after crash or pod restart
 	if _, err := os.Stat(socket); !errors.Is(err, fs.ErrNotExist) {
@@ -105,6 +112,15 @@ func (s *Driver) start(_ context.Context) <-chan struct{} {
 
 		if err := s.server.Serve(s.lis); err != nil {
 			l.Log().Error(err, "failed to serve gRPC server")
+			os.Exit(1)
+		}
+	}()
+
+	go func() {
+		http.Handle("/metrics", promhttp.Handler())
+		err := http.ListenAndServe(":2112", nil)
+		if err != nil {
+			l.Log().Error(err, "failed to serve metrics")
 			os.Exit(1)
 		}
 	}()
