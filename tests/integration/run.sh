@@ -15,4 +15,5 @@ ginkgo \
     --tags integration \
     --label-filter "objectscale" \
     --output-dir=../reports/integration \
+    --junit-report=report.xml \
     ./...
