@@ -18,9 +18,9 @@ require (
 	go.opentelemetry.io/otel/trace v1.18.0
 	google.golang.org/grpc v1.58.2
 	gopkg.in/yaml.v3 v3.0.1
-	k8s.io/api v0.28.1
-	k8s.io/apimachinery v0.28.1
-	k8s.io/client-go v0.28.1
+	k8s.io/api v0.28.2
+	k8s.io/apimachinery v0.28.2
+	k8s.io/client-go v0.28.2
 	sigs.k8s.io/container-object-storage-interface-api v0.1.0
 	sigs.k8s.io/container-object-storage-interface-provisioner-sidecar v0.1.1-0.20230130215648-c0cf9951ffc6
 	sigs.k8s.io/container-object-storage-interface-spec v0.1.1-0.20230824172359-684d40bf7217
