@@ -232,8 +232,8 @@ k8s.io/utils v0.0.0-20230406110748-d93618cff8a2 h1:qY1Ad8PODbnymg2pRbkyMT/ylpTrC
 k8s.io/utils v0.0.0-20230406110748-d93618cff8a2/go.mod h1:OLgZIPagt7ERELqWJFomSt595RzquPNLL48iOWgYOg0=
 sigs.k8s.io/container-object-storage-interface-api v0.1.0 h1:8tB6JFQhbQIC1hwGQ+q4+tmSSNfjKemb7bFI6C0CK/4=
 sigs.k8s.io/container-object-storage-interface-api v0.1.0/go.mod h1:YiB+i/UGkzqgODDhRG3u7jkbWkQcoUeLEJ7hwOT/2Qk=
-sigs.k8s.io/container-object-storage-interface-provisioner-sidecar v0.1.1-0.20230130215648-c0cf9951ffc6 h1:rVG6pl5uVyDbEqx11+cF9SNMV2FA01T3nmj0Y5thJzQ=
-sigs.k8s.io/container-object-storage-interface-provisioner-sidecar v0.1.1-0.20230130215648-c0cf9951ffc6/go.mod h1:U4jXJB8bpQ3a51VIPnbd6m7pshVey5m4PDAhvCKitds=
+sigs.k8s.io/container-object-storage-interface-provisioner-sidecar v0.1.1-0.20230921204055-8e23092e0f65 h1:aY6KjWps2rKlV1QL7fMa+9WEh2h4moquB5lbIfRk2e0=
+sigs.k8s.io/container-object-storage-interface-provisioner-sidecar v0.1.1-0.20230921204055-8e23092e0f65/go.mod h1:U4jXJB8bpQ3a51VIPnbd6m7pshVey5m4PDAhvCKitds=
 sigs.k8s.io/container-object-storage-interface-spec v0.1.1-0.20230824172359-684d40bf7217 h1:pKZQKRcx+WwT/AYHPFEcDGppS8qKEVpnIYbbHAPRkA8=
 sigs.k8s.io/container-object-storage-interface-spec v0.1.1-0.20230824172359-684d40bf7217/go.mod h1:SzF/yVSh88TgYdBOAXqhT96XjU8pCQtoeQKxzIOOmWQ=
 sigs.k8s.io/controller-runtime v0.12.3 h1:FCM8xeY/FI8hoAfh/V4XbbYMY20gElh9yh+A98usMio=
