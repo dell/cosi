@@ -3,7 +3,7 @@ module github.com/dell/cosi
 go 1.21
 
 require (
-	github.com/aws/aws-sdk-go v1.45.1
+	github.com/aws/aws-sdk-go v1.45.24
 	github.com/bombsimon/logrusr/v4 v4.0.0
 	github.com/dell/goobjectscale v0.1.0
 	github.com/go-logr/logr v1.2.4
