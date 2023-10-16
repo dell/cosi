@@ -181,6 +181,8 @@ func New(config *config.Objectscale) (*Server, error) {
 		Password: password,
 	}
 
+	objClient.SetLogger(l.Log())
+
 	iamSession, err := session.NewSessionWithOptions(
 		session.Options{
 			Config: aws.Config{
