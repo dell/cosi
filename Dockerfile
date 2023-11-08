@@ -12,8 +12,6 @@
 
 # BASEIMAGE is a base image for final COSI-Driver container.
 ARG BASEIMAGE
-# DIGEST is a hash-version of a used BASEIMAGE.
-ARG DIGEST
 # GOVERSION is a Go version used for bulding driver.
 ARG GOVERSION
 
@@ -42,7 +40,7 @@ COPY pkg/ pkg/
 RUN make build
 
 # Second stage: building final environment for running the driver.
-FROM ${BASEIMAGE}@${DIGEST} AS final
+FROM ${BASEIMAGE} AS final
 
 WORKDIR /dell
 

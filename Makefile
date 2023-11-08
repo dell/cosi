@@ -53,16 +53,21 @@ build:	##build project
 ########################################################################
 
 .PHONY: docker
-docker: vendor	##build the docker container
-	@echo "Base Images is set to: $(BASEIMAGE)"
+docker: vendor download-csm-common ##build the docker container
+	$(eval include csm-common.mk)
+	@echo "Base Images is set to: $(DEFAULT_BASEIMAGE)"
 	@echo "Building: $(IMAGENAME):$(IMAGETAG)"
-	docker build --pull -t "$(IMAGENAME):$(IMAGETAG)" --build-arg BASEIMAGE=$(BASEIMAGE) --build-arg GOVERSION=$(GOVERSION) --build-arg DIGEST=$(DIGEST) .
+	docker build --pull -t "$(IMAGENAME):$(IMAGETAG)" --build-arg BASEIMAGE=$(DEFAULT_BASEIMAGE) --build-arg GOVERSION=$(GOVERSION) .
 
 .PHONY: push
 push: docker	##build and push the docker container to repository
 	@echo "Pushing: $(REGISTRY)/$(IMAGENAME):$(IMAGETAG)"
 	docker tag "$(IMAGENAME):$(IMAGETAG)" "$(REGISTRY)/$(IMAGENAME):$(IMAGETAG)"
 	docker push "$(REGISTRY)/$(IMAGENAME):$(IMAGETAG)"
+
+.PHONY: download-csm-common
+download-csm-common:
+	curl -O -L https://raw.githubusercontent.com/dell/csm/main/config/csm-common.mk
 
 ########################################################################
 ##                              TESTING                               ##
