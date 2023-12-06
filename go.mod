@@ -5,7 +5,7 @@ go 1.21
 require (
 	github.com/aws/aws-sdk-go v1.45.1
 	github.com/bombsimon/logrusr/v4 v4.0.0
-	github.com/dell/goobjectscale v0.1.0
+	github.com/dell/goobjectscale v0.2.0
 	github.com/go-logr/logr v1.2.4
 	github.com/google/uuid v1.3.1
 	github.com/onsi/ginkgo/v2 v2.12.1
