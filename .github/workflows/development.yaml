@@ -27,7 +27,7 @@ jobs:
         run: |
           git config --global url."https://csmbot:$TOKEN@github.com".insteadOf "https://github.com"
           echo "machine github.com login csmbot password $TOKEN" >> ~/.netrc
-      - uses: actions/setup-go@v4
+      - uses: actions/setup-go@v5
         with:
           go-version: "1.21"
           cache: false
@@ -87,7 +87,7 @@ jobs:
         uses: Difegue/action-perlcritic@master
         with:
           args: ./scripts/*
-      - uses: actions/setup-go@v4
+      - uses: actions/setup-go@v5
         with:
           go-version: "1.21"
           cache: false
@@ -131,7 +131,7 @@ jobs:
         run: |
           git config --global url."https://csmbot:$TOKEN@github.com".insteadOf "https://github.com"
           echo "machine github.com login csmbot password $TOKEN" >> ~/.netrc
-      - uses: actions/setup-go@v4
+      - uses: actions/setup-go@v5
         with:
           go-version: "1.21"
           cache: false

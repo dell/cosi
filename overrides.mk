@@ -12,11 +12,11 @@
 
 # overrides.mk file
 # This file, included from the Makefile, will overlay default values with environment variables:
-# GOVERSION, REGISTRY, IMAGENAME, IMAGETAG.
+# GOIMAGE, REGISTRY, IMAGENAME, IMAGETAG.
 
 # DEFAULT values
-# GOVERSION is a build version for driver.
-DEFAULT_GOVERSION:=$(shell sed -En 's/^go (.*)$$/\1/p' go.mod)
+# GOIMAGE is the version of Go.
+DEFAULT_GOIMAGE:=$(shell sed -En 's/^go (.*)$$/\1/p' go.mod)
 # REGISTRY in which COSI image resides.
 DEFAULT_REGISTRY=docker.io
 # IMAGENAME is COSI image name.
@@ -24,9 +24,9 @@ DEFAULT_IMAGENAME=dell/cosi
 # IMAGETAG by default is latest commit SHA.
 DEFAULT_IMAGETAG:=$(shell git rev-parse HEAD)
 
-# set the GOVERSION if needed
-ifeq ($(GOVERSION),)
-export GOVERSION="$(DEFAULT_GOVERSION)"
+# set the GOIMAGE if needed
+ifeq ($(GOIMAGE),)
+export GOIMAGE="$(DEFAULT_GOIMAGE)"
 endif
 
 # set the REGISTRY if needed
@@ -49,8 +49,8 @@ overrides-help:
 	@echo
 	@echo "The following environment variables can be set to control the build"
 	@echo
-	@echo "GOVERSION   - The version of Go to build with, default is: $(DEFAULT_GOVERSION)"
-	@echo "              Current setting is: $(GOVERSION)"
+	@echo "GOIMAGE     - The version of Go to build with, default is: $(DEFAULT_GOIMAGE)"
+	@echo "              Current setting is: $(GOIMAGE)"
 	@echo "REGISTRY    - The registry to push images to, default is: $(DEFAULT_REGISTRY)"
 	@echo "              Current setting is: $(REGISTRY)"
 	@echo "IMAGENAME   - The image name to be built, defaut is: $(DEFAULT_IMAGENAME)"
