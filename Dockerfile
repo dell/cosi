@@ -12,11 +12,11 @@
 
 # BASEIMAGE is a base image for final COSI-Driver container.
 ARG BASEIMAGE
-# GOVERSION is a Go version used for bulding driver.
-ARG GOVERSION
+# GOIMAGE is a Go version used for bulding driver.
+ARG GOIMAGE
 
 # First stage: building binary of the driver.
-FROM golang:${GOVERSION} as builder
+FROM $GOIMAGE as builder
 
 WORKDIR /workspace
 
