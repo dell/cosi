@@ -223,6 +223,7 @@ func TestNew(t *testing.T) {
 
 			testFile, err := tc.file.Write()
 			defer os.RemoveAll(path.Dir(testFile))
+
 			if err != nil {
 				// unexpected error, should panic
 				panic(err)

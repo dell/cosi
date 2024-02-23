@@ -74,6 +74,7 @@ func CheckSecret(ctx context.Context, clientset *kubernetes.Clientset, inputSecr
 
 	err := retry(ctx, attempts, sleep, func() error {
 		var err error
+
 		k8sSecret, err = clientset.CoreV1().Secrets(inputSecret.Namespace).Get(ctx, inputSecret.Name, metav1.GetOptions{})
 		if err != nil {
 			return err

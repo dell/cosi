@@ -107,6 +107,7 @@ func CheckBucketAccessStatus(ctx context.Context, bucketClient *bucketclientset.
 
 	err := retry(ctx, attempts, sleep, func() error {
 		var err error
+
 		myBucketAccess, err = bucketClient.ObjectstorageV1alpha1().BucketAccesses(bucketAccess.Namespace).Get(ctx, bucketAccess.Name, v1.GetOptions{})
 		if err != nil {
 			return err
@@ -115,6 +116,7 @@ func CheckBucketAccessStatus(ctx context.Context, bucketClient *bucketclientset.
 		if !myBucketAccess.Status.AccessGranted {
 			return fmt.Errorf("AccessGranted is false")
 		}
+
 		return nil
 	})
 
@@ -139,6 +141,7 @@ func GetBucketResource(ctx context.Context, bucketClient *bucketclientset.Client
 
 	err := retry(ctx, attempts, sleep, func() error {
 		var err error
+
 		myBucketClaim, err = bucketClient.ObjectstorageV1alpha1().BucketClaims(bucketClaim.Namespace).Get(ctx, bucketClaim.Name, v1.GetOptions{})
 		if err != nil {
 			return err
@@ -147,6 +150,7 @@ func GetBucketResource(ctx context.Context, bucketClient *bucketclientset.Client
 		if myBucketClaim.Status.BucketName == "" && myBucketClaim.Spec.ExistingBucketName == "" {
 			return fmt.Errorf("BucketName and ExistingBucketName are empty")
 		}
+
 		return nil
 	})
 
@@ -156,6 +160,7 @@ func GetBucketResource(ctx context.Context, bucketClient *bucketclientset.Client
 
 	err = retry(ctx, attempts, sleep, func() error {
 		var err error
+
 		name := ""
 		if myBucketClaim.Spec.ExistingBucketName != "" {
 			name = myBucketClaim.Spec.ExistingBucketName
@@ -192,6 +197,7 @@ func CheckBucketStatusEmpty(ctx context.Context, bucketClient *bucketclientset.C
 	err := retry(ctx, attempts, sleep, func() error {
 		var err error
 		myBucketClaim, err = bucketClient.ObjectstorageV1alpha1().BucketClaims(bucketClaim.Namespace).Get(ctx, bucketClaim.Name, v1.GetOptions{})
+
 		return err
 	})
 

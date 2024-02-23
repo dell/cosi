@@ -55,10 +55,12 @@ func TestDriversetAdd(t *testing.T) {
 		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
+
 			err := tc.driverset.Add(tc.driver)
 			if err != nil {
 				assert.ErrorContains(t, err, tc.wantErrorMsg)
 			}
+
 			compareSyncMaps(t, &tc.want.drivers, &tc.driverset.drivers)
 		})
 	}
@@ -126,10 +128,12 @@ func TestDriversetGet(t *testing.T) {
 		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
+
 			got, err := tc.driverset.Get(tc.id)
 			if err != nil {
 				assert.ErrorContains(t, err, tc.wantErrorMsg)
 			}
+
 			assert.Equal(t, tc.want, got)
 		})
 	}
@@ -154,6 +158,7 @@ func TestErrDriverDuplicate(t *testing.T) {
 		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
+
 			err := ErrDriverDuplicate{tc.id}
 			assert.Equal(t, err.Error(), tc.want)
 		})
@@ -179,6 +184,7 @@ func TestErrNotConfigured(t *testing.T) {
 		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
+
 			err := ErrNotConfigured{tc.id}
 			assert.Equal(t, err.Error(), tc.want)
 		})

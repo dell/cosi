@@ -69,6 +69,7 @@ func TestExactlyOne(t *testing.T) {
 		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
+
 			actual := exactlyOne(tc.nillables...)
 			assert.Equal(t, tc.expected, actual)
 		})
