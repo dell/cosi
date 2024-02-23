@@ -162,15 +162,18 @@ func testDriverNew(t *testing.T) {
 			defer cancel()
 
 			driver, err := New(tc.config)
+
 			switch tc.result {
 			case ok:
 				assert.NoError(t, err)
+
 				if assert.NotNil(t, driver) {
 					assert.Equal(t, tc.config.Id, driver.ID())
 				}
 
 			case warning:
 				assert.NoError(t, err)
+
 				if assert.NotNil(t, driver) {
 					assert.Equal(t, strings.ReplaceAll(tc.config.Id, "-", "_"), driver.ID())
 				}
@@ -262,6 +265,7 @@ func testParsePolicyStatement(t *testing.T) {
 		t.Run(scenario.description, func(t *testing.T) {
 			ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 			defer cancel()
+
 			updatedPolicy := parsePolicyStatement(ctx, scenario.inputStatements, scenario.awsBucketResourceARN, scenario.awsPrincipalString)
 			assert.Equalf(t, scenario.expectedOutput, updatedPolicy, "not equal")
 		})

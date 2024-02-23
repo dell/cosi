@@ -310,9 +310,12 @@ func TestNew(t *testing.T) {
 				if assert.Error(t, err) {
 					assert.Regexp(t, tc.errorMessage, err.Error())
 				}
+
 				return
 			}
+
 			assert.NoError(t, err)
+
 			if assert.NotNil(t, transport) &&
 				assert.NotNil(t, transport.TLSClientConfig) {
 				assert.Equal(t, tc.config.Insecure, transport.TLSClientConfig.InsecureSkipVerify)
