@@ -52,12 +52,17 @@ build:	##build project
 ##                             CONTAINER                              ##
 ########################################################################
 
-.PHONY: docker
-docker: vendor download-csm-common ##build the docker container
+.PHONY: build-base-image
+build-base-image: vendor download-csm-common
 	$(eval include csm-common.mk)
-	@echo "Base Images is set to: $(DEFAULT_BASEIMAGE)"
+	sh ./scripts/build-ubi-micro.sh $(DEFAULT_BASEIMAGE)
+	$(eval BASEIMAGE=localhost/cosi-ubimicro:latest)
+
+.PHONY: docker
+docker: build-base-image
+	@echo "Base Images is set to: $(BASEIMAGE)"
 	@echo "Building: $(IMAGENAME):$(IMAGETAG)"
-	docker build --pull -t "$(IMAGENAME):$(IMAGETAG)" --build-arg BASEIMAGE=$(DEFAULT_BASEIMAGE) --build-arg GOIMAGE=$(DEFAULT_GOIMAGE) .
+	docker build -t "$(IMAGENAME):$(IMAGETAG)" --build-arg BASEIMAGE=$(BASEIMAGE) --build-arg GOIMAGE=$(DEFAULT_GOIMAGE) .
 
 .PHONY: push
 push: docker	##build and push the docker container to repository
