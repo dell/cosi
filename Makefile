@@ -56,7 +56,7 @@ build:	##build project
 build-base-image: vendor download-csm-common
 	$(eval include csm-common.mk)
 	sh ./scripts/build-ubi-micro.sh $(DEFAULT_BASEIMAGE)
-	$(eval BASEIMAGE=localhost/cosi-ubimicro:latest)
+	$(eval BASEIMAGE=cosi-ubimicro:latest)
 
 .PHONY: docker
 docker: build-base-image
