@@ -142,8 +142,8 @@ jobs:
          chmod +x ./scripts/build-ubi-micro.sh
          make build-base-image
          podman build -t docker.io/${{ env.IMAGENAME }}:${{ env.IMAGETAG }} -f ./Dockerfile --build-arg GOIMAGE=golang:latest --build-arg BASEIMAGE="localhost/cosi-ubimicro"
-         podman save docker.io/library/${{ env.IMAGENAME }}:${{ env.IMAGETAG }} -o /tmp/${{ env.IMAGENAME }}:${{ env.IMAGETAG }}.tar
-         docker load -i /tmp/${{ env.IMAGENAME }}:${{ env.IMAGETAG }}.tar
+         podman save docker.io/library/${{ env.IMAGENAME }}:${{ env.IMAGETAG }} -o /tmp/cosi.tar
+         docker load -i /tmp/cosi.tar
       - name: Run trivy action
         uses: aquasecurity/trivy-action@master
         with:
