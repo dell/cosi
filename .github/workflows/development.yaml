@@ -121,6 +121,9 @@ jobs:
   build-and-secure:
     name: Build and Scan Docker image
     runs-on: ubuntu-latest
+    env:
+      IMAGETAG: "${{ github.sha }}"
+      IMAGENAME: "dell/cosi"
     steps:
       - name: Configure git for private modules
         run: |
@@ -138,16 +141,16 @@ jobs:
       - run: |
          chmod +x ./scripts/build-ubi-micro.sh
          make build-base-image
-         podman build -t docker.io/cosi -f ./Dockerfile --build-arg GOIMAGE=golang:latest --build-arg BASEIMAGE="localhost/cosi-ubimicro"
-         podman save docker.io/library/cosi -o /tmp/cosi.tar
-         docker load -i /tmp/cosi.tar
+         podman build -t docker.io/${{ env.IMAGENAME }}:${{ env.IMAGETAG }} -f ./Dockerfile --build-arg GOIMAGE=golang:latest --build-arg BASEIMAGE="localhost/cosi-ubimicro"
+         podman save docker.io/library/${{ env.IMAGENAME }}:${{ env.IMAGETAG }} -o /tmp/${{ env.IMAGENAME }}:${{ env.IMAGETAG }}.tar
+         docker load -i /tmp/${{ env.IMAGENAME }}:${{ env.IMAGETAG }}.tar
       - name: Run trivy action
         uses: aquasecurity/trivy-action@master
         with:
-          image-ref: cosi
+          image-ref: ${{ env.IMAGENAME }}:${{ env.IMAGETAG }}
       - name: Run dockle action
         uses: erzz/dockle-action@v1.4.0
         env:
           DOCKER_CONTENT_TRUST: 1
         with:
-          image: cosi
+          image: ${{ env.IMAGENAME }}:${{ env.IMAGETAG }}
