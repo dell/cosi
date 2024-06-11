@@ -123,8 +123,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       IMAGETAG: "${{ github.sha }}"
-      IMAGENAME: "dell/cosi"
-      REGISTRY: "sample_registry"
+      IMAGENAME: "cosi"
     steps:
       - name: Configure git for private modules
         run: |
@@ -139,7 +138,12 @@ jobs:
       - name: "Vendor packages"
         run: |
           go mod vendor
-      - run: make docker
+      - run: |
+         chmod +x ./scripts/build-ubi-micro.sh
+         make build-base-image
+         podman build -t docker.io/${{ env.IMAGENAME }}:${{ env.IMAGETAG }} -f ./Dockerfile --build-arg GOIMAGE=golang:latest --build-arg BASEIMAGE="localhost/cosi-ubimicro"
+         podman save docker.io/library/${{ env.IMAGENAME }}:${{ env.IMAGETAG }} -o /tmp/cosi.tar
+         docker load -i /tmp/cosi.tar
       - name: Run trivy action
         uses: aquasecurity/trivy-action@master
         with:
