@@ -319,6 +319,7 @@ func TestNew(t *testing.T) {
 			if assert.NotNil(t, transport) &&
 				assert.NotNil(t, transport.TLSClientConfig) {
 				assert.Equal(t, tc.config.Insecure, transport.TLSClientConfig.InsecureSkipVerify)
+				assert.NotNil(t, transport.TLSClientConfig.CipherSuites)
 			}
 		})
 	}

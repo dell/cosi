@@ -115,7 +115,10 @@ var _ = BeforeSuite(func() {
 
 	// ObjectScale clientset
 	transport := &http.Transport{
-		TLSClientConfig: &tls.Config{InsecureSkipVerify: true}, //nolint:gosec
+		TLSClientConfig: &tls.Config{
+			InsecureSkipVerify: true, //nolint:gosec
+			CipherSuites:       getSecuredCipherSuites(),
+		},
 	}
 	unsafeClient := &http.Client{Transport: transport}
 
@@ -143,7 +146,10 @@ var _ = BeforeSuite(func() {
 		Region:   &region,
 		HTTPClient: &http.Client{
 			Transport: &http.Transport{
-				TLSClientConfig: &tls.Config{InsecureSkipVerify: true}, //nolint:gosec
+				TLSClientConfig: &tls.Config{
+					InsecureSkipVerify: true, //nolint:gosec
+					CipherSuites:       getSecuredCipherSuites(),
+				},
 			},
 		},
 	})
@@ -168,3 +174,11 @@ var _ = AfterSuite(func(ctx context.Context) {
 		steps.CheckErrors(ctx, clientset, pod.Name, DriverContainerName, pod.Namespace)
 	}
 })
+
+func getSecuredCipherSuites() (suites []uint16) {
+	securedSuite := tls.CipherSuites()
+	for _, v := range securedSuite {
+		suites = append(suites, v.ID)
+	}
+	return suites
+}

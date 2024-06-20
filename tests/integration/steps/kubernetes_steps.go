@@ -181,7 +181,10 @@ func CheckBucketAccessFromSecret(ctx context.Context, clientset *kubernetes.Clie
 	bucketName := secretData.Spec.BucketName
 
 	x509Client := http.Client{Transport: &http.Transport{
-		TLSClientConfig: &tls.Config{InsecureSkipVerify: true}, //nolint:gosec
+		TLSClientConfig: &tls.Config{
+			InsecureSkipVerify: true, //nolint:gosec
+			CipherSuites:       getSecuredCipherSuites(),
+		},
 	}}
 
 	s3Config := &aws.Config{
@@ -229,4 +232,12 @@ func CheckErrors(ctx context.Context, clientset *kubernetes.Clientset, pod, cont
 	gomega.Expect(buf.String()).To(gomega.SatisfyAll(
 		gomega.Not(gomega.ContainSubstring("\"level\":\"error\"")),
 		gomega.Not(gomega.ContainSubstring("Error"))))
+}
+
+func getSecuredCipherSuites() (suites []uint16) {
+	securedSuite := tls.CipherSuites()
+	for _, v := range securedSuite {
+		suites = append(suites, v.ID)
+	}
+	return suites
 }

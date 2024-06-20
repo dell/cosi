@@ -39,8 +39,10 @@ var (
 func New(cfg config.Tls) (*http.Transport, error) {
 	var tlsConfig *tls.Config
 	if cfg.Insecure {
-		/* #nosec */
-		tlsConfig = &tls.Config{InsecureSkipVerify: true}
+		tlsConfig = &tls.Config{
+			InsecureSkipVerify: true, //nolint:gosec
+			CipherSuites:       getSecuredCipherSuites(),
+		}
 
 		l.Log().V(4).Info("Insecure connection applied.", "insecure", cfg.Insecure)
 	} else {
@@ -66,6 +68,7 @@ func New(cfg config.Tls) (*http.Transport, error) {
 			MinVersion:         tls.VersionTLS12,
 			Certificates:       cert,
 			RootCAs:            caCertPool,
+			CipherSuites:       getSecuredCipherSuites(),
 		}
 
 		l.Log().V(6).Info("Secure connection applied.", "insecure", cfg.Insecure)
@@ -121,4 +124,15 @@ func clientCert(certData, keyData *string) ([]tls.Certificate, error) {
 	l.Log().V(8).Info("X509 key pair created")
 
 	return []tls.Certificate{x509}, nil
+}
+
+// getSecuredCipherSuites returns a slice of secured cipher suites.
+// It iterates over the tls.CipherSuites() and appends the ID of each cipher suite to the suites slice.
+// The function returns the suites slice.
+func getSecuredCipherSuites() (suites []uint16) {
+	securedSuite := tls.CipherSuites()
+	for _, v := range securedSuite {
+		suites = append(suites, v.ID)
+	}
+	return suites
 }
