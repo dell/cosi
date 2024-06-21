@@ -239,5 +239,6 @@ func getSecuredCipherSuites() (suites []uint16) {
 	for _, v := range securedSuite {
 		suites = append(suites, v.ID)
 	}
+
 	return suites
 }
