@@ -182,7 +182,7 @@ func CheckBucketAccessFromSecret(ctx context.Context, clientset *kubernetes.Clie
 
 	x509Client := http.Client{Transport: &http.Transport{
 		TLSClientConfig: &tls.Config{
-			InsecureSkipVerify: true, //nolint:gosec
+			InsecureSkipVerify: true, // #nosec G402
 			CipherSuites:       getSecuredCipherSuites(),
 		},
 	}}

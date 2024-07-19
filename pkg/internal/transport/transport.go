@@ -40,7 +40,7 @@ func New(cfg config.Tls) (*http.Transport, error) {
 	var tlsConfig *tls.Config
 	if cfg.Insecure {
 		tlsConfig = &tls.Config{
-			InsecureSkipVerify: true, //nolint:gosec
+			InsecureSkipVerify: true, // #nosec G402
 			CipherSuites:       getSecuredCipherSuites(),
 		}
 
