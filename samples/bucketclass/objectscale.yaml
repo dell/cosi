@@ -1,0 +1,9 @@
+kind: BucketClass
+apiVersion: objectstorage.k8s.io/v1alpha1
+metadata:
+  name: my-bucket-class
+deletionPolicy: Delete
+driverName: cosi.dellemc.com
+parameters:                  
+  id: driverID
+  
