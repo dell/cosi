@@ -49,8 +49,8 @@ If you are using ISCSI, then the Node portion of the driver can only be run on n
 ## Driver Installation
 Please consult the [Installation Guide](https://dell.github.io/csm-docs/docs/cosidriver/installation)
 
-## Using Driver
-Please refer to the section `Testing Drivers` in the [Documentation](https://dell.github.io/csm-docs/docs/cosidriver/installation/test/) for more info.
+<!-- ## Using Driver
+Please refer to the section `Testing Drivers` in the [Documentation](https://dell.github.io/csm-docs/docs/cosidriver/installation/test/) for more info. -->
 
 ## Documentation
 For more detailed information on the driver, please refer to [Container Storage Modules documentation](https://dell.github.io/csm-docs/).
