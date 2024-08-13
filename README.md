@@ -31,7 +31,7 @@ For any COSI driver issues, questions or feedback, please follow our [support pr
 This project is a Go module (see golang.org Module information for explanation). 
 The dependencies for this project are in the go.mod file.
 
-To build the source, execute `make clean build`.
+To build the source, execute `make build`.
 
 To build an image, execute `make podman`.
 
