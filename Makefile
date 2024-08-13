@@ -58,17 +58,17 @@ build-base-image: vendor download-csm-common
 	sh ./scripts/build-ubi-micro.sh $(DEFAULT_BASEIMAGE)
 	$(eval BASEIMAGE=cosi-ubimicro:latest)
 
-.PHONY: docker
-docker: build-base-image
+.PHONY: podman
+podman: build-base-image
 	@echo "Base Images is set to: $(BASEIMAGE)"
 	@echo "Building: $(IMAGENAME):$(IMAGETAG)"
-	docker build -t "$(IMAGENAME):$(IMAGETAG)" --build-arg BASEIMAGE=$(BASEIMAGE) --build-arg GOIMAGE=$(DEFAULT_GOIMAGE) .
+	podman build -t "$(IMAGENAME):$(IMAGETAG)" --build-arg BASEIMAGE=$(BASEIMAGE) --build-arg GOIMAGE=$(DEFAULT_GOIMAGE) .
 
 .PHONY: push
-push: docker	##build and push the docker container to repository
+push: podman	##build and push the podman container to repository
 	@echo "Pushing: $(REGISTRY)/$(IMAGENAME):$(IMAGETAG)"
-	docker tag "$(IMAGENAME):$(IMAGETAG)" "$(REGISTRY)/$(IMAGENAME):$(IMAGETAG)"
-	docker push "$(REGISTRY)/$(IMAGENAME):$(IMAGETAG)"
+	podman tag "$(IMAGENAME):$(IMAGETAG)" "$(REGISTRY)/$(IMAGENAME):$(IMAGETAG)"
+	podman push "$(REGISTRY)/$(IMAGENAME):$(IMAGETAG)"
 
 .PHONY: download-csm-common
 download-csm-common:

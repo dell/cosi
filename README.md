@@ -33,13 +33,15 @@ The dependencies for this project are in the go.mod file.
 
 To build the source, execute `make clean build`.
 
-To build an image, execute `make docker`.
+To build an image, execute `make podman`.
+
+To run unit tests, execute `make unit-test`.
 
 Default parameters for building an image are defined in overrides.mk. Run `make -f overrides.mk overrides-help` to display current values.
 
 <!-- You can run an integration test on a Linux system by populating the file `env.sh` with values for your Dell PowerMax systems and then run "`make integration-test`". -->
 
-## Runtime Dependencies
+<!-- ## Runtime Dependencies -->
 <!-- Both the Controller and the Node portions of the driver can only be run on nodes which have network connectivity to a “`Unisphere for PowerMax`” server (which is used by the driver). 
 
 If you are using ISCSI, then the Node portion of the driver can only be run on nodes that have the iscsi-initiator-utils package installed. -->
