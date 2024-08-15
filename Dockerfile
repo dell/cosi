@@ -35,6 +35,7 @@ COPY overrides.mk overrides.mk
 COPY Makefile Makefile
 COPY cmd/main.go cmd/main.go
 COPY pkg/ pkg/
+COPY .mockery.yaml .mockery.yaml
 
 # Build.
 RUN make build
