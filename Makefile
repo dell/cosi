@@ -37,6 +37,10 @@ clean:	##clean directory
 
 .PHONY: codegen
 codegen: clean	##regenerate files
+	go generate -skip="mockery" ./...
+
+.PHONY: mockgen
+mockgen: clean
 	go generate ./...
 
 # FIXME: remove this target after we remove dependency on private goobjectscale.
@@ -82,11 +86,11 @@ download-csm-common:
 test: unit-test fuzz	##run unit and fuzzy tests
 
 .PHONY: unit-test
-unit-test:	##run unit tests (Windows or Linux; requires no hardware)
+unit-test: mockgen	##run unit tests (Windows or Linux; requires no hardware)
 	( go clean -cache; CGO_ENABLED=0 go test -v -coverprofile=c.out ./...)
 
 .PHONY: unit-test-race
-unit-test-race:	##run unit tests with race condition reporting (Windows or Linux; requires no hardware, requires CGO)
+unit-test-race:	mockgen ##run unit tests with race condition reporting (Windows or Linux; requires no hardware, requires CGO)
 	( go clean -cache; CGO_ENABLED=1 go test -race -v -coverprofile=c.out ./...)
 
 .PHONY: fuzz
