@@ -45,7 +45,7 @@ vendor:	##generate the vendor directory
 	go mod vendor
 
 .PHONY: build
-build: ##build project
+build: codegen ##build project
 	GOOS=linux CGO_ENABLED=0 go build -ldflags="-s -w" -o ${COSI_BUILD_DIR}/cosi ${COSI_BUILD_PATH}
 
 ########################################################################
@@ -55,7 +55,7 @@ build: ##build project
 .PHONY: build-base-image
 build-base-image: vendor download-csm-common
 	$(eval include csm-common.mk)
-	sh ./scripts/build-ubi-micro.sh $(DEFAULT_BASEIMAGE)
+	buildah unshare ./scripts/build-ubi-micro.sh $(DEFAULT_BASEIMAGE)
 	$(eval BASEIMAGE=cosi-ubimicro:latest)
 
 .PHONY: podman
