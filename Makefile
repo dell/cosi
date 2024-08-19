@@ -59,11 +59,7 @@ build: codegen ##build project
 .PHONY: build-base-image
 build-base-image: vendor download-csm-common
 	$(eval include csm-common.mk)
-	if [ "$(shell whoami)" != "root" ]; then \
-		buildah unshare ./scripts/build-ubi-micro.sh $(DEFAULT_BASEIMAGE); \
-	else \
-		sh ./scripts/build-ubi-micro.sh $(DEFAULT_BASEIMAGE); \
-	fi
+	sh ./scripts/build-ubi-micro.sh $(DEFAULT_BASEIMAGE);
 	$(eval BASEIMAGE=cosi-ubimicro:latest)
 
 .PHONY: podman
