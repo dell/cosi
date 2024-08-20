@@ -1,4 +1,4 @@
-# Copyright © 2023 Dell Inc. or its subsidiaries. All Rights Reserved.
+# Copyright © 2023 - 2024 Dell Inc. or its subsidiaries. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -37,6 +37,10 @@ clean:	##clean directory
 
 .PHONY: codegen
 codegen: clean	##regenerate files
+	go generate -skip="mockery" ./...
+
+.PHONY: mockgen
+mockgen: clean
 	go generate ./...
 
 # FIXME: remove this target after we remove dependency on private goobjectscale.
@@ -45,7 +49,7 @@ vendor:	##generate the vendor directory
 	go mod vendor
 
 .PHONY: build
-build:	##build project
+build: codegen ##build project
 	GOOS=linux CGO_ENABLED=0 go build -ldflags="-s -w" -o ${COSI_BUILD_DIR}/cosi ${COSI_BUILD_PATH}
 
 ########################################################################
@@ -55,20 +59,20 @@ build:	##build project
 .PHONY: build-base-image
 build-base-image: vendor download-csm-common
 	$(eval include csm-common.mk)
-	sh ./scripts/build-ubi-micro.sh $(DEFAULT_BASEIMAGE)
+	sh ./scripts/build-ubi-micro.sh $(DEFAULT_BASEIMAGE);
 	$(eval BASEIMAGE=cosi-ubimicro:latest)
 
-.PHONY: docker
-docker: build-base-image
+.PHONY: podman
+podman: build-base-image
 	@echo "Base Images is set to: $(BASEIMAGE)"
 	@echo "Building: $(IMAGENAME):$(IMAGETAG)"
-	docker build -t "$(IMAGENAME):$(IMAGETAG)" --build-arg BASEIMAGE=$(BASEIMAGE) --build-arg GOIMAGE=$(DEFAULT_GOIMAGE) .
+	podman build -t "$(IMAGENAME):$(IMAGETAG)" --build-arg BASEIMAGE=$(BASEIMAGE) --build-arg GOIMAGE=$(DEFAULT_GOIMAGE) .
 
 .PHONY: push
-push: docker	##build and push the docker container to repository
+push: podman	##build and push the podman container to repository
 	@echo "Pushing: $(REGISTRY)/$(IMAGENAME):$(IMAGETAG)"
-	docker tag "$(IMAGENAME):$(IMAGETAG)" "$(REGISTRY)/$(IMAGENAME):$(IMAGETAG)"
-	docker push "$(REGISTRY)/$(IMAGENAME):$(IMAGETAG)"
+	podman tag "$(IMAGENAME):$(IMAGETAG)" "$(REGISTRY)/$(IMAGENAME):$(IMAGETAG)"
+	podman push "$(REGISTRY)/$(IMAGENAME):$(IMAGETAG)"
 
 .PHONY: download-csm-common
 download-csm-common:
@@ -82,11 +86,11 @@ download-csm-common:
 test: unit-test fuzz	##run unit and fuzzy tests
 
 .PHONY: unit-test
-unit-test:	##run unit tests (Windows or Linux; requires no hardware)
+unit-test: mockgen	##run unit tests (Windows or Linux; requires no hardware)
 	( go clean -cache; CGO_ENABLED=0 go test -v -coverprofile=c.out ./...)
 
 .PHONY: unit-test-race
-unit-test-race:	##run unit tests with race condition reporting (Windows or Linux; requires no hardware, requires CGO)
+unit-test-race:	mockgen ##run unit tests with race condition reporting (Windows or Linux; requires no hardware, requires CGO)
 	( go clean -cache; CGO_ENABLED=1 go test -race -v -coverprofile=c.out ./...)
 
 .PHONY: fuzz
