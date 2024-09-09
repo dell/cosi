@@ -66,7 +66,14 @@ build-base-image: vendor download-csm-common
 podman: build-base-image
 	@echo "Base Images is set to: $(BASEIMAGE)"
 	@echo "Building: $(IMAGENAME):$(IMAGETAG)"
-	podman build -t "$(IMAGENAME):$(IMAGETAG)" --build-arg BASEIMAGE=$(BASEIMAGE) --build-arg GOIMAGE=$(DEFAULT_GOIMAGE) .
+	podman build $(NOCACHE) -t "$(IMAGENAME):$(IMAGETAG)" --build-arg BASEIMAGE=$(BASEIMAGE) --build-arg GOIMAGE=$(DEFAULT_GOIMAGE) .
+
+.PHONY: podman-no-cache
+podman: build-base-image
+	@echo "Base Images is set to: $(BASEIMAGE)"
+	@echo "Building: $(IMAGENAME):$(IMAGETAG)"
+	@echo "Building with --no-cache ..."
+	@make podman NOCACHE=--no-cache
 
 .PHONY: push
 push: podman	##build and push the podman container to repository
