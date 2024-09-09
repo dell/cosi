@@ -69,7 +69,6 @@ podman: build-base-image
 	podman build $(NOCACHE) -t "$(IMAGENAME):$(IMAGETAG)" --build-arg BASEIMAGE=$(BASEIMAGE) --build-arg GOIMAGE=$(DEFAULT_GOIMAGE) .
 
 .PHONY: podman-no-cache
-podman: build-base-image
 	@echo "Base Images is set to: $(BASEIMAGE)"
 	@echo "Building: $(IMAGENAME):$(IMAGETAG)"
 	@echo "Building with --no-cache ..."
