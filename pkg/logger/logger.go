@@ -58,7 +58,7 @@ func New(level int, formatter string) {
 	logrusInstance.SetLevel(logrus.Level(defaultLevel))
 
 	if level >= minLevel || level <= maxLevel {
-		logrusInstance.SetLevel(logrus.Level(uint(level)))
+		logrusInstance.SetLevel(logrus.Level(uint32(level)))
 	}
 
 	switch formatter {
