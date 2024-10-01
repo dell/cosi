@@ -21,7 +21,7 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-const (
+var (
 	minLevel     = 0
 	maxLevel     = 10
 	defaultLevel = 4
