@@ -132,15 +132,11 @@ func tracerProvider(ctx context.Context, url string) (*sdktrace.TracerProvider, 
 		return nil, fmt.Errorf("failed to create tracing resource: %w", err)
 	}
 
-	conn, err := grpc.DialContext(
-		ctx,
-		url,
-		// insecure transport left intentionally here
+	conn, err := grpc.NewClient(url,
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
-		grpc.WithBlock(),
 	)
 	if err != nil {
-		return nil, fmt.Errorf("failed to create gRPC connection to collector: %w", err)
+		return nil, fmt.Errorf("failed to create gRPC client to collector: %w", err)
 	}
 
 	// Set up a trace exporter
