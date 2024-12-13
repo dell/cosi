@@ -1,7 +1,17 @@
+# CODEOWNERS
 #
-# documentation for this file can be found at:
+# Documentation for this file can be found at:
 # https://help.github.com/en/articles/about-code-owners
+
 # These are the default owners for the code and will
 # be requested for review when someone opens a pull request.
+# Order is alphabetical for easier maintenance.
+#
+# Abhilash Muralidhara (abhi16394)
+# Adarsh Kumar Yadav (adarsh-dell)
+# Akshay Saini (AkshaySainiDell)
+# Don Khan (donatwork)
+# Santhosh Lakshmanan (santhoshatdell)
 
-* @adamginna-dell @adarsh-dell @AkshaySainiDell @cbartoszDell @bogdanNovikovDell @boyamurthy @chimanjain @mdutka-dell @nitesh3108 @rajendraindukuri @rishabhatdell @shaynafinocchiaro @shefali-malhotra @suryagupta4 @Leonard-Dell @shanmydell
+# for all files
+* @abhi16394 @adarsh-dell @AkshaySainiDell @donatwork @santhoshatdell

@@ -81,9 +81,9 @@ type S3 struct {
 }
 
 // UnmarshalYAML implements yaml.Unmarshaler.
-func (j *S3) UnmarshalYAML(b []byte) error {
+func (j *S3) UnmarshalYAML(value *yaml.Node) error {
 	var raw map[string]interface{}
-	if err := yaml.Unmarshal(b, &raw); err != nil {
+	if err := value.Decode(&raw); err != nil {
 		return err
 	}
 	if v, ok := raw["endpoint"]; !ok || v == nil {
@@ -91,7 +91,7 @@ func (j *S3) UnmarshalYAML(b []byte) error {
 	}
 	type Plain S3
 	var plain Plain
-	if err := yaml.Unmarshal(b, &plain); err != nil {
+	if err := value.Decode(&plain); err != nil {
 		return err
 	}
 	*j = S3(plain)
@@ -132,9 +132,9 @@ func (j *Tls) UnmarshalJSON(b []byte) error {
 }
 
 // UnmarshalYAML implements yaml.Unmarshaler.
-func (j *Tls) UnmarshalYAML(b []byte) error {
+func (j *Tls) UnmarshalYAML(value *yaml.Node) error {
 	var raw map[string]interface{}
-	if err := yaml.Unmarshal(b, &raw); err != nil {
+	if err := value.Decode(&raw); err != nil {
 		return err
 	}
 	if v, ok := raw["insecure"]; !ok || v == nil {
@@ -142,7 +142,7 @@ func (j *Tls) UnmarshalYAML(b []byte) error {
 	}
 	type Plain Tls
 	var plain Plain
-	if err := yaml.Unmarshal(b, &plain); err != nil {
+	if err := value.Decode(&plain); err != nil {
 		return err
 	}
 	*j = Tls(plain)
@@ -213,9 +213,9 @@ func (j *Objectscale) UnmarshalJSON(b []byte) error {
 }
 
 // UnmarshalYAML implements yaml.Unmarshaler.
-func (j *Objectscale) UnmarshalYAML(b []byte) error {
+func (j *Objectscale) UnmarshalYAML(value *yaml.Node) error {
 	var raw map[string]interface{}
-	if err := yaml.Unmarshal(b, &raw); err != nil {
+	if err := value.Decode(&raw); err != nil {
 		return err
 	}
 	if v, ok := raw["credentials"]; !ok || v == nil {
@@ -247,7 +247,7 @@ func (j *Objectscale) UnmarshalYAML(b []byte) error {
 	}
 	type Plain Objectscale
 	var plain Plain
-	if err := yaml.Unmarshal(b, &plain); err != nil {
+	if err := value.Decode(&plain); err != nil {
 		return err
 	}
 	if v, ok := raw["emptyBucket"]; !ok || v == nil {
@@ -258,9 +258,9 @@ func (j *Objectscale) UnmarshalYAML(b []byte) error {
 }
 
 // UnmarshalYAML implements yaml.Unmarshaler.
-func (j *Credentials) UnmarshalYAML(b []byte) error {
+func (j *Credentials) UnmarshalYAML(value *yaml.Node) error {
 	var raw map[string]interface{}
-	if err := yaml.Unmarshal(b, &raw); err != nil {
+	if err := value.Decode(&raw); err != nil {
 		return err
 	}
 	if v, ok := raw["password"]; !ok || v == nil {
@@ -271,7 +271,7 @@ func (j *Credentials) UnmarshalYAML(b []byte) error {
 	}
 	type Plain Credentials
 	var plain Plain
-	if err := yaml.Unmarshal(b, &plain); err != nil {
+	if err := value.Decode(&plain); err != nil {
 		return err
 	}
 	*j = Credentials(plain)
