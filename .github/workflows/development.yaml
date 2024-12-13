@@ -37,7 +37,6 @@ jobs:
         with:
           version: latest
           skip-cache: true
-          args: --config=configs/golangci-lint/golangci.yaml
 
   malware-security-scan:
     name: Malware Scanner
