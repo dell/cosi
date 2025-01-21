@@ -124,6 +124,7 @@ jobs:
     env:
       IMAGETAG: "${{ github.sha }}"
       IMAGENAME: "cosi"
+      BASE_IMAGE: "quay.io/dell/container-storage-modules/csm-base-image:nightly"
     steps:
       - name: Configure git for private modules
         run: |
@@ -139,9 +140,7 @@ jobs:
         run: |
           go mod vendor
       - run: |
-         chmod +x ./scripts/build-ubi-micro.sh
-         make build-base-image
-         podman build -t docker.io/${{ env.IMAGENAME }}:${{ env.IMAGETAG }} -f ./Dockerfile --build-arg GOIMAGE=golang:latest --build-arg BASEIMAGE="localhost/cosi-ubimicro"
+         podman build -t docker.io/${{ env.IMAGENAME }}:${{ env.IMAGETAG }} -f ./Dockerfile --build-arg GOIMAGE=golang:latest --build-arg BASEIMAGE=${{ env.BASE_IMAGE }} .
          podman save docker.io/${{ env.IMAGENAME }}:${{ env.IMAGETAG }} -o /tmp/cosi.tar
          docker load -i /tmp/cosi.tar
       - name: Run trivy action
