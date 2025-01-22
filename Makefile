@@ -70,7 +70,7 @@ push: podman	##build and push the podman container to repository
 
 .PHONY: download-csm-common
 download-csm-common:
-	curl -O -L https://raw.githubusercontent.com/dell/csm/base-image-improvements/config/csm-common.mk
+	curl -O -L https://raw.githubusercontent.com/dell/csm/main/config/csm-common.mk
 	$(eval include csm-common.mk)
 
 ########################################################################
