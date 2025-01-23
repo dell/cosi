@@ -1,4 +1,4 @@
-# Copyright © 2023 - 2024 Dell Inc. or its subsidiaries. All Rights Reserved.
+# Copyright © 2023-2025 Dell Inc. or its subsidiaries. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -42,6 +42,11 @@ codegen: clean	##regenerate files
 .PHONY: mockgen
 mockgen: clean
 	go generate ./...
+
+# FIXME: remove this target after we remove dependency on private goobjectscale.
+.PHONY: vendor
+vendor:	##generate the vendor directory
+	go mod vendor
 
 .PHONY: build
 build: codegen ##build project

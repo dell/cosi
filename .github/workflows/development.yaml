@@ -29,6 +29,9 @@ jobs:
           cache: false
       - name: Checkout the code
         uses: actions/checkout@v4
+      - name: Vendor packages
+        run: |
+          go mod vendor
       - name: golangci-lint
         uses: golangci/golangci-lint-action@v6
         with:
@@ -102,6 +105,9 @@ jobs:
         with:
           go-version: "1.23"
           cache: false
+      - name: Vendor packages
+        run: |
+          go mod vendor
       - name: Run unit tests and check package coverage
         uses: dell/common-github-actions/go-code-tester@main
         with:
@@ -130,6 +136,9 @@ jobs:
           cache: false
       - name: Checkout the code
         uses: actions/checkout@v4
+      - name: "Vendor packages"
+        run: |
+          go mod vendor
       - run: |
          podman build -t docker.io/${{ env.IMAGENAME }}:${{ env.IMAGETAG }} -f ./Dockerfile --build-arg GOIMAGE=golang:latest --build-arg BASEIMAGE=${{ env.BASE_IMAGE }} .
          podman save docker.io/${{ env.IMAGENAME }}:${{ env.IMAGETAG }} -o /tmp/cosi.tar

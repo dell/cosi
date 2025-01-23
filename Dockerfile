@@ -24,7 +24,11 @@ WORKDIR /workspace
 COPY go.mod go.mod
 COPY go.sum go.sum
 
-RUN go mod download
+# cache deps before building and copying source so that we don't need to re-download as much
+# and so that source changes don't invalidate our downloaded layer.
+# FIXME: this should be added after we remove dependency on private goobjectscale
+# RUN go mod download
+COPY vendor/ vendor/
 
 # Copy the go source.
 COPY overrides.mk overrides.mk
