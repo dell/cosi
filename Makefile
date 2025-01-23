@@ -1,4 +1,4 @@
-# Copyright © 2023 - 2024 Dell Inc. or its subsidiaries. All Rights Reserved.
+# Copyright © 2023-2025 Dell Inc. or its subsidiaries. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -56,17 +56,11 @@ build: codegen ##build project
 ##                             CONTAINER                              ##
 ########################################################################
 
-.PHONY: build-base-image
-build-base-image: vendor download-csm-common
-	$(eval include csm-common.mk)
-	sh ./scripts/build-ubi-micro.sh $(DEFAULT_BASEIMAGE);
-	$(eval BASEIMAGE=cosi-ubimicro:latest)
-
 .PHONY: podman
-podman: build-base-image
-	@echo "Base Images is set to: $(BASEIMAGE)"
+podman: download-csm-common
+	@echo "Base Images is set to: $(CSM_BASEIMAGE)"
 	@echo "Building: $(IMAGENAME):$(IMAGETAG)"
-	podman build -t "$(IMAGENAME):$(IMAGETAG)" --build-arg BASEIMAGE=$(BASEIMAGE) --build-arg GOIMAGE=$(DEFAULT_GOIMAGE) .
+	podman build -t "$(IMAGENAME):$(IMAGETAG)" --build-arg BASEIMAGE=$(CSM_BASEIMAGE) --build-arg GOIMAGE=$(DEFAULT_GOIMAGE) .
 
 .PHONY: push
 push: podman	##build and push the podman container to repository
@@ -77,6 +71,7 @@ push: podman	##build and push the podman container to repository
 .PHONY: download-csm-common
 download-csm-common:
 	curl -O -L https://raw.githubusercontent.com/dell/csm/main/config/csm-common.mk
+	$(eval include csm-common.mk)
 
 ########################################################################
 ##                              TESTING                               ##

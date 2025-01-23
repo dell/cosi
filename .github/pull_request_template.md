@@ -1,6 +1,6 @@
 <!--
-# Copyright © 2023 Dell Inc. or its subsidiaries. All Rights Reserved.
-# 
+# Copyright © 2023-2025 Dell Inc. or its subsidiaries. All Rights Reserved.
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -34,7 +34,7 @@ List the GitHub issues impacted by this PR:
 - [ ] Backward compatibility is not broken
 
 # How Has This Been Tested?
-Please describe the tests that you ran to verify your changes. Please also list any relevant details for your test configuration
+Please describe the tests that you ran to verify your changes. Please also list any relevant details for your test configuration.
 
 - [ ] Unit testing
 - [ ] Integration testing
