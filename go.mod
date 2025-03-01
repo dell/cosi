@@ -1,8 +1,6 @@
 module github.com/dell/cosi
 
-go 1.23.0
-
-toolchain go1.23.4
+go 1.24
 
 require (
 	github.com/aws/aws-sdk-go v1.55.6
