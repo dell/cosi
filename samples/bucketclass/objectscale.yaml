@@ -4,6 +4,5 @@ metadata:
   name: my-bucket-class
 deletionPolicy: Delete
 driverName: cosi.dellemc.com
-parameters:                  
+parameters:
   id: driverID
-  
