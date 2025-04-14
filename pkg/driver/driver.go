@@ -87,7 +87,6 @@ func New(config *config.ConfigSchemaJson, socket, name string) (*Driver, error) 
 	}
 
 	// Create shared listener for gRPC server
-	fmt.Println("socket = ", socket)
 	listener, err := net.Listen("unix", socket)
 	if err != nil {
 		return nil, fmt.Errorf("failed to announce on the local network address: %w", err)
@@ -95,7 +94,6 @@ func New(config *config.ConfigSchemaJson, socket, name string) (*Driver, error) 
 
 	l.Log().V(6).Info("Shared listener created.", "socket", socket)
 
-	fmt.Println("HERE IN NEW")
 	return &Driver{server, listener}, nil
 }
 
@@ -134,7 +132,6 @@ func Run(ctx context.Context, config *config.ConfigSchemaJson, socket, name stri
 // RunBlocking is a blocking version of Run.
 func RunBlocking(ctx context.Context, config *config.ConfigSchemaJson, socket, name string) error {
 	// Create new driver
-	fmt.Println("socket in RunBlocking: ", socket)
 	driver, err := New(config, socket, name)
 	if err != nil {
 		l.Log().Error(err, "failed to start gRPC server")
@@ -144,7 +141,6 @@ func RunBlocking(ctx context.Context, config *config.ConfigSchemaJson, socket, n
 	l.Log().V(4).Info("gRPC server started.")
 	// Block until driver is ready
 	<-driver.start(ctx)
-	fmt.Print("in RunBlocking \n")
 
 	// Block until context is done
 	<-ctx.Done()

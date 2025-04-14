@@ -110,7 +110,6 @@ func runMain() error {
 	}()
 
 	l.Log().V(4).Info("COSI driver is starting.")
-	fmt.Print("GOT TO HERE")
 	// Run the driver.
 	return driver.RunBlocking(ctx, cfg, driver.COSISocket, tracedServiceName)
 }
