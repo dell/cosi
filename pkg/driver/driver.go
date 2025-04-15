@@ -135,7 +135,6 @@ func RunBlocking(ctx context.Context, config *config.ConfigSchemaJson, socket, n
 	driver, err := New(config, socket, name)
 	if err != nil {
 		l.Log().Error(err, "failed to start gRPC server")
-
 		return err
 	}
 

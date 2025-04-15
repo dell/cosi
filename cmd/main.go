@@ -48,17 +48,14 @@ const (
 	tracedServiceName = "cosi.dellemc.com"
 )
 
-// init is run before main and is used to define command line flags.
-func init() {
+func main() {
 	// Parse command line flags.
 	flag.Parse()
 	// Create logger instance.
 	l.New(*logLevel, *logFormat)
 	// Set the custom logger for OpenTelemetry.
 	setOtelLogger()
-}
 
-func main() {
 	err := runMain()
 	if err != nil {
 		l.Log().Error(err, "failed to start application")
