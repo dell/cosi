@@ -221,10 +221,10 @@ func TestDocumentEqual(t *testing.T) {
 
 func TestStatementEntryEqual(t *testing.T) {
 	tests := []struct {
-		name string
+		name   string
 		entry1 StatementEntry
 		entry2 StatementEntry
-		want bool
+		want   bool
 	}{
 		{
 			name: "equal documents",
@@ -329,8 +329,8 @@ func TestStatementEntryEqual(t *testing.T) {
 		{
 			name: "different length Resource",
 			entry1: StatementEntry{
-				Effect: "Allow",
-				Action: []string{"s3:*"},
+				Effect:   "Allow",
+				Action:   []string{"s3:*"},
 				Resource: []string{},
 			},
 			entry2: StatementEntry{
@@ -398,7 +398,6 @@ func TestStatementEntryEqual(t *testing.T) {
 			},
 			want: false,
 		},
-
 	}
 
 	for _, tt := range tests {
@@ -412,11 +411,11 @@ func TestStatementEntryEqual(t *testing.T) {
 }
 
 func TestPrincipalEntryEqual(t *testing.T) {
-	tests := []struct{
-		name string
+	tests := []struct {
+		name   string
 		entry1 PrincipalEntry
 		entry2 PrincipalEntry
-		want bool
+		want   bool
 	}{
 		{
 			name: "equal Principal entry",
