@@ -20,8 +20,6 @@ This project may be compiled as a stand-alone binary using Golang that, when run
 * [Security](https://github.com/dell/csm/blob/main/docs/SECURITY.md)
 * [Building](#building)
 * [Runtime Dependecies](#runtime-dependencies)
-* [Driver Installation](#driver-installation)
-* [Using Driver](#using-driver)
 * [Documentation](#documentation)
 
 ## Support
@@ -45,12 +43,6 @@ Default parameters for building an image are defined in overrides.mk. Run `make 
 <!-- Both the Controller and the Node portions of the driver can only be run on nodes which have network connectivity to a “`Unisphere for PowerMax`” server (which is used by the driver). 
 
 If you are using ISCSI, then the Node portion of the driver can only be run on nodes that have the iscsi-initiator-utils package installed. -->
-
-## Driver Installation
-Please consult the [Installation Guide](https://dell.github.io/csm-docs/docs/cosidriver/installation)
-
-<!-- ## Using Driver
-Please refer to the section `Testing Drivers` in the [Documentation](https://dell.github.io/csm-docs/docs/cosidriver/installation/test/) for more info. -->
 
 ## Documentation
 For more detailed information on the driver, please refer to [Container Storage Modules documentation](https://dell.github.io/csm-docs/).
