@@ -5,7 +5,7 @@ go 1.25
 require (
 	github.com/aws/aws-sdk-go v1.55.6
 	github.com/bombsimon/logrusr/v4 v4.1.0
-	github.com/dell/goobjectscale v0.4.1-0.20241104204410-e2d0b7f198e5
+	github.com/dell/goobjectscale v0.4.0
 	github.com/go-logr/logr v1.4.3
 	github.com/google/uuid v1.6.0
 	github.com/onsi/ginkgo/v2 v2.25.1
