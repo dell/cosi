@@ -1,3 +1,4 @@
+
 # COSI Driver
 
 **Repository for COSI Driver for Dell Container Storage Modules**
@@ -6,23 +7,6 @@
 COSI Driver is part of the [CSM (Container Storage Modules)](https://github.com/dell/csm) open-source suite of Kubernetes storage enablers for Dell products. COSI Driver is a Container Object Storage Interface (COSI) driver that provides support for provisioning persistent storage using Dell storage array. 
 
 <!-- It supports CSI specification version 1.5. -->
-
-# :lock: **Important Notice**
-Starting with the release of **Container Storage Modules v1.16.0**, this repository will no longer be maintained as an open source project. Future development will continue under a closed source model. This change reflects our commitment to delivering even greater value to our customers by enabling faster innovation and more deeply integrated features with the Dell storage portfolio.<br>
-For existing customers using Dell’s Container Storage Modules, you will continue to receive:
-* **Ongoing Support & Community Engagement**<br>
-       You will continue to receive high-quality support through Dell Support and our community channels. Your experience of engaging with the Dell community remains unchanged.
-* **Streamlined Deployment & Updates**<br>
-        Deployment and update processes will remain consistent, ensuring a smooth and familiar experience.
-* **Access to Documentation & Resources**<br>
-       All documentation and related materials will remain publicly accessible, providing transparency and technical guidance.
-* **Continued Access to Current Open Source Version**<br>
-       The current open-source version will remain available under its existing license for those who rely on it.
-
-Moving to a closed source model allows Dell’s development team to accelerate feature delivery and enhance integration across our Enterprise Kubernetes Storage solutions ultimately providing a more seamless and robust experience.<br>
-We deeply appreciate the contributions of the open source community and remain committed to supporting our customers through this transition.<br>
-
-For questions or access requests, please contact the maintainers via [Dell Support](https://www.dell.com/support/kbdoc/en-in/000188046/container-storage-interface-csi-drivers-and-container-storage-modules-csm-how-to-get-support).
 
 This project may be compiled as a stand-alone binary using Golang that, when run, provides a valid COSI endpoint. It also can be used as a precompiled container image.
 
@@ -66,4 +50,7 @@ For more detailed information on the driver, please refer to [Container Storage 
 
 *NOTICE*: the COSI driver code is linted with the phenomenal `golangci-lint`. For a detailed list 
 of the linters used and their configuration, please refer to the `.golangci.yml` in the root of the project.
+
+
+
 
