@@ -1,3 +1,5 @@
+This project may be compiled as a stand-alone binary using Golang that, when run, provides a valid COSI endpoint. It also can be used as a precompiled container image.
+
 # COSI Driver
 
 **Repository for COSI Driver for Dell Container Storage Modules**
@@ -47,5 +49,6 @@ For more detailed information on the driver, please refer to [Container Storage 
 
 *NOTICE*: the COSI driver code is linted with the phenomenal `golangci-lint`. For a detailed list 
 of the linters used and their configuration, please refer to the `.golangci.yml` in the root of the project.
+
 
 
