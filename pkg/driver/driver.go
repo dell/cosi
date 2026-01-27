@@ -1,14 +1,10 @@
-// Copyright © 2023 Dell Inc. or its subsidiaries. All Rights Reserved.
+// Copyright © 2023-2025 Dell Inc. or its subsidiaries. All Rights Reserved.
 //
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//      http://www.apache.org/licenses/LICENSE-2.0
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+// This software contains the intellectual property of Dell Inc.
+// or is licensed to Dell Inc. from third parties. Use of this software
+// and the intellectual property contained therein is expressly limited to the
+// terms and conditions of the License Agreement under which it is provided by or
+// on behalf of Dell Inc. or its subsidiaries.
 
 // Package driver implements gRPC server for handling requests to the COSI driver
 // as specified by COSI specification.
@@ -24,17 +20,24 @@ import (
 
 	"google.golang.org/grpc"
 
-	spec "sigs.k8s.io/container-object-storage-interface-spec"
+	spec "sigs.k8s.io/container-object-storage-interface/proto"
 
 	"github.com/dell/cosi/pkg/config"
 	"github.com/dell/cosi/pkg/identity"
-	l "github.com/dell/cosi/pkg/logger"
 	"github.com/dell/cosi/pkg/provisioner"
+	"github.com/dell/cosi/pkg/provisioner/virtualdriver"
+	"github.com/dell/csmlog"
 )
 
 const (
 	// COSISocket is a default location of COSI API UNIX socket.
 	COSISocket = "/var/lib/cosi/cosi.sock"
+)
+
+var (
+	NetListenFunc                   func(string, string) (net.Listener, error)               = net.Listen
+	ProvisionerNewVirtualDriverFunc func(config.Configuration) (virtualdriver.Driver, error) = provisioner.NewVirtualDriver
+	log                                                                                      = csmlog.GetLogger()
 )
 
 // Driver structure for storing server and listener instances.
@@ -53,19 +56,19 @@ func New(config *config.ConfigSchemaJson, socket, name string) (*Driver, error) 
 	driverset := &provisioner.Driverset{}
 
 	for _, cfg := range config.Connections {
-		driver, err := provisioner.NewVirtualDriver(cfg)
+		driver, err := ProvisionerNewVirtualDriverFunc(cfg)
 		if err != nil {
 			return nil, fmt.Errorf("failed to validate provided object storage platform connection: %w", err)
 		}
 
-		l.Log().V(6).Info("Configuration for specified object storage platform validated.", "driver", driver.ID())
+		log.Infof("Validated configuration for object storage %s", driver.ID())
 
 		err = driverset.Add(driver)
 		if err != nil {
 			return nil, fmt.Errorf("failed to add object storage platform configuration: %w", err)
 		}
 
-		l.Log().V(6).Info("New configuration for specified object storage platform added.", "driver", driver.ID())
+		log.Infof("New configuration successfully applied to object storage %s", driver.ID())
 	}
 
 	provisionerServer := provisioner.New(driverset)
@@ -81,18 +84,16 @@ func New(config *config.ConfigSchemaJson, socket, name string) (*Driver, error) 
 	// so we can start a new driver after crash or pod restart
 	if _, err := os.Stat(socket); !errors.Is(err, fs.ErrNotExist) {
 		if err := os.RemoveAll(socket); err != nil {
-			l.Log().Error(err, "failed to remove socket")
+			log.Errorf("failed to remove socket: %v", err)
 			os.Exit(1)
 		}
 	}
 
 	// Create shared listener for gRPC server
-	listener, err := net.Listen("unix", socket)
+	listener, err := NetListenFunc("unix", socket)
 	if err != nil {
 		return nil, fmt.Errorf("failed to announce on the local network address: %w", err)
 	}
-
-	l.Log().V(6).Info("Shared listener created.", "socket", socket)
 
 	return &Driver{server, listener}, nil
 }
@@ -104,7 +105,7 @@ func (s *Driver) start(_ context.Context) <-chan struct{} {
 		close(ready)
 
 		if err := s.server.Serve(s.lis); err != nil {
-			l.Log().Error(err, "failed to serve gRPC server")
+			log.Errorf("failed to serve gRPC server: %v", err)
 			os.Exit(1)
 		}
 	}()
@@ -119,13 +120,11 @@ func Run(ctx context.Context, config *config.ConfigSchemaJson, socket, name stri
 	// Create new driver
 	driver, err := New(config, socket, name)
 	if err != nil {
-		l.Log().Error(err, "failed to start gRPC server")
-
+		log.Errorf("failed to start gRPC server: %v", err)
 		return nil, err
 	}
 
-	l.Log().V(4).Info("gRPC server started.")
-
+	log.Debug("gRPC server started")
 	return driver.start(ctx), nil
 }
 
@@ -134,11 +133,11 @@ func RunBlocking(ctx context.Context, config *config.ConfigSchemaJson, socket, n
 	// Create new driver
 	driver, err := New(config, socket, name)
 	if err != nil {
-		l.Log().Error(err, "failed to start gRPC server")
+		log.Errorf("failed to start gRPC server: %v", err)
 		return err
 	}
 
-	l.Log().V(4).Info("gRPC server started.")
+	log.Debug("gRPC server started")
 	// Block until driver is ready
 	<-driver.start(ctx)
 

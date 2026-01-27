@@ -1,14 +1,10 @@
-// Copyright © 2023 Dell Inc. or its subsidiaries. All Rights Reserved.
+// Copyright © 2023-2025 Dell Inc. or its subsidiaries. All Rights Reserved.
 //
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//      http://www.apache.org/licenses/LICENSE-2.0
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+// This software contains the intellectual property of Dell Inc.
+// or is licensed to Dell Inc. from third parties. Use of this software
+// and the intellectual property contained therein is expressly limited to the
+// terms and conditions of the License Agreement under which it is provided by or
+// on behalf of Dell Inc. or its subsidiaries.
 
 // Package config creates configuration structures based on provided json or yaml file.
 package config
@@ -21,10 +17,12 @@ import (
 	"os"
 	"path"
 
-	l "github.com/dell/cosi/pkg/logger"
+	"github.com/dell/csmlog"
 
 	"gopkg.in/yaml.v3"
 )
+
+var log = csmlog.GetLogger()
 
 //go:generate go run github.com/atombender/go-jsonschema/cmd/gojsonschema@v0.13.1 --package=config --output=config.gen.go config.schema.json --extra-imports
 
@@ -61,7 +59,7 @@ func NewJSON(bytes []byte) (*ConfigSchemaJson, error) {
 		return nil, err
 	}
 
-	l.Log().V(6).Info("JSON document unmarshalled.", "config", cfg)
+	log.Debug("JSON document unmarshalled")
 
 	return cfg, nil
 }
@@ -78,7 +76,7 @@ func NewYAML(bytes []byte) (*ConfigSchemaJson, error) {
 		return nil, err
 	}
 
-	l.Log().V(6).Info("YAML document unmarshalled.", "config", body)
+	log.Debug("YAML document unmarshalled")
 	// we ignore the error, as the config was previously successfully Unmarshaled from YAML.
 	// and there is no case, when the Marshaling will fail.
 	b, _ := json.Marshal(body)
@@ -97,7 +95,7 @@ func readFile(filename string) ([]byte, error) {
 		return nil, err
 	}
 
-	l.Log().V(6).Info("Config file opened.", "configFilePath", filename)
+	log.Debugf("Config file path %s", filename)
 
 	// limit reader is used, so we will read only 20MB of the file.
 	maxFileSize := 20000000

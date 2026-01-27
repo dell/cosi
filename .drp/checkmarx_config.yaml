@@ -1,0 +1,6 @@
+---
+checkmarx:
+  vulnerability_level: 'high'
+project_exclusion_list:
+  exclusion_file_paths:
+    - 'pkg/provisioner/objectscale/objectscale_test.go'

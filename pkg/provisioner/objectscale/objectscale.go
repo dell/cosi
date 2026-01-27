@@ -1,45 +1,40 @@
-// Copyright © 2023 Dell Inc. or its subsidiaries. All Rights Reserved.
+// Copyright © 2022-2025 Dell Inc. or its subsidiaries. All Rights Reserved.
 //
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//      http://www.apache.org/licenses/LICENSE-2.0
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+// This software contains the intellectual property of Dell Inc.
+// or is licensed to Dell Inc. from third parties. Use of this software
+// and the intellectual property contained therein is expressly limited to the
+// terms and conditions of the License Agreement under which it is provided by or
+// on behalf of Dell Inc. or its subsidiaries.
 
-// Package objectscale implements custom server handlers for communication with Dell ObjectScale platform.
 package objectscale
 
 import (
-	"errors"
+	"context"
 	"fmt"
 	"net/http"
-	"strings"
-	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/credentials"
-	"github.com/aws/aws-sdk-go/aws/session"
-	"github.com/aws/aws-sdk-go/service/iam"
-	"github.com/aws/aws-sdk-go/service/iam/iamiface"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/config"
+	"github.com/aws/aws-sdk-go-v2/credentials"
+	"github.com/aws/aws-sdk-go-v2/service/iam"
+	smithyhttp "github.com/aws/smithy-go/transport/http"
+	cosi "sigs.k8s.io/container-object-storage-interface/proto"
 
-	l "github.com/dell/cosi/pkg/logger"
-	driver "github.com/dell/cosi/pkg/provisioner/virtualdriver"
-	objectscaleRest "github.com/dell/goobjectscale/pkg/client/rest"
-	objectscaleClient "github.com/dell/goobjectscale/pkg/client/rest/client"
-	iamObjectscale "github.com/dell/goobjectscale/pkg/client/rest/iam"
-	cosi "sigs.k8s.io/container-object-storage-interface-spec"
+	"github.com/aws/smithy-go/middleware"
 
-	"github.com/dell/cosi/pkg/config"
+	obsConfig "github.com/dell/cosi/pkg/config"
 	"github.com/dell/cosi/pkg/internal/transport"
+	logger "github.com/dell/cosi/pkg/logger"
+	"github.com/pkg/errors"
+
+	driver "github.com/dell/cosi/pkg/provisioner/virtualdriver"
 	"github.com/dell/goobjectscale/pkg/client/api"
+	"github.com/dell/goobjectscale/pkg/client/rest"
+	"github.com/dell/goobjectscale/pkg/client/rest/client"
+	obsconfig "github.com/dell/goobjectscale/pkg/config"
 )
 
 const (
-	splitNumber = 2
 	// bucketVersion is used when sending the bucket policy update request.
 	bucketVersion = "2012-10-17"
 	// allowEffect is used when updating the bucket policy, in order to grant permissions to user.
@@ -53,179 +48,139 @@ const (
 	RevokeBucketAccessTraceName = "RevokeBucketAccessRequest"
 )
 
-var (
-	// All common errors that can be returned by
-	// DriverCreateBucket, DriverDeleteBucket, DriverGrantBucketAccess, DriverRevokeBucketAccess.
-	ErrInvalidBucketID           = errors.New("invalid bucketID")
-	ErrFailedToCheckBucketExists = errors.New("failed to check bucket existence")
-	ErrFailedToMarshalPolicy     = errors.New("failed to marshal policy into JSON")
-	ErrFailedToCheckPolicyExists = errors.New("failed to check bucket policy existence")
-	ErrFailedToCheckUserExists   = errors.New("failed to check for user existence")
-	// ErrInvalidRequest is an edge case error, which should be returned when incoming request is not of type
-	// DriverCreateBucket, DriverDeleteBucketRequest, DriverGrantBucketAccessRequest or DriverRevokeBucketAccessRequest.
-	ErrInvalidRequest = errors.New("incoming request invalid")
-
-	// TODO: is 20 a good number?
-	// defaultTimeout is the default call length before context gets canceled.
-	defaultTimeout = time.Second * 20
-)
-
-// Server is implementation of driver.Driver interface for ObjectScale platform.
 type Server struct {
-	mgmtClient         api.ClientSet
-	iamClient          iamiface.IAMAPI
-	x509Client         http.Client
-	objClient          objectscaleClient.AuthUser
-	backendID          string
-	emptyBucket        bool
-	namespace          string
-	username           string
-	password           string
-	region             string
-	objectScaleGateway string
-	objectStoreGateway string
-	objectScaleID      string
-	objectStoreID      string
-	s3Endpoint         string
+	mgmtClient  api.ClientSet
+	backendID   string
+	emptyBucket bool
+	namespace   string
+	s3Endpoint  string
+	iamClient   func(context.Context) (IAM, error)
+	cosi.UnimplementedProvisionerServer
+}
+
+// Since aws-v2 doesn't provide interface, define our own for ease of mocking and unit testing
+//
+//go:generate go run github.com/vektra/mockery/v2@latest --all
+type IAM interface {
+	CreateAccessKey(ctx context.Context, params *iam.CreateAccessKeyInput, optFns ...func(*iam.Options)) (*iam.CreateAccessKeyOutput, error)
+	CreateUser(ctx context.Context, params *iam.CreateUserInput, optFns ...func(*iam.Options)) (*iam.CreateUserOutput, error)
+	DeleteAccessKey(ctx context.Context, params *iam.DeleteAccessKeyInput, optFns ...func(*iam.Options)) (*iam.DeleteAccessKeyOutput, error)
+	DeleteUser(ctx context.Context, params *iam.DeleteUserInput, optFns ...func(*iam.Options)) (*iam.DeleteUserOutput, error)
+	GetUser(ctx context.Context, params *iam.GetUserInput, optFns ...func(*iam.Options)) (*iam.GetUserOutput, error)
+	ListAccessKeys(ctx context.Context, params *iam.ListAccessKeysInput, optFns ...func(*iam.Options)) (*iam.ListAccessKeysOutput, error)
 }
 
 var _ driver.Driver = (*Server)(nil)
 
-// New initializes server based on the config file.
-// TODO: verify if emptiness verification can be moved to a separate function.
-func New(config *config.Objectscale) (*Server, error) {
-	id := config.Id
+func New(objConfig *obsConfig.Objectscale) (*Server, error) {
+	log.Info("Initializing driver")
+	id := objConfig.Id
 	if id == "" {
 		return nil, errors.New("empty driver id")
 	}
 
-	namespace := config.Namespace
-	if namespace == "" {
-		return nil, errors.New("empty objectstore id")
-	}
-
-	username := config.Credentials.Username
+	username := objConfig.Credentials.Username
 	if username == "" {
 		return nil, errors.New("empty username")
 	}
 
-	password := config.Credentials.Password
+	password := objConfig.Credentials.Password
 	if password == "" {
 		return nil, errors.New("empty password")
 	}
 
-	region := config.Region
-	if region == nil {
-		return nil, errors.New("region was not specified in config")
+	mgmtConfig := &obsconfig.MgmtConfig{
+		Username:    username,
+		EndpointURL: objConfig.MgmtEndpoint,
 	}
 
-	if *region == "" {
-		return nil, errors.New("empty region provided")
-	}
+	log.Debugf("Management config has been set %v", mgmtConfig)
+	// set Password here to prevent it from being printed in the logs
+	mgmtConfig.Password = password
 
-	objectscaleGateway := config.ObjectscaleGateway
-	if objectscaleGateway == "" {
-		return nil, errors.New("empty objectscale gateway")
-	}
-
-	objectstoreGateway := config.ObjectstoreGateway
-	if objectstoreGateway == "" {
-		return nil, errors.New("empty objectstore gateway")
-	}
-
-	objectscaleID := config.ObjectscaleId
-	if objectscaleID == "" {
-		return nil, errors.New("empty objectscaleID")
-	}
-
-	objectstoreID := config.ObjectstoreId
-	if objectstoreID == "" {
-		return nil, errors.New("empty objectstoreID")
-	}
-
-	protocolS3Endpoint := config.Protocols.S3.Endpoint
+	protocolS3Endpoint := objConfig.Protocols.S3.Endpoint
 	if protocolS3Endpoint == "" {
 		return nil, errors.New("empty protocol S3 endpoint")
 	}
 
-	if strings.Contains(id, "-") {
-		id = strings.ReplaceAll(id, "-", "_")
-
-		l.Log().V(0).Info("ID in config contains hyphens, which will be replaced with underscores.", "id", id, "config.id", config.Id)
-	}
-
-	transport, err := transport.New(config.Tls)
+	baseTransport, err := transport.New(objConfig.Tls)
 	if err != nil {
-		return nil, fmt.Errorf("initialization of transport failed: %w", err)
+		return nil, err
 	}
 
-	x509Client := http.Client{Transport: transport}
-
-	objectscaleAuthUser := objectscaleClient.AuthUser{
-		Gateway:  objectscaleGateway,
-		Username: username,
-		Password: password,
-	}
-	mgmtClient := objectscaleRest.NewClientSet(
-		&objectscaleClient.Simple{
-			Endpoint:       objectstoreGateway,
-			Authenticator:  &objectscaleAuthUser,
-			HTTPClient:     &x509Client,
-			OverrideHeader: false,
-		},
-	)
-
-	objClient := objectscaleClient.AuthUser{
-		Gateway:  objectscaleGateway,
-		Username: username,
-		Password: password,
+	httpClient := &http.Client{
+		Transport: baseTransport,
 	}
 
-	iamSession, err := session.NewSessionWithOptions(
-		session.Options{
-			Config: aws.Config{
-				CredentialsChainVerboseErrors: aws.Bool(true),
-				Credentials:                   credentials.AnonymousCredentials,
-				Endpoint:                      aws.String(objectscaleGateway + "/iam"),
-				Region:                        region,
-				HTTPClient:                    &x509Client,
-				Logger:                        l.NewAWSLogger(l.Log()),
-			},
-		},
-	)
-	if err != nil {
-		return nil, fmt.Errorf("failed to create new IAM session: %w", err)
+	objectscaleAuthUser := client.AuthUser{
+		Gateway:  mgmtConfig.EndpointURL,
+		Username: mgmtConfig.Username,
+		Password: mgmtConfig.Password,
 	}
 
-	iamClient := iam.New(iamSession)
-
-	err = iamObjectscale.InjectAccountIDToIAMClient(iamClient, namespace)
-	if err != nil {
-		return nil, fmt.Errorf("failed to inject account ID to IAM client: %w", err)
+	simpleClient := &client.Simple{
+		Endpoint:       mgmtConfig.EndpointURL,
+		Authenticator:  &objectscaleAuthUser,
+		OverrideHeader: false,
+		HTTPClient:     httpClient,
 	}
 
-	err = iamObjectscale.InjectTokenToIAMClient(iamClient, &objectscaleAuthUser, x509Client)
-	if err != nil {
-		return nil, fmt.Errorf("failed to inject token to IAM client: %w", err)
+	simpleClient.SetLogger(logger.Log())
+	clientset := rest.NewClientSet(simpleClient)
+
+	log.Info("Driver has been successfully initialized")
+	iamFactory := &IAMClientFactory{
+		namespace:     *objConfig.Namespace,
+		client:        httpClient,
+		endpoint:      objConfig.MgmtEndpoint,
+		authenticator: &objectscaleAuthUser,
+		username:      mgmtConfig.Username,
+		password:      mgmtConfig.Password,
 	}
 
 	return &Server{
-		mgmtClient:         mgmtClient,
-		iamClient:          iamClient,
-		x509Client:         x509Client,
-		objClient:          objClient,
-		backendID:          id,
-		namespace:          namespace,
-		emptyBucket:        config.EmptyBucket,
-		username:           username,
-		password:           password,
-		region:             *region,
-		objectScaleGateway: objectscaleGateway,
-		objectStoreGateway: objectstoreGateway,
-		objectScaleID:      objectscaleID,
-		objectStoreID:      objectstoreID,
-		s3Endpoint:         protocolS3Endpoint,
+		mgmtClient:  clientset,
+		backendID:   id,
+		emptyBucket: objConfig.EmptyBucket,
+		namespace:   *objConfig.Namespace,
+		s3Endpoint:  protocolS3Endpoint,
+		iamClient:   iamFactory.getIAMClient,
 	}, nil
+}
+
+type IAMClientFactory struct {
+	namespace     string
+	username      string
+	password      string
+	endpoint      string
+	authenticator client.Authenticator
+	client        *http.Client
+}
+
+func (i IAMClientFactory) getIAMClient(ctx context.Context) (IAM, error) {
+	if !i.authenticator.IsAuthenticated() {
+		err := i.authenticator.Login(ctx, i.client)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	iamConfig, err := config.LoadDefaultConfig(ctx,
+		config.WithCredentialsProvider(credentials.NewStaticCredentialsProvider(
+			i.username, i.password, "")),
+		config.WithHTTPClient(i.client),
+		config.WithAPIOptions([]func(*middleware.Stack) error{
+			smithyhttp.AddHeaderValue("X-Emc-Namespace", i.namespace),
+			smithyhttp.AddHeaderValue("X-Sds-Auth-Token", i.authenticator.Token()),
+		}),
+	)
+	if err != nil {
+		return nil, err
+	}
+	iamClient := iam.NewFromConfig(iamConfig, func(o *iam.Options) {
+		o.BaseEndpoint = aws.String(fmt.Sprintf("%s/iam/", i.endpoint))
+	})
+	return iamClient, nil
 }
 
 // ID extends COSI interface by adding ID method.
@@ -233,55 +188,11 @@ func (s *Server) ID() string {
 	return s.backendID
 }
 
-func BuildUsername(namespace, bucketName string) string {
-	raw := fmt.Sprintf("%v-user-%v", namespace, bucketName)
+func BuildUsername(namespace, access string) string {
+	raw := fmt.Sprintf("%v-user-%v", namespace, access)
 	if len(raw) > maxUsernameLength {
 		raw = raw[:maxUsernameLength]
 	}
 
 	return raw
-}
-
-// BuildResourceString constructs policy resource string.
-func BuildResourceString(objectScaleID, objectStoreID, bucketName string) string {
-	return fmt.Sprintf("arn:aws:s3:%s:%s:%s/*", objectScaleID, objectStoreID, bucketName)
-}
-
-// BuildPrincipalString constructs policy principal string.
-func BuildPrincipalString(namespace, bucketName string) string {
-	return fmt.Sprintf("urn:osc:iam::%s:user/%s", namespace, BuildUsername(namespace, bucketName))
-}
-
-// GetBucketName splits BucketID by -, the first element is backendID, the second element is bucketName.
-func GetBucketName(bucketID string) (string, error) {
-	list := strings.SplitN(bucketID, "-", splitNumber)
-
-	if len(list) != 2 || list[1] == "" { //nolint:gomnd
-		return "", ErrInvalidBucketID
-	}
-
-	return list[1], nil
-}
-
-// isBucketIDEmpty checks if bucketID is not empty.
-func isBucketIDEmpty(req interface{}) error {
-	gbaR, ok := req.(*cosi.DriverGrantBucketAccessRequest)
-	if ok {
-		if gbaR.GetBucketId() == "" {
-			return ErrInvalidBucketID
-		}
-
-		return nil
-	}
-
-	rbaR, ok := req.(*cosi.DriverRevokeBucketAccessRequest)
-	if ok {
-		if rbaR.GetBucketId() == "" {
-			return ErrInvalidBucketID
-		}
-
-		return nil
-	}
-
-	return ErrInvalidRequest
 }

@@ -1,14 +1,10 @@
-// Copyright © 2023 Dell Inc. or its subsidiaries. All Rights Reserved.
+// Copyright © 2023-2025 Dell Inc. or its subsidiaries. All Rights Reserved.
 //
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//      http://www.apache.org/licenses/LICENSE-2.0
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+// This software contains the intellectual property of Dell Inc.
+// or is licensed to Dell Inc. from third parties. Use of this software
+// and the intellectual property contained therein is expressly limited to the
+// terms and conditions of the License Agreement under which it is provided by or
+// on behalf of Dell Inc. or its subsidiaries.
 
 package config
 
@@ -34,11 +30,8 @@ var (
                     "password": "testpassword"
                 },
                 "id": "testid",
+                "mgmt-endpoint":"https://example.com/api/s3",
                 "namespace": "testnamespace",
-                "objectscale-gateway": "gateway.objectscale.test",
-                "objectstore-gateway": "gateway.objectstore.test",
-                "objectscale-id": "objectscale123",
-                "objectstore-id": "objectstore123",
                 "emptyBucket": false,
                 "protocols": {
                     "s3": {
@@ -62,10 +55,6 @@ var (
                 },
                 "id": "testid",
                 "namespace": "testnamespace",
-                "objectscale-gateway": "gateway.objectscale.test",
-                "objectstore-gateway": "gateway.objectstore.test",
-                "objectscale-id": "objectscale123",
-                "objectstore-id": "objectstore123",
                 "protocols": {
                     "s3": {
                         "endpoint": "test.endpoint"
@@ -86,10 +75,7 @@ var (
       password: testpassword
     id: testid
     namespace: testnamespace
-    objectscale-gateway: gateway.objectscale.test
-    objectstore-gateway: gateway.objectstore.test
-    objectscale-id: objectscale123
-    objectstore-id: objectstore123
+    mgmt-endpoint: https://example.com/api/s3
     emptyBucket: false
     protocols:
       s3:
@@ -103,10 +89,6 @@ var (
       username: testuser
     id: testid
     namespace: test-namespace
-    objectscale-gateway: gateway.objectscale.test
-    objectstore-gateway: gateway.objectstore.test
-    objectscale-id: objectscale123
-    objectstore-id: objectstore123
     emptyBucket: false
     protocols:
       s3:

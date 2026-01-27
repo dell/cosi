@@ -1,14 +1,10 @@
-// Copyright © 2023 Dell Inc. or its subsidiaries. All Rights Reserved.
+// Copyright © 2023-2025 Dell Inc. or its subsidiaries. All Rights Reserved.
 //
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//      http://www.apache.org/licenses/LICENSE-2.0
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+// This software contains the intellectual property of Dell Inc.
+// or is licensed to Dell Inc. from third parties. Use of this software
+// and the intellectual property contained therein is expressly limited to the
+// terms and conditions of the License Agreement under which it is provided by or
+// on behalf of Dell Inc. or its subsidiaries.
 
 package objectscale
 
@@ -16,244 +12,254 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-
-	"github.com/aws/aws-sdk-go/service/iam"
-	"go.opentelemetry.io/otel"
-	"google.golang.org/grpc/codes"
-
-	l "github.com/dell/cosi/pkg/logger"
-	cosi "sigs.k8s.io/container-object-storage-interface-spec"
+	"fmt"
+	"strings"
 
 	"github.com/dell/cosi/pkg/provisioner/policy"
+	"github.com/dell/csmlog"
 	"github.com/dell/goobjectscale/pkg/client/model"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/iam"
+	"github.com/aws/aws-sdk-go-v2/service/iam/types"
+	smithy "github.com/aws/smithy-go"
+	"go.opentelemetry.io/otel"
+	"google.golang.org/grpc/status"
+	cosi "sigs.k8s.io/container-object-storage-interface/proto"
+
+	otelCodes "go.opentelemetry.io/otel/codes"
+	"go.opentelemetry.io/otel/trace"
+	"google.golang.org/grpc/codes"
 )
 
-// All errors that can be returned by DriverRevokeBucketAccess.
-var (
-	ErrEmptyAccountID             = errors.New("empty accountID")
-	ErrExistingPolicyIsEmpty      = errors.New("existing policy is empty")
-	ErrFailedToUpdateBucketPolicy = errors.New("failed to update bucket policy")
-	ErrFailedToListAccessKeys     = errors.New("failed to list access keys")
-	ErrFailedToDeleteAccessKey    = errors.New("failed to delete access key")
-	ErrFailedToDeleteUser         = errors.New("failed to delete user")
+const (
+	PolicySid = "cosi"
 )
 
-// All warnings that can be returned by DriverRevokeBucketAccess.
-var (
-	WarnBucketNotFound = "Bucket not found."
-	WarnUserNotFound   = "User not found."
-)
+func GetBucketNameFromID(bucketID string) (string, error) {
+	if !strings.Contains(bucketID, "-") {
+		return "", fmt.Errorf("invalid bucket id %s", bucketID)
+	}
+	return strings.SplitN(bucketID, "-", 2)[1], nil
+}
 
-// DriverRevokeBucketAccess revokes access from Bucket on specific Object Storage Platform.
 func (s *Server) DriverRevokeBucketAccess(ctx context.Context,
 	req *cosi.DriverRevokeBucketAccessRequest,
 ) (*cosi.DriverRevokeBucketAccessResponse, error) {
-	ctx, span := otel.Tracer(RevokeBucketAccessTraceName).Start(ctx, "ObjectscaleDriverRevokeBucketAccess")
+	ctx, span := otel.Tracer(CreateBucketTraceName).Start(ctx, "DriverRevokeBucketAccess")
 	defer span.End()
 
-	// Check if bucketID is not empty.
-	if err := isBucketIDEmpty(req); err != nil {
-		return nil, logAndTraceError(span, ErrInvalidBucketID.Error(), err, codes.InvalidArgument)
-	}
-
-	// Check if accountID is not empty.
-	if err := isAccountIDEmpty(req); err != nil {
-		return nil, logAndTraceError(span, ErrEmptyAccountID.Error(), err, codes.InvalidArgument)
-	}
-
-	// Extract bucket name from bucketID.
-	bucketName, err := GetBucketName(req.GetBucketId())
+	bucketName, err := GetBucketNameFromID(req.GetBucketId())
 	if err != nil {
-		return nil, logAndTraceError(span, ErrInvalidBucketID.Error(), err, codes.InvalidArgument)
+		return nil, logAndTraceError(span, "invalid bucket name", err, codes.InvalidArgument)
 	}
 
-	l.Log().V(4).Info("Bucket access for bucket is being revoked.")
+	log.Infof("Revoking access to bucket %s for user %s", bucketName, req.GetAccountId())
+	iamClient, err := s.iamClient(ctx)
+	if err != nil {
+		return nil, logAndTraceError(span, "failed to create IAM client", err, codes.Internal)
+	}
 
-	parameters := make(map[string]string)
+	parameters := map[string]string{}
 	parameters["namespace"] = s.namespace
-
-	l.Log().V(4).Info("Parameters of the bucket.", "parameters", parameters)
 
 	// Check if bucket for revoking access exists.
 	bucketExists, err := checkBucketExistence(ctx, s, bucketName, parameters)
 	if err != nil {
-		return nil, logAndTraceError(span, ErrFailedToCheckBucketExists.Error(), err, codes.Internal, "bucket", bucketName)
+		return nil, logAndTraceError(span, "failed checking if bucket exists", err, codes.Internal, "bucket", bucketName)
 	}
 
 	// Check user existence.
-	userExists, err := checkUserExistence(ctx, s, req.AccountId)
+	userExists, err := checkUserExistence(ctx, iamClient, req.GetAccountId())
 	if err != nil {
-		return nil, logAndTraceError(span, err.Error(), err, codes.Internal, "bucket", bucketName, "user", req.AccountId)
+		return nil, logAndTraceError(span, "failed checking if user exists", err, codes.Internal, "user", req.GetAccountId())
 	}
 
+	principalUsername := BuildPrincipalString(req.AccountId, s.namespace)
+
 	if bucketExists {
-		err := removeBucketPolicy(ctx, s, bucketName, parameters)
+		err := removeBucketPolicy(ctx, s, bucketName, principalUsername, parameters)
 		if err != nil {
-			return nil, logAndTraceError(span, err.Error(), err, codes.Internal, "bucket", bucketName)
+			return nil, logAndTraceError(span, "failed removing bucket policy", err, codes.Internal, "bucket", bucketName)
 		}
 	}
 
 	if userExists {
-		if err := deleteUser(s, req.AccountId); err != nil {
-			return nil, logAndTraceError(span, err.Error(), err, codes.Internal, "bucket", bucketName, "user", req.AccountId)
+		if err := deleteUser(ctx, iamClient, req.AccountId); err != nil {
+			return nil, logAndTraceError(span, "failed deleting user", err, codes.Internal, "user", req.GetAccountId())
 		}
 	}
 
-	l.Log().V(4).Info("Bucket access revoked.", "userName", req.AccountId, "bucket", bucketName)
-
+	log.Infof("Revoked access to bucket %s for user %s", bucketName, req.GetAccountId())
 	return &cosi.DriverRevokeBucketAccessResponse{}, nil
 }
 
-// checkUserExistence checks if particual user exists on ObjectScale;
-// function returns boolean value: true if user exists, false if user does not exist.
-func checkUserExistence(ctx context.Context, s *Server, accountID string) (bool, error) {
-	_, span := otel.Tracer(RevokeBucketAccessTraceName).Start(ctx, "ObjectscaleCheckUserExistence")
-	defer span.End()
-
-	_, err := s.iamClient.GetUser(&iam.GetUserInput{UserName: &accountID})
-
-	// User is not found - return false. It's a valid scenario.
-	if err != nil && err.Error() == iam.ErrCodeNoSuchEntityException {
-		l.Log().V(0).Info(WarnUserNotFound, "user", accountID)
-		span.AddEvent(WarnUserNotFound)
-
-		return false, nil
-	}
-
-	// Connection error probably, failed to check if user exists - return error.
-	if err != nil {
-		return false, ErrFailedToCheckUserExists
-	}
-
-	// No errors - user exists.
-	return true, nil
-}
-
-// checkBucketExistence checks if particual bucket exists on ObjectScale;
-// function returns boolean value: true if bucket exists, false if bucket does not exist.
-func checkBucketExistence(ctx context.Context, s *Server, bucketName string, parameters map[string]string) (bool, error) {
-	ctx, span := otel.Tracer(RevokeBucketAccessTraceName).Start(ctx, "ObjectscaleCheckBucketExistence")
-	defer span.End()
-
-	_, err := s.mgmtClient.Buckets().Get(ctx, bucketName, parameters)
-
-	// Bucket is not found - return false. It's a valid scenario.
-	if errors.Is(err, ErrParameterNotFound) {
-		span.AddEvent(WarnBucketNotFound)
-		l.Log().V(0).Info(WarnBucketNotFound, "bucket", bucketName)
-
-		return false, nil
-	}
-
-	// Connection error probably, failed to check if bucket exists - return error.
-	if err != nil {
-		return false, ErrFailedToCheckBucketExists
-	}
-
-	// No errors - bucket exists.
-	return true, nil
-}
-
-// removeBucketPolicy is a function used when revoking a bucket access;
-// it's responsible for updating bucket policy and removing particular right from it.
 func removeBucketPolicy(
 	ctx context.Context,
 	s *Server,
 	bucketName string,
+	principalUsername string,
 	parameters map[string]string,
 ) error {
 	// Get existing policy.
 	existingPolicy, err := s.mgmtClient.Buckets().GetPolicy(ctx, bucketName, parameters)
-	if err != nil && !errors.Is(err, model.Error{Code: model.CodeResourceNotFound}) {
-		return ErrFailedToCheckPolicyExists
-	} else if err == nil && existingPolicy == "" {
-		return ErrExistingPolicyIsEmpty
+	if errors.Is(err, model.ErrParameterNotFound) {
+		return nil
+	}
+	if err != nil {
+		return err
 	}
 
-	// Amazon Resource Name, format: arn:aws:s3:<objectScaleID>:<objectStoreID>:<bucketName>/*.
-	// To see more: https://docs.aws.amazon.com/IAM/latest/UserGuide/reference-arns.html.
-	awsBucketResourceARN := BuildResourceString(s.objectScaleID, s.objectStoreID, bucketName)
-	// Unique ID, format: urn:osc:iam::<namespace>:user/<userName>.
-	awsPrincipalString := BuildPrincipalString(s.namespace, bucketName)
+	// no policy exists, return
+	if existingPolicy == "" {
+		return nil
+	}
 
 	jsonPolicy := policy.Document{}
 
 	err = json.Unmarshal([]byte(existingPolicy), &jsonPolicy)
 	if err != nil {
-		return ErrFailedToMarshalPolicy
+		return err
 	}
 
-	for k, statement := range jsonPolicy.Statement {
-		l.Log().V(6).Info("Processing next statement.", "k", k, "statement", statement)
+	updatedPolicyDoc := policy.Document{}
+	updatedPolicyDoc.ID = jsonPolicy.ID
+	updatedPolicyDoc.Version = jsonPolicy.Version
+	updatedPolicyDoc.Statement = []policy.StatementEntry{}
 
-		statement.Principal.AWS = remove(statement.Principal.AWS, awsPrincipalString)
-		statement.Resource = remove(statement.Resource, awsBucketResourceARN)
-
-		jsonPolicy.Statement[k] = statement
+	for _, statement := range jsonPolicy.Statement {
+		isMatch := statement.Sid == PolicySid && statement.Principal["AWS"] == principalUsername
+		if !isMatch {
+			updatedPolicyDoc.Statement = append(updatedPolicyDoc.Statement, statement)
+		}
 	}
 
-	updatedPolicy, err := json.Marshal(jsonPolicy)
+	updatedPolicy, err := json.Marshal(updatedPolicyDoc)
 	if err != nil {
-		return ErrFailedToMarshalPolicy
+		return &aws.RequestCanceledError{}
 	}
 
-	l.Log().V(6).Info("Updating policy.", "policy", jsonPolicy, "rawPolicy", string(updatedPolicy))
-
-	// Update policy.
-	err = s.mgmtClient.Buckets().UpdatePolicy(ctx, bucketName, string(updatedPolicy), parameters)
-	if err != nil {
-		return ErrFailedToUpdateBucketPolicy
+	if len(updatedPolicyDoc.Statement) == 0 {
+		log.Infof("Deleting policy")
+		err = s.mgmtClient.Buckets().DeletePolicy(ctx, bucketName, parameters)
+		if errors.Is(err, model.ErrParameterNotFound) {
+			return nil
+		}
+		if err != nil {
+			return err
+		}
+	} else {
+		log.Infof("Updating policy %s", updatedPolicyDoc)
+		log.Debugf("Raw policy %s", string(updatedPolicy))
+		// Update policy.
+		err = s.mgmtClient.Buckets().UpdatePolicy(ctx, bucketName, string(updatedPolicy), parameters)
+		if errors.Is(err, model.ErrParameterNotFound) {
+			return nil
+		}
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil
 }
 
-// removeUser is a function used when revoking a bucket access;
-// it's responsible for removing users tied to a specific Bucket Access through an accountID.
-func deleteUser(s *Server, accountID string) error {
-	// Get access keys list.
-	accessKeyList, err := s.iamClient.ListAccessKeys(&iam.ListAccessKeysInput{UserName: &accountID})
+func checkUserExistence(ctx context.Context, iamClient IAM, accountID string) (bool, error) {
+	_, span := otel.Tracer(RevokeBucketAccessTraceName).Start(ctx, "ObjectscaleCheckUserExistence")
+	defer span.End()
+
+	_, err := iamClient.GetUser(ctx, &iam.GetUserInput{UserName: &accountID})
 	if err != nil {
-		return ErrFailedToListAccessKeys
+		var apiError smithy.APIError
+		if errors.As(err, &apiError) {
+			switch apiError.(type) {
+			case *types.NoSuchEntityException:
+				return false, nil
+			default:
+				return false, err
+			}
+		}
+	}
+	return true, nil
+}
+
+func getBucket(ctx context.Context, s *Server, bucketName string, parameters map[string]string) (*model.Bucket, error) {
+	ctx, span := otel.Tracer(RevokeBucketAccessTraceName).Start(ctx, "ObjectscaleGetBucket")
+	defer span.End()
+
+	bucket, err := s.mgmtClient.Buckets().Get(ctx, bucketName, parameters)
+
+	if errors.Is(err, model.ErrParameterNotFound) {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, err
+	}
+
+	return bucket, nil
+}
+
+func checkBucketExistence(ctx context.Context, s *Server, bucketName string, parameters map[string]string) (bool, error) {
+	ctx, span := otel.Tracer(RevokeBucketAccessTraceName).Start(ctx, "ObjectscaleCheckBucketExistence")
+	defer span.End()
+	bucket, err := getBucket(ctx, s, bucketName, parameters)
+	if err != nil {
+		return false, err
+	}
+	return bucket != nil, nil
+}
+
+func deleteUser(ctx context.Context, iamClient IAM, accountID string) error {
+	// Get access keys list.
+	accessKeyList, err := iamClient.ListAccessKeys(ctx, &iam.ListAccessKeysInput{UserName: &accountID})
+	if err != nil {
+		return err
 	}
 
 	// Delete all access keys for particular user.
 	for _, accessKey := range accessKeyList.AccessKeyMetadata {
-		_, err = s.iamClient.DeleteAccessKey(&iam.DeleteAccessKeyInput{
+		_, err = iamClient.DeleteAccessKey(ctx, &iam.DeleteAccessKeyInput{
 			AccessKeyId: accessKey.AccessKeyId, UserName: &accountID,
 		})
 		if err != nil {
-			return ErrFailedToDeleteAccessKey
+			return err
 		}
 	}
 
 	// Delete user.
-	_, err = s.iamClient.DeleteUser(&iam.DeleteUserInput{UserName: &accountID})
+	_, err = iamClient.DeleteUser(ctx, &iam.DeleteUserInput{UserName: &accountID})
 	if err != nil {
-		return ErrFailedToDeleteUser
+		return err
 	}
 
 	return nil
 }
 
-// remove is a generic function that removes all occurrences of an item.
-func remove[T comparable](from []T, item T) []T {
-	output := make([]T, 0, len(from)) // should be little bit faster if we preallocate capacity
-
-	for _, element := range from {
-		if element != item {
-			output = append(output, element)
+// kvToFields converts variadic key-value pairs into csmlog.Fields.
+// Only string keys are kept; malformed pairs are skipped safely.
+func kvToFields(keysAndValues ...any) csmlog.Fields {
+	fields := csmlog.Fields{}
+	for i := 0; i+1 < len(keysAndValues); i += 2 {
+		k, ok := keysAndValues[i].(string)
+		if !ok {
+			continue
 		}
+		fields[k] = keysAndValues[i+1]
 	}
-
-	return output
+	return fields
 }
 
-// isAccountIDEmpty checks if Account ID is not empty.
-func isAccountIDEmpty(req *cosi.DriverRevokeBucketAccessRequest) error {
-	if req.GetAccountId() == "" {
-		return ErrEmptyBucketAccessName
+// logAndTraceError is a helper function that logs an error with specified fields and records it in a span.
+func logAndTraceError(span trace.Span, errMsg string, err error, code codes.Code, keysAndValues ...any) error {
+	fields := kvToFields(keysAndValues...)
+
+	// Add the error as a structured field
+	if err != nil {
+		fields["error"] = err
 	}
 
-	return nil
+	log.WithFields(fields).Error(errMsg)
+	span.RecordError(err)
+	span.SetStatus(otelCodes.Error, errMsg)
+
+	return status.Error(code, errMsg)
 }

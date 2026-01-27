@@ -1,460 +1,354 @@
 // Copyright © 2025 Dell Inc. or its subsidiaries. All Rights Reserved.
 //
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//      http://www.apache.org/licenses/LICENSE-2.0
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+// This software contains the intellectual property of Dell Inc.
+// or is licensed to Dell Inc. from third parties. Use of this software
+// and the intellectual property contained therein is expressly limited to the
+// terms and conditions of the License Agreement under which it is provided by or
+// on behalf of Dell Inc. or its subsidiaries.
 
-// Package policy exists for handling operations on AWS Policies,
-// defines structures and functions for processing and comparing policies.
-package policy
+package policy_test
 
 import (
+	"reflect"
+	"strings"
 	"testing"
+
+	"github.com/dell/cosi/pkg/provisioner/policy"
+	"github.com/stretchr/testify/assert"
 )
-
-func TestToJSON(t *testing.T) {
-	tests := []struct {
-		name     string
-		document Document
-		want     string
-		wantErr  bool
-	}{
-		{
-			name: "valid policy",
-			document: Document{
-				Version: "1",
-				ID:      "id",
-				Statement: []StatementEntry{
-					{
-						Effect: "Allow",
-						Action: []string{"s3:*"},
-						Resource: []string{
-							"arn:aws:s3:::*",
-							"arn:aws:s3:::bucket/*",
-						},
-					},
-				},
-			},
-			want:    `{"Version":"1","Id":"id","Statement":[{"Effect":"Allow","Action":["s3:*"],"Resource":["arn:aws:s3:::*","arn:aws:s3:::bucket/*"],"Principal":{"AWS":null},"Sid":""}]}`,
-			wantErr: false,
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			got, err := tt.document.ToJSON()
-			if err != nil {
-				t.Errorf("ToJSON() error = %v", err)
-			}
-
-			if got != tt.want {
-				t.Errorf("ToJSON() = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
 
 func TestNewFromJSON(t *testing.T) {
 	tests := []struct {
-		name    string
-		jsonStr string
-		want    Document
-		wantErr bool
+		name        string
+		jsonString  string
+		expected    policy.Document
+		expectedErr bool
 	}{
 		{
-			name:    "valid JSON",
-			jsonStr: `{"Version":"1","Id":"id","Statement":[{"Effect":"Allow","Action":["s3:*"],"Resource":["arn:aws:s3:::*","arn:aws:s3:::bucket/*"],"Principal":{"AWS":null},"Sid":""}]}`,
-			want: Document{
-				Version: "1",
-				ID:      "id",
-				Statement: []StatementEntry{
+			name: "valid JSON",
+			jsonString: `{
+				"Version": "2012-10-17",
+				"Id": "policy-id",
+				"Statement": [
 					{
-						Effect: "Allow",
-						Action: []string{"s3:*"},
-						Resource: []string{
-							"arn:aws:s3:::*",
-							"arn:aws:s3:::bucket/*",
-						},
+						"Effect": "Allow",
+						"Action": ["s3:GetObject"],
+						"Resource": ["arn:aws:s3:::my-bucket/*"]
+					}
+				]
+			}`,
+			expected: policy.Document{
+				Version: "2012-10-17",
+				ID:      "policy-id",
+				Statement: []policy.StatementEntry{
+					{
+						Effect:   "Allow",
+						Action:   []string{"s3:GetObject"},
+						Resource: []string{"arn:aws:s3:::my-bucket/*"},
 					},
 				},
 			},
-			wantErr: false,
+			expectedErr: false,
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := NewFromJSON(tt.jsonStr)
-			if err != nil {
-				t.Errorf("NewFromJSON() error = %v", err)
+			actual, err := policy.NewFromJSON(tt.jsonString)
+			if (err != nil) != tt.expectedErr {
+				t.Errorf("NewFromJSON() error = %v, wantErr %v", err, tt.expectedErr)
 				return
 			}
-
-			if !got.Equal(&tt.want) {
-				t.Errorf("NewFromJSON() = %v, want %v", got, tt.want)
+			if !reflect.DeepEqual(actual, tt.expected) {
+				t.Errorf("NewFromJSON() = %v, want %v", actual, tt.expected)
 			}
 		})
 	}
 }
 
-func TestDocumentEqual(t *testing.T) {
+func TestToJSON(t *testing.T) {
 	tests := []struct {
-		name string
-		doc1 Document
-		doc2 Document
-		want bool
+		name        string
+		jsonString  string
+		expected    policy.Document
+		expectedErr bool
 	}{
 		{
-			name: "equal documents",
-			doc1: Document{
-				Version: "1",
-				ID:      "id",
-				Statement: []StatementEntry{
+			name: "toJSON equals",
+			jsonString: `{
+				"Version": "2012-10-17",
+				"Id": "policy-id",
+				"Statement": [
 					{
-						Effect: "Allow",
-						Action: []string{"s3:*"},
-						Resource: []string{
-							"arn:aws:s3:::*",
-							"arn:aws:s3:::bucket/*",
-						},
-					},
-				},
-			},
-			doc2: Document{
-				Version: "1",
-				ID:      "id",
-				Statement: []StatementEntry{
-					{
-						Effect: "Allow",
-						Action: []string{"s3:*"},
-						Resource: []string{
-							"arn:aws:s3:::*",
-							"arn:aws:s3:::bucket/*",
-						},
-					},
-				},
-			},
-			want: true,
-		},
-
-		{
-			name: "different versions",
-			doc1: Document{
-				Version: "1",
-				ID:      "id",
-				Statement: []StatementEntry{
-					{
-						Effect: "Allow",
-						Action: []string{"s3:*"},
-						Resource: []string{
-							"arn:aws:s3:::*",
-							"arn:aws:s3:::bucket/*",
-						},
-					},
-				},
-			},
-			doc2: Document{
-				Version: "2",
-				ID:      "id",
-				Statement: []StatementEntry{
-					{
-						Effect: "Allow",
-						Action: []string{"s3:*"},
-						Resource: []string{
-							"arn:aws:s3:::*",
-							"arn:aws:s3:::bucket/*",
-						},
-					},
-				},
-			},
-			want: false,
-		},
-		{
-			name: "different IDs",
-			doc1: Document{
-				Version: "1",
-				ID:      "id1",
-				Statement: []StatementEntry{
-					{
-						Effect: "Allow",
-						Action: []string{"s3:*"},
-						Resource: []string{
-							"arn:aws:s3:::*",
-							"arn:aws:s3:::bucket/*",
-						},
-					},
-				},
-			},
-			doc2: Document{
-				Version: "1",
-				ID:      "id2",
-				Statement: []StatementEntry{
-					{
-						Effect: "Allow",
-						Action: []string{"s3:*"},
-						Resource: []string{
-							"arn:aws:s3:::*",
-							"arn:aws:s3:::bucket/*",
-						},
-					},
-				},
-			},
-			want: false,
+						"Effect": "Allow",
+						"Action": ["s3:GetObject"],
+						"Resource": ["arn:aws:s3:::my-bucket/*"]
+					}
+				]
+			}`,
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := tt.doc1.Equal(&tt.doc2)
-			if got != tt.want {
-				t.Errorf("Equal() = %v, want %v", got, tt.want)
-			}
+			doc, err := policy.NewFromJSON(tt.jsonString)
+			assert.Nil(t, err)
+			generatedJSON, err := doc.ToJSON()
+
+			condensed := strings.ReplaceAll(tt.jsonString, " ", "")
+			condensed = strings.ReplaceAll(condensed, "\n", "")
+			condensed = strings.ReplaceAll(condensed, "\t", "")
+
+			assert.Nil(t, err)
+			assert.Equal(t, condensed, generatedJSON)
 		})
 	}
 }
 
-func TestStatementEntryEqual(t *testing.T) {
+func TestEqual(t *testing.T) {
 	tests := []struct {
-		name   string
-		entry1 StatementEntry
-		entry2 StatementEntry
-		want   bool
+		name        string
+		jsonString1 string
+		jsonString2 string
+		isEqual     bool
 	}{
 		{
-			name: "equal documents",
-			entry1: StatementEntry{
-				Effect: "Allow",
-				Action: []string{"s3:*"},
-				Resource: []string{
-					"arn:aws:s3:::*",
-					"arn:aws:s3:::bucket/*",
-				},
-			},
-			entry2: StatementEntry{
-				Effect: "Allow",
-				Action: []string{"s3:*"},
-				Resource: []string{
-					"arn:aws:s3:::*",
-					"arn:aws:s3:::bucket/*",
-				},
-			},
-			want: true,
+			name: "valid JSON",
+			jsonString1: `{
+				"Version": "2012-10-17",
+				"Id": "policy-id",
+				"Statement": [
+					{
+						"Effect": "Allow",
+						"Action": ["s3:GetObject"],
+						"Resource": ["arn:aws:s3:::my-bucket/*"]
+					}
+				]
+			}`,
+			jsonString2: `{
+				"Version": "2012-10-17",
+				"Id": "policy-id",
+				"Statement": [
+					{
+						"Effect": "Allow",
+						"Action": ["s3:GetObject"],
+						"Resource": ["arn:aws:s3:::my-bucket/*"]
+					}
+				]
+			}`,
+			isEqual: true,
 		},
 		{
-			name: "different Effects",
-			entry1: StatementEntry{
-				Effect: "Allow",
-				Action: []string{"s3:*"},
-				Resource: []string{
-					"arn:aws:s3:::*",
-					"arn:aws:s3:::bucket/*",
-				},
-			},
-			entry2: StatementEntry{
-				Effect: "Deny",
-				Action: []string{"s3:*"},
-				Resource: []string{
-					"arn:aws:s3:::*",
-					"arn:aws:s3:::bucket/*",
-				},
-			},
-			want: false,
+			name: "different version",
+			jsonString1: `{
+				"Version": "2012-10-17",
+				"Id": "policy-id",
+				"Statement": [
+					{
+						"Effect": "Allow",
+						"Action": ["s3:GetObject"],
+						"Resource": ["arn:aws:s3:::my-bucket/*"]
+					}
+				]
+			}`,
+			jsonString2: `{
+				"Version": "2012-10-18",
+				"Id": "policy-id",
+				"Statement": [
+					{
+						"Effect": "Allow",
+						"Action": ["s3:GetObject"],
+						"Resource": ["arn:aws:s3:::my-bucket/*"]
+					}
+				]
+			}`,
+			isEqual: false,
 		},
 		{
-			name: "different Actions",
-			entry1: StatementEntry{
-				Effect: "Allow",
-				Action: []string{"s3:*"},
-				Resource: []string{
-					"arn:aws:s3:::*",
-					"arn:aws:s3:::bucket/*",
-				},
-			},
-			entry2: StatementEntry{
-				Effect: "Allow",
-				Action: []string{"s3:GetObject"},
-				Resource: []string{
-					"arn:aws:s3:::*",
-					"arn:aws:s3:::bucket/*",
-				},
-			},
-			want: false,
+			name: "different id",
+			jsonString1: `{
+				"Version": "2012-10-17",
+				"Id": "policy-id-1",
+				"Statement": [
+					{
+						"Effect": "Allow",
+						"Action": ["s3:GetObject"],
+						"Resource": ["arn:aws:s3:::my-bucket/*"]
+					}
+				]
+			}`,
+			jsonString2: `{
+				"Version": "2012-10-17",
+				"Id": "policy-id-2",
+				"Statement": [
+					{
+						"Effect": "Allow",
+						"Action": ["s3:GetObject"],
+						"Resource": ["arn:aws:s3:::my-bucket/*"]
+					}
+				]
+			}`,
+			isEqual: false,
 		},
 		{
-			name: "different length Actions",
-			entry1: StatementEntry{
-				Effect: "Allow",
-				Action: []string{},
-				Resource: []string{
-					"arn:aws:s3:::*",
-					"arn:aws:s3:::bucket/*",
-				},
-			},
-			entry2: StatementEntry{
-				Effect: "Allow",
-				Action: []string{"s3:GetObject"},
-				Resource: []string{
-					"arn:aws:s3:::*",
-					"arn:aws:s3:::bucket/*",
-				},
-			},
-			want: false,
+			name: "different statement effect",
+			jsonString1: `{
+				"Version": "2012-10-17",
+				"Id": "policy-id",
+				"Statement": [
+					{
+						"Effect": "Deny",
+						"Action": ["s3:GetObject"],
+						"Resource": ["arn:aws:s3:::my-bucket/*"]
+					}
+				]
+			}`,
+			jsonString2: `{
+				"Version": "2012-10-17",
+				"Id": "policy-id",
+				"Statement": [
+					{
+						"Effect": "Allow",
+						"Action": ["s3:GetObject"],
+						"Resource": ["arn:aws:s3:::my-bucket/*"]
+					}
+				]
+			}`,
+			isEqual: false,
 		},
 		{
-			name: "different Resource",
-			entry1: StatementEntry{
-				Effect: "Allow",
-				Action: []string{"s3:*"},
-				Resource: []string{
-					"arn:aws:s3:::*",
-					"arn:aws:s3:::bucket/*",
-				},
-			},
-			entry2: StatementEntry{
-				Effect: "Allow",
-				Action: []string{"s3:*"},
-				Resource: []string{
-					"arn:aws:s3:::example-bucket/*",
-					"arn:aws:s3:::bucket/*",
-				},
-			},
-			want: false,
+			name: "different action",
+			jsonString1: `{
+				"Version": "2012-10-17",
+				"Id": "policy-id",
+				"Statement": [
+					{
+						"Effect": "Allow",
+						"Action": ["s3:PutObject"],
+						"Resource": ["arn:aws:s3:::my-bucket/*"]
+					}
+				]
+			}`,
+			jsonString2: `{
+				"Version": "2012-10-17",
+				"Id": "policy-id",
+				"Statement": [
+					{
+						"Effect": "Allow",
+						"Action": ["s3:GetObject"],
+						"Resource": ["arn:aws:s3:::my-bucket/*"]
+					}
+				]
+			}`,
+			isEqual: false,
 		},
 		{
-			name: "different length Resource",
-			entry1: StatementEntry{
-				Effect:   "Allow",
-				Action:   []string{"s3:*"},
-				Resource: []string{},
-			},
-			entry2: StatementEntry{
-				Effect: "Allow",
-				Action: []string{"s3:*"},
-				Resource: []string{
-					"arn:aws:s3:::example-bucket/*",
-					"arn:aws:s3:::bucket/*",
-				},
-			},
-			want: false,
+			name: "different resource",
+			jsonString1: `{
+				"Version": "2012-10-17",
+				"Id": "policy-id",
+				"Statement": [
+					{
+						"Effect": "Allow",
+						"Action": ["s3:GetObject"],
+						"Resource": ["arn:aws:s3:::my-bucket-1/*"]
+					}
+				]
+			}`,
+			jsonString2: `{
+				"Version": "2012-10-17",
+				"Id": "policy-id",
+				"Statement": [
+					{
+						"Effect": "Allow",
+						"Action": ["s3:GetObject"],
+						"Resource": ["arn:aws:s3:::my-bucket-2/*"]
+					}
+				]
+			}`,
+			isEqual: false,
 		},
 		{
-			name: "different Principal",
-			entry1: StatementEntry{
-				Effect: "Allow",
-				Action: []string{"s3:*"},
-				Resource: []string{
-					"arn:aws:s3:::*",
-					"arn:aws:s3:::bucket/*",
-				},
-				Principal: PrincipalEntry{
-					AWS: []string{"arn:aws:iam::123456789012:user/csm"},
-				},
-			},
-			entry2: StatementEntry{
-				Effect: "Allow",
-				Action: []string{"s3:*"},
-				Resource: []string{
-					"arn:aws:s3:::*",
-					"arn:aws:s3:::bucket/*",
-				},
-				Principal: PrincipalEntry{
-					AWS: []string{"arn:aws:iam::123456789012:user/admin"},
-				},
-			},
-			want: false,
+			name: "different action length",
+			jsonString1: `{
+				"Version": "2012-10-17",
+				"Id": "policy-id",
+				"Statement": [
+					{
+						"Effect": "Allow",
+						"Action": ["s3:GetObject", "s3:PutObject"],
+						"Resource": ["arn:aws:s3:::my-bucket/*"]
+					}
+				]
+			}`,
+			jsonString2: `{
+				"Version": "2012-10-17",
+				"Id": "policy-id",
+				"Statement": [
+					{
+						"Effect": "Allow",
+						"Action": ["s3:GetObject"],
+						"Resource": ["arn:aws:s3:::my-bucket/*"]
+					}
+				]
+			}`,
+			isEqual: false,
 		},
-
 		{
-			name: "different Sid",
-			entry1: StatementEntry{
-				Effect: "Allow",
-				Action: []string{"s3:*"},
-				Resource: []string{
-					"arn:aws:s3:::*",
-					"arn:aws:s3:::bucket/*",
-				},
-				Principal: PrincipalEntry{
-					AWS: []string{"arn:aws:iam::123456789012:user/csm"},
-				},
-				Sid: "statementID",
-			},
-			entry2: StatementEntry{
-				Effect: "Allow",
-				Action: []string{"s3:*"},
-				Resource: []string{
-					"arn:aws:s3:::*",
-					"arn:aws:s3:::bucket/*",
-				},
-				Principal: PrincipalEntry{
-					AWS: []string{"arn:aws:iam::123456789012:user/csm"},
-				},
-				Sid: "statementID2",
-			},
-			want: false,
+			name: "different resource length",
+			jsonString1: `{
+				"Version": "2012-10-17",
+				"Id": "policy-id",
+				"Statement": [
+					{
+						"Effect": "Allow",
+						"Action": ["s3:GetObject"],
+						"Resource": ["arn:aws:s3:::my-bucket/*", "arn:aws:s3:::my-bucket-2/*"]
+					}
+				]
+			}`,
+			jsonString2: `{
+				"Version": "2012-10-17",
+				"Id": "policy-id",
+				"Statement": [
+					{
+						"Effect": "Allow",
+						"Action": ["s3:GetObject"],
+						"Resource": ["arn:aws:s3:::my-bucket/*"]
+					}
+				]
+			}`,
+			isEqual: false,
+		},
+		{
+			name: "different statement length",
+			jsonString1: `{
+				"Version": "2012-10-17",
+				"Id": "policy-id",
+				"Statement": [
+					{
+						"Effect": "Allow",
+						"Action": ["s3:GetObject"],
+						"Resource": ["arn:aws:s3:::my-bucket/*"]
+					}
+				]
+			}`,
+			jsonString2: `{
+				"Version": "2012-10-17",
+				"Id": "policy-id",
+				"Statement": []
+			}`,
+			isEqual: false,
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := tt.entry1.Equal(&tt.entry2)
-			if got != tt.want {
-				t.Errorf("Equal() = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
-
-func TestPrincipalEntryEqual(t *testing.T) {
-	tests := []struct {
-		name   string
-		entry1 PrincipalEntry
-		entry2 PrincipalEntry
-		want   bool
-	}{
-		{
-			name: "equal Principal entry",
-			entry1: PrincipalEntry{
-				AWS: []string{"arn:aws:iam::123456789012:user/csm"},
-			},
-			entry2: PrincipalEntry{
-				AWS: []string{"arn:aws:iam::123456789012:user/csm"},
-			},
-			want: true,
-		},
-		{
-			name: "different AWS",
-			entry1: PrincipalEntry{
-				AWS: []string{"arn:aws:iam::123456789012:user/csm"},
-			},
-			entry2: PrincipalEntry{
-				AWS: []string{"arn:aws:iam::123456789012:user/admin"},
-			},
-			want: false,
-		},
-		{
-			name: "different length AWS",
-			entry1: PrincipalEntry{
-				AWS: []string{},
-			},
-			entry2: PrincipalEntry{
-				AWS: []string{"arn:aws:iam::123456789012:user/admin"},
-			},
-			want: false,
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			got := tt.entry1.Equal(&tt.entry2)
-			if got != tt.want {
-				t.Errorf("Equal() = %v, want %v", got, tt.want)
-			}
+			doc1, err := policy.NewFromJSON(tt.jsonString1)
+			assert.Nil(t, err)
+			doc2, err := policy.NewFromJSON(tt.jsonString2)
+			assert.Nil(t, err)
+			assert.Equal(t, tt.isEqual, doc1.Equal(&doc2))
 		})
 	}
 }

@@ -1,4 +1,4 @@
-// Copyright © 2023 Dell Inc. or its subsidiaries. All Rights Reserved.
+// Copyright © 2025 Dell Inc. or its subsidiaries. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -10,14 +10,25 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// Package iamapi contains interface that is used to generate mock for AWS IAMAPI.
-package iamapi
+package testcontext
 
-import "github.com/aws/aws-sdk-go/service/iam/iamiface"
+import (
+	"testing"
+	"time"
 
-//go:generate go run github.com/vektra/mockery/v2@latest
+	"github.com/stretchr/testify/assert"
+)
 
-// IAMAPI interface is an interface based on which the Mock is generated.
-type IAMAPI interface {
-	iamiface.IAMAPI
+func TestNew(t *testing.T) {
+	ctx, cancel := New(t)
+	assert.NotNil(t, cancel)
+	assert.NotNil(t, ctx)
+
+	ctx, cancel = getContextCancelFunc(time.Time{}, true)
+	assert.NotNil(t, cancel)
+	assert.NotNil(t, ctx)
+
+	ctx, cancel = getContextCancelFunc(time.Time{}, false)
+	assert.NotNil(t, cancel)
+	assert.NotNil(t, ctx)
 }

@@ -14,7 +14,7 @@
   },
   "definitions": {
     "objectscale": {
-      "description": "Configuration specific to the Dell ObjectScale platform",
+      "description": "Configuration specific to the ObjectScale platform",
       "type": "object",
       "properties": {
         "id": {
@@ -24,27 +24,11 @@
         "credentials": {
           "$ref": "#/definitions/credentials"
         },
-        "objectscale-gateway": {
-          "description": "Endpoint of the ObjectScale Gateway Internal service",
+        "mgmt-endpoint": {
+          "description": "Endpoint of the ObjectScale VDC Management Internal service",
           "type": "string",
           "format": "url",
           "$comment": "format field is placed here only for documentation purposes"
-        },
-        "objectstore-gateway": {
-          "description": "Endpoint of the ObjectScale ObjectStore Management Gateway service",
-          "type": "string",
-          "format": "url",
-          "$comment": "format field is placed here only for documentation purposes"
-        },
-        "objectscale-id": {
-          "description": "The ID of the Objectscale the driver should communicate with",
-          "type": "string",
-          "$comment": "Used i.a. when sending bucket update policy request"
-        },
-        "objectstore-id": {
-          "description": "The ID of the Objectstore under specific Objectscale, with which the driver should communicate",
-          "type": "string",
-          "$comment": "Used i.a. when sending bucket update policy request"
         },
         "namespace": {
           "description": "Namespace associated with the user/tenant that is allowed to access the bucket",
@@ -70,11 +54,7 @@
       "required": [
         "credentials",
         "id",
-        "namespace",
-        "objectscale-gateway",
-        "objectstore-gateway",
-        "objectscale-id",
-        "objectstore-id",
+        "mgmt-endpoint",
         "protocols",
         "tls"
       ]

@@ -29,7 +29,7 @@ type Credentials struct {
 	Username string `json:"username" yaml:"username" mapstructure:"username"`
 }
 
-// Configuration specific to the Dell ObjectScale platform
+// Configuration specific to the ObjectScale platform
 type Objectscale struct {
 	// Credentials corresponds to the JSON schema field "credentials".
 	Credentials Credentials `json:"credentials" yaml:"credentials" mapstructure:"credentials"`
@@ -41,21 +41,11 @@ type Objectscale struct {
 	// Default, unique identifier for the single connection.
 	Id string `json:"id" yaml:"id" mapstructure:"id"`
 
+	// Endpoint of the ObjectScale VDC Management Internal service
+	MgmtEndpoint string `json:"mgmt-endpoint" yaml:"mgmt-endpoint" mapstructure:"mgmt-endpoint"`
+
 	// Namespace associated with the user/tenant that is allowed to access the bucket
-	Namespace string `json:"namespace" yaml:"namespace" mapstructure:"namespace"`
-
-	// Endpoint of the ObjectScale Gateway Internal service
-	ObjectscaleGateway string `json:"objectscale-gateway" yaml:"objectscale-gateway" mapstructure:"objectscale-gateway"`
-
-	// The ID of the Objectscale the driver should communicate with
-	ObjectscaleId string `json:"objectscale-id" yaml:"objectscale-id" mapstructure:"objectscale-id"`
-
-	// Endpoint of the ObjectScale ObjectStore Management Gateway service
-	ObjectstoreGateway string `json:"objectstore-gateway" yaml:"objectstore-gateway" mapstructure:"objectstore-gateway"`
-
-	// The ID of the Objectstore under specific Objectscale, with which the driver
-	// should communicate
-	ObjectstoreId string `json:"objectstore-id" yaml:"objectstore-id" mapstructure:"objectstore-id"`
+	Namespace *string `json:"namespace,omitempty" yaml:"namespace,omitempty" mapstructure:"namespace,omitempty"`
 
 	// Protocols corresponds to the JSON schema field "protocols".
 	Protocols Protocols `json:"protocols" yaml:"protocols" mapstructure:"protocols"`
@@ -81,9 +71,9 @@ type S3 struct {
 }
 
 // UnmarshalYAML implements yaml.Unmarshaler.
-func (j *S3) UnmarshalYAML(b []byte) error {
+func (j *S3) UnmarshalYAML(value *yaml.Node) error {
 	var raw map[string]interface{}
-	if err := yaml.Unmarshal(b, &raw); err != nil {
+	if err := value.Decode(&raw); err != nil {
 		return err
 	}
 	if v, ok := raw["endpoint"]; !ok || v == nil {
@@ -91,7 +81,7 @@ func (j *S3) UnmarshalYAML(b []byte) error {
 	}
 	type Plain S3
 	var plain Plain
-	if err := yaml.Unmarshal(b, &plain); err != nil {
+	if err := value.Decode(&plain); err != nil {
 		return err
 	}
 	*j = S3(plain)
@@ -132,9 +122,9 @@ func (j *Tls) UnmarshalJSON(b []byte) error {
 }
 
 // UnmarshalYAML implements yaml.Unmarshaler.
-func (j *Tls) UnmarshalYAML(b []byte) error {
+func (j *Tls) UnmarshalYAML(value *yaml.Node) error {
 	var raw map[string]interface{}
-	if err := yaml.Unmarshal(b, &raw); err != nil {
+	if err := value.Decode(&raw); err != nil {
 		return err
 	}
 	if v, ok := raw["insecure"]; !ok || v == nil {
@@ -142,7 +132,7 @@ func (j *Tls) UnmarshalYAML(b []byte) error {
 	}
 	type Plain Tls
 	var plain Plain
-	if err := yaml.Unmarshal(b, &plain); err != nil {
+	if err := value.Decode(&plain); err != nil {
 		return err
 	}
 	*j = Tls(plain)
@@ -179,20 +169,8 @@ func (j *Objectscale) UnmarshalJSON(b []byte) error {
 	if v, ok := raw["id"]; !ok || v == nil {
 		return fmt.Errorf("field id in Objectscale: required")
 	}
-	if v, ok := raw["namespace"]; !ok || v == nil {
-		return fmt.Errorf("field namespace in Objectscale: required")
-	}
-	if v, ok := raw["objectscale-gateway"]; !ok || v == nil {
-		return fmt.Errorf("field objectscale-gateway in Objectscale: required")
-	}
-	if v, ok := raw["objectscale-id"]; !ok || v == nil {
-		return fmt.Errorf("field objectscale-id in Objectscale: required")
-	}
-	if v, ok := raw["objectstore-gateway"]; !ok || v == nil {
-		return fmt.Errorf("field objectstore-gateway in Objectscale: required")
-	}
-	if v, ok := raw["objectstore-id"]; !ok || v == nil {
-		return fmt.Errorf("field objectstore-id in Objectscale: required")
+	if v, ok := raw["mgmt-endpoint"]; !ok || v == nil {
+		return fmt.Errorf("field mgmt-endpoint in Objectscale: required")
 	}
 	if v, ok := raw["protocols"]; !ok || v == nil {
 		return fmt.Errorf("field protocols in Objectscale: required")
@@ -213,9 +191,9 @@ func (j *Objectscale) UnmarshalJSON(b []byte) error {
 }
 
 // UnmarshalYAML implements yaml.Unmarshaler.
-func (j *Objectscale) UnmarshalYAML(b []byte) error {
+func (j *Objectscale) UnmarshalYAML(value *yaml.Node) error {
 	var raw map[string]interface{}
-	if err := yaml.Unmarshal(b, &raw); err != nil {
+	if err := value.Decode(&raw); err != nil {
 		return err
 	}
 	if v, ok := raw["credentials"]; !ok || v == nil {
@@ -224,20 +202,8 @@ func (j *Objectscale) UnmarshalYAML(b []byte) error {
 	if v, ok := raw["id"]; !ok || v == nil {
 		return fmt.Errorf("field id in Objectscale: required")
 	}
-	if v, ok := raw["namespace"]; !ok || v == nil {
-		return fmt.Errorf("field namespace in Objectscale: required")
-	}
-	if v, ok := raw["objectscale-gateway"]; !ok || v == nil {
-		return fmt.Errorf("field objectscale-gateway in Objectscale: required")
-	}
-	if v, ok := raw["objectscale-id"]; !ok || v == nil {
-		return fmt.Errorf("field objectscale-id in Objectscale: required")
-	}
-	if v, ok := raw["objectstore-gateway"]; !ok || v == nil {
-		return fmt.Errorf("field objectstore-gateway in Objectscale: required")
-	}
-	if v, ok := raw["objectstore-id"]; !ok || v == nil {
-		return fmt.Errorf("field objectstore-id in Objectscale: required")
+	if v, ok := raw["mgmt-endpoint"]; !ok || v == nil {
+		return fmt.Errorf("field mgmt-endpoint in Objectscale: required")
 	}
 	if v, ok := raw["protocols"]; !ok || v == nil {
 		return fmt.Errorf("field protocols in Objectscale: required")
@@ -247,7 +213,7 @@ func (j *Objectscale) UnmarshalYAML(b []byte) error {
 	}
 	type Plain Objectscale
 	var plain Plain
-	if err := yaml.Unmarshal(b, &plain); err != nil {
+	if err := value.Decode(&plain); err != nil {
 		return err
 	}
 	if v, ok := raw["emptyBucket"]; !ok || v == nil {
@@ -258,9 +224,9 @@ func (j *Objectscale) UnmarshalYAML(b []byte) error {
 }
 
 // UnmarshalYAML implements yaml.Unmarshaler.
-func (j *Credentials) UnmarshalYAML(b []byte) error {
+func (j *Credentials) UnmarshalYAML(value *yaml.Node) error {
 	var raw map[string]interface{}
-	if err := yaml.Unmarshal(b, &raw); err != nil {
+	if err := value.Decode(&raw); err != nil {
 		return err
 	}
 	if v, ok := raw["password"]; !ok || v == nil {
@@ -271,7 +237,7 @@ func (j *Credentials) UnmarshalYAML(b []byte) error {
 	}
 	type Plain Credentials
 	var plain Plain
-	if err := yaml.Unmarshal(b, &plain); err != nil {
+	if err := value.Decode(&plain); err != nil {
 		return err
 	}
 	*j = Credentials(plain)

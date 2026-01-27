@@ -1,25 +1,19 @@
-# Copyright © 2023-2025 Dell Inc. or its subsidiaries. All Rights Reserved.
+# Copyright © 2026 Dell Inc. or its subsidiaries. All Rights Reserved.
 #
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#      http://www.apache.org/licenses/LICENSE-2.0
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# Dell Technologies, Dell and other trademarks are trademarks of Dell Inc.
+# or its subsidiaries. Other trademarks may be trademarks of their respective
+# owners.
+
+include images.mk
 
 COSI_BUILD_DIR   := build
 COSI_BUILD_PATH  := ./cmd/
 
-# When developing docs, chage it so it points to the right file.
+# When developing docs, change it so it points to the right file.
 CONFIGURATION_DOCS ?= ./docs/installation/configuration_file.md
 
 .PHONY: all
-all: clean codegen lint build
-
-include overrides.mk
+all: codegen build test
 
 .PHONY: help
 help:	##show help
@@ -29,6 +23,9 @@ help:	##show help
 clean:	##clean directory
 	rm --force pkg/config/*.gen.go
 	rm --force pkg/internal/iamapi/mock/*.gen.go
+	rm --force golangci.yaml csm-common.mk go-code-tester
+	rm --force coverage_results.txt coverage.txt cover.out new_coverage.txt
+	rm --force --recursive $(COSI_BUILD_DIR)
 	go clean
 
 ########################################################################
@@ -36,42 +33,12 @@ clean:	##clean directory
 ########################################################################
 
 .PHONY: codegen
-codegen: clean	##regenerate files
+codegen: ##regenerate files
 	go generate -skip="mockery" ./...
-
-.PHONY: mockgen
-mockgen: clean
-	go generate ./...
-
-# FIXME: remove this target after we remove dependency on private goobjectscale.
-.PHONY: vendor
-vendor:	##generate the vendor directory
-	go mod vendor
 
 .PHONY: build
 build: codegen ##build project
-	GOOS=linux CGO_ENABLED=0 go build -ldflags="-s -w" -o ${COSI_BUILD_DIR}/cosi ${COSI_BUILD_PATH}
-
-########################################################################
-##                             CONTAINER                              ##
-########################################################################
-
-.PHONY: podman
-podman: download-csm-common
-	@echo "Base Images is set to: $(CSM_BASEIMAGE)"
-	@echo "Building: $(IMAGENAME):$(IMAGETAG)"
-	podman build -t "$(IMAGENAME):$(IMAGETAG)" --build-arg BASEIMAGE=$(CSM_BASEIMAGE) --build-arg GOIMAGE=$(DEFAULT_GOIMAGE) .
-
-.PHONY: push
-push: podman	##build and push the podman container to repository
-	@echo "Pushing: $(REGISTRY)/$(IMAGENAME):$(IMAGETAG)"
-	podman tag "$(IMAGENAME):$(IMAGETAG)" "$(REGISTRY)/$(IMAGENAME):$(IMAGETAG)"
-	podman push "$(REGISTRY)/$(IMAGENAME):$(IMAGETAG)"
-
-.PHONY: download-csm-common
-download-csm-common:
-	curl -O -L https://raw.githubusercontent.com/dell/csm/main/config/csm-common.mk
-	$(eval include csm-common.mk)
+	GOOS=linux CGO_ENABLED=0 go build -mod=vendor -ldflags="-s -w" -o ${COSI_BUILD_DIR}/cosi ${COSI_BUILD_PATH}
 
 ########################################################################
 ##                              TESTING                               ##
@@ -81,12 +48,9 @@ download-csm-common:
 test: unit-test fuzz	##run unit and fuzzy tests
 
 .PHONY: unit-test
-unit-test: mockgen	##run unit tests (Windows or Linux; requires no hardware)
-	( go clean -cache; CGO_ENABLED=0 go test -v -coverprofile=c.out ./...)
-
-.PHONY: unit-test-race
-unit-test-race:	mockgen ##run unit tests with race condition reporting (Windows or Linux; requires no hardware, requires CGO)
-	( go clean -cache; CGO_ENABLED=1 go test -race -v -coverprofile=c.out ./...)
+unit-test: go-code-tester
+	GITHUB_OUTPUT=/dev/null \
+	./go-code-tester 90 "." "" "true" "" "" "./pks/provisioner/virtualdriver/fake|./pkg/provisioner/virtualdriver/fake|./pkg/provisioner/objectscale/mocks|./tests/integration/steps|./pkg/provisioner/virtualdriver"
 
 .PHONY: fuzz
 fuzz:	##run all possible fuzzy tests for 10s each
@@ -94,15 +58,11 @@ fuzz:	##run all possible fuzzy tests for 10s each
 
 .PHONY: integration-test
 integration-test:	##run integration test (Linux only)
-	( cd tests/integration; sh run.sh )
+	(cd tests/integration; sh run.sh)
 
 ########################################################################
 ##                              TOOLING                               ##
 ########################################################################
-
-.PHONY: lint
-lint:	##run golangci-lint over the repository
-	golangci-lint run
 
 .PHONY: example-config
 example-config:	##generate the example configuration file

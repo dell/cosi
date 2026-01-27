@@ -1,21 +1,16 @@
-// Copyright © 2023 Dell Inc. or its subsidiaries. All Rights Reserved.
+// Copyright © 2023-2025 Dell Inc. or its subsidiaries. All Rights Reserved.
 //
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//      http://www.apache.org/licenses/LICENSE-2.0
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+// This software contains the intellectual property of Dell Inc.
+// or is licensed to Dell Inc. from third parties. Use of this software
+// and the intellectual property contained therein is expressly limited to the
+// terms and conditions of the License Agreement under which it is provided by or
+// on behalf of Dell Inc. or its subsidiaries.
 
 package provisioner
 
 import (
 	"errors"
 
-	l "github.com/dell/cosi/pkg/logger"
 	driver "github.com/dell/cosi/pkg/provisioner/virtualdriver"
 
 	"github.com/dell/cosi/pkg/config"
@@ -26,16 +21,16 @@ import (
 // returns correct driver.
 func NewVirtualDriver(config config.Configuration) (driver.Driver, error) {
 	// in the future, here can be more than one
-	if !exactlyOne(config.Objectscale) {
-		return nil, errors.New("expected exactly one object storage platform in configuration")
-	}
+	// if !exactlyOne(config.Objectscale) {
+	// 	return nil, errors.New("expected exactly one object storage platform in configuration")
+	// }
 
 	if config.Objectscale != nil {
-		l.Log().V(6).Info("ObjectScale config created.")
+		log.Info("ObjectScale config created")
 		return objectscale.New(config.Objectscale)
 	}
 
-	panic("programming error")
+	return nil, errors.New("configuration is empty")
 }
 
 // exactlyOne checks if exactly one of its arguments is not nil.
