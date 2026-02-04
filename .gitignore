@@ -1,36 +1,11 @@
-# Build directories
 build/
-
-# Binaries for programs and plugins
-*.exe
-*.exe~
-*.dll
-*.so
-*.dylib
-csm-common.mk
-
-# Test binary, built with `go test -c`
-*.test
-
-# Output of the go coverage tool, specifically when used with LiteIDE
-*.out
-
-# Dependency directories (remove the comment below to include it)
 vendor/
-helm/
-
-# Go workspace file
-go.work
-go.work.sum
-
-# environment files
-*.env
-
-# vscode config dir
-.vscode/
-
-# Fuzzing output
-testdata/
-
-# mirrord dir
-.mirrord/
+csm-common.mk
+c.out
+golangci.yaml
+go-code-tester
+cover.out
+coverage.txt
+coverage_results.txt
+new_coverage.txt
+*.tar.gz

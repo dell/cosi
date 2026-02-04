@@ -1,14 +1,10 @@
-// Copyright © 2023 Dell Inc. or its subsidiaries. All Rights Reserved.
+// Copyright © 2023-2025 Dell Inc. or its subsidiaries. All Rights Reserved.
 //
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//      http://www.apache.org/licenses/LICENSE-2.0
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+// This software contains the intellectual property of Dell Inc.
+// or is licensed to Dell Inc. from third parties. Use of this software
+// and the intellectual property contained therein is expressly limited to the
+// terms and conditions of the License Agreement under which it is provided by or
+// on behalf of Dell Inc. or its subsidiaries.
 
 // Package transport implements transport for HTTP client
 // which is used further in custom client from goobjectscale.
@@ -22,7 +18,7 @@ import (
 	"fmt"
 	"net/http"
 
-	l "github.com/dell/cosi/pkg/logger"
+	"github.com/dell/csmlog"
 
 	"github.com/dell/cosi/pkg/config"
 )
@@ -33,6 +29,7 @@ var (
 
 	// ErrRootCAMissing indicates that root CA (certificate authority) is missing.
 	ErrRootCAMissing = errors.New("root certificate authority is missing")
+	log              = csmlog.GetLogger()
 )
 
 // New creates new HTTP or HTTPS transport based on provided config.
@@ -44,7 +41,7 @@ func New(cfg config.Tls) (*http.Transport, error) {
 			CipherSuites:       getSecuredCipherSuites(),
 		}
 
-		l.Log().V(4).Info("Insecure connection applied.", "insecure", cfg.Insecure)
+		log.Debug("Insecure connection applied")
 	} else {
 		cert, err := clientCert(cfg.ClientCert, cfg.ClientKey)
 		if err != nil {
@@ -71,7 +68,7 @@ func New(cfg config.Tls) (*http.Transport, error) {
 			CipherSuites:       getSecuredCipherSuites(),
 		}
 
-		l.Log().V(6).Info("Secure connection applied.", "insecure", cfg.Insecure)
+		log.Debug("Secure connection applied")
 	}
 
 	return &http.Transport{
@@ -81,26 +78,22 @@ func New(cfg config.Tls) (*http.Transport, error) {
 
 func clientCert(certData, keyData *string) ([]tls.Certificate, error) {
 	if certData == nil && keyData == nil {
-		l.Log().V(6).Info("Default certificate created.", "certData", certData == nil, "keyData", keyData == nil)
-
+		log.Debug("Default certificate created")
 		// no certificates and key is a valid option
 		return []tls.Certificate{}, nil
 	} else if certData == nil || keyData == nil {
 		// only one of those two is missing, it is not a valid option
-		l.Log().V(6).Info("client-cert or client-key missing.", "certData", certData == nil, "keyData", keyData == nil)
-
+		log.Error("client-cert or client-key missing")
 		return nil, ErrClientCertMissing
 	}
 
 	if *certData == "" && *keyData == "" {
 		// both certificate and key are empty, this is also a valid option
-		l.Log().V(6).Info("Default certificate created.", "certData", *certData == "", "keyData", *keyData == "")
-
+		log.Debug("Default certificate created")
 		return []tls.Certificate{}, nil
 	} else if *certData == "" || *keyData == "" {
 		// only one of those two is empty, it is not a valid option
-		l.Log().V(6).Info("client-cert or client-key missing.", "certData", *certData == "", "keyData", *keyData == "")
-
+		log.Error("client-cert or client-key missing")
 		return nil, ErrClientCertMissing
 	}
 
@@ -120,9 +113,6 @@ func clientCert(certData, keyData *string) ([]tls.Certificate, error) {
 	if err != nil {
 		return nil, fmt.Errorf("unable to parse a public/private key pair: %w", err)
 	}
-
-	l.Log().V(8).Info("X509 key pair created")
-
 	return []tls.Certificate{x509}, nil
 }
 

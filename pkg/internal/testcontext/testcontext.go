@@ -24,8 +24,10 @@ const defaultTimeout = 20 * time.Second
 // New creates new context with deadline equal to test deadline, or (if the deadline is empty),
 // with a timeout equal to the default timeout.
 func New(t *testing.T) (context.Context, context.CancelFunc) {
-	deadline, ok := t.Deadline()
+	return getContextCancelFunc(t.Deadline())
+}
 
+func getContextCancelFunc(deadline time.Time, ok bool) (context.Context, context.CancelFunc) {
 	if ok {
 		return context.WithDeadline(context.Background(), deadline)
 	}

@@ -1,4 +1,11 @@
 #!/usr/bin/env bash
+# Copyright © 2023-2026 Dell Inc. or its subsidiaries. All Rights Reserved.
+#
+# This software contains the intellectual property of Dell Inc.
+# or is licensed to Dell Inc. from third parties. Use of this software
+# and the intellectual property contained therein is expressly limited to the
+# terms and conditions of the License Agreement under which it is provided by or
+# on behalf of Dell Inc. or its subsidiaries.
 
 set -a
 set -e
@@ -6,7 +13,7 @@ set -e
 # Open the file for reading
 file="go.mod"
 
-export GOPRIVATE="github.com/dell/objectscale"
+export GOPRIVATE="github.com"
 
 # Define flags
 in_require=0

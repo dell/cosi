@@ -1,18 +1,15 @@
-// Copyright © 2023 Dell Inc. or its subsidiaries. All Rights Reserved.
+// Copyright © 2023-2025 Dell Inc. or its subsidiaries. All Rights Reserved.
 //
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//      http://www.apache.org/licenses/LICENSE-2.0
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+// This software contains the intellectual property of Dell Inc.
+// or is licensed to Dell Inc. from third parties. Use of this software
+// and the intellectual property contained therein is expressly limited to the
+// terms and conditions of the License Agreement under which it is provided by or
+// on behalf of Dell Inc. or its subsidiaries.
 
 package objectscale
 
 import (
+	"errors"
 	"strings"
 	"testing"
 
@@ -21,11 +18,9 @@ import (
 	"github.com/dell/goobjectscale/pkg/client/model"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
-	"github.com/stretchr/testify/require"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
-
-	cosi "sigs.k8s.io/container-object-storage-interface-spec"
+	cosi "sigs.k8s.io/container-object-storage-interface/proto"
 )
 
 // TestServerDriverCreateBucket contains table tests for (*Server).DriverCreateBucket method.
@@ -37,9 +32,11 @@ func TestServerDriverCreateBucket(t *testing.T) {
 		"BucketCreated": testDriverCreateBucketBucketCreated,
 		"BucketExists":  testDriverCreateBucketBucketExists,
 		// testing errors
-		"EmptyBucketName":      testDriverCreateBucketEmptyBucketName,
 		"CheckBucketFailed":    testDriverCreateBucketCheckBucketFailed,
 		"BucketCreationFailed": testDriverCreateBucketBucketCreationFailed,
+		"InvalidQuotaLimit":    testDriverCreateBucketInvalidQuotaLimit,
+		"VPool List Fails":     testDriverCreateBucketVPoolFails,
+		"VPool Does Not Exist": testDriverCreateBucketVPoolDoesNotExist,
 	} {
 		fn := fn
 
@@ -49,6 +46,71 @@ func TestServerDriverCreateBucket(t *testing.T) {
 			fn(t)
 		})
 	}
+}
+
+const (
+	testBucketName = "test_bucket"
+	testNamespace  = "namespace"
+	testID         = "test.id"
+)
+
+var (
+	testBucket = &model.Bucket{
+		Namespace: testNamespace,
+		Name:      testBucketName,
+	}
+
+	testBucketCreationWithVPoolRequest = &cosi.DriverCreateBucketRequest{
+		Name: testBucketName,
+		Parameters: map[string]string{
+			"protocol":         "S3",
+			"namespace":        testNamespace,
+			"replicationGroup": "rg1",
+		},
+	}
+
+	testBucketCreationRequestInvalidQuotaLimit = &cosi.DriverCreateBucketRequest{
+		Name: testBucketName,
+		Parameters: map[string]string{
+			"protocol":   "S3",
+			"namespace":  testNamespace,
+			"quotaLimit": "string",
+		},
+	}
+
+	testBucketCreationRequest = &cosi.DriverCreateBucketRequest{
+		Name: testBucketName,
+		Parameters: map[string]string{
+			"protocol":  "S3",
+			"namespace": testNamespace,
+		},
+	}
+
+	testBucketCreationRequestEmptyNamespace = &cosi.DriverCreateBucketRequest{
+		Name: testBucketName,
+		Parameters: map[string]string{
+			"protocol":  "S3",
+			"namespace": "",
+		},
+	}
+)
+
+func testDriverCreateBucketInvalidQuotaLimit(t *testing.T) {
+	ctx, cancel := testcontext.New(t)
+	defer cancel()
+
+	mgmtClientMock := mocks.NewClientSet(t)
+
+	server := Server{
+		mgmtClient: mgmtClientMock,
+		namespace:  testNamespace,
+		backendID:  testID,
+	}
+
+	res, err := server.DriverCreateBucket(ctx, testBucketCreationRequestInvalidQuotaLimit)
+
+	assert.Error(t, err)
+	assert.Nil(t, res)
 }
 
 // testDriverCreateBucketBucketCreated tests the happy path of the (*Server).DriverCreateBucket method.
@@ -57,28 +119,80 @@ func testDriverCreateBucketBucketCreated(t *testing.T) {
 	ctx, cancel := testcontext.New(t)
 	defer cancel()
 
-	bucketsMock := &mocks.BucketsInterface{}
+	bucketsMock := mocks.NewBucketServiceInterface(t)
 	bucketsMock.On("Create", mock.Anything, mock.Anything).Return(testBucket, nil).Once()
-	bucketsMock.On("Get", mock.Anything, mock.Anything, mock.Anything).Return(nil, ErrParameterNotFound).Once()
+	bucketsMock.On("Get", mock.Anything, mock.Anything, mock.Anything).Return(nil, model.ErrParameterNotFound).Once()
 
-	mgmtClientMock := &mocks.ClientSet{}
+	vpool := mocks.NewVPoolServiceInterface(t)
+	vpool.On("List", mock.Anything).Return([]model.DataServiceVPool{
+		{
+			Name: "rg1",
+		},
+	}, nil).Once()
+	mgmtClientMock := mocks.NewClientSet(t)
 	mgmtClientMock.On("Buckets").Return(bucketsMock).Twice()
+	mgmtClientMock.On("VPools").Return(vpool)
 
 	server := Server{
-		mgmtClient:    mgmtClientMock,
-		namespace:     testNamespace,
-		backendID:     testID,
-		objectScaleID: objectScaleID,
-		objectStoreID: objectStoreID,
+		mgmtClient: mgmtClientMock,
+		namespace:  testNamespace,
+		backendID:  testID,
 	}
 
 	expectedBucketID := strings.Join([]string{server.backendID, testBucket.Name}, "-")
 
-	res, err := server.DriverCreateBucket(ctx, testBucketCreationRequest)
+	res, err := server.DriverCreateBucket(ctx, testBucketCreationWithVPoolRequest)
 
 	assert.NoError(t, err)
-	require.NotNil(t, res)
+	assert.NotNil(t, res)
 	assert.Equal(t, res.BucketId, expectedBucketID)
+}
+
+func testDriverCreateBucketVPoolDoesNotExist(t *testing.T) {
+	ctx, cancel := testcontext.New(t)
+	defer cancel()
+
+	vpool := mocks.NewVPoolServiceInterface(t)
+	vpool.On("List", mock.Anything).Return([]model.DataServiceVPool{
+		{
+			Name: "rg2",
+		},
+	}, nil)
+	mgmtClientMock := mocks.NewClientSet(t)
+	mgmtClientMock.On("VPools").Return(vpool).Once()
+
+	server := Server{
+		mgmtClient: mgmtClientMock,
+		namespace:  testNamespace,
+		backendID:  testID,
+	}
+
+	res, err := server.DriverCreateBucket(ctx, testBucketCreationWithVPoolRequest)
+
+	assert.Error(t, err)
+	assert.Nil(t, res)
+}
+
+func testDriverCreateBucketVPoolFails(t *testing.T) {
+	ctx, cancel := testcontext.New(t)
+	defer cancel()
+
+	vpool := mocks.NewVPoolServiceInterface(t)
+	vpool.On("List", mock.Anything).Return(nil, errors.New("error"))
+
+	mgmtClientMock := mocks.NewClientSet(t)
+	mgmtClientMock.On("VPools").Return(vpool).Once()
+
+	server := Server{
+		mgmtClient: mgmtClientMock,
+		namespace:  testNamespace,
+		backendID:  testID,
+	}
+
+	res, err := server.DriverCreateBucket(ctx, testBucketCreationWithVPoolRequest)
+
+	assert.Error(t, err)
+	assert.Nil(t, res)
 }
 
 // testDriverCreateBucketBucketExists tests the happy path of the (*Server).DriverCreateBucket method.
@@ -87,18 +201,16 @@ func testDriverCreateBucketBucketExists(t *testing.T) {
 	ctx, cancel := testcontext.New(t)
 	defer cancel()
 
-	bucketsMock := &mocks.BucketsInterface{}
+	bucketsMock := mocks.NewBucketServiceInterface(t)
 	bucketsMock.On("Get", mock.Anything, mock.Anything, mock.Anything).Return(testBucket, nil).Once()
 
-	mgmtClientMock := &mocks.ClientSet{}
+	mgmtClientMock := mocks.NewClientSet(t)
 	mgmtClientMock.On("Buckets").Return(bucketsMock).Once()
 
 	server := Server{
-		mgmtClient:    mgmtClientMock,
-		namespace:     testNamespace,
-		backendID:     testID,
-		objectScaleID: objectScaleID,
-		objectStoreID: objectStoreID,
+		mgmtClient: mgmtClientMock,
+		namespace:  testNamespace,
+		backendID:  testID,
 	}
 
 	expectedBucketID := strings.Join([]string{server.backendID, testBucket.Name}, "-")
@@ -106,32 +218,8 @@ func testDriverCreateBucketBucketExists(t *testing.T) {
 	res, err := server.DriverCreateBucket(ctx, testBucketCreationRequest)
 
 	assert.NoError(t, err)
-	require.NotNil(t, res)
+	assert.NotNil(t, res)
 	assert.Equal(t, res.BucketId, expectedBucketID)
-}
-
-// testDriverCreateBucketEmptyBucketName tests if missing bucket name is handled correctly
-// in the (*Server).DriverCreateBucket method.
-func testDriverCreateBucketEmptyBucketName(t *testing.T) {
-	ctx, cancel := testcontext.New(t)
-	defer cancel()
-
-	bucketsMock := &mocks.BucketsInterface{}
-
-	mgmtClientMock := &mocks.ClientSet{}
-	mgmtClientMock.On("Buckets").Return(bucketsMock).Once()
-
-	server := Server{
-		mgmtClient:    mgmtClientMock,
-		namespace:     testNamespace,
-		backendID:     testID,
-		objectScaleID: objectScaleID,
-		objectStoreID: objectStoreID,
-	}
-
-	_, err := server.DriverCreateBucket(ctx, &cosi.DriverCreateBucketRequest{})
-
-	assert.ErrorIs(t, err, status.Error(codes.InvalidArgument, ErrEmptyBucketName.Error()))
 }
 
 // testDriverCreateBucketCheckBucketFailed tests if error during checking bucket existence is handled correctly
@@ -140,23 +228,21 @@ func testDriverCreateBucketCheckBucketFailed(t *testing.T) {
 	ctx, cancel := testcontext.New(t)
 	defer cancel()
 
-	bucketsMock := &mocks.BucketsInterface{}
-	bucketsMock.On("Get", mock.Anything, mock.Anything, mock.Anything).Return(nil, ErrInternalException).Once()
+	bucketsMock := mocks.NewBucketServiceInterface(t)
+	bucketsMock.On("Get", mock.Anything, mock.Anything, mock.Anything).Return(nil, status.Error(codes.Internal, "custom error")).Once()
 
-	mgmtClientMock := &mocks.ClientSet{}
+	mgmtClientMock := mocks.NewClientSet(t)
 	mgmtClientMock.On("Buckets").Return(bucketsMock).Once()
 
 	server := Server{
-		mgmtClient:    mgmtClientMock,
-		namespace:     testNamespace,
-		backendID:     testID,
-		objectScaleID: objectScaleID,
-		objectStoreID: objectStoreID,
+		mgmtClient: mgmtClientMock,
+		namespace:  testNamespace,
+		backendID:  testID,
 	}
 
 	_, err := server.DriverCreateBucket(ctx, testBucketCreationRequest)
 
-	assert.ErrorIs(t, err, status.Error(codes.Internal, ErrFailedToCheckBucketExists.Error()))
+	assert.ErrorIs(t, status.Error(codes.Internal, "error finding bucket"), err)
 }
 
 // testDriverCreateBucketBucketCreationFailed tests if error during creation of bucket is handled correctly
@@ -165,201 +251,20 @@ func testDriverCreateBucketBucketCreationFailed(t *testing.T) {
 	ctx, cancel := testcontext.New(t)
 	defer cancel()
 
-	bucketsMock := &mocks.BucketsInterface{}
-	bucketsMock.On("Create", mock.Anything, mock.Anything).Return(nil, ErrInternalException).Once()
-	bucketsMock.On("Get", mock.Anything, mock.Anything, mock.Anything).Return(nil, ErrParameterNotFound).Once()
+	bucketsMock := mocks.NewBucketServiceInterface(t)
+	bucketsMock.On("Create", mock.Anything, mock.Anything).Return(nil, status.Error(codes.Internal, "error")).Once()
+	bucketsMock.On("Get", mock.Anything, mock.Anything, mock.Anything).Return(nil, model.ErrParameterNotFound).Once()
 
-	mgmtClientMock := &mocks.ClientSet{}
+	mgmtClientMock := mocks.NewClientSet(t)
 	mgmtClientMock.On("Buckets").Return(bucketsMock).Twice()
 
 	server := Server{
-		mgmtClient:    mgmtClientMock,
-		namespace:     testNamespace,
-		backendID:     testID,
-		objectScaleID: objectScaleID,
-		objectStoreID: objectStoreID,
+		mgmtClient: mgmtClientMock,
+		namespace:  testNamespace,
+		backendID:  testID,
 	}
 
 	_, err := server.DriverCreateBucket(ctx, testBucketCreationRequest)
 
-	assert.ErrorIs(t, err, status.Error(codes.Internal, ErrFailedToCreateBucket.Error()))
-}
-
-// TestGetBucket contains table tests for (*Server).getBucket method.
-func TestGetBucket(t *testing.T) {
-	t.Parallel()
-
-	for scenario, fn := range map[string]func(t *testing.T){
-		// happy path
-		"Valid": testGetBucketValid,
-		// testing errors
-		"NoBucket":     testGetBucketNoBucket,
-		"UnknownError": testGetBucketUnknownError,
-	} {
-		fn := fn
-
-		t.Run(scenario, func(t *testing.T) {
-			t.Parallel()
-
-			fn(t)
-		})
-	}
-}
-
-// testGetBucketValid tests the happy path of the (*Server).getBucket method.
-func testGetBucketValid(t *testing.T) {
-	ctx, cancel := testcontext.New(t)
-	defer cancel()
-
-	modelBucket := &model.Bucket{Name: "valid"}
-	params := make(map[string]string)
-
-	bucketsMock := &mocks.BucketsInterface{}
-	bucketsMock.On("Get", mock.Anything, mock.Anything, mock.Anything).Return(modelBucket, nil).Once()
-
-	// Generic mock for the ClientSet interface, we care only about returning Buckets from it.
-	mgmtClientMock := &mocks.ClientSet{}
-	mgmtClientMock.On("Buckets").Return(bucketsMock).Once()
-
-	server := Server{
-		mgmtClient:    mgmtClientMock,
-		namespace:     testNamespace,
-		backendID:     testID,
-		objectScaleID: objectScaleID,
-		objectStoreID: objectStoreID,
-	}
-
-	bucket, err := server.getBucket(ctx, testBucketName, params)
-
-	assert.NoError(t, err)
-	assert.EqualValues(t, modelBucket, bucket)
-}
-
-// testGetBucketNoBucket tests if the error indicating that no bucket was found returned from the mocked API,
-// is handled correctly in the (*Server).getBucket method.
-func testGetBucketNoBucket(t *testing.T) {
-	ctx, cancel := testcontext.New(t)
-	defer cancel()
-
-	bucketsMock := &mocks.BucketsInterface{}
-	bucketsMock.On("Get", mock.Anything, mock.Anything, mock.Anything).Return(nil, ErrParameterNotFound).Once()
-
-	// Generic mock for the ClientSet interface, we care only about returning Buckets from it.
-	mgmtClientMock := &mocks.ClientSet{}
-	mgmtClientMock.On("Buckets").Return(bucketsMock).Once()
-
-	server := Server{
-		mgmtClient:    mgmtClientMock,
-		namespace:     testNamespace,
-		backendID:     testID,
-		objectScaleID: objectScaleID,
-		objectStoreID: objectStoreID,
-	}
-
-	params := make(map[string]string)
-
-	bucket, err := server.getBucket(ctx, testBucketName, params)
-
-	assert.Nil(t, err)
-	assert.Nil(t, bucket)
-}
-
-// testGetBucketUnknownError tests if the unexpected error returned from mocked API,
-// is handled correctly in the (*Server).getBucket method.
-func testGetBucketUnknownError(t *testing.T) {
-	ctx, cancel := testcontext.New(t)
-	defer cancel()
-
-	bucketsMock := &mocks.BucketsInterface{}
-	bucketsMock.On("Get", mock.Anything, mock.Anything, mock.Anything).Return(nil, ErrInternalException).Once()
-
-	// Generic mock for the ClientSet interface, we care only about returning Buckets from it.
-	mgmtClientMock := &mocks.ClientSet{}
-	mgmtClientMock.On("Buckets").Return(bucketsMock).Once()
-
-	server := Server{
-		mgmtClient:    mgmtClientMock,
-		namespace:     testNamespace,
-		backendID:     testID,
-		objectScaleID: objectScaleID,
-		objectStoreID: objectStoreID,
-	}
-
-	params := make(map[string]string)
-
-	bucket, err := server.getBucket(ctx, testBucketName, params)
-
-	assert.ErrorIs(t, err, ErrInternalException)
-	assert.Nil(t, bucket)
-}
-
-// TestCreateBucket contains table tests for (*Server).createBucket method.
-func TestCreateBucket(t *testing.T) {
-	t.Parallel()
-
-	for scenario, fn := range map[string]func(t *testing.T){
-		// happy path
-		"Valid": testCreateBucketValid,
-		// testing errors
-		"Failed": testCreateBucketFailed,
-	} {
-		fn := fn
-
-		t.Run(scenario, func(t *testing.T) {
-			t.Parallel()
-
-			fn(t)
-		})
-	}
-}
-
-// testCreateBucketValid tests the happy path of the (*Server).createBucket method.
-func testCreateBucketValid(t *testing.T) {
-	ctx, cancel := testcontext.New(t)
-	defer cancel()
-
-	bucketsMock := &mocks.BucketsInterface{}
-	bucketsMock.On("Create", mock.Anything, mock.Anything).Return(&model.Bucket{}, nil).Once()
-
-	// Generic mock for the ClientSet interface, we care only about returning Buckets from it.
-	mgmtClientMock := &mocks.ClientSet{}
-	mgmtClientMock.On("Buckets").Return(bucketsMock).Once()
-
-	server := Server{
-		mgmtClient:    mgmtClientMock,
-		namespace:     testNamespace,
-		backendID:     testID,
-		objectScaleID: objectScaleID,
-		objectStoreID: objectStoreID,
-	}
-
-	err := server.createBucket(ctx, testBucket)
-
-	assert.NoError(t, err)
-}
-
-// testCreateBucketValid tests if the error returned from the mocked API is handled correctly
-// in the (*Server).createBucket method.
-func testCreateBucketFailed(t *testing.T) {
-	ctx, cancel := testcontext.New(t)
-	defer cancel()
-
-	bucketsMock := &mocks.BucketsInterface{}
-	bucketsMock.On("Create", mock.Anything, mock.Anything).Return(nil, ErrInternalException).Once()
-
-	// Generic mock for the ClientSet interface, we care only about returning Buckets from it.
-	mgmtClientMock := &mocks.ClientSet{}
-	mgmtClientMock.On("Buckets").Return(bucketsMock).Once()
-
-	server := Server{
-		mgmtClient:    mgmtClientMock,
-		namespace:     testNamespace,
-		backendID:     testID,
-		objectScaleID: objectScaleID,
-		objectStoreID: objectStoreID,
-	}
-
-	err := server.createBucket(ctx, testBucket)
-
-	assert.ErrorIs(t, err, ErrInternalException)
+	assert.ErrorIs(t, err, status.Error(codes.Internal, "failed to create bucket"))
 }

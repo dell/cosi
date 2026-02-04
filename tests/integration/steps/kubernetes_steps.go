@@ -1,14 +1,10 @@
-// Copyright © 2023 Dell Inc. or its subsidiaries. All Rights Reserved.
+// Copyright © 2023-2025 Dell Inc. or its subsidiaries. All Rights Reserved.
 //
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//      http://www.apache.org/licenses/LICENSE-2.0
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+// This software contains the intellectual property of Dell Inc.
+// or is licensed to Dell Inc. from third parties. Use of this software
+// and the intellectual property contained therein is expressly limited to the
+// terms and conditions of the License Agreement under which it is provided by or
+// on behalf of Dell Inc. or its subsidiaries.
 
 package steps
 
@@ -21,20 +17,21 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/credentials"
-	"github.com/aws/aws-sdk-go/aws/session"
-	"github.com/aws/aws-sdk-go/service/s3"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/config"
+	"github.com/aws/aws-sdk-go-v2/credentials"
+	"github.com/aws/aws-sdk-go-v2/service/s3"
+
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/meta"
 	"k8s.io/apimachinery/pkg/fields"
 	"k8s.io/client-go/kubernetes"
-	"sigs.k8s.io/container-object-storage-interface-api/apis/objectstorage/v1alpha1"
+	"sigs.k8s.io/container-object-storage-interface/client/apis/objectstorage/v1alpha1"
 
 	gomega "github.com/onsi/gomega"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	cosiapi "sigs.k8s.io/container-object-storage-interface-api/apis"
+	cosiapi "sigs.k8s.io/container-object-storage-interface/client/apis"
 )
 
 const (
@@ -187,28 +184,30 @@ func CheckBucketAccessFromSecret(ctx context.Context, clientset *kubernetes.Clie
 		},
 	}}
 
-	s3Config := &aws.Config{
-		Credentials:      credentials.NewStaticCredentials(accessKey, secretKey, ""),
-		Endpoint:         aws.String(s3Endpoint),
-		DisableSSL:       aws.Bool(false),
-		S3ForcePathStyle: aws.Bool(true),
-		HTTPClient:       &x509Client,
-		Region:           aws.String("us-east-1"),
-	}
+	s3Config, err := config.LoadDefaultConfig(ctx,
+		config.WithCredentialsProvider(credentials.NewStaticCredentialsProvider(
+			accessKey, secretKey, "")),
+		config.WithHTTPClient(&x509Client),
+		config.WithBaseEndpoint(s3Endpoint),
+		config.WithRegion("us-east-1"),
+		config.WithRequestChecksumCalculation(aws.RequestChecksumCalculationWhenRequired),
+	)
 
-	session, err := session.NewSession(s3Config)
-	gomega.Expect(err).ToNot(gomega.HaveOccurred())
+	s3Client := s3.NewFromConfig(s3Config)
 
-	s3Client := s3.New(session)
-
-	_, err = s3Client.PutObject(&s3.PutObjectInput{
+	_, err = s3Client.PutObject(ctx, &s3.PutObjectInput{
 		Body:   strings.NewReader(testObjectData),
 		Bucket: aws.String(bucketName),
 		Key:    aws.String(testObjectKey),
 	})
 	gomega.Expect(err).ToNot(gomega.HaveOccurred())
 
-	_, err = s3Client.DeleteObject(&s3.DeleteObjectInput{
+	_, err = s3Client.ListObjects(ctx, &s3.ListObjectsInput{
+		Bucket: aws.String(bucketName),
+	})
+	gomega.Expect(err).ToNot(gomega.HaveOccurred())
+
+	_, err = s3Client.DeleteObject(ctx, &s3.DeleteObjectInput{
 		Bucket: aws.String(bucketName),
 		Key:    aws.String(testObjectKey),
 	})

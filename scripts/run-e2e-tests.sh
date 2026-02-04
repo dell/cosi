@@ -1,35 +1,37 @@
 #!/usr/bin/env bash
+# Copyright © 2023-2026 Dell Inc. or its subsidiaries. All Rights Reserved.
+#
+# This software contains the intellectual property of Dell Inc.
+# or is licensed to Dell Inc. from third parties. Use of this software
+# and the intellectual property contained therein is expressly limited to the
+# terms and conditions of the License Agreement under which it is provided by or
+# on behalf of Dell Inc. or its subsidiaries.
 
 if [ -n "${DEBUG}" ]; then
-  # The  shell shall write to standard error a trace for each command after it expands
-  # the command and before it executes it.
   set -x
 fi
 
 #########################################################################################
 # Configuration:
 # - The shell shall write a message to standard error when it tries to expand a variable
-#   that is  not set and immediately exit.
+#   that is not set and immediately exit.
 #----------------------------------------------------------------------------------------
 set -u
 
 # Helm specific
 export DRIVER_NAMESPACE="${DRIVER_NAMESPACE:-cosi-test-ns}"
-export HELM_RELEASE_NAME="${HELM_RELEASE_NAME:=dell-cosi}"
+export HELM_RELEASE_NAME="${HELM_RELEASE_NAME:-dell-cosi}"
 
 # Image specific
-export REGISTRY="${REGISTRY:-docker.io}"
-export IMAGENAME="${IMAGENAME:-dell/cosi}"
+export REGISTRY="${REGISTRY:-quay.io/dell/container-storage-modules}"
+export IMAGENAME="${IMAGENAME:-cosi:nightly}"
 export CHART_BRANCH="${CHART_BRANCH:-main}"
 
 # ObjectScale specific
 export OBJECTSCALE_NAMESPACE="${OBJECTSCALE_NAMESPACE}"
-export OBJECTSCALE_ID="${OBJECTSCALE_ID}"
-export OBJECTSCALE_OBJECTSTORE_ID="${OBJECTSCALE_OBJECTSTORE_ID}"
 export OBJECTSCALE_USER="${OBJECTSCALE_USER}"
 export OBJECTSCALE_PASSWORD="${OBJECTSCALE_PASSWORD}"
 export OBJECTSCALE_GATEWAY="${OBJECTSCALE_GATEWAY}"
-export OBJECTSCALE_OBJECTSTORE_GATEWAY="${OBJECTSCALE_OBJECTSTORE_GATEWAY}"
 export OBJECTSCALE_S3_ENDPOINT="${OBJECTSCALE_S3_ENDPOINT}"
 
 # Tests specific
@@ -40,60 +42,11 @@ export DRIVER_CONTAINER_NAME="${DRIVER_CONTAINER_NAME:-objectstorage-provisioner
 # - subshell execution
 #----------------------------------------------------------------------------------------
 (
-
-NS=("access-namespace" "access-grant-namespace" "access-grant-namespace-greenfield" "access-grant-namespace-brownfield" "access-revoke-namespace" "creation-namespace" "deletion-namespace")
-
-# delete all finalizers and then objects from those namespaces
-for n in "${NS[@]}";
-do
-  # first check if namespace exists
-  if kubectl get namespace "${n}" > /dev/null 2>&1; then
-    echo "Cleaning namespace $n"
-  else
-    echo "Namespace $n does not exist, skipping..."
-    continue
-  fi
-
-  # delete all finalizers and then objects from those namespaces
-  for s in $(kubectl get secret -n="${n}" -o=jsonpath='{.items[*].metadata.name}');
-  do
-    kubectl patch secret -n="${n}" "${s}" -p='{"metadata":{"finalizers":null}}' --type=merge
-  done
-
-  for b in $(kubectl get bucketclaim.objectstorage.k8s.io -n="${n}" -o=jsonpath='{.items[*].metadata.name}');
-  do
-    kubectl patch bucketclaim.objectstorage.k8s.io -n="${n}" "{$b}" -p='{"metadata":{"finalizers":null}}' --type=merge
-  done
-
-  for b in $(kubectl get bucketaccess.objectstorage.k8s.io -n="${n}" -o=jsonpath='{.items[*].metadata.name}');
-  do
-    kubectl patch bucketaccess.objectstorage.k8s.io -n="${n}" "{$b}" -p='{"metadata":{"finalizers":null}}' --type=merge
-  done
-
-  for b in $(kubectl get bucket.objectstorage.k8s.io -n="${n}" -o=jsonpath='{.items[*].metadata.name}');
-  do
-    kubectl patch bucket.objectstorage.k8s.io -n="${n}" "{$b}" -p='{"metadata":{"finalizers":null}}' --type=merge
-  done
-
-  for b in $(kubectl get bucketaccessclass.objectstorage.k8s.io -n="${n}" -o=jsonpath='{.items[*].metadata.name}');
-  do
-    kubectl patch bucketaccessclass.objectstorage.k8s.io -n="${n}" "{$b}" -p='{"metadata":{"finalizers":null}}' --type=merge
-  done
-
-  for b in $(kubectl get bucketclass.objectstorage.k8s.io -n="${n}" -o=jsonpath='{.items[*].metadata.name}');
-  do
-    kubectl patch bucketclass.objectstorage.k8s.io -n="${n}" "${b}" -p='{"metadata":{"finalizers":null}}' --type=merge
-  done
-
-  # delete all objects from those namespaces
-  kubectl delete bucketclaims.objectstorage.k8s.io -n="${n}" --all
-  kubectl delete bucketaccesses.objectstorage.k8s.io -n="${n}" --all
-  kubectl delete bucketaccessclasses.objectstorage.k8s.io --all
-  kubectl delete bucketclasses.objectstorage.k8s.io --all
-  kubectl delete buckets.objectstorage.k8s.io --all
-  kubectl delete secret -n="${n}" --all
-  kubectl delete namespace "${n}"
-done
+./e2e-cleanup.sh
+if [ $? -ne 0 ]; then
+  echo "ERROR: e2e-cleanup.sh failed"
+  exit 1
+fi
 
 # uninstall driver
 helm uninstall "${HELM_RELEASE_NAME}" -n="${DRIVER_NAMESPACE}" || true
@@ -105,13 +58,10 @@ connections:
 - objectscale:
     id: e2e.test.objectscale
     namespace: ${OBJECTSCALE_NAMESPACE}
-    objectscale-id: ${OBJECTSCALE_ID}
-    objectstore-id: ${OBJECTSCALE_OBJECTSTORE_ID}
     credentials:
       username: ${OBJECTSCALE_USER}
       password: ${OBJECTSCALE_PASSWORD}
-    objectscale-gateway: ${OBJECTSCALE_GATEWAY}
-    objectstore-gateway: ${OBJECTSCALE_OBJECTSTORE_GATEWAY}
+    mgmt-endpoint: ${OBJECTSCALE_GATEWAY}
     region: us-east-1
     emptyBucket: false
     protocols:
@@ -119,6 +69,19 @@ connections:
         endpoint: ${OBJECTSCALE_S3_ENDPOINT}
     tls:
       insecure: true
+EOF
+
+cosiConfig=`cat /tmp/cosi-conf.yml | base64 -w 0`
+
+kubectl apply -f - <<EOF
+apiVersion: v1
+data:
+  config.yaml: ${cosiConfig}
+kind: Secret
+metadata:
+  name: ${HELM_RELEASE_NAME}-config
+  namespace: ${DRIVER_NAMESPACE}
+type: Opaque
 EOF
 
 # When this option is on, if a simple command fails for any of the reasons listed in
@@ -136,18 +99,12 @@ git clone \
 
 # install the driver
 helm install "${HELM_RELEASE_NAME}" ./helm/charts/cosi \
-  --set=provisioner.image.repository="${REGISTRY}/${IMAGENAME}" \
-  --set=provisioner.image.tag="$(git rev-parse HEAD)" \
-  --set=provisioner.image.pullPolicy=Always \
-  --set=provisioner.logFormat=json \
-  --set=provisioner.logLevel=10 \
-  --set=provisioner.otelEndpoint='' \
-  --set=sidecar.verbosity=10 \
-  --set-file=configuration.data=/tmp/cosi-conf.yml \
+  --set=images.provisioner.image="${REGISTRY}/${IMAGENAME}" \
+  --set=imagePullPolicy=Always \
   --namespace="${DRIVER_NAMESPACE}" \
   --create-namespace
 
-# check if the driver is installed correctly 
+# check if the driver is installed correctly
 kubectl wait \
   --for=condition=available \
   --timeout=60s \
@@ -155,5 +112,5 @@ kubectl wait \
   deployments "${HELM_RELEASE_NAME}"
 
 # start e2e tests
-make integration-test
+cd .. && make integration-test
 )

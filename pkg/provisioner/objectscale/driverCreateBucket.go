@@ -1,129 +1,97 @@
-// Copyright © 2023 Dell Inc. or its subsidiaries. All Rights Reserved.
+// Copyright © 2023-2025 Dell Inc. or its subsidiaries. All Rights Reserved.
 //
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//      http://www.apache.org/licenses/LICENSE-2.0
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+// This software contains the intellectual property of Dell Inc.
+// or is licensed to Dell Inc. from third parties. Use of this software
+// and the intellectual property contained therein is expressly limited to the
+// terms and conditions of the License Agreement under which it is provided by or
+// on behalf of Dell Inc. or its subsidiaries.
 
 package objectscale
 
 import (
 	"context"
 	"errors"
-	"fmt"
 	"strings"
 
-	l "github.com/dell/cosi/pkg/logger"
-	cosi "sigs.k8s.io/container-object-storage-interface-spec"
-
+	"github.com/dell/csmlog"
 	"github.com/dell/goobjectscale/pkg/client/model"
 	"go.opentelemetry.io/otel"
 	"google.golang.org/grpc/codes"
+	cosi "sigs.k8s.io/container-object-storage-interface/proto"
 )
 
-// All errors that can be returned by DriverCreateBucket.
-var (
-	ErrEmptyBucketName      = errors.New("empty bucket name")
-	ErrFailedToCreateBucket = errors.New("failed to create bucket")
-)
+var log = csmlog.GetLogger()
 
-// DriverCreateBucket creates Bucket on specific Object Storage Platform.
-func (s *Server) DriverCreateBucket(
-	ctx context.Context,
+// DriverCreateBucket is an idempotent method for creating buckets
+// It is expected to create the same bucket given a bucketName and protocol
+// If the bucket already exists, then it MUST return codes.AlreadyExists
+// Return values
+//
+//	nil -                   Bucket successfully created
+//	codes.AlreadyExists -   Bucket already exists. No more retries
+//	non-nil err -           Internal error                                [requeue'd with exponential backoff]
+func (s *Server) DriverCreateBucket(ctx context.Context,
 	req *cosi.DriverCreateBucketRequest,
 ) (*cosi.DriverCreateBucketResponse, error) {
-	ctx, span := otel.Tracer(CreateBucketTraceName).Start(ctx, "ObjectscaleDriverCreateBucket")
+	ctx, span := otel.Tracer(CreateBucketTraceName).Start(ctx, "DriverCreateBucket")
 	defer span.End()
 
 	ctx, cancel := context.WithTimeout(ctx, defaultTimeout)
 	defer cancel()
 
-	l.Log().V(4).Info("Bucket is being created.", "bucket", req.GetName())
-
-	span.AddEvent("bucket is being created")
-
-	// Create bucket model.
-	bucket := &model.Bucket{}
-	bucket.Name = req.GetName()
-	bucket.Namespace = s.namespace
-
-	// Check if bucket name is not empty.
-	if bucket.Name == "" {
-		return nil, logAndTraceError(span, ErrEmptyBucketName.Error(), ErrEmptyBucketName, codes.InvalidArgument)
+	log.Infof("Creating Bucket %s", req.GetName())
+	createParams := &model.CreateBucketRequestParams{}
+	err := createParams.ParseFrom(req.GetParameters())
+	if err != nil {
+		return nil, logAndTraceError(span, "failed parsing parameters", err, codes.Internal)
 	}
 
-	parameters := make(map[string]string)
-	parameters["namespace"] = s.namespace
+	// check rg if user input replicationGroup value
+	vPoolID := ""
+	if len(createParams.ReplicationGroup) > 0 {
+		vPools, err := s.mgmtClient.VPools().List(ctx)
+		if err != nil {
+			return nil, logAndTraceError(span, "failed listing replication groups", err, codes.Internal)
+		}
+		rgExists := false
+		for _, vPool := range vPools {
+			if vPool.Name == createParams.ReplicationGroup {
+				vPoolID = vPool.ID
+				rgExists = true
+				break
+			}
+		}
+		if !rgExists {
+			return nil, logAndTraceError(span, "replication group not found", err, codes.NotFound, "replicationGroup", createParams.ReplicationGroup)
+		}
+	}
 
-	l.Log().V(4).Info("Parameters of the bucket.", "parameters", parameters)
-
-	// Get bucket.
-	existingBucket, err := s.getBucket(ctx, bucket.Name, parameters)
-	if err != nil && !errors.Is(err, ErrParameterNotFound) {
-		return nil, logAndTraceError(span, ErrFailedToCheckBucketExists.Error(), err, codes.Internal, "bucket", bucket.Name)
+	existingBucket, err := getBucket(ctx, s, req.GetName(), map[string]string{"namespace": s.namespace})
+	if err != nil && !errors.Is(err, model.ErrParameterNotFound) {
+		return nil, logAndTraceError(span, "error finding bucket", err, codes.Internal, "namespace", s.namespace, "bucket", req.GetName())
 	} else if err == nil && existingBucket != nil {
 		return &cosi.DriverCreateBucketResponse{
-			BucketId: strings.Join([]string{s.backendID, bucket.Name}, "-"),
+			BucketId: strings.Join([]string{s.backendID, existingBucket.Name}, "-"),
 		}, nil
 	}
 
-	// Create bucket.
-	err = s.createBucket(ctx, bucket)
+	toBeCreatedBucket := &model.ObjectBucketParam{}
+	toBeCreatedBucket.Name = req.GetName()
+	toBeCreatedBucket.Namespace = s.namespace
+	toBeCreatedBucket.Vpool = vPoolID
+	toBeCreatedBucket.HeadType = model.S3
+	toBeCreatedBucket.EncryptionEnabled = createParams.EncryptionEnabled
+	toBeCreatedBucket.FsAccessEnabled = createParams.FilesystemEnabled
+	toBeCreatedBucket.IsStaleAllowed = createParams.AccessDuringOutageEnabled
+	toBeCreatedBucket.Retention = createParams.DefaultRetention
+	toBeCreatedBucket.BlockSize = createParams.QuotaLimit
+	toBeCreatedBucket.NotificationSize = createParams.QuotaWarn
+
+	bucket, err := s.mgmtClient.Buckets().Create(ctx, toBeCreatedBucket)
 	if err != nil {
-		return nil, logAndTraceError(span, ErrFailedToCreateBucket.Error(), err, codes.Internal, "bucket", bucket.Name)
+		return nil, logAndTraceError(span, "failed to create bucket", err, codes.Internal, "namespace", s.namespace, "bucket", req.GetName())
 	}
 
-	// Return response.
-	return &cosi.DriverCreateBucketResponse{
-		BucketId: strings.Join([]string{s.backendID, bucket.Name}, "-"),
-	}, nil
-}
-
-// getBucket is used to obtain bucket info from the Provisioner.
-func (s *Server) getBucket(ctx context.Context, bucketName string, parameters map[string]string) (*model.Bucket, error) {
-	ctx, span := otel.Tracer(CreateBucketTraceName).Start(ctx, "ObjectscaleGetBucket")
-	defer span.End()
-
-	// Check if bucket with specific name and parameters already exists.
-	retrievedBucket, err := s.mgmtClient.Buckets().Get(ctx, bucketName, parameters)
-
-	switch {
-	// First, we don't find the bucket on the Provider.
-	case errors.Is(err, ErrParameterNotFound):
-		return nil, nil
-
-	// Second case is the error is nil, which means we actually found a bucket.
-	case err == nil:
-		l.Log().V(4).Info("Bucket already exists.", "bucket", bucketName)
-
-		span.AddEvent("bucket already exists")
-
-		return retrievedBucket, nil
-
-	// Final case, when we receive an unknown error.
-	default:
-		return nil, fmt.Errorf("%w: %w", ErrFailedToCheckBucketExists, err)
-	}
-}
-
-// createBucket is used to create bucket on the Provisioner.
-func (s *Server) createBucket(ctx context.Context, bucket *model.Bucket) error {
-	ctx, span := otel.Tracer(CreateBucketTraceName).Start(ctx, "ObjectscaleCreateBucket")
-	defer span.End()
-
-	_, err := s.mgmtClient.Buckets().Create(ctx, *bucket)
-	if err != nil {
-		return err
-	}
-
-	l.Log().V(4).Info("Bucket successfully created.", "bucket", bucket.Name)
-
-	span.AddEvent("bucket successfully created")
-
-	return nil
+	log.Infof("Successfully created bucket %s in namespace %s", req.GetName(), s.namespace)
+	return &cosi.DriverCreateBucketResponse{BucketId: strings.Join([]string{s.backendID, bucket.Name}, "-")}, nil
 }

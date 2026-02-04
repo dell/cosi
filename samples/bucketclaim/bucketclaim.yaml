@@ -1,0 +1,16 @@
+kind: BucketClaim
+apiVersion: objectstorage.k8s.io/v1alpha1
+metadata:
+  name: my-bucket-claim
+spec:
+  bucketClassName: my-bucket-class
+  # Protocols are the set of data API this bucket is required to support.
+  # The possible values for protocol are:
+  # - S3: Indicates Amazon S3 protocol
+  # - Azure: Indicates Microsoft Azure BlobStore protocol
+  # - GCS: Indicates Google Cloud Storage protocol
+  protocols:
+  # Name of a bucket object that was manually
+  # created to import a bucket created outside of COSI
+  # If unspecified, then a new Bucket will be dynamically provisioned
+  existingBucketName:
