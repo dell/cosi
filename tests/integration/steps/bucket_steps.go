@@ -39,7 +39,29 @@ func DeleteBucketClaimResource(ctx context.Context, bucketClient *bucketclientse
 
 // CheckBucketClaimStatus Function for checking BucketClaim status.
 func CheckBucketClaimStatus(ctx context.Context, bucketClient *bucketclientset.Clientset, bucketClaim *v1alpha1.BucketClaim, status bool) {
-	myBucketClaim, err := bucketClient.ObjectstorageV1alpha1().BucketClaims(bucketClaim.Namespace).Get(ctx, bucketClaim.Name, v1.GetOptions{})
+	var myBucketClaim *v1alpha1.BucketClaim
+
+	claimAttempt := 0
+	err := retry(ctx, attempts, sleep, func() error {
+		var err error
+
+		claimAttempt++
+
+		myBucketClaim, err = bucketClient.ObjectstorageV1alpha1().BucketClaims(bucketClaim.Namespace).Get(ctx, bucketClaim.Name, v1.GetOptions{})
+		if err != nil {
+			fmt.Printf("[CheckBucketClaimStatus] attempt %d/%d: error fetching BucketClaim %s/%s: %v\n", claimAttempt, attempts, bucketClaim.Namespace, bucketClaim.Name, err)
+			return err
+		}
+
+		if myBucketClaim.Status.BucketReady != status {
+			fmt.Printf("[CheckBucketClaimStatus] attempt %d/%d: BucketReady is %v, expected %v for %s/%s\n", claimAttempt, attempts, myBucketClaim.Status.BucketReady, status, bucketClaim.Namespace, bucketClaim.Name)
+			return fmt.Errorf("BucketReady is %v, expected %v", myBucketClaim.Status.BucketReady, status)
+		}
+
+		fmt.Printf("[CheckBucketClaimStatus] attempt %d/%d: BucketClaim %s/%s has expected status %v\n", claimAttempt, attempts, bucketClaim.Namespace, bucketClaim.Name, status)
+		return nil
+	})
+
 	gomega.Expect(err).ToNot(gomega.HaveOccurred())
 	gomega.Expect(myBucketClaim).NotTo(gomega.BeNil())
 	gomega.Expect(myBucketClaim.Status.BucketReady).To(gomega.Equal(status))
@@ -101,18 +123,24 @@ func DeleteBucketAccessResource(ctx context.Context, bucketClient *bucketclients
 func CheckBucketAccessStatus(ctx context.Context, bucketClient *bucketclientset.Clientset, bucketAccess *v1alpha1.BucketAccess, status bool) *v1alpha1.BucketAccess {
 	var myBucketAccess *v1alpha1.BucketAccess
 
+	accessAttempt := 0
 	err := retry(ctx, attempts, sleep, func() error {
 		var err error
 
+		accessAttempt++
+
 		myBucketAccess, err = bucketClient.ObjectstorageV1alpha1().BucketAccesses(bucketAccess.Namespace).Get(ctx, bucketAccess.Name, v1.GetOptions{})
 		if err != nil {
+			fmt.Printf("[CheckBucketAccessStatus] attempt %d/%d: error fetching BucketAccess %s/%s: %v\n", accessAttempt, attempts, bucketAccess.Namespace, bucketAccess.Name, err)
 			return err
 		}
 
 		if !myBucketAccess.Status.AccessGranted {
+			fmt.Printf("[CheckBucketAccessStatus] attempt %d/%d: AccessGranted is false for %s/%s\n", accessAttempt, attempts, bucketAccess.Namespace, bucketAccess.Name)
 			return fmt.Errorf("AccessGranted is false")
 		}
 
+		fmt.Printf("[CheckBucketAccessStatus] attempt %d/%d: BucketAccess %s/%s has AccessGranted=%v\n", accessAttempt, attempts, bucketAccess.Namespace, bucketAccess.Name, myBucketAccess.Status.AccessGranted)
 		return nil
 	})
 
@@ -135,18 +163,24 @@ func CheckBucketAccessAccountID(ctx context.Context, bucketClient *bucketclients
 func GetBucketResource(ctx context.Context, bucketClient *bucketclientset.Clientset, bucketClaim *v1alpha1.BucketClaim) *v1alpha1.Bucket {
 	var myBucketClaim *v1alpha1.BucketClaim
 
+	claimAttempt := 0
 	err := retry(ctx, attempts, sleep, func() error {
 		var err error
 
+		claimAttempt++
+
 		myBucketClaim, err = bucketClient.ObjectstorageV1alpha1().BucketClaims(bucketClaim.Namespace).Get(ctx, bucketClaim.Name, v1.GetOptions{})
 		if err != nil {
+			fmt.Printf("[GetBucketResource] attempt %d/%d: error fetching BucketClaim %s/%s: %v\n", claimAttempt, attempts, bucketClaim.Namespace, bucketClaim.Name, err)
 			return err
 		}
 
 		if myBucketClaim.Status.BucketName == "" && myBucketClaim.Spec.ExistingBucketName == "" {
+			fmt.Printf("[GetBucketResource] attempt %d/%d: BucketClaim %s/%s still missing bucket reference\n", claimAttempt, attempts, bucketClaim.Namespace, bucketClaim.Name)
 			return fmt.Errorf("BucketName and ExistingBucketName are empty")
 		}
 
+		fmt.Printf("[GetBucketResource] attempt %d/%d: BucketClaim %s/%s has bucket reference\n", claimAttempt, attempts, bucketClaim.Namespace, bucketClaim.Name)
 		return nil
 	})
 
@@ -154,8 +188,11 @@ func GetBucketResource(ctx context.Context, bucketClient *bucketclientset.Client
 
 	var bucket *v1alpha1.Bucket
 
+	bucketAttempt := 0
 	err = retry(ctx, attempts, sleep, func() error {
 		var err error
+
+		bucketAttempt++
 
 		name := ""
 		if myBucketClaim.Spec.ExistingBucketName != "" {
@@ -166,17 +203,26 @@ func GetBucketResource(ctx context.Context, bucketClient *bucketclientset.Client
 
 		bucket, err = bucketClient.ObjectstorageV1alpha1().Buckets().Get(ctx, name, v1.GetOptions{})
 		if err != nil {
+			fmt.Printf("[GetBucketResource] attempt %d/%d: error fetching Bucket %s: %v\n", bucketAttempt, attempts, name, err)
 			return err
 		}
 
 		if bucket.Spec.ExistingBucketID != "" {
-			return nil
+			if bucket.Status.BucketReady && bucket.Status.BucketID != "" {
+				fmt.Printf("[GetBucketResource] attempt %d/%d: bucket %s is ready\n", bucketAttempt, attempts, bucket.Name)
+				return nil
+			}
+
+			fmt.Printf("[GetBucketResource] attempt %d/%d: bucket %s is not ready yet\n", bucketAttempt, attempts, bucket.Name)
+			return fmt.Errorf("bucket %s is not ready yet", bucket.Name)
 		}
 
 		if !bucket.Status.BucketReady {
+			fmt.Printf("[GetBucketResource] attempt %d/%d: bucket %s is not ready\n", bucketAttempt, attempts, bucket.Name)
 			return fmt.Errorf("bucket %s is not ready", bucket.Name)
 		}
 
+		fmt.Printf("[GetBucketResource] attempt %d/%d: bucket %s is ready\n", bucketAttempt, attempts, bucket.Name)
 		return nil
 	})
 
@@ -190,9 +236,16 @@ func GetBucketResource(ctx context.Context, bucketClient *bucketclientset.Client
 func CheckBucketStatusEmpty(ctx context.Context, bucketClient *bucketclientset.Clientset, bucketClaim *v1alpha1.BucketClaim) {
 	var myBucketClaim *v1alpha1.BucketClaim
 
+	emptyAttempt := 0
 	err := retry(ctx, attempts, sleep, func() error {
 		var err error
+
+		emptyAttempt++
+
 		myBucketClaim, err = bucketClient.ObjectstorageV1alpha1().BucketClaims(bucketClaim.Namespace).Get(ctx, bucketClaim.Name, v1.GetOptions{})
+		if err != nil {
+			fmt.Printf("[CheckBucketStatusEmpty] attempt %d/%d: error fetching BucketClaim %s/%s: %v\n", emptyAttempt, attempts, bucketClaim.Namespace, bucketClaim.Name, err)
+		}
 
 		return err
 	})

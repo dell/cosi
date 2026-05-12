@@ -45,9 +45,26 @@ func CheckBucketResourceInObjectStore(ctx context.Context, client api.ClientSet,
 	parameters := map[string]string{}
 	parameters["namespace"] = namespace
 
-	objectScaleBucket, err := client.Buckets().Get(ctx, id, parameters)
+	checkAttempt := 0
+	err = retry(ctx, attempts, sleep, func() error {
+		checkAttempt++
+
+		objectScaleBucket, err := client.Buckets().Get(ctx, id, parameters)
+		if err != nil {
+			fmt.Printf("[CheckBucketResourceInObjectStore] attempt %d/%d: error fetching bucket %s: %v\n", checkAttempt, attempts, id, err)
+			return err
+		}
+
+		if objectScaleBucket == nil {
+			fmt.Printf("[CheckBucketResourceInObjectStore] attempt %d/%d: bucket %s not found in ObjectStore\n", checkAttempt, attempts, id)
+			return fmt.Errorf("bucket %s not found in ObjectStore", id)
+		}
+
+		fmt.Printf("[CheckBucketResourceInObjectStore] attempt %d/%d: bucket %s found in ObjectStore\n", checkAttempt, attempts, id)
+		return nil
+	})
+
 	gomega.Expect(err).ToNot(gomega.HaveOccurred())
-	gomega.Expect(objectScaleBucket).NotTo(gomega.BeNil())
 }
 
 // CheckBucketDeletionInObjectStore Function for checking Bucket deletion in ObjectStore.
@@ -58,21 +75,27 @@ func CheckBucketDeletionInObjectStore(ctx context.Context, client api.ClientSet,
 	parameters := map[string]string{}
 	parameters["namespace"] = namespace
 
+	deleteAttempt := 0
 	err = retry(ctx, attempts, sleep, func() error {
 		var err error
 		var bucket *model.Bucket
 
+		deleteAttempt++
+
 		bucket, err = client.Buckets().Get(ctx, id, parameters)
 		// if error is ErrParameterNotFound, it means the bucket was deleted from ObjectScale
 		if err != nil && errors.Is(err, model.ErrParameterNotFound) {
+			fmt.Printf("[CheckBucketDeletionInObjectStore] attempt %d/%d: bucket %s confirmed deleted\n", deleteAttempt, attempts, id)
 			return nil
 		}
 
 		if err != nil {
+			fmt.Printf("[CheckBucketDeletionInObjectStore] attempt %d/%d: error fetching bucket %s: %v\n", deleteAttempt, attempts, id, err)
 			return err
 		}
 
 		if bucket != nil {
+			fmt.Printf("[CheckBucketDeletionInObjectStore] attempt %d/%d: bucket %s still exists\n", deleteAttempt, attempts, bucket.Name)
 			return fmt.Errorf("bucket %s still exists", bucket.Name)
 		}
 
@@ -95,27 +118,34 @@ func CheckPolicy(ctx context.Context, mgmtClient api.ClientSet, expectedPolicyDo
 
 	ErrComparisonFailed := errors.New("comparison failed")
 
+	policyAttempt := 0
 	// This also needs to be retried, as we are not sure, if the policy was already updated.
 	err := retry(ctx, attempts, sleep, func() error {
 		var err error
+
+		policyAttempt++
 
 		param := make(map[string]string)
 		param["namespace"] = namespace
 
 		actualPolicy, err := mgmtClient.Buckets().GetPolicy(ctx, myBucket.Name, param)
 		if err != nil {
+			fmt.Printf("[CheckPolicy] attempt %d/%d: error fetching policy for bucket %s: %v\n", policyAttempt, attempts, myBucket.Name, err)
 			return err
 		}
 
 		actualPolicyDocument, err = policy.NewFromJSON(actualPolicy)
 		if err != nil {
+			fmt.Printf("[CheckPolicy] attempt %d/%d: error parsing policy for bucket %s: %v\n", policyAttempt, attempts, myBucket.Name, err)
 			return err
 		}
 
 		if !reflect.DeepEqual(actualPolicyDocument, expectedPolicyDocument) {
+			fmt.Printf("[CheckPolicy] attempt %d/%d: policy for bucket %s does not match expected\n", policyAttempt, attempts, myBucket.Name)
 			return ErrComparisonFailed
 		}
 
+		fmt.Printf("[CheckPolicy] attempt %d/%d: policy for bucket %s matches expected\n", policyAttempt, attempts, myBucket.Name)
 		return nil
 	})
 
@@ -127,22 +157,28 @@ func CheckPolicy(ctx context.Context, mgmtClient api.ClientSet, expectedPolicyDo
 func CheckEmptyPolicy(ctx context.Context, mgmtClient api.ClientSet, myBucket *v1alpha1.Bucket, namespace string) {
 	ErrComparisonFailed := errors.New("comparison failed")
 
+	emptyPolicyAttempt := 0
 	// This also needs to be retried, as we are not sure, if the policy was already updated.
 	err := retry(ctx, attempts, sleep, func() error {
 		var err error
+
+		emptyPolicyAttempt++
 
 		param := make(map[string]string)
 		param["namespace"] = namespace
 
 		actualPolicy, err := mgmtClient.Buckets().GetPolicy(ctx, myBucket.Name, param)
 		if err != nil {
+			fmt.Printf("[CheckEmptyPolicy] attempt %d/%d: error fetching policy for bucket %s: %v\n", emptyPolicyAttempt, attempts, myBucket.Name, err)
 			return err
 		}
 
 		if actualPolicy != "" {
+			fmt.Printf("[CheckEmptyPolicy] attempt %d/%d: policy for bucket %s is not empty yet\n", emptyPolicyAttempt, attempts, myBucket.Name)
 			return errors.New("policy is not empty")
 		}
 
+		fmt.Printf("[CheckEmptyPolicy] attempt %d/%d: policy for bucket %s is empty as expected\n", emptyPolicyAttempt, attempts, myBucket.Name)
 		return nil
 	})
 

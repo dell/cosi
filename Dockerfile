@@ -4,7 +4,7 @@
 
 ARG BASEIMAGE
 ARG GOIMAGE
-ARG VERSION="1.0.0"
+ARG VERSION="1.1.0"
 
 FROM $GOIMAGE as builder
 ARG VERSION
@@ -45,7 +45,7 @@ LABEL vendor="Dell Technologies" \
     name="cosi" \
     summary="COSI Driver for Dell Storage Systems" \
     description="COSI Driver for provisioning object storage from Dell Storage Systems" \
-    release="1.16.0" \
+    release="1.17.0" \
     version=$VERSION \
     license="Dell CSM Operator Apache License"
 
