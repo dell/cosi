@@ -8,7 +8,7 @@
 
 // Package driver implements gRPC server for handling requests to the COSI driver
 // as specified by COSI specification.
-package driver
+package cosidriver
 
 import (
 	"context"

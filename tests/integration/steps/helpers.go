@@ -10,32 +10,44 @@ package steps
 
 import (
 	"context"
+	"fmt"
 	"time"
 )
 
 const (
-	attempts = 10
+	attempts = 60
 	sleep    = 2 * time.Second //nolint:gomnd
 )
 
 func retry(ctx context.Context, attempts int, sleep time.Duration, f func() error) error {
 	ticker := time.NewTicker(sleep)
+	defer ticker.Stop()
+
 	retries := 0
 
 	for {
 		select {
 		case <-ticker.C:
+			retries++
+
 			err := f()
 			if err == nil {
+				if retries > 1 {
+					fmt.Printf("[retry] succeeded on attempt %d/%d\n", retries, attempts)
+				}
+
 				return nil
 			}
 
-			retries++
-			if retries > attempts {
+			fmt.Printf("[retry] attempt %d/%d failed: %v\n", retries, attempts, err)
+
+			if retries >= attempts {
+				fmt.Printf("[retry] exhausted all %d attempts\n", attempts)
 				return err
 			}
 
 		case <-ctx.Done():
+			fmt.Printf("[retry] context cancelled after %d attempts: %v\n", retries, ctx.Err())
 			return ctx.Err()
 		}
 	}

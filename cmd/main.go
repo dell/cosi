@@ -186,7 +186,7 @@ func updateDriverConfigParams(ctx context.Context, v *viper.Viper) error {
 }
 
 var runBlocking = func(ctx context.Context, cfg *config.ConfigSchemaJson, tracedServiceName string) error {
-	return driver.RunBlocking(ctx, cfg, driver.COSISocket, tracedServiceName)
+	return cosidriver.RunBlocking(ctx, cfg, cosidriver.COSISocket, tracedServiceName)
 }
 
 var newResource = func(ctx context.Context) (*resource.Resource, error) {

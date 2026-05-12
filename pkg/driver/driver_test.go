@@ -6,7 +6,7 @@
 // terms and conditions of the License Agreement under which it is provided by or
 // on behalf of Dell Inc. or its subsidiaries.
 
-package driver
+package cosidriver
 
 import (
 	"context"

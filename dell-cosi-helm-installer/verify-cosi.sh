@@ -1,7 +1,7 @@
 #!/bin/bash
 #
 #Copyright © 2020-2025 Dell Inc. or its subsidiaries. All Rights Reserved.
- 
+
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -14,10 +14,10 @@
 
 # verify-cosi method
 function verify-cosi() {
-  verify_k8s_versions "1.31" "1.33"
-  verify_openshift_versions "4.18" "4.19"
+  verify_k8s_versions "1.34" "1.36"
+  verify_openshift_versions "4.18" "4.21"
   verify_namespace "${NS}"
   verify_helm_values_version "${DRIVER_VERSION}"
   verify_required_secrets "${RELEASE}-config"
-  verify_helm_3  
+  verify_helm_3
 }
