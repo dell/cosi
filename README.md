@@ -21,5 +21,3 @@ To run unit tests, execute `make vendor unit-test`.
 
 Default parameters for building an image are defined in overrides.mk. Run `make -f overrides.mk overrides-help` to display current values.
 
-## Documentation
-For more detailed information on the driver, please refer to [Container Storage Modules documentation](https://dell.github.io/csm-docs/).
