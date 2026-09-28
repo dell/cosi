@@ -19,7 +19,7 @@ VERIFYSCRIPT="${SCRIPTDIR}/verify.sh"
 PROG="${0}"
 VERIFY=1
 MODE="install"
-DEFAULT_VERSION="v1.1.0"
+DEFAULT_VERSION="v1.2.0"
 WATCHLIST=""
 
 # export the name of the debug log, so child processes will see it

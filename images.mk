@@ -7,7 +7,7 @@
 include overrides.mk
 include helper.mk
 
-images: vendor download-csm-common
+images: vendor copy-csm-common
 	$(eval include csm-common.mk)
 	@echo "Building: $(IMAGE_REGISTRY)/$(IMAGE_NAME):$(IMAGE_TAG)"
 	$(BUILDER) build --pull $(NOCACHE) -t "$(IMAGE_REGISTRY)/$(IMAGE_NAME):$(IMAGE_TAG)" --build-arg GOIMAGE=$(DEFAULT_GOIMAGE) --build-arg BASEIMAGE=$(CSM_BASEIMAGE) .

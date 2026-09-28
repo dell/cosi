@@ -110,7 +110,7 @@ func CheckUser(ctx context.Context, iamClient *iam.Client, accountID string) {
 	userOut, err := iamClient.GetUser(ctx, &iam.GetUserInput{UserName: &accountID})
 	gomega.Expect(err).ToNot(gomega.HaveOccurred())
 	gomega.Expect(userOut.User).NotTo(gomega.BeNil())
-	gomega.Expect(accountID).To(gomega.Equal(*(userOut.User.UserName)))
+	gomega.Expect(accountID).To(gomega.Equal(*userOut.User.UserName))
 }
 
 func CheckPolicy(ctx context.Context, mgmtClient api.ClientSet, expectedPolicyDocument policy.Document, myBucket *v1alpha1.Bucket, namespace string) {

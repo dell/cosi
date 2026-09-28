@@ -5,7 +5,7 @@
 # owners.
 
 IMAGE_REGISTRY?="sample_registry"
-IMAGE_NAME="cosi"
+IMAGE_NAME=cosi
 IMAGE_TAG?=$(shell date +%Y%m%d%H%M%S)
 
 # figure out if podman or docker should be used (use podman if found)

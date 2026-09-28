@@ -20,7 +20,6 @@ import (
 
 	logger "github.com/dell/cosi/pkg/logger"
 	"github.com/fsnotify/fsnotify"
-	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 	sdktrace "go.opentelemetry.io/otel/sdk/trace"
 	semconv "go.opentelemetry.io/otel/semconv/v1.17.0"
@@ -172,12 +171,12 @@ func updateDriverConfigParams(ctx context.Context, v *viper.Viper) error {
 		logFormat := strings.ToUpper(v.GetString(ParamLogFormat))
 		switch logFormat {
 		case "TEXT":
-			log.SetFormatter(&logrus.TextFormatter{})
+			csmlog.SetFormat("text")
 		case "JSON":
-			log.SetFormatter(&logrus.JSONFormatter{})
+			csmlog.SetFormat("json")
 		default:
 			// use text formatter by default
-			log.SetFormatter(&logrus.TextFormatter{})
+			csmlog.SetFormat("text")
 		}
 		log.Infof("Log format set to %s", logFormat)
 	}

@@ -1,4 +1,4 @@
-// Copyright © 2025 Dell Inc. or its subsidiaries. All Rights Reserved.
+// Copyright © 2025-2026 Dell Inc. or its subsidiaries. All Rights Reserved.
 //
 // This software contains the intellectual property of Dell Inc.
 // or is licensed to Dell Inc. from third parties. Use of this software
@@ -11,7 +11,9 @@ package main
 import (
 	"context"
 	"errors"
+	"os"
 	"testing"
+	"time"
 
 	"github.com/dell/cosi/pkg/config"
 	"github.com/spf13/viper"
@@ -21,6 +23,9 @@ import (
 )
 
 func TestRunMain(t *testing.T) {
+	oldRunBlocking := runBlocking
+	defer func() { runBlocking = oldRunBlocking }()
+
 	tests := []struct {
 		name                   string
 		configFile             string
@@ -144,6 +149,67 @@ func TestRunMain(t *testing.T) {
 			// execute run to verify that it does not panic
 			run()
 		})
+	}
+}
+
+func TestMainReturnsOnInvalidDriverConfigParams(t *testing.T) {
+	configParamsFile := t.TempDir() + "/driver-config-params.yaml"
+	if err := os.WriteFile(configParamsFile, []byte("COSI_LOG_LEVEL: INVALID\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+
+	configPath := "test-data.yaml"
+	endpoint := ""
+	configFile = &configPath
+	otelEndpoint = &endpoint
+	driverConfigParamsFile = &configParamsFile
+	oldRunBlocking := runBlocking
+	oldOSExit := osExit
+	defer func() {
+		runBlocking = oldRunBlocking
+		osExit = oldOSExit
+	}()
+	runBlocking = func(_ context.Context, _ *config.ConfigSchemaJson, _ string) error {
+		return nil
+	}
+	osExit = func() {}
+
+	main()
+}
+
+func TestRunMainHandlesDriverConfigChangeError(t *testing.T) {
+	configParamsFile := t.TempDir() + "/driver-config-params.yaml"
+	if err := os.WriteFile(configParamsFile, []byte("COSI_LOG_LEVEL: INFO\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+
+	configPath := "test-data.yaml"
+	endpoint := ""
+	configFile = &configPath
+	otelEndpoint = &endpoint
+	driverConfigParamsFile = &configParamsFile
+	oldRunBlocking := runBlocking
+	defer func() { runBlocking = oldRunBlocking }()
+	runBlocking = func(_ context.Context, _ *config.ConfigSchemaJson, _ string) error {
+		if err := os.WriteFile(configParamsFile, []byte("COSI_LOG_LEVEL: INVALID\n"), 0o600); err != nil {
+			t.Fatal(err)
+		}
+		time.Sleep(100 * time.Millisecond)
+		return nil
+	}
+
+	if err := runMain(); err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestRunBlockingReturnsConfigurationError(t *testing.T) {
+	cfg := &config.ConfigSchemaJson{
+		Connections: []config.Configuration{{}},
+	}
+
+	if err := runBlocking(context.Background(), cfg, ""); err == nil {
+		t.Fatal("runBlocking() error = nil, want configuration error")
 	}
 }
 
