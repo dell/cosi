@@ -231,7 +231,7 @@ CREATE="false"
 PREPARE="false"
 REGISTRY=""
 DRIVER="cosi"
-DEFAULT_VERSION="v1.1.0"
+DEFAULT_VERSION="v1.2.0"
 
 # some directories
 SCRIPTDIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)"

@@ -9,6 +9,11 @@ COSI Driver is part of the [CSM (Container Storage Modules)](https://github.com/
 
 This project may be compiled as a stand-alone binary using Golang that, when run, provides a valid COSI endpoint. It also can be used as a precompiled container image.
 
+## Table of Contents
+
+* [Building](#building)
+* [Documentation](#documentation)
+
 ## Building
 This project is a Go module (see golang.org Module information for explanation).
 The dependencies for this project are in the go.mod file.
@@ -21,3 +26,5 @@ To run unit tests, execute `make vendor unit-test`.
 
 Default parameters for building an image are defined in overrides.mk. Run `make -f overrides.mk overrides-help` to display current values.
 
+## Documentation
+For more detailed information on the driver, please refer to [Container Storage Modules documentation](https://www.dell.com/support/product-details/en-us/product/container-storage-modules/resources/manuals).

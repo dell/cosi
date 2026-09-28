@@ -5,6 +5,7 @@ c.out
 golangci.yaml
 go-code-tester
 cover.out
+coverage.*
 coverage.txt
 coverage_results.txt
 new_coverage.txt
