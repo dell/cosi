@@ -19,12 +19,12 @@ import (
 	omocks "github.com/dell/cosi/pkg/provisioner/objectscale/mocks"
 	"github.com/dell/cosi/pkg/provisioner/policy"
 
-	"github.com/dell/cosi/pkg/internal/testcontext"
-	"github.com/dell/goobjectscale/pkg/client/api/mocks"
-	"github.com/dell/goobjectscale/pkg/client/model"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/iam"
 	"github.com/aws/aws-sdk-go-v2/service/iam/types"
+	"github.com/dell/cosi/pkg/internal/testcontext"
+	"github.com/dell/goobjectscale/pkg/client/api/mocks"
+	"github.com/dell/goobjectscale/pkg/client/model"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	cosi "sigs.k8s.io/container-object-storage-interface/proto"
@@ -65,7 +65,7 @@ func testDriverRevokeBucketAccess(t *testing.T) {
 		Statement: []policy.StatementEntry{
 			{
 				Effect:    "Allow",
-				Action:    []string{"*"},
+				Action:    []string{"s3:*"},
 				Resource:  resourceARNs,
 				Principal: map[string]string{"AWS": awsPrincipalString},
 				Sid:       PolicySid,
@@ -125,14 +125,14 @@ func testDriverRevokeBucketAccessWithMultiplePolicies(t *testing.T) {
 		Statement: []policy.StatementEntry{
 			{
 				Effect:    "Allow",
-				Action:    []string{"*"},
+				Action:    []string{"s3:*"},
 				Resource:  resourceARNs,
 				Principal: map[string]string{"AWS": awsPrincipalString},
 				Sid:       PolicySid,
 			},
 			{
 				Effect:    "Allow",
-				Action:    []string{"*"},
+				Action:    []string{"s3:*"},
 				Resource:  []string{"existing-resource"},
 				Principal: map[string]string{"AWS": "existing-principal"},
 				Sid:       PolicySid,
