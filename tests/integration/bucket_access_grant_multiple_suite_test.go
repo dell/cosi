@@ -263,7 +263,7 @@ func GetBucketPolicy(resourceARN []string, awsPrincipal []string) policy.Documen
 		bucketPolicy.Statement = append(bucketPolicy.Statement, policy.StatementEntry{
 			Effect: "Allow",
 			Action: []string{
-				"*",
+				"s3:*",
 			},
 			Resource: resourceARN,
 			Principal: map[string]string{
