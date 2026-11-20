@@ -46,7 +46,7 @@ func parsePolicyStatement(
 	newStatement.Resource = awsBucketResourceARNs
 	newStatement.Effect = allowEffect
 	newStatement.Principal = map[string]string{"AWS": awsPrincipalString}
-	newStatement.Action = []string{"*"}
+	newStatement.Action = []string{"s3:*"}
 	inputStatements = append(inputStatements, newStatement)
 
 	return inputStatements
